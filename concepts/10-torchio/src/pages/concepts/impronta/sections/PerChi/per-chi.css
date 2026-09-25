@@ -400,7 +400,7 @@
 
   .imp-root .imp-perchi__posto--biglietto {
     grid-column: 6 / span 3;
-    margin-block-start: clamp(var(--imp-sp-9), calc(var(--imp-u) * 2), 13rem);
+    margin-block-start: clamp(10rem, calc(var(--imp-u) * 3.4), 20rem);
   }
 
   .imp-root .imp-perchi__posto--libro {

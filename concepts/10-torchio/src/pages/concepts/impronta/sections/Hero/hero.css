@@ -221,6 +221,7 @@
 @media (min-width: 600px) {
   .imp-root .imp-hero__titolo {
     grid-column: 1 / span 7;
+    max-inline-size: none;
   }
 
   .imp-root .imp-hero__sotto,
@@ -264,6 +265,23 @@
 
   .imp-root .imp-hero__luce {
     display: inline-flex;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Schermi in verticale (telefoni, tablet in piedi): frontespizio. La parola
+   resta in testa, il blocco in inchiostro scende al piede della prima
+   schermata; in mezzo solo carta, dove il dito sposta la luce. La testa non
+   cresce (≤ 96 px): è il piede che si allunga, come in un libro.
+   Su desktop resta la gabbia dell'ux-architect (titolo al 40% dell'altezza).
+   -------------------------------------------------------------------------- */
+@media (max-aspect-ratio: 4/5) and (min-height: 700px) {
+  .imp-root .imp-hero__piano {
+    margin-block-end: clamp(40px, 9svh, 112px);
+  }
+
+  .imp-root .imp-hero__testo {
+    margin-block-start: auto;
   }
 }
 

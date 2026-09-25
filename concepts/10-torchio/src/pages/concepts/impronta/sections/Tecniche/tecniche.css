@@ -67,7 +67,7 @@
   max-inline-size: 34ch;
 }
 
-/* Sotto 1024 il titolo sta prima del palco e scorre via: il palco fissato
+/* Sotto 768 il titolo sta prima del palco e scorre via: il palco fissato
    tiene solo i nomi, il foglio e la spiegazione (altezza utile su 375). */
 .imp-root .imp-tecniche__testa-fuori {
   padding-block: var(--imp-testa) var(--imp-sp-2);
@@ -137,6 +137,38 @@
 @media (min-width: 600px) {
   .imp-root .imp-tecniche__gabbia {
     row-gap: var(--imp-sp-5);
+  }
+}
+
+/* Da 640 il bottone "Torna in Ciceri Lab" del sito è in alto a sinistra
+   (14 + 44 px): il palco parte sotto. */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .imp-root .imp-tecniche__gabbia {
+    padding-block-start: calc(14px + var(--imp-tocco-min) + var(--imp-sp-5));
+  }
+}
+
+/* Da 768 il titolo resta nel palco: quattro righe (titolo, nomi, foglio,
+   spiegazione). */
+@media (max-width: 1023px) {
+  .imp-root .imp-tecniche__gabbia--con-testa {
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+  }
+
+  .imp-root .imp-tecniche__gabbia--con-testa .imp-tecniche__testa {
+    grid-row: 1;
+  }
+
+  .imp-root .imp-tecniche__gabbia--con-testa .imp-tecniche__indice {
+    grid-row: 2;
+  }
+
+  .imp-root .imp-tecniche__gabbia--con-testa .imp-tecniche__zona {
+    grid-row: 3;
+  }
+
+  .imp-root .imp-tecniche__gabbia--con-testa .imp-tecniche__voci {
+    grid-row: 4;
   }
 }
 
@@ -531,6 +563,10 @@
   display: grid;
   gap: var(--imp-sp-5);
   align-items: center;
+}
+
+.imp-root .imp-tecniche__blocco .imp-tecniche__zona--statica {
+  grid-row: auto;
 }
 
 .imp-root .imp-tecniche__zona--statica {

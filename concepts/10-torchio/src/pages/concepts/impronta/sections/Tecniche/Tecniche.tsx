@@ -33,7 +33,6 @@ import {
   VAR,
   ATTESA_PRESSA,
   LARGHEZZA_STRETTA,
-  LARGHEZZA_TESTATA,
   giroTecniche,
   progressoSaltoTecnica,
 } from '../../motion/choreography';
@@ -254,7 +253,7 @@ function TecnichePin({ parola, carta, stretto }: { parola: string; carta: Carta;
         </div>
       ) : null}
       <div className="imp-tecniche__palco" data-tecnica={id}>
-        <div className="imp-page imp-tecniche__gabbia">
+        <div className={stretto ? 'imp-page imp-tecniche__gabbia' : 'imp-page imp-tecniche__gabbia imp-tecniche__gabbia--con-testa'}>
           {stretto ? null : <Testa statica={false} />}
 
           <div className="imp-tecniche__indice">
@@ -383,9 +382,9 @@ export default function Tecniche() {
   const ridotto = useImpronta((s) => s.reducedMotion);
   const carta = useImpronta((s) => s.carta);
   const campione = useImpronta(selParolaCampione);
-  const stretto = useSotto(LARGHEZZA_TESTATA);
-  const corto = useSotto(LARGHEZZA_STRETTA);
-  const parola = parolaPerLarghezza(campione, corto);
+  // Sotto 768 il titolo scorre via prima del pin (altezza utile su 375).
+  const stretto = useSotto(LARGHEZZA_STRETTA);
+  const parola = parolaPerLarghezza(campione, stretto);
 
   return (
     <section

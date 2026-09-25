@@ -462,7 +462,7 @@ export default function Banco() {
                   ref={levaRef}
                   descrittaDa="imp-banco-promessa imp-banco-totale"
                   inCorso={fermo}
-                  messaggio={invio === 'sending' ? BANCO.leva.inCorso : null}
+                  messaggio={invio === 'sending' ? '' : null}
                   puoPartire={puoPartire}
                   onBloccato={onBloccato}
                   onInizio={onInizio}

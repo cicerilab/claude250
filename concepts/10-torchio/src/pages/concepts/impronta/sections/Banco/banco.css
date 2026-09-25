@@ -564,7 +564,9 @@
   box-shadow: inset 0 0 0 3px var(--imp-su-lamina);
 }
 
-.imp-root .imp-banco__leva-testo {
+.imp-root .imp-banco .imp-banco__leva-testo {
+  padding-inline: calc(var(--imp-ix-maniglia) + 20px);
+  text-align: center;
   font-size: var(--imp-fs-leva);
   line-height: var(--imp-lh-interfaccia);
   font-weight: 600;
@@ -703,6 +705,8 @@
 }
 
 .imp-root .imp-banco__prova {
+  /* La prova si guarda da vicino: il solco è più marcato che sul foglio del sito. */
+  --imp-rilievo: 2.6;
   position: absolute;
   inset: 0;
   container-type: inline-size;
@@ -788,6 +792,7 @@
 }
 
 .imp-root .imp-banco__riga--secondaria {
+  --imp-rilievo: 1.8;
   font-family: var(--imp-font-testo);
   font-weight: 500;
   line-height: 1.25;
@@ -797,7 +802,7 @@
 
 /* Il campo vuoto mostra l'esempio, premuto più leggero. */
 .imp-root .imp-banco__riga--esempio {
-  --imp-rilievo: 0.5;
+  --imp-rilievo: 1.7;
 }
 
 .imp-root .imp-banco__riga--esempio:is(.imp-inchiostro, .imp-caldo) {
@@ -1071,10 +1076,16 @@
     align-items: start;
   }
 
+  .imp-root .imp-banco {
+    padding-block-end: max(var(--imp-sp-8), calc(var(--imp-piede) - 32vh));
+  }
+
+  /* Spazio sotto la leva: quando la leva è a metà schermo la lastra ferma è ancora intera. */
   .imp-root .imp-banco__colonna {
     grid-column: 8 / span 5;
     grid-row: 1;
     max-inline-size: none;
+    padding-block-end: 32vh;
   }
 
   .imp-root .imp-banco__lastra {
@@ -1094,8 +1105,8 @@
   }
 
   .imp-root .imp-banco__piano {
-    block-size: min(60vh, calc(100vh - var(--imp-banco-sticky) - 210px));
-    block-size: min(60svh, calc(100svh - var(--imp-banco-sticky) - 210px));
+    block-size: min(56vh, calc(100vh - var(--imp-banco-sticky) - 230px));
+    block-size: min(56svh, calc(100svh - var(--imp-banco-sticky) - 230px));
     min-block-size: 360px;
   }
 
@@ -1134,11 +1145,6 @@
   }
 }
 
-@media (min-width: 1280px) {
-  .imp-root .imp-banco__lastra {
-    grid-column: 1 / span 7;
-  }
-}
 
 /* --------------------------------------------------------------------------
    Movimento ridotto: le lettere compaiono già premute, la striscia non scorre
