@@ -338,3 +338,119 @@ costruzione): da ricontrollare quando i section-builder hanno finito.
 - Smontaggio nel sito vero: provato chiamando `dispose()` direttamente (ticker
   e contesto tornano puliti); la navigazione tra pagine va provata al porting,
   come per lo scaffold.
+
+---
+
+## Giro 2
+
+Richieste: giuria (`awwwards-jury.md` §5, riga shader-engineer: copertina
+"Sul Noncello" vuota a 2560 col GL) e `performance-auditor.md` (P5 avvio in un
+task lungo, P6 atlante 32 MB). Toccati solo `ImprontaGL.ts`, `blocks.ts`,
+`atlas.ts` e questo documento. I file del webgl-artist non sono toccati.
+
+### Esito
+
+| Controllo | Esito |
+|---|---|
+| typecheck, lint (`eslint src`), build | verdi |
+| Chunk WebGL | `index-*.js` 23,7 KB gz + three 112,8 KB gz = **136,6 KB gz** (budget 160) |
+| Copertina a 2560×1440 (`?gl=1`) | **disegnata**: 4 blocchi sullo schermo, 4 disegnati, nessun `fuori`, entro ~1 s dall'arrivo sulla sezione (`giro2-perchi-2560.png`) |
+| Copertina a 1440×900 | disegnata e premuta, allineata al DOM (`giro2-perchi-1440-premuto.png`) |
+| Avvio del GL | spezzato in task separati, tracciati con `performance.mark('impronta-gl:…')` (vedi sotto) |
+| Errori in console | 0 del codice (solo `ERR_TOO_MANY_RETRIES` dei font nella sandbox) |
+
+Prove con Playwright (argomenti SwiftShader, `?gl=1`) su
+`npx vite --port 8113 --strictPort`, chiuso alla fine. Nel browser di prova
+il WebSocket dell'HMR di Vite è finto (script di init): altri agent modificano
+file in parallelo e ogni aggiornamento rimontava il canvas a metà prova (è
+quello che dava la diagnostica "vuota" nelle prime misure). Durante il giro
+`interaction/light.ts` era a metà modifica (`ReferenceError:
+arcoVietatoQui`, file altrui); nelle misure finali l'errore non c'è più.
+
+### 1. Copertina vuota a 2560
+
+**Causa.** Il limite degli 8 blocchi non c'entrava: a 2560 sulla sezione ci
+sono 4 blocchi. Il problema era la portata delle cotture. Dopo un salto
+nella pagina entrano 3-4 pezzi insieme, e le maschere si disegnavano e
+cuocevano in ordine di registrazione, una cottura per frame. In più, alla
+comparsa si ridisegnavano TUTTE le maschere (§4, "assi di arrivo"), e la
+copertina aspettava in coda dietro all'hero ricotto. Nel frattempo il pezzo
+restava fuori dal GL: DOM trasparente sopra la carta Grafite, cioè una
+copertina nera e vuota. A 1440 lo stesso succedeva per meno tempo.
+
+**Correzioni.**
+- `blocks.ts`: `punteggio()` = `spec.priorita`, poi **area in vista** (px²
+  del rettangolo dentro lo schermo), poi vicinanza al centro. Lo usano il
+  culling oltre gli 8 blocchi e l'ordine di disegno e cottura: i pezzi grandi
+  in vista passano per primi.
+- `ImprontaGL.ts`: disegni e cotture in ordine di urgenza (slot riservato →
+  sullo schermo per punteggio → entro una viewport).
+- Cotture per frame a GL acceso: **2 quando un blocco sullo schermo aspetta
+  la sua maschera**, 1 altrimenti (3 draw call in più, budget §8).
+- Ricottura alla comparsa **solo per i fantasmi il cui stile è cambiato**:
+  `firmaStile(el)` (famiglia, corpo, assi, peso, larghezza, spaziatura del
+  blocco e dei suoi primi 12 discendenti), registrata a ogni disegno e
+  confrontata quando la radice ha `data-gl="on"`. Di solito si ricuoce solo
+  la parola dell'hero.
+- Un blocco sullo schermo non disegnato (maschera in arrivo, oltre gli 8,
+  disegno fallito) ha sempre `data-imp-gl="fuori"`, e **Per chi** e **Banco**
+  lo usano già nel loro CSS per tornare al rilievo CSS: la copertina non è
+  mai vuota, al massimo per qualche frame è in CSS. Resta aperta per
+  l'art-director la regola generale in `relief-fallback.css` per gli altri
+  fantasmi (richiesta del giro 1, §10).
+
+### 2. P5 · avvio in un task lungo
+
+Prima: compilazione e primo uso dei tre programmi nello stesso task. Adesso
+`avvia()` fa, per ciascun programma (blur, composite, rilievo), due passi in
+**task separati** (un `setTimeout(0)` tra l'uno e l'altro):
+1. `renderer.compileAsync(scene, camera)`: con `KHR_parallel_shader_compile`
+   il driver compila e collega in parallelo, three aspetta senza bloccare;
+2. primo uso su un bersaglio di 1 texel (link, uniform, allocazione del
+   render target). Per il composite il bersaglio è l'atlante, quindi anche
+   l'allocazione dei suoi 16/32 MB ha un task suo.
+
+Le cotture prima della comparsa scendono da 6 a **3 per frame**.
+
+Siccome three controlla i programmi di `compileAsync` con un `setTimeout`,
+uno smontaggio durante la compilazione non perde più il contesto subito
+(altrimenti three interrogherebbe all'infinito): `dispose()` stacca tutto il
+resto e libera il GPU quando la compilazione finisce (`liberaGpu()`).
+
+Misura a 1440×900 in SwiftShader (segni `impronta-gl:*` e long task):
+
+| Passo | Task |
+|---|---|
+| fibra (a pezzi) | 55 / 131 ms |
+| primo uso blur | 895 ms |
+| primo uso composite + allocazione atlante | 2182 ms |
+| primo uso rilievo | 1036 ms |
+
+SwiftShader non ha `KHR_parallel_shader_compile` e compila e alloca in
+software, quindi tutto il costo finisce sul primo uso e i valori assoluti non
+significano nulla. Conta la forma: tre task separati invece di uno, con il
+main thread libero tra l'uno e l'altro. Su GPU vera con l'estensione (Chrome
+desktop e Android recenti) la compilazione esce dal main thread. **Da misurare
+su iPhone 12 / Pixel 6a** (performance-auditor), con i segni
+`impronta-gl:avvio`, `fibra`, `compilato-*`, `primo-uso-*`, `primo-frame`.
+
+### 3. P6 · atlante 32 MB su desktop
+
+`tipoTexel()` in `atlas.ts`: HalfFloat solo se WebGL2 con
+`EXT_color_buffer_float`, puntatore fine **e** `navigator.deviceMemory ≥ 8`.
+Senza `deviceMemory` (Safari, Firefox) o sotto gli 8 GB si resta a 8 bit
+(16 MB, nel budget §8). Quindi 32 MB solo su macchine che dichiarano 8 GB o
+più. Il webgl-artist ha provato che a 8 bit la resa regge. Se il
+tech-architect preferisce 16 MB sempre, basta alzare `MEMORIA_HALF_FLOAT_GB`
+a un valore irraggiungibile.
+
+### 4. Richieste
+
+- **art-director**: la regola generale per `[data-imp-gl="fuori"]` in
+  `relief-fallback.css` (giro 1, §10). Per chi e Banco l'hanno già nel loro
+  CSS.
+- **performance-auditor**: rimisurare P5 su device con i segni
+  `impronta-gl:*`.
+- **interaction-designer**: `light.ts` durante il giro lanciava
+  `ReferenceError: arcoVietatoQui` a ogni frame (modifica in corso?).
+  Controllare che la versione finale sia pulita.
