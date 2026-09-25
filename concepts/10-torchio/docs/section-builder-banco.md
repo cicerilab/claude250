@@ -240,3 +240,36 @@ dopo i 900 ms. Il gesto va provato su un dispositivo vero.
 | Carta nel compositoio | radio sincronizzato | la spunta segue lo scambio dell'onda (circa 300 ms) | la carta dello store cambia al 45% dell'onda; un secondo stato locale mentirebbe per 300 ms |
 | Rilievo GL | tutta la sezione | pezzo e prezzo allo shader solo da 1024 px | sotto, la lastra è un foglio opaco che copre il canvas |
 | Scelte dopo l'invio | non specificato | ferme e visibili, come la bolla di un ordine | la prova "resta dov'è"; "Prova un'altra cosa" le libera |
+
+---
+
+## Giro 2 (giuria: Banco 5; auditor accessibilità, prestazioni, responsive; art-director e copywriter giro 2)
+
+| Punto | Cosa ho fatto | File |
+|---|---|---|
+| Schede con bordino (Cotone bianche, Citrino gialle) | Via tutte le tile. **Cosa stampi**: i quattro formati disegnati in scala (mm × `--imp-banco-k`, sagome `.imp-foglio` con costa e un segno d'inchiostro dove cadrebbe il testo; libro col dorso), si tocca la sagoma; su colonna < 440 px due per riga, stessa scala. **Tecnica**: le prime due lettere del testo del cliente stampate nella tecnica (secco, inchiostro, lamina) sopra il nome. **Quante**: numeri Anybody in riga. **Legatura, Quando**: parole in riga. Scelta = riga premuta d'inchiostro 3 px con labbro di luce + "scelta" | `Compositoio.tsx`, `banco.css` |
+| Campi bianchi su bianco | `--imp-superficie` + `--imp-ombra-superficie` dell'art-director (campi, casella del taglio, "Prova un'altra cosa"); `--imp-carta-luce` resta solo labbro | `banco.css` |
+| Prova = riquadro vuoto | Tolto il vassoio con bordo: il biglietto sta sulla carta del sito con costa e ombra, largo ~530 px a 1440 (margini 16 px, presenza 1). Rilievo del CSS più netto: `--imp-rilievo` 3,2 (esempio compreso, che ora si legge come la prova vera) + 0,8 con la leva; inchiostro 1,4 | `banco.css` |
+| Nome sdoppiato dopo l'invio | Era mio: `--imp-rilievo` arrivava a 4 a leva piena e le due ombre nette della lamina diventavano una seconda copia. Ora la lamina delle righe ha profondità fissa 1,1 (e l'art-director ha messo un `clamp` in `.imp-caldo`); la leva approfondisce solo secco e inchiostro | `banco.css` |
+| Leva = barra grigia | Solco inciso nella carta (fondo del solco, ombra interna, labbro), manico tondo in lamina (`--imp-lamina-grana` + `--imp-lamina-bordi`, riflesso sferico) che scorre fino al **fermo** d'inchiostro; la corsa fatta si scurisce nel solco; tenendo, il manico affonda. Etichetta Hanken 18/600 sopra il solco, mai sovrapposta | `Leva.tsx`, `banco.css` |
+| Successo | Il nome si imprime ancora una volta (`urto`). Frase fuori dalla colonna: su mobile **sopra** la lastra (ordine −2), che smette di stare ferma; su desktop al posto della leva, riga 2 della griglia, con la lastra che copre le due righe (resta accanto) | `Banco.tsx`, `banco.css` |
+| Vuoto sotto la leva (1440) | Tolti i 32vh di carta in fondo alla colonna e il piede ridotto | `banco.css` |
+| Lastra a 768 che copre la leva; 42svh | Tra 600 e 1023 la lastra è 42svh **in tutto** (compresi i 64 px sotto il bottone del sito); scroll-margin sui controlli | `banco.css` |
+| A1 "cos'è?" coperto | Link nel flusso sotto la legenda della tecnica, niente posizionamento assoluto | `banco.css` |
+| A2 fuoco coperto | `scroll-margin-block` sull'elemento che riceve il fuoco (input, radio, leva, link, dial, bottoni, esito): mobile 42svh + testata, in basso posto per i fissi; desktop testata + 16 px | `banco.css` |
+| A3 reflow al 400% | `@media (max-height: 34rem)`: lastra non ferma, vassoio `min(60vh, 20rem)`; `min-block-size: min(260px, 42svh)` | `banco.css` |
+| M2 esito letto due volte | Niente annuncio di successo e di errore: il fuoco va sulla frase | `Banco.tsx` |
+| M5 leva, nome ≠ etichetta | Tolti `aria-label` e `aria-hidden`: il nome è l'etichetta visibile, che cambia con lo stato | `Leva.tsx` |
+| B3 prezzo annunciato da lontano | L'annuncio del prezzo parte solo se la scelta viene dal banco o il fuoco è nel banco | `Banco.tsx` |
+| B8 errore contatto non annunciato | `role="status"` sul paragrafo dell'errore (sempre nel DOM, vuoto quando non c'è errore) | `Compositoio.tsx` |
+| P2 INP: 17 layout per tasto | `adattaRighe` riscritta: una **sonda** invisibile per riga grande (stesso testo a wdth 100, senza a capo) dà la larghezza naturale; due funzioni fisse nel ticker leggono tutto in fase `read` e scrivono in fase `write`, al frame dopo il tasto (un layout per tutte le righe, zero letture nell'handler). Le righe della prova non hanno più la transizione del colore (il cambio di tecnica è una sostituzione secca sotto la platina) | `Prova.tsx`, `banco.css` |
+| Copywriter giro 2 | `BANCO.intro` vuota: niente `<p>`. Riepilogo, `dipende` e `ristampa` resi **una volta sola**: sotto la lastra da 1024 px, nel compositoio sotto | `Banco.tsx`, `Compositoio.tsx`, `Prova.tsx` |
+| Art-director giro 2 | Tolte le mie regole `data-imp-gl="fuori"` per pezzo e prezzo (ora le copre `relief-fallback.css`); resta solo lo spegnimento delle righe figlie | `banco.css` |
+
+**Verifica**: typecheck e `eslint src/.../Banco` verdi. Dev server mio su 8102, riavviato con `--force` perché la cache dei moduli (HMR di `Filo.tsx`, non mio) bloccava la pagina, poi chiuso. Font serviti con `page.route` + curl. Screenshot in `/tmp/claude-0/shots-banco/giro2/`
+`{375,768,1440,2560}-{citrino,cotone}-gl0-{1-vuoto,2-compilato,3-leva-a-meta,4-successo}.png` e
+`{1440,375}-{citrino,cotone}-gl-….png` (GL acceso). La "leva a metà" si fotografa fermando `requestAnimationFrame` a metà tenuta.
+
+**Da girare**:
+- **shader-engineer**: col GL acceso su SwiftShader, dopo lo scroll verso la frase di successo il pezzo resta disegnato per un momento nel punto vecchio (`1440-cotone-gl-4-successo`): probabilmente è la lentezza del frame in headless, ma va visto su GPU vera. Il prezzo in lamina su Citrino nel GL resta quasi invisibile (già segnalato al giro 1).
+- In headless a 2560 una ristampa (170 + 520 ms) può superare il secondo, perché i frame sono lenti: su una macchina vera va bene.
