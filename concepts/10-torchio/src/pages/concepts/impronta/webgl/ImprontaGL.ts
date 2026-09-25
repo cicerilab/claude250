@@ -209,7 +209,6 @@ export class ImprontaGL {
   private spento = false;
   private smontato = false;
   private numeroFrame = 0;
-  private disegnatoFramePrima = false;
   /** Dopo la comparsa: le maschere vanno ridisegnate appena il DOM mostra data-gl="on". */
   private rifaiDopoComparsa = false;
 
@@ -539,9 +538,10 @@ export class ImprontaGL {
       onda !== null ||
       this.ondaAttiva;
     if (!serve) {
+      // Frame saltato (per esempio l'arco della luce a 30 fps): non
+      // interrompe il conteggio della qualità, solo un sonno del ticker lo fa.
       this.diagnostica.frameSaltati += 1;
-      this.disegnatoFramePrima = false;
-      this.qualita.interrompi();
+      if (dt === DT_RISVEGLIO) this.qualita.interrompi();
       return ancora;
     }
 
@@ -590,14 +590,15 @@ export class ImprontaGL {
       this.primoFrame = true;
       window.clearTimeout(this.timerAttesa);
       this.diagnostica.stato = 'acceso';
-      this.disegnatoFramePrima = false;
       impostaGL('on');
       this.rifaiDopoComparsa = true;
       return true;
     }
 
-    // 9. Qualità: solo frame di render continuo senza cotture.
-    if (cotte === 0 && this.disegnatoFramePrima) {
+    // 9. Qualità: frame disegnati senza cotture. Il dt è l'intervallo dal
+    // frame precedente (disegnato o saltato): misura quanto il GPU trattiene
+    // il main thread. Il primo frame dopo un sonno del ticker non conta.
+    if (cotte === 0) {
       if (dt === DT_RISVEGLIO) {
         this.qualita.interrompi();
       } else {
@@ -612,7 +613,6 @@ export class ImprontaGL {
         }
       }
     }
-    this.disegnatoFramePrima = true;
     return ancora;
   };
 

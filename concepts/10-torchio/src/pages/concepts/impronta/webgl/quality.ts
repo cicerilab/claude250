@@ -18,11 +18,11 @@
  *      per 3 secondi di orologio, si passa al fallback CSS.
  *
  * Il campione è il `dt` del ticker (secondi, limitato a 50 ms): si prende
- * solo nei frame in cui si è disegnato E anche il frame prima aveva
- * disegnato (render continuo: scroll, luce, pressa, onda), e mai nei frame
- * di cottura delle maschere. Il limite a 50 ms del ticker non conta: 50 ms
- * sta già sopra entrambe le soglie. Il primo frame dopo un risveglio del
- * ticker vale 1/60 per contratto: è un campione ottimista, innocuo.
+ * nei frame in cui si è disegnato, mai in quelli di cottura delle maschere.
+ * Il limite a 50 ms del ticker non conta: 50 ms sta già sopra entrambe le
+ * soglie. Il primo frame dopo un sonno del ticker (dt = 1/60 per contratto)
+ * non è un campione: chiama `interrompi()`, perché i 3 s di lentezza devono
+ * essere consecutivi.
  *
  * Con `?gl=1` (forzatura del test o di chi lo vuole acceso) il DPR scende lo
  * stesso ma il GL non si spegne mai per lentezza: serve alle prove in

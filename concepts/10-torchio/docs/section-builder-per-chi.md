@@ -114,10 +114,17 @@ cambia il pezzo in vista. Forced colors: bordo di sistema sui pezzi.
 - Dev server mio: `npx vite --port 8102 --strictPort`. Playwright (Chromium di
   `/opt/pw-browsers`, SwiftShader) a 375, 768, 1440, con e senza `?gl=0`, e
   con reduced motion. Screenshot in `/tmp/claude-0/shots-per-chi/`.
-- In headless `data-gl` resta `pending`/`off` (lo stub `webgl/index.ts` non
-  disegna ancora): quello che si vede è il rilievo CSS. La parte GL
-  (maschere dai `selettore`, ordine busta → partecipazione) è da verificare
-  quando lo shader-engineer collega `ImprontaCanvas`.
+- Con i flag SwiftShader il WebGL dello shader-engineer si accende
+  (`data-gl="on"`): partecipazione e busta premute, patta in cordonatura,
+  nome del biglietto in lamina, copertina con cerniera; i fantasmi DOM sono
+  trasparenti e il taglio delle pagine resta DOM fuori dalla copertina. Su
+  SwiftShader la cottura delle maschere richiede diversi secondi: a 2 s la
+  copertina non c'era ancora, a 15 s sì (`per-chi-1440-gl-attesa*.png`).
+- Screenshot: `per-chi-{375,768,1440}-gl0(-b).png` (rilievo CSS),
+  `per-chi-{375,1440}-gl(-b).png` e `per-chi-1440-gl-attesa(-b).png` (WebGL),
+  `per-chi-375-gl0-ridotto(-b).png` (reduced motion: tutto già premuto).
+- In headless i font Google a volte non arrivano (proxy, scaffold §11.1):
+  alcune catture sono con i ripieghi tarati.
 
 ## 7. Stringhe e note per altri agent
 
