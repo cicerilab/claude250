@@ -1,38 +1,53 @@
 /* ==========================================================================
-   IMPRONTA · Legatoria, "il filo" (section-builder-legatoria)
+   IMPRONTA · Legatoria, "il filo" (section-builder-legatoria, giro 2)
    --------------------------------------------------------------------------
-   Un filo d'inchiostro, largo quanto il filo degli schemi (2,4 unità del
-   viewBox in scala), scende lungo il margine interno e passa nei fori veri
-   di quattro legature. Ogni pezzo del filo (tratto dritto, schema, nodo) ha
-   il suo intervallo --filo-da / --filo-a (scritti da Legatoria.tsx dopo la
-   misura) e si disegna quando --imp-filo-p (motion, useFilo) lo attraversa.
-   Il testo accanto è fermo: l'aggancio (--imp-filo-aggancio, molla "tiro")
-   tocca solo i segni della cucitura.
+   Il filo è il protagonista e occupa tutta l'area viva.
+   - 375: gli schemi stanno a sinistra, il filo corre nel margine esterno
+     (10 px dal bordo), entra nello schema, ne esce e passa SOTTO il nome
+     della legatura (il nome è appeso al filo), poi torna nel margine. Il
+     testo è a tutta larghezza, senza rientro.
+   - da 600: serpentina. Schemi grandi alternati a sinistra e a destra
+     (5 colonne su 12 a 1440: 476 × 595 px), il filo attraversa la pagina da
+     uno all'altro. Il nome di ogni legatura è appeso al primo foro dello
+     schema con un laccio che parte quando il filo aggancia.
+   - in fondo il filo scende, sottolinea "Prova la tua" e si chiude in un nodo.
+
+   Ogni pezzo (tratto, schema, nodo) ha --filo-da / --filo-a (Legatoria.tsx)
+   e si disegna quando --imp-filo-p (motion) lo attraversa. L'aggancio
+   (--imp-filo-aggancio, molla "tiro") tocca solo segni e lacci, mai il testo.
+
+   stroke-dashoffset sempre con l'unità dentro il calcolo (Firefox, B1 del
+   cross-browser-tester): calc((1 - x) * 1px).
 
    Tutti i selettori sotto .imp-root. Solo variabili --imp-*.
    ========================================================================== */
 
 .imp-root .imp-legatoria {
-  /* Scala degli schemi (viewBox 240 × 300). Unitless: serve a moltiplicare px. */
-  --filo-s: 0.9;
-  --filo-w: calc(240px * var(--filo-s));
-  --filo-h: calc(300px * var(--filo-s));
-  --filo-spessore: calc(2.4px * var(--filo-s));
-  /* x del filo dal bordo sinistro della fermata. Su 375: 8 px dentro l'area
-     viva, cioè 28 px dal bordo dello schermo (ux-architect 5.5). */
-  --filo-x: 8px;
-  /* Colonna del filo e rientro del testo. */
-  --filo-colonna: 36px;
-  --filo-canalino: 0px;
-  /* Nodo finale: lato 14 unità dello schema. */
-  --filo-nodo: calc(14px * var(--filo-s));
+  /* Larghezza dello schema (viewBox 240 × 300). Tutto il resto ne deriva. */
+  --filo-w: 250px;
+  --filo-h: calc(var(--filo-w) * 1.25);
+  /* Spessore del filo: 2,4 unità su 240. */
+  --filo-sp: max(2px, calc(var(--filo-w) * 0.01));
+  /* x del filo dentro uno schema appoggiato a sinistra: 16 unità su 240. */
+  --filo-xd: calc(var(--filo-w) / 15);
+  /* x del filo nel margine esterno (375): 10 px oltre l'area viva. */
+  --filo-xr: calc(100% + 10px);
+  /* x del filo dentro uno schema appoggiato a destra (da 600). */
+  --filo-xrov: calc(100% - var(--filo-w) + var(--filo-xd));
+  /* Spazio in testa a ogni fermata (dove il filo arriva e scende). */
+  --filo-testa: var(--imp-sp-6);
+  /* Altezza della riga del nome (titolo-3). */
+  --filo-riga: calc(var(--imp-fs-titolo-3) * 1.08);
+  /* Diametro del nodo-radio. */
+  --filo-nodo-d: 22px;
+  /* Diametro del nodo finale: 12,4 unità su 240. */
+  --filo-fine-d: calc(var(--filo-w) * 12.4 / 240);
   position: relative;
   color: var(--imp-inchiostro);
 }
 
 /* --------------------------------------------------------------------------
-   Testa della sezione: h2, intro, spiegazione di "segnatura".
-   Ancorata al margine interno, mai centrata.
+   Testa della sezione
    -------------------------------------------------------------------------- */
 .imp-root .imp-legatoria__testa {
   max-inline-size: 36rem;
@@ -62,12 +77,11 @@
    -------------------------------------------------------------------------- */
 .imp-root .imp-legatoria__corpo {
   position: relative;
-  margin-block-start: var(--imp-sp-7);
+  margin-block-start: var(--imp-sp-6);
 }
 
-/* Prima che la misura e il motion scrivano le loro variabili, con il
-   movimento pieno il filo non c'è ancora (nessun lampo di filo intero). Con
-   reduced motion vale il default: tutto cucito. */
+/* Prima che misura e motion scrivano, con il movimento pieno il filo non
+   c'è ancora (niente lampo di filo intero). Reduced motion: tutto cucito. */
 .imp-root[data-motion="full"] .imp-legatoria__corpo {
   --imp-filo-p: 0;
 }
@@ -85,82 +99,137 @@
   );
 }
 
-/* Tratti dritti: una riga d'inchiostro che si srotola dall'alto. */
-/* Tratti dritti. Sotto, il percorso a matita (tratteggio sottile, come la
-   guida degli schemi); sopra, la riga d'inchiostro che si srotola
-   dall'alto (scaleY) mentre il filo attraversa il suo intervallo. */
+.imp-root .imp-legatoria__gruppo {
+  margin: 0;
+}
+
+.imp-root .imp-legatoria__fermate {
+  margin: 0;
+}
+
+/* --- tratti dritti --------------------------------------------------------- */
+
+/* Sotto il percorso a matita (tratteggio sottile), sopra l'inchiostro che si
+   srotola dal lato da cui arriva il filo. Solo transform. */
 .imp-root .imp-legatoria__tratto {
-  position: relative;
+  position: absolute;
   display: block;
-  inline-size: var(--filo-spessore);
-  margin-inline-start: calc(var(--filo-x) - var(--filo-spessore) / 2);
+  pointer-events: none;
 }
 
 .imp-root .imp-legatoria__tratto::before,
 .imp-root .imp-legatoria__tratto::after {
   content: "";
   position: absolute;
-  inset-block: 0;
-}
-
-.imp-root .imp-legatoria__tratto::before {
-  inset-inline-start: calc(50% - 0.5px * var(--filo-s));
-  inline-size: calc(1px * var(--filo-s));
-  background-image: repeating-linear-gradient(
-    to bottom,
-    currentColor 0 calc(1.5px * var(--filo-s)),
-    transparent calc(1.5px * var(--filo-s)) calc(5px * var(--filo-s))
-  );
-  opacity: 0.5;
 }
 
 .imp-root .imp-legatoria__tratto::after {
-  inset-inline: 0;
+  inset: 0;
   background-color: currentColor;
+}
+
+.imp-root .imp-legatoria__tratto--verticale {
+  inline-size: var(--filo-sp);
+}
+
+.imp-root .imp-legatoria__tratto--verticale::before {
+  inset-block: 0;
+  inset-inline-start: calc(50% - 0.5px);
+  inline-size: 1px;
+  background-image: repeating-linear-gradient(to bottom, currentColor 0 2px, transparent 2px 7px);
+  opacity: 0.45;
+}
+
+.imp-root .imp-legatoria__tratto--verticale::after {
   transform-origin: 50% 0;
   transform: scaleY(var(--filo-l));
 }
 
+.imp-root .imp-legatoria__tratto--orizzontale {
+  block-size: var(--filo-sp);
+}
+
+.imp-root .imp-legatoria__tratto--orizzontale::before {
+  inset-inline: 0;
+  inset-block-start: calc(50% - 0.5px);
+  block-size: 1px;
+  background-image: repeating-linear-gradient(to right, currentColor 0 2px, transparent 2px 7px);
+  opacity: 0.45;
+}
+
+.imp-root .imp-legatoria__tratto--orizzontale::after {
+  transform-origin: 0 50%;
+  transform: scaleX(var(--filo-l));
+}
+
+/* Il filo arriva da destra: si srotola da destra. */
+.imp-root .imp-legatoria__tratto--da-destra::after,
+.imp-root .imp-legatoria__tratto--fine-traversa::after {
+  transform-origin: 100% 50%;
+}
+
+/* Ingresso: sotto la testa, nel margine esterno (375) o nel primo schema. */
 .imp-root .imp-legatoria__tratto--ingresso {
-  block-size: var(--imp-sp-8);
-}
-
-/* La coda di ogni fermata: dal piede dello schema al piede della fermata,
-   accanto al testo, fino al primo foro della legatura successiva. */
-.imp-root .imp-legatoria__tratto--coda {
-  position: absolute;
-  inset-block: var(--filo-h) 0;
-  inset-inline-start: 0;
-}
-
-.imp-root .imp-legatoria__tratto--uscita {
-  flex: 1 1 auto;
-  min-block-size: var(--imp-sp-6);
+  position: relative;
+  block-size: var(--imp-sp-7);
+  margin-inline-start: calc(var(--filo-xr) - var(--filo-sp) / 2);
 }
 
 /* --------------------------------------------------------------------------
-   Le quattro fermate
+   Le fermate · 375
    -------------------------------------------------------------------------- */
-.imp-root .imp-legatoria__fermate {
-  margin: 0;
-}
-
 .imp-root .imp-legatoria__fermata {
+  --filo-xs: var(--filo-xd);
+  /* y del filo che passa sotto il nome (375). */
+  --filo-y: calc(var(--filo-testa) + var(--filo-h) + var(--imp-sp-5) + var(--filo-riga) + 6px);
   position: relative;
-  display: grid;
-  grid-template-columns: var(--filo-colonna) minmax(0, 1fr);
-  column-gap: var(--filo-canalino);
-  padding-block-end: var(--imp-sp-7);
+  display: flex;
+  flex-direction: column;
+  padding-block: var(--filo-testa) var(--imp-sp-7);
 }
 
-/* Lo schema: su 375 sta sopra il testo, allineato al filo del margine. */
+/* In testa: dal margine esterno allo schema, da destra. */
+.imp-root .imp-legatoria__tratto--entra {
+  inset-block-start: calc(var(--filo-sp) / -2);
+  inset-inline-start: calc(var(--filo-xs) - var(--filo-sp) / 2);
+  inline-size: calc(var(--filo-xr) - var(--filo-xs) + var(--filo-sp));
+}
+
+.imp-root .imp-legatoria__tratto--entra::after {
+  transform-origin: 100% 50%;
+}
+
+.imp-root .imp-legatoria__tratto--scende {
+  inset-block-start: 0;
+  inset-inline-start: calc(var(--filo-xs) - var(--filo-sp) / 2);
+  block-size: var(--filo-testa);
+}
+
+.imp-root .imp-legatoria__tratto--esce {
+  inset-block-start: calc(var(--filo-testa) + var(--filo-h));
+  inset-inline-start: calc(var(--filo-xs) - var(--filo-sp) / 2);
+  block-size: calc(var(--filo-y) - var(--filo-testa) - var(--filo-h));
+}
+
+/* Sotto il nome, fino al margine esterno. */
+.imp-root .imp-legatoria__tratto--traversa {
+  inset-block-start: calc(var(--filo-y) - var(--filo-sp) / 2);
+  inset-inline-start: calc(var(--filo-xs) - var(--filo-sp) / 2);
+  inline-size: calc(var(--filo-xr) - var(--filo-xs) + var(--filo-sp));
+}
+
+.imp-root .imp-legatoria__tratto--coda {
+  inset-block: var(--filo-y) 0;
+  inset-inline-start: calc(var(--filo-xr) - var(--filo-sp) / 2);
+}
+
+/* Lo schema. */
 .imp-root .imp-legatoria__schema {
-  grid-column: 1 / -1;
-  grid-row: 1;
   display: block;
+  flex: none;
   inline-size: var(--filo-w);
   block-size: var(--filo-h);
-  margin-inline-start: calc(var(--filo-x) - 16px * var(--filo-s));
+  margin-inline-start: calc(var(--filo-xs) - var(--filo-xd));
 }
 
 .imp-root .imp-legatoria__svg {
@@ -169,35 +238,27 @@
   overflow: visible;
 }
 
-.imp-root .imp-legatoria__testo {
-  grid-column: 2;
-  grid-row: 2;
-  max-inline-size: var(--imp-giustezza);
-  padding-block-start: var(--imp-sp-4);
-}
-
 /* --- segni della cucitura -------------------------------------------------- */
 
-/* Il percorso a matita: dove passerà l'ago. Sparisce quando il filo aggancia. */
+/* Il percorso a matita: dove passerà l'ago. Svanisce quando il filo aggancia. */
 .imp-root .imp-legatoria__guida {
   stroke-width: 1;
   stroke-dasharray: 1.5 3.5;
   opacity: calc(0.5 * (1 - var(--imp-filo-aggancio, 1)));
 }
 
-/* Il filo cucito dello schema: pathLength 1, si disegna col suo intervallo.
-   Sull'aggancio si tende (spessore con la molla "tiro", 1,5% di elongazione). */
+/* Il filo cucito dello schema: pathLength 1. Sull'aggancio si tende. */
 .imp-root .imp-legatoria__cucito {
-  stroke-dasharray: 1 2;
-  stroke-dashoffset: calc(1 - var(--filo-l));
+  stroke-dasharray: 1px 2px;
+  stroke-dashoffset: calc((1 - var(--filo-l)) * 1px);
   stroke-width: calc(2.1px + 0.3px * var(--imp-filo-aggancio, 1));
   opacity: calc(var(--filo-l) * 400);
 }
 
 /* Le graffe del punto metallico battono insieme sull'aggancio. */
 .imp-root .imp-legatoria__graffa {
-  stroke-dasharray: 1 2;
-  stroke-dashoffset: calc(1 - var(--imp-filo-aggancio, 1));
+  stroke-dasharray: 1px 2px;
+  stroke-dashoffset: calc((1 - var(--imp-filo-aggancio, 1)) * 1px);
   opacity: calc(var(--imp-filo-aggancio, 1) * 400);
 }
 
@@ -208,23 +269,121 @@
   stroke-opacity: calc(0.45 + 0.55 * var(--imp-filo-aggancio, 1));
 }
 
+/* I numeri dei fori sono quote da disegno tecnico: il nome sta sul filo. */
 .imp-root .imp-legatoria__svg [id$="-numeri"] {
-  opacity: calc(0.5 + 0.5 * var(--imp-filo-aggancio, 1));
+  display: none;
 }
 
 .imp-root .imp-legatoria__svg [id$="-carta"],
 .imp-root .imp-legatoria__svg [id$="-fettucce"] {
-  opacity: 0.55;
+  opacity: 0.6;
 }
 
-/* --- testo della fermata: fermo, in inchiostro ----------------------------- */
+/* --- testo della fermata --------------------------------------------------- */
+
+.imp-root .imp-legatoria__testo {
+  max-inline-size: var(--imp-giustezza);
+  padding-block-start: var(--imp-sp-5);
+}
+
+/* Il nome con il suo nodo. Su 375 il filo gli passa sotto (--filo-y). */
+.imp-root .imp-legatoria__nome-riga {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  column-gap: var(--imp-sp-3);
+  min-block-size: var(--filo-riga);
+  padding-block-end: 6px;
+  padding-inline-start: calc(var(--filo-xs) + var(--filo-nodo-d) / 2 + var(--imp-sp-2));
+}
 
 .imp-root .imp-legatoria__nome {
   margin: 0;
+  white-space: nowrap;
+}
+
+.imp-root .imp-legatoria__scelto {
+  font-size: var(--imp-fs-nota);
+  line-height: var(--imp-lh-piccolo);
+  font-weight: 600;
+}
+
+/* Il laccio (da 600): il ramo di filo tra il primo foro e il nodo. */
+.imp-root .imp-legatoria__laccio {
+  display: none;
+}
+
+/* Il nodo è un radio vero: vuoto a matita finché non lo scegli. Su 375 sta
+   sull'angolo in cui il filo esce dallo schema e gira sotto il nome. */
+.imp-root .imp-legatoria__nodo-scelta {
+  position: absolute;
+  inset-block-start: calc(var(--filo-y) - var(--filo-nodo-d) / 2);
+  inset-inline-start: calc(var(--filo-xs) - var(--filo-nodo-d) / 2);
+  display: grid;
+  place-items: center;
+  inline-size: var(--filo-nodo-d);
+  block-size: var(--filo-nodo-d);
+  flex: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Area di tocco 44 × 44 attorno al nodo. */
+.imp-root .imp-legatoria__nodo-scelta::after {
+  content: "";
+  position: absolute;
+  inset: calc((44px - var(--filo-nodo-d)) / -2);
+}
+
+.imp-root .imp-legatoria__radio {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+  z-index: 1;
+}
+
+.imp-root .imp-legatoria__nodo-segno {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  border-radius: 50%;
+  background-color: var(--imp-carta);
+  box-shadow: inset 0 0 0 calc(1px + 1.5px * var(--imp-filo-aggancio, 1)) currentColor;
+  transition: box-shadow var(--imp-ix-rapido, 140ms) linear;
+}
+
+/* Scelto: il nodo si stringe, pieno d'inchiostro con l'occhiello chiaro. */
+.imp-root .imp-legatoria__radio:checked + .imp-legatoria__nodo-segno {
+  box-shadow:
+    inset 0 0 0 calc(var(--filo-nodo-d) / 2 - 3px) currentColor,
+    inset 0 0 0 calc(var(--filo-nodo-d) / 2) currentColor;
+  background-color: var(--imp-carta);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .imp-root .imp-legatoria__nodo-scelta:hover .imp-legatoria__nodo-segno {
+    box-shadow: inset 0 0 0 3px currentColor;
+  }
+
+  .imp-root .imp-legatoria__nodo-scelta:hover .imp-legatoria__radio:checked + .imp-legatoria__nodo-segno {
+    box-shadow:
+      inset 0 0 0 calc(var(--filo-nodo-d) / 2 - 3px) currentColor,
+      inset 0 0 0 calc(var(--filo-nodo-d) / 2) currentColor;
+  }
+}
+
+.imp-root .imp-legatoria__nodo-scelta:has(.imp-legatoria__radio:focus-visible) {
+  outline: var(--imp-focus-spessore, 3px) solid var(--imp-ix-anello, var(--imp-inchiostro));
+  outline-offset: var(--imp-focus-distanza, 3px);
+  border-radius: 50%;
 }
 
 .imp-root .imp-legatoria__cosa {
-  margin: var(--imp-sp-3) 0 0;
+  margin: var(--imp-sp-4) 0 0;
   font-size: var(--imp-fs-corpo);
   line-height: var(--imp-lh-corpo);
 }
@@ -237,70 +396,50 @@
 }
 
 .imp-root .imp-legatoria__prezzo {
-  margin: var(--imp-sp-5) 0 0;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  column-gap: var(--imp-sp-4);
-  row-gap: var(--imp-sp-1);
+  margin: var(--imp-sp-4) 0 0;
+  font-size: var(--imp-fs-piccolo);
+  line-height: var(--imp-lh-piccolo);
 }
 
 .imp-root .imp-legatoria__cifra {
   font-family: var(--imp-font-display);
   font-synthesis: none;
-  font-size: var(--imp-fs-prezzo);
-  font-weight: var(--imp-wght-prezzo);
-  font-variation-settings: "wdth" var(--imp-wdth-prezzo), "wght" var(--imp-wght-prezzo);
+  font-size: var(--imp-fs-titolo-3);
+  font-weight: 800;
+  font-variation-settings: "wdth" var(--imp-wdth-prezzo), "wght" 800;
   line-height: 1;
   letter-spacing: -0.01em;
   font-variant-numeric: lining-nums tabular-nums;
   white-space: nowrap;
+  margin-inline-end: var(--imp-sp-1);
 }
 
-.imp-root .imp-legatoria__prezzo-testo {
-  font-size: var(--imp-fs-piccolo);
+.imp-root .imp-legatoria__nota {
+  margin: var(--imp-sp-2) 0 0;
+  font-size: var(--imp-fs-nota);
   line-height: var(--imp-lh-piccolo);
-  letter-spacing: var(--imp-trk-piccolo);
+  font-weight: 500;
 }
 
 /* --------------------------------------------------------------------------
-   Fine del filo: le ultime righe, il nodo, "Prova la tua"
+   Fine del filo · 375: il filo scende nel margine, torna a sinistra sotto
+   "Prova la tua" e si chiude nel nodo.
    -------------------------------------------------------------------------- */
 .imp-root .imp-legatoria__fine {
-  display: grid;
-  grid-template-columns: var(--filo-colonna) minmax(0, 1fr);
-  column-gap: var(--filo-canalino);
+  --filo-xf: var(--filo-xr);
+  position: relative;
+  padding-block-start: var(--filo-testa);
 }
 
-.imp-root .imp-legatoria__fine-filo {
-  grid-column: 1;
-  display: flex;
-  flex-direction: column;
-  /* Il nodo si chiude all'altezza del centro del bottone. */
-  padding-block-end: calc(var(--imp-bottone-h) / 2 - var(--filo-nodo) / 2);
+.imp-root .imp-legatoria__tratto--fine-scende {
+  inset-block: 0 calc(var(--filo-sp) / -2);
+  inset-inline-start: calc(var(--filo-xf) - var(--filo-sp) / 2);
 }
 
-.imp-root .imp-legatoria__nodo {
-  flex: none;
-  inline-size: var(--filo-nodo);
-  block-size: var(--filo-nodo);
-  margin-inline-start: calc(var(--filo-x) - var(--filo-nodo) / 2);
-  overflow: visible;
-}
-
-.imp-root .imp-legatoria__nodo-cerchio {
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2.4;
-  stroke-linecap: round;
-  stroke-dasharray: 1 2;
-  stroke-dashoffset: calc(1 - var(--filo-l));
-  opacity: calc(var(--filo-l) * 400);
-}
-
-.imp-root .imp-legatoria__fine-testo {
-  grid-column: 2;
-  padding-block-start: var(--imp-sp-4);
+.imp-root .imp-legatoria__tratto--fine-traversa {
+  inset-block-end: calc(var(--filo-sp) / -2);
+  inset-inline-start: calc(var(--filo-fine-d) - var(--filo-sp) / 2);
+  inline-size: calc(var(--filo-xf) - var(--filo-fine-d) + var(--filo-sp));
 }
 
 .imp-root .imp-legatoria__note {
@@ -313,164 +452,290 @@
   letter-spacing: var(--imp-trk-piccolo);
 }
 
-.imp-root .imp-legatoria__note > li:first-child {
+.imp-root .imp-legatoria__note > .imp-legatoria__riferimento {
   font-size: var(--imp-fs-corpo);
   line-height: var(--imp-lh-corpo);
   font-weight: var(--imp-wght-corpo-forte);
   letter-spacing: 0;
 }
 
-.imp-root .imp-legatoria__legature {
+.imp-root .imp-legatoria__per-il-banco {
   margin: var(--imp-sp-7) 0 0;
-}
-
-.imp-root .imp-legatoria__legenda {
-  margin-block-end: var(--imp-sp-3);
-  font-size: var(--imp-fs-piccolo);
-  line-height: var(--imp-lh-piccolo);
-  font-weight: var(--imp-wght-corpo-forte);
-}
-
-/* Le quattro legature come quattro rettangoli di carta: due per riga su
-   375, in fila da 600. Scelta = bordo interno d'inchiostro più la parola. */
-.imp-root .imp-legatoria__opzioni {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--imp-sp-2);
-}
-
-.imp-root .imp-legatoria__opzione {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  min-block-size: 56px;
-  padding: var(--imp-sp-2) var(--imp-sp-3);
-  font-size: var(--imp-fs-piccolo);
-  line-height: 1.2;
-  background-color: color-mix(in srgb, var(--imp-carta-luce) 45%, transparent);
-}
-
-.imp-root .imp-legatoria__opzione-nome {
-  font-weight: var(--imp-wght-corpo-forte);
-}
-
-.imp-root .imp-legatoria__opzione-segno {
-  font-size: var(--imp-fs-nota);
-  font-weight: 500;
-}
-
-.imp-root .imp-legatoria__nota-punto {
-  margin: var(--imp-sp-3) 0 0;
   font-size: var(--imp-fs-nota);
   line-height: var(--imp-lh-piccolo);
   font-weight: 500;
 }
 
+/* "Prova la tua": un link tipografico sottolineato dal filo stesso. */
 .imp-root .imp-legatoria__azione {
-  margin-block-start: var(--imp-sp-5);
+  position: relative;
   display: flex;
+  align-items: flex-end;
+  margin-block-start: var(--imp-sp-2);
+  padding-inline-start: calc(var(--filo-fine-d) + var(--imp-sp-3));
+}
+
+.imp-root .imp-legatoria__nodo {
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-end: calc(var(--filo-fine-d) / -2);
+  inline-size: var(--filo-fine-d);
+  block-size: var(--filo-fine-d);
+  overflow: visible;
+}
+
+.imp-root .imp-legatoria__nodo-cerchio {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-dasharray: 1px 2px;
+  stroke-dashoffset: calc((1 - var(--filo-l)) * 1px);
+  opacity: calc(var(--filo-l) * 400);
 }
 
 .imp-root .imp-legatoria__prova {
-  flex: 1 1 auto;
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-block-size: var(--imp-bottone-h);
-  padding-inline: 28px;
-  font-size: var(--imp-fs-bottone);
-  font-weight: var(--imp-wght-bottone);
-  line-height: var(--imp-lh-interfaccia);
+  align-items: flex-end;
+  min-block-size: 44px;
+  padding-block-end: 8px;
+  font-family: var(--imp-font-display);
+  font-synthesis: none;
+  font-size: var(--imp-fs-titolo-3);
+  font-weight: var(--imp-wght-titolo-3);
+  font-variation-settings: "wdth" var(--imp-wdth-titolo-3), "wght" var(--imp-wght-titolo-3);
+  line-height: 1.08;
+  color: inherit;
   text-decoration: none;
   white-space: nowrap;
+  transition: transform var(--imp-ix-rapido, 140ms) var(--imp-ix-curva-rilascio, ease-out);
+}
+
+/* Sotto la mano la riga premuta scende di 1 px nel filo. */
+@media (hover: hover) and (pointer: fine) {
+  .imp-root .imp-legatoria__prova:hover {
+    transform: translateY(2px);
+  }
+}
+
+.imp-root .imp-legatoria__prova:active {
+  transform: translateY(3px);
 }
 
 /* --------------------------------------------------------------------------
-   Da 600 px: lo schema a sinistra del testo, il filo al bordo dello schema
+   Da 600 px: serpentina a tutta area. Schema a sinistra nelle fermate
+   "dritte", a destra nelle "rovescie"; il testo nelle colonne libere.
    -------------------------------------------------------------------------- */
 @media (min-width: 600px) {
   .imp-root .imp-legatoria {
-    --filo-s: 0.95;
-    --filo-x: calc(16px * var(--filo-s));
-    --filo-colonna: calc(var(--imp-colonna) * 3 + var(--imp-canalino) * 2);
-    --filo-canalino: var(--imp-canalino);
-  }
-
-  .imp-root .imp-legatoria__corpo {
-    margin-block-start: var(--imp-sp-8);
+    --filo-w: calc(var(--imp-colonna) * 4 + var(--imp-canalino) * 3);
+    /* Colonne tra il bordo del testo e lo schema. */
+    --filo-stacco: var(--imp-canalino);
+    --filo-testa: var(--imp-sp-8);
   }
 
   .imp-root .imp-legatoria__tratto--ingresso {
-    block-size: var(--imp-sp-9);
+    block-size: var(--imp-sp-8);
+    margin-inline-start: calc(var(--filo-xd) - var(--filo-sp) / 2);
   }
 
   .imp-root .imp-legatoria__fermata {
-    grid-template-rows: auto;
-    padding-block-end: var(--imp-sp-9);
+    --filo-xs: var(--filo-xd);
+    display: grid;
+    grid-template-columns: repeat(var(--imp-colonne), minmax(0, 1fr));
+    column-gap: var(--imp-canalino);
+    align-items: start;
+    padding-block: var(--filo-testa) 0;
+  }
+
+  .imp-root .imp-legatoria__fermata[data-verso="rovescio"] {
+    --filo-xs: var(--filo-xrov);
+  }
+
+  /* In testa: il filo attraversa la pagina dallo schema di prima a questo. */
+  .imp-root .imp-legatoria__tratto--entra {
+    inset-inline-start: calc(var(--filo-xd) - var(--filo-sp) / 2);
+    inline-size: calc(var(--filo-xrov) - var(--filo-xd) + var(--filo-sp));
+  }
+
+  .imp-root .imp-legatoria__fermata[data-verso="rovescio"] .imp-legatoria__tratto--entra::after {
+    transform-origin: 0 50%;
+  }
+
+  .imp-root .imp-legatoria__fermata:first-child .imp-legatoria__tratto--entra,
+  .imp-root .imp-legatoria__tratto--esce,
+  .imp-root .imp-legatoria__tratto--traversa {
+    display: none;
+  }
+
+  .imp-root .imp-legatoria__tratto--coda {
+    inset-block: calc(var(--filo-testa) + var(--filo-h)) 0;
+    inset-inline-start: calc(var(--filo-xs) - var(--filo-sp) / 2);
   }
 
   .imp-root .imp-legatoria__schema {
-    grid-column: 1;
     grid-row: 1;
+    grid-column: 1 / span 4;
+    justify-self: start;
     margin-inline-start: 0;
   }
 
+  .imp-root .imp-legatoria__fermata[data-verso="rovescio"] .imp-legatoria__schema {
+    grid-column: 5 / -1;
+    justify-self: end;
+  }
+
+  /* Il testo nelle colonne libere, con la riga del nome all'altezza del
+     foro a cui è appeso (--filo-gy: y del foro su 300). */
   .imp-root .imp-legatoria__testo {
-    grid-column: 2;
     grid-row: 1;
-    /* Il nome sta all'altezza del primo foro dello schema. */
-    padding-block-start: calc(46px * var(--filo-s));
+    grid-column: 5 / -1;
+    max-inline-size: none;
+    padding-block-start: calc(var(--filo-w) * var(--filo-gy) / 240 - var(--filo-riga) / 2);
   }
 
-  .imp-root .imp-legatoria__opzioni {
-    grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+  .imp-root .imp-legatoria__fermata[data-verso="rovescio"] .imp-legatoria__testo {
+    grid-column: 1 / span 4;
   }
 
-  .imp-root .imp-legatoria__prova {
+  .imp-root .imp-legatoria__testo > :not(.imp-legatoria__nome-riga) {
+    max-inline-size: min(100%, var(--imp-giustezza));
+  }
+
+  /* Dove il laccio si aggancia allo schema: x e y del foro, su 240 × 300. */
+  .imp-root .imp-legatoria__fermata[data-legatura="brossura"] {
+    --filo-gx: 164;
+    --filo-gy: 68;
+  }
+
+  .imp-root .imp-legatoria__fermata[data-legatura="cartonato"] {
+    --filo-gx: 92;
+    --filo-gy: 64;
+  }
+
+  .imp-root .imp-legatoria__fermata[data-legatura="giapponese"] {
+    --filo-gx: 122;
+    --filo-gy: 92;
+  }
+
+  .imp-root .imp-legatoria__fermata[data-legatura="punto-metallico"] {
+    --filo-gx: 104;
+    --filo-gy: 100;
+  }
+
+  .imp-root .imp-legatoria__nome-riga {
+    padding-block-end: 0;
+    padding-inline-start: 0;
+  }
+
+  .imp-root .imp-legatoria__nodo-scelta {
+    position: relative;
+    inset: auto;
+  }
+
+  /* Laccio: dal foro dello schema al nodo, largo metà del filo, tirato
+     dall'aggancio. Dritto: esce a sinistra oltre il bordo del testo. */
+  .imp-root .imp-legatoria__laccio {
+    display: block;
     flex: none;
+    position: relative;
+    align-self: center;
+    block-size: max(1.5px, calc(var(--filo-sp) * 0.6));
+    inline-size: calc(var(--filo-stacco) + var(--filo-w) * (240 - var(--filo-gx)) / 240 - var(--imp-sp-3));
+    margin-inline-start: calc(-1 * (var(--filo-stacco) + var(--filo-w) * (240 - var(--filo-gx)) / 240));
+  }
+
+  .imp-root .imp-legatoria__laccio::before,
+  .imp-root .imp-legatoria__laccio::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+  }
+
+  .imp-root .imp-legatoria__laccio::before {
+    inset-block: calc(50% - 0.5px);
+    background-image: repeating-linear-gradient(to right, currentColor 0 2px, transparent 2px 7px);
+    opacity: 0.45;
+  }
+
+  .imp-root .imp-legatoria__laccio::after {
+    background-color: currentColor;
+    transform-origin: 0 50%;
+    transform: scaleX(var(--imp-filo-aggancio, 1));
+  }
+
+  /* Rovescio: nome, nodo, poi il laccio verso destra fino al foro. */
+  .imp-root .imp-legatoria__fermata[data-verso="rovescio"] .imp-legatoria__laccio {
+    order: 3;
+    flex: 1 1 auto;
+    inline-size: auto;
+    margin-inline-start: 0;
+    margin-inline-end: calc(-1 * (var(--filo-stacco) + var(--filo-w) * var(--filo-gx) / 240));
+  }
+
+  .imp-root .imp-legatoria__fermata[data-verso="rovescio"] .imp-legatoria__laccio::after {
+    transform-origin: 100% 50%;
+  }
+
+  .imp-root .imp-legatoria__fermata[data-verso="rovescio"] .imp-legatoria__nome {
+    order: 1;
+  }
+
+  .imp-root .imp-legatoria__fermata[data-verso="rovescio"] .imp-legatoria__scelto {
+    order: 2;
+  }
+
+  .imp-root .imp-legatoria__fermata[data-verso="rovescio"] .imp-legatoria__nodo-scelta {
+    order: 2;
+  }
+
+  /* Fine: il filo scende dall'ultimo schema (a destra) e torna a sinistra
+     sotto "Prova la tua". */
+  .imp-root .imp-legatoria__fine {
+    --filo-xf: var(--filo-xrov);
+    display: grid;
+    grid-template-columns: repeat(var(--imp-colonne), minmax(0, 1fr));
+    column-gap: var(--imp-canalino);
+    align-items: end;
+  }
+
+  .imp-root .imp-legatoria__fine > :not(.imp-legatoria__tratto) {
+    grid-column: 1 / span 4;
   }
 }
 
-/* --------------------------------------------------------------------------
-   Da 1024 px: colonna del filo c1-c4, testo da c5; fermate sfalsate di una
-   colonna (c5-c10, c6-c11) come nel wireframe dell'ux-architect.
-   -------------------------------------------------------------------------- */
+/* Da 1024: 12 colonne, schemi di 5 colonne (476 × 595 px a 1440), una
+   colonna vuota tra testo e schema. */
 @media (min-width: 1024px) {
   .imp-root .imp-legatoria {
-    --filo-s: 1.1;
-    --filo-colonna: calc(var(--imp-colonna) * 4 + var(--imp-canalino) * 3);
+    --filo-w: calc(var(--imp-colonna) * 5 + var(--imp-canalino) * 4);
+    --filo-stacco: calc(var(--imp-colonna) + var(--imp-canalino) * 2);
+    --filo-testa: var(--imp-sp-9);
+    --filo-nodo-d: 24px;
   }
 
   .imp-root .imp-legatoria__testa {
     max-inline-size: calc(var(--imp-colonna) * 6 + var(--imp-canalino) * 5);
   }
 
-  .imp-root .imp-legatoria__testo,
-  .imp-root .imp-legatoria__fine-testo {
-    max-inline-size: calc(var(--imp-colonna) * 6 + var(--imp-canalino) * 5);
+  .imp-root .imp-legatoria__testo {
+    grid-column: 7 / span 5;
   }
 
   .imp-root .imp-legatoria__fermata[data-verso="rovescio"] .imp-legatoria__testo {
-    margin-inline-start: calc(var(--imp-colonna) + var(--imp-canalino));
+    grid-column: 2 / span 5;
   }
-}
 
-@media (min-width: 1200px) {
-  .imp-root .imp-legatoria {
-    --filo-s: 1.3;
+  .imp-root .imp-legatoria__schema {
+    grid-column: 1 / span 5;
   }
-}
 
-@media (min-width: 1400px) {
-  .imp-root .imp-legatoria {
-    --filo-s: 1.5;
+  .imp-root .imp-legatoria__fermata[data-verso="rovescio"] .imp-legatoria__schema {
+    grid-column: 8 / -1;
   }
-}
 
-@media (min-width: 1640px) {
-  .imp-root .imp-legatoria {
-    --filo-s: 1.6;
+  .imp-root .imp-legatoria__fine > :not(.imp-legatoria__tratto) {
+    grid-column: 1 / span 6;
   }
 }
 
@@ -487,6 +752,10 @@
   .imp-root .imp-legatoria__fermata {
     --imp-filo-aggancio: 1;
   }
+
+  .imp-root .imp-legatoria__prova {
+    transition: none;
+  }
 }
 
 .imp-root[data-motion="reduced"] .imp-legatoria__pezzo {
@@ -494,13 +763,28 @@
 }
 
 @media (forced-colors: active) {
-  .imp-root .imp-legatoria__tratto::after {
+  .imp-root .imp-legatoria__tratto::after,
+  .imp-root .imp-legatoria__laccio::after {
     background-color: CanvasText;
     forced-color-adjust: none;
   }
+
+  .imp-root .imp-legatoria__nodo-segno {
+    forced-color-adjust: none;
+    background-color: Canvas;
+    box-shadow: inset 0 0 0 2px CanvasText;
+  }
+
+  .imp-root .imp-legatoria__radio:checked + .imp-legatoria__nodo-segno {
+    background-color: Highlight;
+  }
+
+  .imp-root .imp-legatoria__prova {
+    text-decoration: underline;
+  }
 }
 
-/* Stampa: il filo intero, niente animazioni. */
+/* Stampa: il filo intero. */
 @media print {
   .imp-root .imp-legatoria__pezzo {
     --filo-l: 1;

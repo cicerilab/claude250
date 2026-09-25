@@ -1,37 +1,45 @@
 /**
  * IMPRONTA · sezione 5 · Legatoria, "il filo" (`#legatoria`).
- * Proprietario: section-builder-legatoria (ondata 3).
+ * Proprietario: section-builder-legatoria (ondata 3, giro 2).
  *
- * Un solo filo d'inchiostro scende lungo il margine interno e, a ogni
- * legatura, passa nei fori veri di quella legatura (schemi del
- * vector-artist). Si cuce con lo scroll (`useFilo` del motion-designer:
- * `--imp-filo-p` con le soste, `--imp-filo-aggancio` e
- * `data-imp-agganciato` su ogni fermata). Accanto a ogni schema il testo è
- * già lì, fermo, in inchiostro: cos'è, per cosa sceglierla, prezzo.
- * In fondo "Prova la tua" porta al banco con libro e la legatura su cui il
- * lettore si è fermato di più (brossura se nessuna).
+ * Un solo filo d'inchiostro attraversa tutta l'area viva: da 600 px va a
+ * serpentina da un lato all'altro della pagina e a ogni fermata passa nei
+ * fori veri di una legatura (schemi del vector-artist, grandi, 500-600 px
+ * d'altezza a 1440); su 375 corre nel margine esterno, entra nello schema e
+ * sottolinea il nome della legatura. Il nome di ogni legatura è appeso al
+ * filo: un laccio parte dal primo foro dello schema e arriva al nodo accanto
+ * al nome (da 600 px), o il filo stesso passa sotto il nome (375). Il nodo è
+ * un radio vero: scegli la legatura toccando il suo nodo.
  *
- * Misure: una volta al montaggio, su ResizeObserver del corpo e a font
- * pronti. Si misura la lunghezza vera di ogni pezzo in px (tratti dritti,
- * schemi in scala, nodo) e si scrive su ciascuno il suo intervallo
- * (`--filo-da`, `--filo-a`); le soste passate a `useFilo` sono le frazioni
- * in cui il filo finisce di cucire ogni legatura. Nessuna lettura di layout
- * durante lo scroll.
+ * Il filo si cuce con lo scroll (`useFilo` del motion-designer:
+ * `--imp-filo-p` con le soste, `--imp-filo-aggancio` e `data-imp-agganciato`
+ * su ogni fermata). Il testo è già lì, fermo, in inchiostro.
  *
- * Reduced motion: `useFilo` scrive 1 e aggancia tutto: filo già cucito.
+ * In fondo il filo scende e sottolinea "Prova la tua" (un solo richiamo,
+ * testuale: la lamina resta della testata) e si chiude in un nodo. Il link
+ * imposta libro + la legatura scelta sul nodo, oppure, se non l'hai scelta,
+ * quella che hai letto più a lungo (brossura se nessuna). I radio non si
+ * spuntano mai da soli (B6 dell'accessibility-auditor): la preselezione vale
+ * solo per il link ed è scritta accanto.
+ *
+ * Misure: al montaggio, su ResizeObserver del corpo e a font pronti. Si
+ * misura la lunghezza vera di ogni pezzo in px e si scrive su ciascuno il
+ * suo intervallo (`--filo-da`, `--filo-a`); le soste passate a `useFilo`
+ * sono le frazioni in cui il filo finisce di cucire ogni legatura. Nessuna
+ * lettura di layout durante lo scroll. Reduced motion: filo già cucito.
  * Nessun accesso a window/document a livello di modulo.
  */
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import './legatoria.css';
 
 import { FILI, type Legatura as LegaturaSvg } from '../../assets/svg';
-import { BANCO, BOTTEGA, COMUNI, LEGATORIA, LEGATURE_NOMI, euro } from '../../content/testi';
+import { BANCO, BOTTEGA, COMUNI, LEGATORIA, LEGATURE_NOMI, PRODOTTI, euro } from '../../content/testi';
 import { LEGATORIA_A_COPIA, LEGATURA_DEFAULT, type Legatura } from '../../content/prezzi';
 import { LEGATORIA as MOTION_LEGATORIA } from '../../motion/choreography';
 import { useFilo } from '../../motion/useScrollProgress';
-import { LEGATURE_VALIDE, aggiornaProva } from '../../state/store';
-import { NODO_R, NodoFilo, SCHEMA_W, SchemaFilo, TrattoFilo } from './Filo';
+import { aggiornaProva } from '../../state/store';
+import { NODO_R, NodoFilo, SCHEMA_W, SchemaFilo, TrattoFilo, type RuoloTratto } from './Filo';
 
 /** Legatura dei testi e dei prezzi → nome dello schema SVG. */
 const SVG_DI: Record<Legatura, LegaturaSvg> = {
@@ -44,8 +52,8 @@ const SVG_DI: Record<Legatura, LegaturaSvg> = {
 /**
  * Punto dello schema (frazione del suo path) in cui la legatura è "fatta":
  * fine della cucitura per le tre cucite; per il punto metallico il filo
- * della sezione passa accanto alle graffe a metà schema (le graffe
- * battono insieme, come le teste della cucitrice).
+ * della sezione passa accanto alle graffe a metà schema (le graffe battono
+ * insieme, come le teste della cucitrice).
  */
 function fineCucitura(chiave: LegaturaSvg): number {
   if (chiave === 'punto-metallico') return 0.5;
@@ -56,9 +64,13 @@ const N = LEGATORIA.voci.length;
 /** Tempo minimo di lettura (ms) perché una legatura conti come "vista". */
 const SOGLIA_VISTA = 700;
 
+/** Pezzi del filo di ogni fermata, nell'ordine in cui il filo li percorre. */
+const PEZZI_FERMATA = ['entra', 'scende', 'schema', 'esce', 'traversa', 'coda'] as const;
+type PezzoFermata = (typeof PEZZI_FERMATA)[number];
+
 /** Il simbolo dell'euro non va mai a capo da solo ("90 €"). */
 function unito(testo: string): string {
-  return testo.replace(/ €/g, '\u00a0€');
+  return testo.replace(/ €/g, ' €');
 }
 
 function stessiNumeri(a: readonly number[], b: readonly number[]): boolean {
@@ -75,21 +87,32 @@ function scriviIntervallo(el: Element | null, da: number, a: number): void {
   el.style.setProperty('--filo-a', Math.max(a, da + 1e-5).toFixed(5));
 }
 
+/** Lunghezza in px di un tratto dritto: larghezza se orizzontale, altezza se verticale. */
+function lunghezzaTratto(el: HTMLElement | null): number {
+  if (el === null) return 0;
+  return el.dataset.versoTratto === 'orizzontale' ? el.offsetWidth : el.offsetHeight;
+}
+
+function mappaVuota(): Record<PezzoFermata, HTMLElement | null> {
+  return { entra: null, scende: null, schema: null, esce: null, traversa: null, coda: null };
+}
+
 export default function Legatoria() {
   const corpoRef = useRef<HTMLDivElement>(null);
   const ingressoRef = useRef<HTMLSpanElement>(null);
-  const uscitaRef = useRef<HTMLSpanElement>(null);
+  const fineScendeRef = useRef<HTMLSpanElement>(null);
+  const fineTraversaRef = useRef<HTMLSpanElement>(null);
   const nodoRef = useRef<SVGSVGElement>(null);
   const fermateRef = useRef<Array<HTMLLIElement | null>>(Array.from({ length: N }, () => null));
-  const schemiRef = useRef<Array<HTMLSpanElement | null>>(Array.from({ length: N }, () => null));
-  const codeRef = useRef<Array<HTMLSpanElement | null>>(Array.from({ length: N }, () => null));
+  const pezziRef = useRef<Array<Record<PezzoFermata, HTMLElement | null>>>(Array.from({ length: N }, mappaVuota));
   const testiRef = useRef<Array<HTMLDivElement | null>>(Array.from({ length: N }, () => null));
 
   const [soste, setSoste] = useState<readonly number[]>(MOTION_LEGATORIA.soste);
-  const [scelta, setScelta] = useState<Legatura>(LEGATURA_DEFAULT);
+  /** Scelta fatta dal lettore sul nodo (null finché non tocca nulla). */
+  const [scelta, setScelta] = useState<Legatura | null>(null);
+  /** Legatura letta più a lungo: vale solo come default del link. */
+  const [vista, setVista] = useState<Legatura>(LEGATURA_DEFAULT);
   const permanenzaRef = useRef<number[]>(Array.from({ length: N }, () => 0));
-  /** Il lettore ha scelto a mano la legatura: il tempo di lettura non la cambia più. */
-  const sceltaManualeRef = useRef(false);
 
   /* ---------------------------------------------------------------- misura del filo */
 
@@ -97,24 +120,26 @@ export default function Legatoria() {
     const pezzi: Array<{ el: Element | null; lunghezza: number }> = [];
     let scala = 1;
 
-    const ingresso = ingressoRef.current;
-    pezzi.push({ el: ingresso, lunghezza: ingresso?.offsetHeight ?? 0 });
+    pezzi.push({ el: ingressoRef.current, lunghezza: lunghezzaTratto(ingressoRef.current) });
 
-    const finiSchema: number[] = [];
+    const indiciSchema: number[] = [];
     LEGATORIA.voci.forEach((voce, i) => {
-      const chiave = SVG_DI[voce.id];
-      const schema = schemiRef.current[i] ?? null;
-      const larghezza = schema?.getBoundingClientRect().width ?? 0;
-      if (larghezza > 0) scala = larghezza / SCHEMA_W;
-      const lunghezza = FILI[chiave].lunghezza * (larghezza / SCHEMA_W);
-      finiSchema.push(pezzi.length);
-      pezzi.push({ el: schema, lunghezza });
-      const coda = codeRef.current[i] ?? null;
-      pezzi.push({ el: coda, lunghezza: coda?.offsetHeight ?? 0 });
+      const mappa = pezziRef.current[i] ?? mappaVuota();
+      for (const nome of PEZZI_FERMATA) {
+        const el = mappa[nome];
+        if (nome === 'schema') {
+          const larghezza = el?.getBoundingClientRect().width ?? 0;
+          if (larghezza > 0) scala = larghezza / SCHEMA_W;
+          indiciSchema.push(pezzi.length);
+          pezzi.push({ el, lunghezza: FILI[SVG_DI[voce.id]].lunghezza * (larghezza / SCHEMA_W) });
+        } else {
+          pezzi.push({ el, lunghezza: lunghezzaTratto(el) });
+        }
+      }
     });
 
-    const uscita = uscitaRef.current;
-    pezzi.push({ el: uscita, lunghezza: uscita?.offsetHeight ?? 0 });
+    pezzi.push({ el: fineScendeRef.current, lunghezza: lunghezzaTratto(fineScendeRef.current) });
+    pezzi.push({ el: fineTraversaRef.current, lunghezza: lunghezzaTratto(fineTraversaRef.current) });
     pezzi.push({ el: nodoRef.current, lunghezza: 2 * Math.PI * NODO_R * scala });
 
     const totale = pezzi.reduce((s, p) => s + p.lunghezza, 0);
@@ -129,11 +154,10 @@ export default function Legatoria() {
     }
 
     const nuove = LEGATORIA.voci.map((voce, i) => {
-      const indice = finiSchema[i] ?? 0;
+      const indice = indiciSchema[i] ?? 0;
       const pezzo = pezzi[indice];
       const inizio = inizi[indice] ?? 0;
-      const frazione = fineCucitura(SVG_DI[voce.id]);
-      return (inizio + frazione * (pezzo?.lunghezza ?? 0)) / totale;
+      return (inizio + fineCucitura(SVG_DI[voce.id]) * (pezzo?.lunghezza ?? 0)) / totale;
     });
     setSoste((prima) => (stessiNumeri(prima, nuove) ? prima : nuove));
   }, []);
@@ -158,25 +182,22 @@ export default function Legatoria() {
 
   /* ---------------------------------------------------------------- il filo con lo scroll */
 
-  useFilo(corpoRef, {
-    fermate: fermateRef,
-    soste,
-  });
+  useFilo(corpoRef, { fermate: fermateRef, soste });
 
-  /* ---------------------------------------------------------------- quale legatura hai guardato */
+  /* ---------------------------------------------------------------- quale legatura hai letto */
 
   /*
    * "La legatura dell'ultima fermata vista" (ux-architect 5.5): arrivati in
    * fondo il filo le ha passate tutte, quindi conta il tempo. Una fascia al
    * centro dello schermo misura quanto resta sotto gli occhi il testo di
-   * ciascuna; vince la più letta (a parità, la più recente). Sotto la soglia
-   * resta la brossura cucita.
+   * ciascuna; vince la più letta (a parità, la più recente). Non tocca i
+   * radio: serve solo al link in fondo, che lo dice accanto.
    */
   useEffect(() => {
     const entrate: Array<number | null> = Array.from({ length: N }, () => null);
     const permanenza = permanenzaRef.current;
 
-    const aggiornaScelta = (): void => {
+    const aggiornaVista = (): void => {
       let migliore = -1;
       let massimo = SOGLIA_VISTA;
       permanenza.forEach((ms, i) => {
@@ -185,9 +206,8 @@ export default function Legatoria() {
           migliore = i;
         }
       });
-      if (sceltaManualeRef.current) return;
       const voce = migliore >= 0 ? LEGATORIA.voci[migliore] : undefined;
-      setScelta(voce !== undefined ? voce.id : LEGATURA_DEFAULT);
+      setVista(voce !== undefined ? voce.id : LEGATURA_DEFAULT);
     };
 
     const io = new IntersectionObserver(
@@ -206,7 +226,7 @@ export default function Legatoria() {
             }
           }
         }
-        aggiornaScelta();
+        aggiornaVista();
       },
       { rootMargin: '-38% 0px -38% 0px', threshold: 0 },
     );
@@ -218,14 +238,16 @@ export default function Legatoria() {
     };
   }, []);
 
-  const provaLaTua = (_evento: ReactMouseEvent<HTMLAnchorElement>): void => {
+  const perIlBanco: Legatura = scelta ?? vista;
+
+  const provaLaTua = (): void => {
     // Il viaggio verso #banco lo fa il listener delegato di Impronta.tsx.
-    aggiornaProva({ prodotto: 'libro', legatura: scelta });
+    aggiornaProva({ prodotto: 'libro', legatura: perIlBanco });
   };
 
-  const scegli = (legatura: Legatura): void => {
-    sceltaManualeRef.current = true;
-    setScelta(legatura);
+  const registraPezzo = (i: number, nome: PezzoFermata) => (el: HTMLElement | null) => {
+    const mappa = pezziRef.current[i];
+    if (mappa !== undefined) mappa[nome] = el;
   };
 
   return (
@@ -242,110 +264,104 @@ export default function Legatoria() {
         <div ref={corpoRef} className="imp-legatoria__corpo">
           <TrattoFilo ref={ingressoRef} ruolo="ingresso" />
 
-          <ol className="imp-legatoria__fermate imp-lista">
-            {LEGATORIA.voci.map((voce, i) => {
-              const chiave = SVG_DI[voce.id];
-              return (
-                <li
-                  key={voce.id}
-                  ref={(el) => {
-                    fermateRef.current[i] = el;
-                  }}
-                  className="imp-legatoria__fermata"
-                  data-legatura={chiave}
-                  data-verso={i % 2 === 0 ? 'dritto' : 'rovescio'}
-                  aria-labelledby={`legatoria-${voce.id}`}
-                >
-                  <SchemaFilo
-                    ref={(el: HTMLSpanElement | null) => {
-                      schemiRef.current[i] = el;
-                    }}
-                    legatura={chiave}
-                  />
-                  <TrattoFilo
+          <fieldset className="imp-legatoria__gruppo">
+            <legend className="imp-sr">{BANCO.legatura.legenda}</legend>
+            <ol className="imp-legatoria__fermate imp-lista">
+              {LEGATORIA.voci.map((voce, i) => {
+                const chiave = SVG_DI[voce.id];
+                const idNome = `legatoria-${voce.id}`;
+                const scelto = scelta === voce.id;
+                const tratto = (ruolo: Exclude<PezzoFermata, 'schema'> & RuoloTratto) => (
+                  <TrattoFilo ref={registraPezzo(i, ruolo)} ruolo={ruolo} />
+                );
+                return (
+                  <li
+                    key={voce.id}
                     ref={(el) => {
-                      codeRef.current[i] = el;
+                      fermateRef.current[i] = el;
                     }}
-                    ruolo="coda"
-                  />
-
-                  <div
-                    ref={(el) => {
-                      testiRef.current[i] = el;
-                    }}
-                    className="imp-legatoria__testo"
+                    className="imp-legatoria__fermata"
+                    data-legatura={chiave}
+                    data-verso={i % 2 === 0 ? 'dritto' : 'rovescio'}
+                    data-scelto={scelto ? '' : undefined}
                   >
-                    <h3 id={`legatoria-${voce.id}`} className="imp-legatoria__nome">
-                      {voce.titolo}
-                    </h3>
-                    <p className="imp-legatoria__cosa">{unito(voce.testo)}</p>
-                    <p className="imp-legatoria__quando">{voce.perCosa}</p>
-                    <p className="imp-legatoria__prezzo">
-                      <span className="imp-legatoria__cifra" aria-hidden="true">
-                        {euro(LEGATORIA_A_COPIA[voce.id])}
-                      </span>
-                      <span className="imp-legatoria__prezzo-testo">{unito(voce.prezzo)}</span>
-                    </p>
-                    <p className="imp-sr">{voce.filoAlt}</p>
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
+                    {tratto('entra')}
+                    {tratto('scende')}
+                    <SchemaFilo ref={registraPezzo(i, 'schema')} legatura={chiave} />
+                    {tratto('esce')}
+                    {tratto('traversa')}
+                    {tratto('coda')}
+
+                    <div
+                      ref={(el) => {
+                        testiRef.current[i] = el;
+                      }}
+                      className="imp-legatoria__testo"
+                    >
+                      <div className="imp-legatoria__nome-riga">
+                        <span className="imp-legatoria__laccio" aria-hidden="true" />
+                        <label className="imp-legatoria__nodo-scelta">
+                          <input
+                            className="imp-legatoria__radio"
+                            type="radio"
+                            name="legatoria-legatura"
+                            value={voce.id}
+                            checked={scelto}
+                            aria-labelledby={idNome}
+                            onChange={() => {
+                              setScelta(voce.id);
+                            }}
+                          />
+                          <span className="imp-legatoria__nodo-segno" aria-hidden="true" />
+                        </label>
+                        <h3 id={idNome} className="imp-legatoria__nome">
+                          {voce.titolo}
+                        </h3>
+                        {scelto ? <span className="imp-legatoria__scelto">{BANCO.carta.scelta}</span> : null}
+                      </div>
+                      <p className="imp-legatoria__cosa">{voce.testo}</p>
+                      <p className="imp-legatoria__quando">{voce.perCosa}</p>
+                      <p className="imp-legatoria__prezzo">
+                        <span className="imp-legatoria__cifra">{euro(LEGATORIA_A_COPIA[voce.id])}</span>{' '}
+                        <span className="imp-legatoria__prezzo-testo">{voce.prezzoDopoCifra}</span>
+                      </p>
+                      {voce.id === 'punto' ? <p className="imp-legatoria__nota">{BANCO.legatura.notaPunto}</p> : null}
+                      <p className="imp-sr">{voce.filoAlt}</p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          </fieldset>
 
           <div className="imp-legatoria__fine">
-            <div className="imp-legatoria__fine-filo" aria-hidden="true">
-              <TrattoFilo ref={uscitaRef} ruolo="uscita" />
+            <TrattoFilo ref={fineScendeRef} ruolo="fine-scende" />
+            <TrattoFilo ref={fineTraversaRef} ruolo="fine-traversa" />
+
+            <ul className="imp-legatoria__note imp-lista">
+              <li className="imp-legatoria__riferimento">{LEGATORIA.riferimento}</li>
+              <li>{BOTTEGA.tempi}</li>
+              <li>{unito(LEGATORIA.tesi)}</li>
+              <li>{unito(LEGATORIA.restauro)}</li>
+            </ul>
+
+            <p id="legatoria-per-il-banco" className="imp-legatoria__per-il-banco">
+              {`${PRODOTTI.libro.nome}, ${LEGATURE_NOMI[perIlBanco].nome.toLowerCase()}`}
+            </p>
+
+            <div className="imp-legatoria__azione">
               <NodoFilo ref={nodoRef} />
-            </div>
-
-            <div className="imp-legatoria__fine-testo">
-              <ul className="imp-legatoria__note imp-lista">
-                <li>{LEGATORIA.tiraturaMinima}</li>
-                <li>{BOTTEGA.tempi}</li>
-                <li>{unito(LEGATORIA.tesi)}</li>
-                <li>{unito(LEGATORIA.restauro)}</li>
-              </ul>
-
-              <fieldset className="imp-legatoria__legature">
-                <legend className="imp-legatoria__legenda">{BANCO.legatura.legenda}</legend>
-                <div className="imp-legatoria__opzioni">
-                  {LEGATURE_VALIDE.map((legatura) => {
-                    const attiva = legatura === scelta;
-                    return (
-                      <label key={legatura} className="imp-legatoria__opzione imp-ix-scelta imp-ix-premibile">
-                        <input
-                          className="imp-ix-scelta__input"
-                          type="radio"
-                          name="legatoria-legatura"
-                          value={legatura}
-                          checked={attiva}
-                          onChange={() => {
-                            scegli(legatura);
-                          }}
-                        />
-                        <span className="imp-legatoria__opzione-nome">{LEGATURE_NOMI[legatura].breve}</span>
-                        {attiva ? <span className="imp-legatoria__opzione-segno">{BANCO.carta.scelta}</span> : null}
-                      </label>
-                    );
-                  })}
-                </div>
-                {scelta === 'punto' ? <p className="imp-legatoria__nota-punto">{BANCO.legatura.notaPunto}</p> : null}
-              </fieldset>
-
-              <div className="imp-legatoria__azione">
-                <a
-                  href="#banco"
-                  className="imp-legatoria__prova imp-lamina imp-ix-premibile"
-                  aria-describedby="legatoria-prova-aria"
-                  onClick={provaLaTua}
-                >
-                  {COMUNI.provaLaTua}
-                </a>
-                <span id="legatoria-prova-aria" className="imp-sr">
-                  {LEGATORIA.provaAria}
-                </span>
-              </div>
+              <a
+                href="#banco"
+                className="imp-legatoria__prova"
+                aria-describedby="legatoria-prova-aria legatoria-per-il-banco"
+                onClick={provaLaTua}
+              >
+                {COMUNI.provaLaTua}
+              </a>
+              <span id="legatoria-prova-aria" className="imp-sr">
+                {LEGATORIA.provaAria}
+              </span>
             </div>
           </div>
         </div>

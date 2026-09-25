@@ -86,25 +86,27 @@ const ID_INDICE_LUCE = 'imp-indice-luce';
 const SOGLIA_ATTACCATA = 4;
 /** Scroll in su (px, sommato) che fa tornare la riga mobile dopo un'uscita. */
 const RIENTRO_SU = 28;
+/** Dopo uno spostamento del fuoco fuori dalla testata, per questo tempo la riga non rientra (ms). */
+const FUOCO_RECENTE_MS = 400;
 /** Differenza tra altezza della finestra e della viewport visibile oltre cui la tastiera è aperta. */
 const SOGLIA_TASTIERA = 150;
 /** Banda di lettura per la sezione corrente: una riga al 38% dell'altezza. */
 const BANDA_SEZIONE = '-38% 0px -61% 0px';
 
 /**
- * Voce della testata desktop da accendere per ogni sezione (ux-architect 2.2):
- * le sezioni senza voce accendono la voce più vicina che le precede; nell'hero
- * e nel banco non si accende nulla.
+ * Voce della testata desktop da accendere per ogni sezione. Giro 2 (giuria:
+ * "lavori" acceso in tecniche e carta dice il falso): si accende solo la voce
+ * della sezione in cui si è davvero; nelle sezioni senza voce, nessuna.
  */
 const VOCE_PER_SEZIONE: Readonly<Record<SezioneId, string | null>> = {
   inizio: null,
   lavori: 'lavori',
-  tecniche: 'lavori',
-  carta: 'lavori',
+  tecniche: null,
+  carta: null,
   legatoria: 'legatoria',
   banco: null,
   bottega: 'bottega',
-  colophon: 'bottega',
+  colophon: null,
 };
 
 /* ------------------------------------------------------------------ utilità */
@@ -150,25 +152,59 @@ function useSezioneCorrente(): SezioneId {
   return sezione;
 }
 
-/** true finché il bottone "Prova la tua" dell'hero è (anche solo in parte) sullo schermo. */
-function useCtaHeroVisibile(): boolean {
-  const [visibile, setVisibile] = useState(true);
+/**
+ * true quando sullo schermo c'è già un altro collegamento al banco ("Prova la
+ * tua" dell'hero, dei pezzi di Per chi, della legatoria, del colophon…).
+ * Allora i richiami della testata e dell'angolo in basso si tolgono di mezzo:
+ * un solo "Prova la tua" per schermo (giuria giro 1, responsive-tester).
+ * Osserva tutti gli `a[href="#banco"]` del contenuto tranne i propri
+ * (`data-imp-richiamo="testata|segnapagina"`), anche quelli montati dopo.
+ */
+function useAltroRichiamoInVista(ref: RefObject<HTMLElement>): boolean {
+  const [inVista, setInVista] = useState(true);
   useEffect(() => {
-    const el = document.querySelector('[data-imp-hero-cta]');
-    if (el === null || typeof IntersectionObserver === 'undefined') return undefined;
+    const radice = ref.current?.closest('.imp-contenuto') ?? null;
+    if (radice === null || typeof IntersectionObserver === 'undefined') return undefined;
+    const visibili = new Set<Element>();
+    const osservati = new Set<Element>();
     const osservatore = new IntersectionObserver(
       (voci) => {
-        const ultima = voci[voci.length - 1];
-        if (ultima !== undefined) setVisibile(ultima.isIntersecting);
+        for (const v of voci) {
+          if (v.isIntersecting) visibili.add(v.target);
+          else visibili.delete(v.target);
+        }
+        setInVista(visibili.size > 0);
       },
       { threshold: 0 },
     );
-    osservatore.observe(el);
+    const scandisci = (): void => {
+      const presenti = new Set<Element>();
+      for (const a of Array.from(radice.querySelectorAll('a[href="#banco"]'))) {
+        const mio = a.getAttribute('data-imp-richiamo');
+        if (mio === 'testata' || mio === 'segnapagina' || a.closest('dialog') !== null) continue;
+        presenti.add(a);
+        if (!osservati.has(a)) {
+          osservati.add(a);
+          osservatore.observe(a);
+        }
+      }
+      for (const a of Array.from(osservati)) {
+        if (presenti.has(a)) continue;
+        osservati.delete(a);
+        visibili.delete(a);
+        osservatore.unobserve(a);
+      }
+      setInVista(visibili.size > 0);
+    };
+    scandisci();
+    const mutazioni = typeof MutationObserver !== 'undefined' ? new MutationObserver(scandisci) : null;
+    mutazioni?.observe(radice, { childList: true, subtree: true });
     return () => {
+      mutazioni?.disconnect();
       osservatore.disconnect();
     };
-  }, []);
-  return visibile;
+  }, [ref]);
+  return inVista;
 }
 
 /** true con la tastiera del telefono aperta (la viewport visibile si accorcia molto). */
@@ -214,6 +250,8 @@ function useStatoTestata(ref: RefObject<HTMLElement>, bloccata: boolean): void {
     let scrittoVia: boolean | null = null;
     let fuocoDentro = false;
     let dopoViaggio = false;
+    /** Istante dell'ultimo spostamento del fuoco FUORI dalla testata (A2 punto 3). */
+    let fuocoFuoriAl = Number.NEGATIVE_INFINITY;
 
     const leggi = (): void => {
       const y = runtime.scrollY;
@@ -244,6 +282,12 @@ function useStatoTestata(ref: RefObject<HTMLElement>, bloccata: boolean): void {
         via = true;
         su = 0;
       } else if (dy < -0.5) {
+        // Scorrimento all'indietro causato dal fuoco (Shift+Tab): la riga non
+        // rientra, altrimenti coprirebbe l'elemento appena portato in vista.
+        if (performance.now() - fuocoFuoriAl < FUOCO_RECENTE_MS) {
+          su = 0;
+          return;
+        }
         su += -dy;
         if (su >= RIENTRO_SU) via = false;
       }
@@ -269,8 +313,13 @@ function useStatoTestata(ref: RefObject<HTMLElement>, bloccata: boolean): void {
       ticker.wake();
     };
 
+    const suFuocoDocumento = (e: FocusEvent): void => {
+      if (e.target instanceof Node && !el.contains(e.target)) fuocoFuoriAl = performance.now();
+    };
+
     el.addEventListener('focusin', suFuocoDentro);
     el.addEventListener('focusout', suFuocoFuori);
+    document.addEventListener('focusin', suFuocoDocumento);
     const togliLeggi = ticker.add(leggi, 'read');
     const togliScrivi = ticker.add(scrivi, 'write');
     const togliViaggio = viaggioAncora.ascolta(() => {
@@ -281,6 +330,7 @@ function useStatoTestata(ref: RefObject<HTMLElement>, bloccata: boolean): void {
     return () => {
       el.removeEventListener('focusin', suFuocoDentro);
       el.removeEventListener('focusout', suFuocoFuori);
+      document.removeEventListener('focusin', suFuocoDocumento);
       togliLeggi();
       togliScrivi();
       togliViaggio();
@@ -364,7 +414,6 @@ function Indice({ aperto, sezione, onChiuso, annuncia }: PropsIndice) {
       setStato('chiuso');
       dialog.showModal();
       sbloccaRef.current = bloccaScroll();
-      annuncia(ANNUNCI.indiceAperto);
       let passo2 = 0;
       const passo1 = window.requestAnimationFrame(() => {
         passo2 = window.requestAnimationFrame(() => {
@@ -395,7 +444,6 @@ function Indice({ aperto, sezione, onChiuso, annuncia }: PropsIndice) {
       window.clearTimeout(timerRef.current);
       setStato('chiuso');
       if (foglioRef.current !== null) foglioRef.current.style.transform = '';
-      annuncia(ANNUNCI.indiceChiuso);
       onChiusoRef.current();
     };
     dialog.addEventListener('cancel', suCancel);
@@ -426,7 +474,7 @@ function Indice({ aperto, sezione, onChiuso, annuncia }: PropsIndice) {
     premutoSulFondo.current = false;
   };
 
-  /* ---------- trascinamento verso il basso (dalla testa del foglio) */
+  /* ---------- trascinamento verso l'alto (dal piede del foglio, dove c'è la linguetta) */
   const trascina = useRef<{
     id: number;
     y0: number;
@@ -440,7 +488,8 @@ function Indice({ aperto, sezione, onChiuso, annuncia }: PropsIndice) {
   const scriviSpostamento = useCallback((px: number): void => {
     const foglio = foglioRef.current;
     if (foglio === null) return;
-    foglio.style.transform = px > 0.1 ? `translate3d(0, ${px.toFixed(1)}px, 0)` : '';
+    // Il foglio scende dall'alto: si richiude tirandolo in SU (px verso l'alto).
+    foglio.style.transform = px > 0.1 ? `translate3d(0, ${(-px).toFixed(1)}px, 0)` : '';
   }, []);
 
   const fermaTick = (): void => {
@@ -483,7 +532,7 @@ function Indice({ aperto, sezione, onChiuso, annuncia }: PropsIndice) {
   const suMuoviTesta = (e: ReactPointerEvent<HTMLDivElement>): void => {
     const t = trascina.current;
     if (t === null || t.id !== e.pointerId) return;
-    t.dy = Math.max(0, e.clientY - t.y0);
+    t.dy = Math.max(0, t.y0 - e.clientY);
     t.campioni.push({ y: e.clientY, t: e.timeStamp });
     if (t.campioni.length > 5) t.campioni.shift();
     ticker.wake();
@@ -501,7 +550,7 @@ function Indice({ aperto, sezione, onChiuso, annuncia }: PropsIndice) {
     const primo = t.campioni[0];
     const ultimo = t.campioni[t.campioni.length - 1];
     const velocita =
-      primo !== undefined && ultimo !== undefined && ultimo.t > primo.t ? (ultimo.y - primo.y) / (ultimo.t - primo.t) : 0;
+      primo !== undefined && ultimo !== undefined && ultimo.t > primo.t ? (primo.y - ultimo.y) / (ultimo.t - primo.t) : 0;
 
     if (t.dy > t.altezza * MOTO_INDICE.sogliaChiusura || velocita > MOTO_INDICE.velocitaChiusura) {
       // Dalla posizione corrente il CSS porta il foglio giù (stato 'scende').
@@ -583,14 +632,7 @@ function Indice({ aperto, sezione, onChiuso, annuncia }: PropsIndice) {
       onClick={suClicDialog}
     >
       <div ref={foglioRef} className="imp-indice__foglio">
-        <div
-          className="imp-indice__testa"
-          onPointerDown={suGiuTesta}
-          onPointerMove={suMuoviTesta}
-          onPointerUp={suSuTesta}
-          onPointerCancel={suAnnullaTesta}
-        >
-          <span className="imp-indice__linguetta" aria-hidden="true" />
+        <div className="imp-indice__testa">
           <h2 id={ID_INDICE_TITOLO} className="imp-indice__titolo">
             {TESTI_INDICE.titolo}
           </h2>
@@ -688,6 +730,17 @@ function Indice({ aperto, sezione, onChiuso, annuncia }: PropsIndice) {
             </div>
           ) : null}
         </div>
+
+        <div
+          className="imp-indice__piede"
+          onPointerDown={suGiuTesta}
+          onPointerMove={suMuoviTesta}
+          onPointerUp={suSuTesta}
+          onPointerCancel={suAnnullaTesta}
+          aria-hidden="true"
+        >
+          <span className="imp-indice__linguetta" />
+        </div>
       </div>
     </dialog>
   );
@@ -698,7 +751,7 @@ function Indice({ aperto, sezione, onChiuso, annuncia }: PropsIndice) {
 export default function Testata() {
   const headerRef = useRef<HTMLElement>(null);
   const sezione = useSezioneCorrente();
-  const ctaHeroVisibile = useCtaHeroVisibile();
+  const altroInVista = useAltroRichiamoInVista(headerRef);
   const tastiera = useTastieraAperta();
   const [indiceAperto, setIndiceAperto] = useState(false);
   const [annuncio, setAnnuncio] = useState('');
@@ -715,14 +768,17 @@ export default function Testata() {
 
   const voceAccesa = VOCE_PER_SEZIONE[sezione];
   const nelBanco = sezione === 'banco';
-  const richiamoVisibile = !ctaHeroVisibile && !nelBanco && sezione !== 'colophon' && !tastiera && !indiceAperto;
+  // Un solo "Prova la tua" per schermo: i due richiami della testata stanno
+  // fuori finché un altro collegamento al banco è in vista.
+  const ctaTestata = !altroInVista && !nelBanco;
+  const richiamoVisibile = ctaTestata && !tastiera && !indiceAperto;
 
   const stileMarchio = { '--imp-segno': `url("${marchioUrl}")` } as CSSProperties;
 
   return (
     <>
       <header ref={headerRef} className="imp-testata">
-        <div className="imp-testata__barra imp-page">
+        <div className="imp-testata__barra" data-cta={ctaTestata || nelBanco ? '' : undefined}>
           <a href="#inizio" className="imp-testata__marchio" aria-label={TESTATA.marchioAria}>
             <span className="imp-testata__segno imp-segno-caldo" style={stileMarchio} aria-hidden="true">
               <span className="imp-segno-caldo__lamina" />
@@ -749,7 +805,14 @@ export default function Testata() {
             {nelBanco ? (
               <span className="imp-testata__sul-banco">{COMUNI.seiSulBanco}</span>
             ) : (
-              <a href="#banco" className="imp-testata__cta imp-lamina imp-ix-premibile" aria-label={TESTATA.provaAria}>
+              <a
+                href="#banco"
+                className="imp-testata__cta imp-ix-premibile"
+                aria-label={TESTATA.provaAria}
+                data-imp-richiamo="testata"
+                aria-hidden={ctaTestata ? undefined : true}
+                tabIndex={ctaTestata ? undefined : -1}
+              >
                 {COMUNI.provaLaTua}
               </a>
             )}
@@ -772,8 +835,9 @@ export default function Testata() {
 
       <a
         href="#banco"
-        className="imp-segnapagina imp-lamina imp-ix-premibile"
+        className="imp-segnapagina imp-ix-premibile"
         aria-label={TESTATA.provaAria}
+        data-imp-richiamo="segnapagina"
         data-visibile={richiamoVisibile ? '' : undefined}
         aria-hidden={richiamoVisibile ? undefined : true}
         tabIndex={richiamoVisibile ? undefined : -1}

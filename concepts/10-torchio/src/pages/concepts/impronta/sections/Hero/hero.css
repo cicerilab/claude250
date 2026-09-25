@@ -1,47 +1,38 @@
 /* ==========================================================================
-   IMPRONTA · Hero, "la pressa" (section-builder-hero)
+   IMPRONTA · Hero, "la pressa" (section-builder-hero, giro 2)
    --------------------------------------------------------------------------
-   Una pagina di libro (recto): la parola *impronta* premuta a secco, larga
-   esattamente quanto l'area viva tra il margine interno e quello esterno;
-   sotto, fuori centro verso l'interno, il titolo in inchiostro, il
-   sottotitolo e l'unico bottone. Il resto è carta vuota: lì gioca la luce.
+   La parola premuta è l'oggetto: due righe, "impron" e "ta", stesso corpo,
+   la prima larga quanto l'area viva, la seconda chiusa sul margine esterno.
+   Il blocco in inchiostro è agganciato alla parola:
+   - da 1024 px nel vuoto a sinistra di "ta", appeso alla linea della x;
+   - sotto, subito sotto "ta".
+   L'hero è alto quanto il suo contenuto (nessun min-height a schermo
+   intero, quindi nessun vuoto). Da 1680 px la parola esce dalla gabbia
+   della pagina e usa tutta la finestra (margini da libro), così a 2560 non
+   resta piccola: è la copertina.
 
-   Regole seguite (DESIGN.md, art-director §3.4):
-   - solo variabili --imp-*, nessun hex;
-   - colore e ombre del testo premuto li decidono le classi materiali
-     (.imp-secco, .imp-inchiostro, .imp-lamina): qui non si ridefiniscono;
-   - la parola a interlinea 0,86 non sta in un contenitore con overflow
-     nascosto (la "p" scende sotto il box);
-   - gli assi della parola li calcola .imp-pressa da --imp-press: qui si dà
-     solo l'arrivo (--imp-wdth-hero / --imp-wght-hero dei token).
-   Tutti i selettori partono da .imp-root.
+   Regole (DESIGN.md, art-director §3.4): solo variabili --imp-*; colore e
+   ombre del rilievo li danno le classi materiali (.imp-secco,
+   .imp-inchiostro, .imp-lamina); gli assi della parola li calcola
+   .imp-pressa da --imp-press (qui solo l'arrivo); niente overflow nascosto
+   attorno a righe con interlinea 0,86. Tutti i selettori da .imp-root.
    ========================================================================== */
 
 .imp-root .imp-hero {
-  --_imp-testata: 56px;
   position: relative;
-  display: flex;
-  flex-direction: column;
-  min-block-size: calc(100vh - var(--_imp-testata));
-  min-block-size: calc(100svh - var(--_imp-testata));
-  /* Testa corta dopo la testata (≤ 96 px, DESIGN.md §5), piede da libro. */
-  padding-block: clamp(24px, calc(4svh + 8px), 64px) var(--imp-piede);
-  scroll-margin-block-start: 0;
+  padding-block: clamp(12px, 2.5svh, 32px) var(--imp-sp-7);
+  padding-inline: var(--imp-margine-interno) var(--imp-margine-esterno);
 }
 
 @media (min-width: 1024px) {
   .imp-root .imp-hero {
-    --_imp-testata: var(--imp-testata-h);
-    padding-block-start: clamp(32px, calc(14svh - var(--imp-testata-h)), 96px);
+    padding-block: clamp(16px, 3svh, 40px) var(--imp-sp-8);
   }
 }
 
 /* --------------------------------------------------------------------------
-   La parola premuta
-   Il piano è un contenitore di query: la sua larghezza di contenuto È l'area
-   viva (padding della gabbia esclusi), anche con la barra di scorrimento
-   visibile. Il corpo si calcola da lì: larghezza / larghezza della parola in
-   em (tokens: 5,479 / 6,819 / 8,158 alle tre larghezze d'arrivo).
+   Il piano: contenitore di query largo quanto l'area viva. Tutte le misure
+   della parola si calcolano da qui (100cqi), barra di scorrimento esclusa.
    -------------------------------------------------------------------------- */
 .imp-root .imp-hero__piano {
   position: relative;
@@ -49,57 +40,72 @@
   inline-size: 100%;
 }
 
-.imp-root .imp-hero__parola {
-  --imp-wdth-arrivo: var(--imp-wdth-hero);
-  --imp-wght-arrivo: var(--imp-wght-hero);
-  font-size: var(--imp-fs-secco-hero);
-  line-height: var(--imp-lh-secco);
-  letter-spacing: var(--imp-trk-secco);
-  text-transform: none;
-  /* Il fantasma non è testo da selezionare: è materiale. Il tocco sulla
-     parola sposta la luce (è carta, per light.ts). */
-  user-select: none;
-  -webkit-user-select: none;
-  /* La "p" scende di 0,09 em sotto il box: nessun overflow nascosto qui né
-     sui contenitori, e il titolo sta ben più sotto (margine del blocco). */
+.imp-root .imp-hero__composizione {
+  /* Larghezza in em della riga più lunga: misura del DOM, o stima prima. */
+  --_imp-em: var(--imp-hero-em-misurato, var(--imp-hero-em-s, 3.9));
+  /* Corpo: la riga più lunga riempie l'area viva; tetto al 42% della
+     finestra per tutte le righe insieme (interlinea 0,86). */
+  --_imp-fs: min(
+    calc(var(--imp-area-viva) / var(--_imp-em)),
+    calc(42svh / (var(--imp-hero-righe, 2) * 0.86))
+  );
+  display: grid;
+  grid-template-columns: repeat(var(--imp-colonne), minmax(0, 1fr));
+  column-gap: var(--imp-canalino);
+  align-items: start;
 }
 
 @supports (inline-size: 1cqi) {
-  .imp-root .imp-hero__parola {
-    font-size: calc(100cqi / var(--imp-hero-em));
+  .imp-root .imp-hero__composizione {
+    --_imp-fs: min(
+      calc(100cqi / var(--_imp-em)),
+      calc(42svh / (var(--imp-hero-righe, 2) * 0.86))
+    );
   }
 }
 
-/* Dopo l'invio: il testo del cliente al posto di *impronta*. Corpo stimato
-   dalle misure di Anybody (Hero.tsx scrive la larghezza in em alle tre
-   larghezze d'arrivo), mai più grande della parola originale, con il 3% di
-   margine sull'errore della stima: il testo non supera mai il margine. */
-.imp-root .imp-hero__parola[data-cliente] {
-  --_imp-em: var(--imp-hero-em-s, var(--imp-hero-em));
-  font-size: min(var(--imp-fs-secco-hero), calc(var(--imp-area-viva) / var(--imp-hero-em-misurato, var(--_imp-em)) * 0.97));
-}
-
 @media (min-width: 600px) {
-  .imp-root .imp-hero__parola[data-cliente] {
-    --_imp-em: var(--imp-hero-em-m, var(--imp-hero-em));
+  .imp-root .imp-hero__composizione {
+    --_imp-em: var(--imp-hero-em-misurato, var(--imp-hero-em-m, 5));
   }
 }
 
 @media (min-width: 1024px) {
-  .imp-root .imp-hero__parola[data-cliente] {
-    --_imp-em: var(--imp-hero-em-l, var(--imp-hero-em));
+  .imp-root .imp-hero__composizione {
+    --_imp-em: var(--imp-hero-em-misurato, var(--imp-hero-em-l, 6.1));
   }
 }
 
-@supports (inline-size: 1cqi) {
-  .imp-root .imp-hero__parola[data-cliente] {
-    font-size: min(calc(100cqi / var(--imp-hero-em)), calc(100cqi / var(--imp-hero-em-misurato, var(--_imp-em)) * 0.995));
-  }
+/* --------------------------------------------------------------------------
+   Le righe premute
+   -------------------------------------------------------------------------- */
+.imp-root .imp-hero__riga {
+  --imp-wdth-arrivo: var(--imp-wdth-hero);
+  --imp-wght-arrivo: var(--imp-wght-hero);
+  grid-column: 1 / -1;
+  font-size: var(--_imp-fs);
+  line-height: var(--imp-lh-secco);
+  letter-spacing: var(--imp-trk-secco);
+  text-transform: none;
+  /* Materiale, non testo da selezionare: il dito qui sposta la luce. */
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
 }
 
-/* Il gemello che misura il testo del cliente: 100 px, assi d'arrivo della
-   parola, dentro una scatola 0 × 0 (nessun ingombro, nessuno scorrimento). */
-.imp-root .imp-hero__misura {
+.imp-root .imp-hero__riga--1 {
+  grid-row: 1;
+}
+
+/* "ta" chiude sul margine esterno. Box a tutta larghezza (text-align), così
+   la pressa che allarga la parola non cambia la misura del blocco. */
+.imp-root .imp-hero__riga--2 {
+  grid-row: 2;
+  text-align: right;
+}
+
+/* I gemelli di misura: 100 px, assi d'arrivo, in una scatola 0 × 0. */
+.imp-root .imp-hero__misure {
   position: absolute;
   inset-block-start: 0;
   inset-inline-start: 0;
@@ -110,7 +116,7 @@
   pointer-events: none;
 }
 
-.imp-root .imp-hero__misura-testo {
+.imp-root .imp-hero__misura {
   position: absolute;
   inset-block-start: 0;
   inset-inline-start: 0;
@@ -125,28 +131,30 @@
 }
 
 /* --------------------------------------------------------------------------
-   Il blocco in inchiostro: ancorato al margine interno, mai centrato.
-   4 colonne (375), 8 (600-1023), 12 (1440): titolo su 8 colonne, sottotitolo
-   su 5, colonne 9-12 e margine esterno vuoti.
+   Il blocco in inchiostro. Sotto 1024 px: sotto l'ultima riga, a 24-40 px
+   dalla linea di base (il box della riga scende 0,15 em sotto la base).
    -------------------------------------------------------------------------- */
 .imp-root .imp-hero__testo {
-  margin-block-start: clamp(40px, 9svh, 112px);
-  row-gap: 0;
+  position: relative;
+  z-index: 1;
+  grid-column: 1 / -1;
+  grid-row: 3;
+  margin-block-start: max(12px, calc(36px - 0.15 * var(--_imp-fs)));
 }
 
-.imp-root .imp-hero__testo > * {
-  grid-column: 1 / -1;
+.imp-root .imp-hero__piano[data-righe="1"] .imp-hero__testo {
+  grid-row: 2;
 }
 
 .imp-root .imp-hero__titolo {
-  /* Assi, corpo e interlinea della voce titolo-1 (base.css); inchiostro con
-     il solco appena accennato (.imp-inchiostro, pressione 1 dal primo frame). */
+  /* Assi e interlinea della voce titolo-1 (base.css); inchiostro con il
+     solco appena accennato (.imp-inchiostro, pressione 1 dal primo frame). */
   max-inline-size: 22ch;
   text-wrap: balance;
 }
 
 .imp-root .imp-hero__sotto {
-  margin-block-start: var(--imp-sp-5);
+  margin-block-start: var(--imp-sp-4);
   max-inline-size: 36ch;
   font-size: var(--imp-fs-lead);
   line-height: var(--imp-lh-lead);
@@ -154,22 +162,15 @@
   text-wrap: pretty;
 }
 
-.imp-root .imp-hero__azioni {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--imp-sp-5);
-  margin-block-start: var(--imp-sp-6);
-}
-
-/* L'unico bottone: lamina argento, raggio 0, filo di bordo (DESIGN.md §4).
-   Su mobile a larghezza piena (52 px), da 600 px a misura del testo (56 px). */
+/* L'unico bottone dell'hero: lamina (art-director), raggio 0.
+   Su mobile a larghezza piena, poi a misura del testo. */
 .imp-root .imp-hero__cta {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   inline-size: 100%;
   min-block-size: var(--imp-bottone-h);
+  margin-block-start: var(--imp-sp-5);
   padding-inline: 28px;
   font-family: var(--imp-font-testo);
   font-size: var(--imp-fs-bottone);
@@ -180,7 +181,7 @@
   white-space: nowrap;
 }
 
-/* Dial della luce: solo desktop (ux-architect 6.3). */
+/* Dial della luce: solo da 1024 px (ux-architect 6.3). */
 .imp-root .imp-hero__luce {
   display: none;
   align-items: center;
@@ -192,7 +193,6 @@
   font-size: var(--imp-fs-nota);
   font-weight: var(--imp-wght-interfaccia);
   line-height: var(--imp-lh-interfaccia);
-  letter-spacing: 0.01em;
 }
 
 /* --------------------------------------------------------------------------
@@ -243,78 +243,68 @@
 }
 
 /* --------------------------------------------------------------------------
-   600 px: margini da libro, 8 colonne, bottone a misura del testo
+   600-1023 px: margini da libro, 8 colonne; blocco su 7 colonne.
    -------------------------------------------------------------------------- */
 @media (min-width: 600px) {
-  .imp-root .imp-hero__titolo {
+  .imp-root .imp-hero__testo {
     grid-column: 1 / span 7;
+  }
+
+  .imp-root .imp-hero__titolo {
     max-inline-size: none;
   }
 
-  .imp-root .imp-hero__sotto,
-  .imp-root .imp-hero__invito {
-    grid-column: 1 / span 6;
-  }
-
-  .imp-root .imp-hero__azioni {
-    grid-column: 1 / span 7;
-  }
-
   .imp-root .imp-hero__cta {
+    display: inline-flex;
     inline-size: auto;
     min-block-size: var(--imp-bottone-h-grande);
   }
 }
 
 /* --------------------------------------------------------------------------
-   1024 px: 12 colonne. Titolo c1-c8 su due righe, sottotitolo c1-c5,
-   bottone a sinistra e dial della luce all'estremo destro del blocco.
+   Da 1024 px: il blocco sta nel vuoto a sinistra di "ta" (colonne 1-7),
+   appeso alla linea della x di "ta". Il titolo scala con l'area viva perché
+   stia su due righe in quelle sette colonne.
+   Linea della x di "ta" dal bordo del suo box: 0,1145 em della parola
+   (Anybody: ascent 0,795, x-height 0,593, interlinea 0,86); occhio del
+   titolo dal bordo del suo box: 0,1225 em del titolo (interlinea 1,04).
    -------------------------------------------------------------------------- */
 @media (min-width: 1024px) {
-  .imp-root .imp-hero__testo {
-    margin-block-start: clamp(48px, 11svh, 120px);
+  .imp-root .imp-hero__piano:not([data-cliente])[data-righe="2"] .imp-hero__testo {
+    grid-column: 1 / span 7;
+    grid-row: 2;
+    margin-block-start: 0;
+  }
+
+  .imp-root .imp-hero__piano:not([data-cliente])[data-righe="2"] .imp-hero__titolo {
+    margin-block-start: calc(0.1145 * var(--_imp-fs) - 0.1225em);
   }
 
   .imp-root .imp-hero__titolo {
-    grid-column: 1 / span 8;
-    max-inline-size: none;
+    font-size: min(var(--imp-fs-titolo-1), calc(var(--imp-area-viva) * 0.0355));
   }
 
-  .imp-root .imp-hero__sotto,
-  .imp-root .imp-hero__invito {
-    grid-column: 1 / span 5;
+  @supports (inline-size: 1cqi) {
+    .imp-root .imp-hero__titolo {
+      font-size: min(var(--imp-fs-titolo-1), 3.55cqi);
+    }
   }
 
-  .imp-root .imp-hero__azioni {
-    grid-column: 1 / span 8;
-    margin-block-start: var(--imp-sp-7);
+  .imp-root .imp-hero__cta {
+    margin-block-start: var(--imp-sp-6);
   }
 
+  /* Sotto "ta", sul margine esterno, alla linea del bottone. */
   .imp-root .imp-hero__luce {
     display: inline-flex;
-  }
-}
-
-/* --------------------------------------------------------------------------
-   Schermi in verticale (telefoni, tablet in piedi): frontespizio. La parola
-   resta in testa, il blocco in inchiostro scende al piede della prima
-   schermata; in mezzo solo carta, dove il dito sposta la luce. La testa non
-   cresce (≤ 96 px): è il piede che si allunga, come in un libro.
-   Su desktop resta la gabbia dell'ux-architect (titolo al 40% dell'altezza).
-   -------------------------------------------------------------------------- */
-@media (max-aspect-ratio: 4/5) and (min-height: 700px) {
-  .imp-root .imp-hero__piano {
-    margin-block-end: clamp(40px, 9svh, 112px);
+    grid-column: 9 / -1;
+    grid-row: 2;
+    justify-self: end;
+    align-self: end;
+    min-block-size: var(--imp-bottone-h-grande);
   }
 
-  .imp-root .imp-hero__testo {
-    margin-block-start: auto;
-  }
-}
-
-/* Schermi bassi (telefono in orizzontale, portatili piccoli): meno aria. */
-@media (max-height: 560px) {
-  .imp-root .imp-hero__testo {
-    margin-block-start: var(--imp-sp-6);
+  .imp-root .imp-hero__piano[data-cliente][data-righe="2"] .imp-hero__luce {
+    grid-row: 3;
   }
 }

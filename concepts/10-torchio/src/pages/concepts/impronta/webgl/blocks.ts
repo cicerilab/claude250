@@ -10,8 +10,8 @@
  *   1. `selezionaBlocchi`: tra i blocchi che il registro dà per visibili
  *      (IntersectionObserver con una viewport di margine) si tengono quelli
  *      che toccano DAVVERO lo schermo (più un margine per ombre e cuscinetto),
- *      al massimo MAX_BLOCCHI = 8, per `spec.priorita` e poi per distanza dal
- *      centro dello schermo (tech-architect §7.2).
+ *      al massimo MAX_BLOCCHI = 8, per `spec.priorita`, poi per area in vista
+ *      (i pezzi grandi prima), poi per vicinanza al centro (tech-architect §7.2).
  *   2. `ordinaPerDisegno`: nello shader vince l'ultimo scritto dove due blocchi
  *      si coprono, quindi prima i pezzi con carta propria (stanno "sotto"),
  *      poi il resto; a parità, in ordine di registrazione (≈ ordine del DOM).
@@ -90,6 +90,8 @@ export interface StatoBloccoGL {
   canvas: HTMLCanvasElement | null;
   /** Sul fantasma c'è l'attributo "fuori dal GL" (vedi ImprontaGL). */
   fuori: boolean;
+  /** Stile del fantasma quando la maschera è stata disegnata (vedi `firmaStile`). */
+  firma: string;
 }
 
 export function nuovoStato(id: string): StatoBloccoGL {
@@ -108,7 +110,34 @@ export function nuovoStato(id: string): StatoBloccoGL {
     ultimoUso: 0,
     canvas: null,
     fuori: false,
+    firma: '',
   };
+}
+
+/** Elementi letti al massimo per la firma (il blocco e i suoi primi discendenti). */
+const FIRMA_MAX_ELEMENTI = 12;
+
+/**
+ * Firma dello stile tipografico del fantasma e dei suoi primi discendenti:
+ * famiglia, corpo, assi, peso, larghezza, spaziatura. Se cambia, cambiano i
+ * glifi anche a scatola invariata (assi di arrivo con data-gl="on", font
+ * arrivato con size-adjust): la maschera va ridisegnata. Legge il layout: si
+ * chiama solo nella fase 'read', al disegno e dopo la comparsa.
+ */
+export function firmaStile(el: HTMLElement): string {
+  const parti: string[] = [];
+  const leggi = (e: Element): void => {
+    const cs = getComputedStyle(e);
+    parti.push(`${cs.fontFamily}|${cs.fontSize}|${cs.fontVariationSettings}|${cs.fontWeight}|${cs.fontStretch}|${cs.letterSpacing}`);
+  };
+  leggi(el);
+  const figli = el.querySelectorAll('*');
+  const n = Math.min(figli.length, FIRMA_MAX_ELEMENTI);
+  for (let i = 0; i < n; i += 1) {
+    const f = figli[i];
+    if (f !== undefined) leggi(f);
+  }
+  return parti.join('#');
 }
 
 /** Il blocco tocca lo schermo (più il margine)? Usa il rettangolo non ruotato allargato della diagonale se ruotato. */
@@ -126,11 +155,28 @@ export function sulloSchermo(b: ReliefBlock, vw: number, vh: number, margine: nu
   return r.x + r.w > -mx && r.x < vw + mx && r.y + r.h > -my && r.y < vh + my;
 }
 
-/** Punteggio per il culling: priorità alta prima, poi vicino al centro dello schermo. */
-function punteggio(b: ReliefBlock, vh: number): number {
+/**
+ * Area del blocco dentro lo schermo, px CSS² (rettangolo non ruotato: per
+ * l'ordine basta). Un blocco grande e in vista pesa più di uno piccolo o
+ * tagliato dal bordo.
+ */
+export function areaInVista(b: ReliefBlock, vw: number, vh: number): number {
+  const r = b.rectView;
+  const w = Math.min(r.x + r.w, vw) - Math.max(r.x, 0);
+  const h = Math.min(r.y + r.h, vh) - Math.max(r.y, 0);
+  return w > 0 && h > 0 ? w * h : 0;
+}
+
+/**
+ * Punteggio per il culling e per l'ordine di disegno e cottura delle
+ * maschere: `spec.priorita` prima, poi l'area in vista (giro 2: la copertina
+ * di "Per chi", il pezzo più grande sullo schermo, restava fuori a 2560),
+ * poi, a parità, la vicinanza al centro dello schermo.
+ */
+export function punteggio(b: ReliefBlock, vw: number, vh: number): number {
   const cy = b.rectView.y + b.rectView.h * 0.5;
-  const distanza = Math.abs(cy - vh * 0.5);
-  return (b.spec.priorita ?? 0) * 1e6 - distanza;
+  const vicinanza = 1 - Math.min(1, Math.abs(cy - vh * 0.5) / Math.max(1, vh));
+  return (b.spec.priorita ?? 0) * 1e10 + areaInVista(b, vw, vh) + vicinanza;
 }
 
 /**
@@ -152,7 +198,7 @@ export function selezionaBlocchi(
     if (b.visibile && sulloSchermo(b, vw, vh)) candidati.push(b);
   }
   if (candidati.length > max) {
-    candidati.sort((a, c) => punteggio(c, vh) - punteggio(a, vh));
+    candidati.sort((a, c) => punteggio(c, vw, vh) - punteggio(a, vw, vh));
   }
   out.length = 0;
   const n = Math.min(max, candidati.length);

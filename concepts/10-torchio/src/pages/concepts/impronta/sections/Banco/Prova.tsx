@@ -26,7 +26,6 @@ import {
   forwardRef,
   useEffect,
   useImperativeHandle,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -35,6 +34,7 @@ import {
 import type { Carta, Legatura, Prodotto, Tecnica } from '../../content/prezzi';
 import { FORMATO_MM } from '../../content/prezzi';
 import { BANCO as TESTI_BANCO, LUCE, euro } from '../../content/testi';
+import { ticker } from '../../core/ticker';
 import { useLuceDial } from '../../interaction/light';
 import { ATTESA_PRESSA, BANCO, pressioneLeva } from '../../motion/choreography';
 import { usePressione } from '../../motion/usePressione';
@@ -97,34 +97,48 @@ interface Caduta {
   lunghezza: number;
 }
 
+/** Esito della misura di una riga grande. */
+interface MisuraRiga {
+  riga: HTMLElement;
+  wdth: number;
+  aCapo: boolean;
+}
+
 /**
  * Stringe le righe grandi con l'asse wdth fino a 75 perché stiano su una
  * riga; oltre, le lascia andare a capo (ux-architect 5.6, "Testo lungo").
- * Una misura per riga, solo quando cambiano testo, forma o misura del pezzo.
+ *
+ * Giro 2 (performance-auditor P2): niente più scrittura e lettura alternate
+ * per ogni riga. Accanto a ogni riga grande c'è una "sonda" invisibile con lo
+ * stesso testo a wdth 100 e senza a capo: la sua larghezza è la larghezza
+ * naturale, quindi basta LEGGERE (fase `read` del ticker, un solo layout per
+ * tutte le righe) e poi SCRIVERE (fase `write`), al frame dopo il tasto.
  */
-function adattaRighe(foglio: HTMLElement): void {
-  const righe = foglio.querySelectorAll<HTMLElement>('[data-stringi]');
-  righe.forEach((riga) => {
-    riga.style.setProperty('--imp-banco-wdth', String(WDTH_MAX));
-    riga.removeAttribute('data-a-capo');
-    const disponibile = riga.clientWidth;
-    const naturale = riga.scrollWidth;
-    if (disponibile <= 0 || naturale <= disponibile + 0.5) return;
-    const rapporto = disponibile / naturale;
-    const wdth = WDTH_MAX - (1 - rapporto) / WDTH_PER_UNITA;
-    if (wdth >= WDTH_MIN) {
-      riga.style.setProperty('--imp-banco-wdth', wdth.toFixed(2));
-      // Verifica: l'asse non è perfettamente lineare su tutte le lettere.
-      if (riga.scrollWidth > riga.clientWidth + 0.5) {
-        const secondo = Math.max(WDTH_MIN, wdth - ((riga.scrollWidth / riga.clientWidth - 1) / WDTH_PER_UNITA));
-        riga.style.setProperty('--imp-banco-wdth', secondo.toFixed(2));
-        if (riga.scrollWidth > riga.clientWidth + 0.5) riga.setAttribute('data-a-capo', '');
-      }
+function misuraRighe(foglio: HTMLElement): MisuraRiga[] {
+  const composizione = foglio.querySelector<HTMLElement>('.imp-banco__composizione');
+  if (composizione === null) return [];
+  const disponibile = composizione.clientWidth;
+  const esito: MisuraRiga[] = [];
+  foglio.querySelectorAll<HTMLElement>('[data-sonda]').forEach((sonda) => {
+    const riga = foglio.querySelector<HTMLElement>(`[data-stringi][data-chiave="${sonda.dataset.sonda ?? ''}"]`);
+    if (riga === null) return;
+    const naturale = sonda.getBoundingClientRect().width;
+    if (disponibile <= 0 || naturale <= disponibile + 0.5) {
+      esito.push({ riga, wdth: WDTH_MAX, aCapo: false });
       return;
     }
-    riga.style.setProperty('--imp-banco-wdth', String(WDTH_MIN));
-    riga.setAttribute('data-a-capo', '');
+    // Margine dell'1%: l'asse non è perfettamente lineare su tutte le lettere.
+    const wdth = WDTH_MAX - (1 - (disponibile * 0.99) / naturale) / WDTH_PER_UNITA;
+    esito.push(wdth >= WDTH_MIN ? { riga, wdth, aCapo: false } : { riga, wdth: WDTH_MIN, aCapo: true });
   });
+  return esito;
+}
+
+function scriviRighe(misure: readonly MisuraRiga[]): void {
+  for (const m of misure) {
+    m.riga.style.setProperty('--imp-banco-wdth', m.wdth.toFixed(2));
+    m.riga.toggleAttribute('data-a-capo', m.aCapo);
+  }
 }
 
 /** Una riga della prova: l'ultima lettera appena scritta "cade" nel compositoio. */
@@ -266,28 +280,47 @@ const Prova = forwardRef<ComandiProva, ProvaProps>(function Prova(
   /* ---------- righe grandi strette con l'asse wdth */
 
   const firmaRighe = righe.map((r) => r.testo).join('\u0001');
-  useLayoutEffect(() => {
+  const righeSporche = useRef(true);
+
+  // Due funzioni fisse nel ticker: leggono e scrivono solo quando serve.
+  useEffect(() => {
     const foglio = foglioRef.current;
     if (foglio === null) return undefined;
-    adattaRighe(foglio);
-    let attesa: ReturnType<typeof setTimeout> | null = null;
-    const riprova = (): void => {
-      if (attesa !== null) clearTimeout(attesa);
-      attesa = setTimeout(() => {
-        attesa = null;
-        adattaRighe(foglio);
-      }, 60);
+    let misure: MisuraRiga[] | null = null;
+    const leggi = (): boolean => {
+      if (!righeSporche.current) return false;
+      righeSporche.current = false;
+      misure = misuraRighe(foglio);
+      return false;
     };
-    const osservatore = new ResizeObserver(riprova);
+    const scrivi = (): boolean => {
+      if (misure === null) return false;
+      scriviRighe(misure);
+      misure = null;
+      return false;
+    };
+    const togliLeggi = ticker.add(leggi, 'read');
+    const togliScrivi = ticker.add(scrivi, 'write');
+    const segna = (): void => {
+      righeSporche.current = true;
+      ticker.wake();
+    };
+    const osservatore = new ResizeObserver(segna);
     osservatore.observe(foglio);
     const fonts = document.fonts;
-    fonts.addEventListener('loadingdone', riprova);
-    void fonts.ready.then(riprova);
+    fonts.addEventListener('loadingdone', segna);
+    void fonts.ready.then(segna);
     return () => {
-      if (attesa !== null) clearTimeout(attesa);
+      togliLeggi();
+      togliScrivi();
       osservatore.disconnect();
-      fonts.removeEventListener('loadingdone', riprova);
+      fonts.removeEventListener('loadingdone', segna);
     };
+  }, []);
+
+  useEffect(() => {
+    righeSporche.current = true;
+    ticker.wake();
   }, [firmaRighe, forma.prodotto, forma.tecnica]);
 
   /* ---------- la leva: comandi per il Banco */
@@ -358,6 +391,13 @@ const Prova = forwardRef<ComandiProva, ProvaProps>(function Prova(
                     </span>
                   );
                 })}
+                {righe
+                  .filter((r) => r.ruolo === 'principale')
+                  .map((r) => (
+                    <span key={`sonda-${r.chiave}`} className="imp-banco__sonda imp-banco__riga--principale" data-sonda={r.chiave}>
+                      {r.testo}
+                    </span>
+                  ))}
               </div>
             </div>
             <span

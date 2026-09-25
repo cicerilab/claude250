@@ -233,9 +233,11 @@ void main() {
     locale = q / dpr;
 
     // Ombra portata: si cammina verso la luce; se il bordo del solco sta
-    // sopra il raggio radente, il punto è in ombra. Quattro passi bastano:
-    // l'ombra più lunga è prof / tan(elevazione), cioè pochi px.
-    float passo = max(0.5 * dpr, prof * 0.65);
+    // sopra il raggio radente, il punto è in ombra. Giro 2: con la luce a
+    // 12-18° l'ombra geometrica sarebbe lunga 3-4 volte la profondità e
+    // sembrerebbe un'estrusione; la si ferma a 2 profondità (quattro passi
+    // di mezza profondità): piena e corta, come nella foto di bottega.
+    float passo = max(0.5 * dpr, prof * 0.5);
     float occ = 0.0;
     for (int k = 1; k <= 4; k++) {
       float dist = float(k) * passo;
@@ -328,7 +330,7 @@ void main() {
     float diff = clamp(dot(nf, L) * 0.5 + 0.5, 0.0, 1.0);
     // Metallo: poca diffusione, il resto è riflesso (così "legge" come argento
     // e non come grigio stampato).
-    vec3 metallo = uLamina.rgb * (0.36 + 0.26 * diff) * (1.0 + spazz * 0.1);
+    vec3 metallo = uLamina.rgb * (0.42 + 0.26 * diff) * (1.0 + spazz * 0.1);
     metallo += vec3(riflesso) * (0.55 + 0.45 * uLamina.rgb);
     // Il metallo riflette un poco la carta attorno (ambiente), niente di più.
     metallo = mix(metallo, metallo * carta.fondo.rgb * 1.15, 0.1);

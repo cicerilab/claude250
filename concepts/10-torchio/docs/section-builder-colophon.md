@@ -125,3 +125,73 @@ da `interaction.css`, e il CSS di sezione le riazzera per sicurezza).
   (ux §2: le sezioni senza voce accendono la precedente): coerente.
 - Il link "← Torna in Ciceri Lab" nel testo porta a `LAB_URL` (`/`): al porting
   va verificato insieme a `core/links.ts` (scaffold §11.3).
+
+---
+
+## Giro 2
+
+Voti del giro 1: Colophon 4/10 (awwwards-jury §2 "Colophon", §5). Interventi
+applicati, solo nei miei file.
+
+### Bug del sigillo (A, responsive-tester §1, jury Usabilità 1)
+
+Causa: `--imp-segno: url(${marchioUrl})` senza virgolette; in build Vite
+inlinea l'SVG come data URI con apici singoli, la dichiarazione diventava non
+valida e la maschera `none`, quindi rettangolo grigio pieno. Invece di
+aggiungere solo le virgolette ho tolto la maschera: il sigillo di ripiego ora
+è un **SVG in linea** con il `path` del marchio (estratto da `marchioImpronta`
+`?raw` con una regex sulla stringa, a livello di modulo solo lavoro su
+stringhe). Così spariscono anche l'import `?url` e il marchio doppio nel bundle
+(performance-auditor P3, parte colophon).
+
+### Rilievo profondo (jury: "marchio pallido")
+
+Filtro SVG con ombra e luce **interne** (id per istanza da `useId`): parete in
+`--imp-carta-ombra` verso la luce (offset 2,2/2,6 unità, sfocatura 0,9), labbro
+in `--imp-carta-luce` dall'altra parte (1,1/1,3, 0,35), fondo del solco =
+`secco-fondo` scurito del 14% verso l'ombra; opacità e fondo scalano con
+`--imp-press`. Un filo di luce esterno (drop-shadow) segue `--imp-luce-x/y`.
+Con `data-gl="on"` l'SVG è `visibility: hidden` (lo disegna lo shader,
+`profondita` salita a 1). `prefers-contrast: more` → inchiostro pieno;
+`forced-colors` → `CanvasText`.
+
+### Ricomposizione da colophon di libro
+
+- Tutto **sull'asse della gabbia** (centro dell'area viva di `.imp-page`, non
+  dello schermo). Scostamento consapevole da DESIGN "mai centrato", chiesto
+  dalla giuria: è l'unica pagina centrata, come il colophon di un volume.
+- Titolo `h2` piccolo e largo (Anybody 22-30 px, wdth 150, 800).
+- Frase in Hanken 18 → 21 (`lead`), 31em, `text-wrap: balance`, carta in
+  `<strong>`; seconda riga in `.imp-piccolo`.
+- Indice **in una riga** di voci separate da spazio (h3 "indice" solo per
+  lettori di schermo; il `nav` ha `aria-label`), ogni voce alta 44 px.
+- **Un solo bottone**: "Prova la tua" in lamina. "Ricomincia da capo" è un
+  comando scritto come link (resta `<button>`); anche "Sì, ricomincia" /
+  "No, lascia così" sono link-bottone. Esito con
+  `COLOPHON.ricomincia.fattoCarta(carta)` (la carta a cui si torna davvero,
+  Citrino o Grafite).
+- Il sigillo è il fotogramma finale grande; sotto, una riga "tipografia e
+  legatoria · Pordenone" e la riga dello stampatore, piccola e raccolta:
+  indirizzo → Maps, "Chiama la bottega", "Scrivi alla bottega"
+  (`COLOPHON.telefono` / `COLOPHON.email`: niente numero né `.example` a
+  vista), finzione (`.imp-nota`), firma "Un concept di Ciceri Lab" →
+  cicerilab.com e "← Torna in Ciceri Lab".
+
+### Altri punti
+
+- SEO 5.1.C: spazi veri tra i frammenti ("tipografia e legatoria Pordenone",
+  voci dell'indice, recapiti, firma); il "·" è un `::before` decorativo.
+- Accessibilità (fuoco coperto, WCAG 2.4.11): `scroll-margin-block` su tutti i
+  link e bottoni del colophon (testata fissa sopra; segnapagina e bottone del
+  sito sotto su mobile).
+- Accessibilità B4: la freccia inline perde il suo `id` (niente id duplicati).
+- Performance P4: uso `.imp-piccolo` / `.imp-nota` di `base.css` invece di
+  ridichiarare la terna tipografica dove possibile.
+- Font nelle prove: `page.route` sui domini Google, servito con `curl` da
+  Node (i font arrivano: `document.fonts.check` vero).
+- Durante il giro altri file erano a metà (Tecniche senza `default`,
+  Legatoria con un errore di tipo): server riavviato a ogni rottura, nessun
+  intervento sui loro file.
+
+Schermate: `/tmp/claude-0/shots-colophon/g2/` (375, 768, 1440, 2560 × Citrino,
+Cotone × GL e `?gl=0`, più la domanda aperta a 375 e reduced motion).

@@ -84,7 +84,7 @@ dell'art-director (vettore verso la luce, y in basso: `cos`, `-sin`).
 | **Dito** | `pointerdown` di tipo touch su `.imp-root`, solo se il bersaglio è **carta**: non un controllo (`a, button, input, label, [role=radio]…`, `.imp-ix-dial`, `[data-imp-no-luce]`) e non un testo (`p, h1-h6, li, dd…`). Il rilievo `.imp-relief` conta come carta. | Le superfici hanno `touch-action: pan-y` (`[data-imp-luce]`): lo scroll verticale resta del browser (arriva `pointercancel`), si muove la luce solo con i tocchi fermi e i trascinamenti orizzontali. Selezione del testo intatta. |
 | **Giroscopio** | `deviceorientation`, solo con `gyroPermission` in stato `attivo`. Posizione neutra = primo evento, ricentraggio lento (0,2% per evento), rotazione dello schermo gestita. ±25° di inclinazione = bordo della finestra. | Ignorato mentre un dito è sulla carta. Mai all'avvio (vedi §3). |
 | **Dial** | `input type=range` 0-345, passo 15. | Precedenza di 1,5 s sul puntatore, e il puntatore sopra il dial non conta: trascinarlo col mouse non si auto-sovrascrive. Può fare il giro intero: è una scelta esplicita. |
-| **Nessun input** | Arco automatico solo con l'hero in vista (IntersectionObserver, soglia 15%): 135 ± 45°, sinusoide con periodo 40 s, obiettivo aggiornato a 30 Hz. Riparte dopo 8 s senza input. Fuori dall'hero, senza input, la luce torna a 135° e si ferma. | Parte sempre da 135 (fase zero): nessuno scatto. |
+| **Nessun input** | Arco automatico solo con l'hero in vista (IntersectionObserver, soglia 15%): 135 ± 45°, **un solo periodo di 40 s per visita**, obiettivo aggiornato a 30 Hz. Il primo input (puntatore, dito, tasto, fuoco su un controllo) lo ferma per sempre. Non parte nel fallback CSS su puntatore grossolano. Fuori dall'hero la luce torna a 135° e si ferma. | Parte sempre da 135 (fase zero): nessuno scatto. Giro 2. |
 
 ### 2.3 Inerzia
 
@@ -98,7 +98,8 @@ dormire (render on demand, 0 frame da fermo).
 
 - `runtime.light.{azimuth, elevation}` (letti dal WebGL) e `runtime.markDirty()`
   a ogni cambio.
-- `--imp-luce-x`, `--imp-luce-y` su `.imp-root`, calcolate con
+- `--imp-luce-x`, `--imp-luce-y` **sulle sole foglie che le leggono e sono in
+  vista** (giro 2, mai su `.imp-root`), calcolate con
   `vettoreLuce(azimut)` di `styles/tokens.ts` (art-director), **solo** con
   `data-gl` diverso da `on`, al massimo 30 volte al secondo: il `text-shadow`
   del fallback CSS gira con la luce.
@@ -559,3 +560,22 @@ non deve metterlo in basso a sinistra né renderlo `position: fixed`.
 - **section-builder** (hero, per chi, carta, banco, indice nella testata):
   classi e hook descritti nelle sezioni 4-9; le superfici di carta vuota
   dell'hero e delle sezioni vanno marcate `data-imp-luce`.
+
+---
+
+## Giro 2 (LOOP, correzioni dai QA)
+
+| Voce | Da | Correzione | Verifica |
+|---|---|---|---|
+| **A4** lampeggio (WCAG 2.3.1) | accessibility-auditor | `paperWave.ts`: al massimo un cambio di carta ogni **450 ms** (`INTERVALLO_MINIMO_MS`). Le richieste nel frattempo vanno in coda e resta solo l'ultima; tutte le Promise in attesa si risolvono quando parte e finisce quella. Vale anche con reduced motion. Nessuna modifica richiesta alle sezioni. | Playwright, 1440, `?gl=0`: ArrowRight tenuta 3 s (ripetizione ~30 Hz) sui radio carta del banco → 5 cambi di `data-carta`, **1,67/s**, intervallo minimo 550 ms. Sui radio di `#carta` le frecce non scelgono (M4 del section-builder-carta), 0 cambi. |
+| **P1** luce a 30 Hz su `.imp-root` | performance-auditor | `light.ts`: `--imp-luce-x/y` non si scrivono più sulla radice. Si scrivono solo sui consumatori (`.imp-secco, .imp-inchiostro, .imp-caldo, .imp-segno-caldo, .imp-colophon__marchio`) **in vista** (IntersectionObserver, margine 25%; elenco riletto con MutationObserver, attesa 250 ms), solo se il valore arrotondato cambia, al massimo a 30 Hz. Un consumatore che entra in vista riceve subito il valore corrente. Nel fallback con puntatore grossolano l'arco non parte. Soglia di quiete da 0,02° a 0,15° (P8). | Playwright `?gl=0`, CPU 4×: 0 scritture di stile su `.imp-root` (prima 36/s). Mobile 390, 3 s nell'hero: 0 long task, 0 scritture della luce. Desktop, 3 s d'arco: 0 long task (~100 scritture/s su 3-4 foglie). Scroll 6 s: lo scroll avanza 5095 px a 390 (prima 365 px). Restano 13 long task (max 333 ms): dal trace sono ricalcoli di stile dovuti a `--imp-press` e alle variabili delle Tecniche (`.imp-carta__secco` 258 scritture, `.imp-tecniche__parola` 181, `.imp-tecniche__pin` 131 in 5 s), non a `light.ts` (5 ms di script in 5 s). Da girare a motion-designer e section-builder-tecniche. |
+| **M3** dial che cambia da solo, arco non fermabile | accessibility-auditor | L'arco fa un solo giro (40 s) e si ferma per sempre al primo input; `focusin` su qualunque controllo e ogni `keydown` contano come input. Col fuoco sul dial il valore non cambia più da solo; su mobile l'arco finisce dopo 40 s, al primo tocco o non parte affatto (fallback). | Logica verificata con tsc/eslint; nessun timer ricorrente resta attivo dopo il giro. |
+| **B2** leva e frame lenti | cross-browser-tester | `useHoldToConfirm.termina()`: se `(ora - t0) / durata >= 1` completa come "tenuta" anche se il ticker non ha ancora visto il 100% (tranne per scroll, perdita di fuoco o scheda nascosta). | tsc/eslint. |
+| **Giuria §5** onda con fotogramma memorabile | awwwards-jury | Il velo ha due strati: `__foglio` (la carta, solo senza WebGL) e **`__costa`**: il bordo del foglio nuovo avanza con la sua costa tinta (`--imp-carta-costa`, larga 2 × `--imp-spessore`: Cotone 600 g ha la costa più alta), un filo di luce sul labbro e un'ombra corta e tinta sul foglio vecchio. La costa c'è anche col WebGL acceso: il velo sta al livello del canvas, sotto l'inchiostro. Bordo della carta netto (lo fa la costa). Reduced motion: niente costa, solo dissolvenza. | CSS validato; sempre sotto 2,5 cambi/s grazie ad A4. |
+
+Non fatto in questo giro: **O5** (`:has()` senza ripiego, bassa). Nei browser
+senza `:has()` lo stato "scelta" resta detto dal testo della sezione.
+
+Typecheck: `npm run typecheck` dà un solo errore, in
+`sections/Carta/Carta.tsx:282`, che non è un mio file; i miei sono puliti.
+`eslint` su `interaction/` è pulito. Nessun commit.

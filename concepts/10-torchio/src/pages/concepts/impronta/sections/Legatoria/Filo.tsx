@@ -1,36 +1,38 @@
 /**
  * IMPRONTA · Legatoria · i pezzi del filo (section-builder-legatoria).
  *
- * Il filo della sezione è UNO, ma nel DOM è fatto di pezzi in fila:
+ * Il filo della sezione è UNO, ma nel DOM è fatto di pezzi in fila. In ogni
+ * fermata:
  *
- *   ingresso ─ schema brossura ─ coda ─ schema cartonato ─ coda ─
- *   schema giapponese ─ coda ─ schema punto metallico ─ coda ─ uscita ─ nodo
+ *   entra (orizzontale, in testa) ─ scende ─ SCHEMA ─ esce ─ traversa ─ coda
  *
- * Ogni pezzo riceve da Legatoria.tsx due variabili, `--filo-da` e `--filo-a`
- * (frazioni 0..1 della lunghezza totale del filo, misurata in px veri), e
- * disegna il proprio tratto quando `--imp-filo-p` (scritto da `useFilo` del
- * motion) passa da `da` ad `a`. Tutto in CSS: nessun calcolo per frame qui.
+ * e in fondo alla sezione: scende ─ traversa (sotto "Prova la tua") ─ nodo.
+ * Da 600 px il filo va a serpentina da un lato all'altro della pagina
+ * (schemi alternati a sinistra e a destra); su 375 scende nel margine
+ * esterno, entra nello schema e sottolinea il nome della legatura. Quali
+ * pezzi esistono e dove stanno lo decide `legatoria.css`: un pezzo nascosto
+ * misura 0 e non conta nella lunghezza.
  *
- * Gli schemi del vector-artist entrano inline una volta sola (id unici). Qui
- * si prepara la stringa, una volta, a livello di modulo (solo testo, nessun
+ * Ogni pezzo riceve da Legatoria.tsx `--filo-da` e `--filo-a` (frazioni 0..1
+ * della lunghezza totale, misurata in px veri) e si disegna quando
+ * `--imp-filo-p` (motion, `useFilo`) attraversa il suo intervallo. Tutto in
+ * CSS: nessun calcolo per frame qui.
+ *
+ * Gli schemi del vector-artist entrano inline una volta sola (id unici). La
+ * stringa si prepara una volta, a livello di modulo (solo testo, nessun
  * accesso a window/document):
- * - al path del filo si aggiunge `pathLength="1"` e una classe;
- * - se ne fa una copia SENZA id (la "guida", tratteggio a matita che mostra
- *   dove passerà l'ago) messa sotto al filo;
+ * - al path del filo `pathLength="1"` e una classe;
+ * - una copia SENZA id del path (la "guida" a matita) sotto al filo;
  * - alle graffe del punto metallico `pathLength="1"` e una classe;
- * - il titolo dell'SVG si toglie (il contenitore è aria-hidden: il testo per
- *   i lettori di schermo è `LEGATORIA.voci[].filoAlt`, accanto) così non
- *   compare il suggerimento del browser al passaggio del mouse.
+ * - via `<title>`, `role`, `aria-labelledby`: il contenitore è aria-hidden e
+ *   il testo per i lettori di schermo è `LEGATORIA.voci[].filoAlt`.
  */
 
-import { forwardRef, memo, type CSSProperties } from 'react';
+import { forwardRef, memo } from 'react';
 import { FILI, type Legatura as LegaturaSvg } from '../../assets/svg';
 
 /** Unità del viewBox comune ai quattro schemi (vector-artist §3.1). */
 export const SCHEMA_W = 240;
-export const SCHEMA_H = 300;
-/** x del filo nello schema: entra in (16, 0) ed esce in (16, 300). */
-export const SCHEMA_FILO_X = 16;
 /** Raggio del nodo finale, in unità dello schema (come il cappio della brossura). */
 export const NODO_R = 5;
 
@@ -73,7 +75,7 @@ interface SchemaProps {
 
 /**
  * Lo schema di cucitura di una legatura, inline. Memo: il markup non cambia
- * mai, così React non riscrive l'innerHTML (e non perde gli stili del filo).
+ * mai, così React non riscrive l'innerHTML.
  */
 export const SchemaFilo = memo(
   forwardRef<HTMLSpanElement, SchemaProps>(function SchemaFilo({ legatura }, ref) {
@@ -89,50 +91,57 @@ export const SchemaFilo = memo(
   }),
 );
 
+export type RuoloTratto =
+  | 'ingresso'
+  | 'entra'
+  | 'scende'
+  | 'esce'
+  | 'traversa'
+  | 'coda'
+  | 'fine-scende'
+  | 'fine-traversa';
+
+/** Tratti che corrono in orizzontale (si misurano in larghezza, si srotolano con scaleX). */
+const ORIZZONTALI: ReadonlySet<RuoloTratto> = new Set<RuoloTratto>(['entra', 'traversa', 'fine-traversa']);
+
 interface TrattoProps {
-  /** Dove sta il tratto: cambia solo la classe (posizione e altezza nel CSS). */
-  readonly ruolo: 'ingresso' | 'coda' | 'uscita';
-  readonly style?: CSSProperties;
+  readonly ruolo: RuoloTratto;
 }
 
 /**
- * Tratto dritto del filo tra un punto e l'altro: una riga d'inchiostro larga
- * quanto il filo dello schema, che si srotola dall'alto (scaleY) mentre
- * `--imp-filo-p` attraversa il suo intervallo.
+ * Tratto dritto del filo: sotto il percorso a matita, sopra la riga
+ * d'inchiostro larga quanto il filo degli schemi, che si srotola
+ * (scaleX / scaleY) mentre `--imp-filo-p` attraversa il suo intervallo.
  */
-export const TrattoFilo = forwardRef<HTMLSpanElement, TrattoProps>(function TrattoFilo({ ruolo, style }, ref) {
+export const TrattoFilo = forwardRef<HTMLSpanElement, TrattoProps>(function TrattoFilo({ ruolo }, ref) {
+  const verso = ORIZZONTALI.has(ruolo) ? 'orizzontale' : 'verticale';
   return (
     <span
       ref={ref}
-      className={`imp-legatoria__tratto imp-legatoria__tratto--${ruolo} imp-legatoria__pezzo`}
+      className={`imp-legatoria__tratto imp-legatoria__tratto--${verso} imp-legatoria__tratto--${ruolo} imp-legatoria__pezzo`}
+      data-verso-tratto={verso}
       aria-hidden="true"
-      style={style}
     />
   );
 });
 
 /**
- * Il nodo finale: il filo si chiude su sé stesso accanto a "Prova la tua",
- * come il nodo con cui il legatore ferma l'ultima segnatura.
+ * Il nodo finale: il filo arriva da destra sotto "Prova la tua" e si chiude
+ * su sé stesso, come il nodo con cui il legatore ferma l'ultima segnatura.
+ * Il cerchio parte dal punto a destra (dove arriva il filo).
  */
 export const NodoFilo = forwardRef<SVGSVGElement>(function NodoFilo(_props, ref) {
-  const lato = NODO_R * 2 + 4;
+  const lato = NODO_R * 2 + 2.4;
+  const centro = lato / 2;
   return (
     <svg
       ref={ref}
       className="imp-legatoria__nodo imp-legatoria__pezzo"
-      viewBox={`${-lato / 2} 0 ${lato} ${lato}`}
+      viewBox={`0 0 ${lato} ${lato}`}
       aria-hidden="true"
       focusable="false"
     >
-      <circle
-        className="imp-legatoria__nodo-cerchio"
-        cx="0"
-        cy={NODO_R + 1}
-        r={NODO_R}
-        pathLength="1"
-        transform={`rotate(-90 0 ${NODO_R + 1})`}
-      />
+      <circle className="imp-legatoria__nodo-cerchio" cx={centro} cy={centro} r={NODO_R} pathLength="1" />
     </svg>
   );
 });

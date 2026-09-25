@@ -186,11 +186,11 @@
   --imp-lamina-profonda: #7E868E; /* piede delle lettere, bordo inferiore delle superfici */
   --imp-su-lamina: #17231D;       /* testo sulla lamina, su tutte le carte */
   /* Superfici (bottone, leva, targhetta): scuro, base, riflesso stretto, base, scuro. */
-  --imp-lamina-sfumatura: linear-gradient(104deg, var(--imp-lamina-scura) 0%, var(--imp-lamina) 30%, var(--imp-lamina-chiara) 43%, var(--imp-lamina-riflesso) 47%, var(--imp-lamina-chiara) 51%, var(--imp-lamina) 66%, var(--imp-lamina-scura) 100%);
+  --imp-lamina-sfumatura: linear-gradient(104deg, var(--imp-lamina-scura) 0%, var(--imp-lamina) 32%, var(--imp-lamina-chiara) 45%, var(--imp-lamina-riflesso) 48%, var(--imp-lamina-chiara) 51%, var(--imp-lamina) 64%, var(--imp-lamina-scura) 100%);
   /* Premuta: la banda di riflesso scivola a destra e tutto si abbassa di tono. */
   --imp-lamina-sfumatura-premuta: linear-gradient(104deg, var(--imp-lamina-scura) 0%, var(--imp-lamina) 44%, var(--imp-lamina-chiara) 58%, var(--imp-lamina-riflesso) 61%, var(--imp-lamina) 70%, var(--imp-lamina-scura) 100%);
   /* Grana spazzolata: righe orizzontali finissime, ferme (anisotropia del metallo). */
-  --imp-lamina-grana: repeating-linear-gradient(0deg, color-mix(in srgb, var(--imp-lamina-riflesso) 34%, transparent) 0 1px, transparent 1px 2px, color-mix(in srgb, var(--imp-lamina-profonda) 12%, transparent) 2px 3px, transparent 3px 5px);
+  --imp-lamina-grana: repeating-linear-gradient(0deg, color-mix(in srgb, var(--imp-lamina-riflesso) 22%, transparent) 0 1px, transparent 1px 2px, color-mix(in srgb, var(--imp-lamina-profonda) 12%, transparent) 2px 3px, transparent 3px 5px);
   /* Lettere in lamina: riflesso in testa, banda chiara stretta a metà
      occhio, piede profondo. Si ripete a ogni riga (1lh). Ferma. */
   --imp-lamina-sfumatura-testo: linear-gradient(180deg, var(--imp-lamina-riflesso) 0%, var(--imp-lamina) 30%, var(--imp-lamina-riflesso) 46%, var(--imp-lamina-scura) 54%, var(--imp-lamina-profonda) 100%);

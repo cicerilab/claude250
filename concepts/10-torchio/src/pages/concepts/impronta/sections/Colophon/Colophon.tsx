@@ -113,6 +113,7 @@ function Sigillo() {
 
 function Ricomincia() {
   const [fase, setFase] = useState<FaseRicomincia>('fermo');
+  const [cartaFatto, setCartaFatto] = useState<Carta>(() => cartaPredefinita());
   const bottoneRef = useRef<HTMLButtonElement>(null);
   const siRef = useRef<HTMLButtonElement>(null);
   /** Dove va il fuoco dopo il prossimo cambio di fase (solo se l'ha chiesto un comando). */
@@ -157,6 +158,7 @@ function Ricomincia() {
     ricominciaDaCapo();
     if (!vivoRef.current) return;
     fuocoRef.current = 'bottone';
+    setCartaFatto(partenza);
     setFase('fatto');
   };
 
@@ -205,7 +207,7 @@ function Ricomincia() {
         </button>
       )}
       <p className="imp-colophon__esito imp-ix-annuncio" aria-live="polite" role="status">
-        {fase === 'fatto' ? TESTI.ricomincia.fatto : ''}
+        {fase === 'fatto' ? TESTI.ricomincia.fattoCarta(cartaFatto) : ''}
       </p>
     </div>
   );
@@ -263,10 +265,10 @@ export default function Colophon() {
               <Freccia />
             </a>{' '}
             <a href={TELEFONO_URL} className="imp-colophon__recapito imp-ix-link">
-              {RECAPITI.telefono}
+              {TESTI.telefono}
             </a>{' '}
             <a href={EMAIL_URL} className="imp-colophon__recapito imp-ix-link">
-              {RECAPITI.email}
+              {TESTI.email}
             </a>
           </address>
           <p className="imp-colophon__finzione imp-nota">{TESTI.finzione}</p>

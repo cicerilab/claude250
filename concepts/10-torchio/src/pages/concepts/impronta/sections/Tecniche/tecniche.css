@@ -28,7 +28,11 @@
   --_imp-t-wdth: 100;
   --_imp-t-em: 0.71;
   --_imp-t-gradi: -24deg;
-  --_imp-t-foglio: 5px;
+  --_imp-t-foglio: 6px;
+  /* Il colore del taglio è quello scelto dall'art-director per la carta del
+     SITO (contrasta con il foglio su cui la pila è appoggiata): lo si fissa
+     qui, prima che la pila di Cotone ridefinisca --imp-taglio. */
+  --_imp-t-bordo: var(--imp-taglio);
   display: flow-root;
   position: relative;
   padding-block-end: var(--imp-piede);
@@ -44,7 +48,7 @@
 @media (min-width: 768px) {
   .imp-root .imp-tecniche {
     --_imp-t-gradi: -32deg;
-    --_imp-t-foglio: 7px;
+    --_imp-t-foglio: 9px;
   }
 }
 
@@ -172,14 +176,16 @@
   }
 }
 
-/* Desktop: a sinistra (c1-c7) titolo, intro e sotto la lastra; a destra
-   (c9-c12) i quattro nomi e la scheda della tecnica, con il piede allineato
-   al piede della lastra. Il blocco intero sta al centro del palco. */
+/* Desktop: in alto il titolo (c1-c7); sotto, a sinistra la lastra (c1-c7)
+   e a destra (c9-c12) i quattro nomi e la scheda della tecnica, con il piede
+   allineato al piede della lastra. La riga della lastra è alta almeno quanto
+   la colonna di destra e al massimo 2/3 della sua larghezza; il blocco intero
+   sta al centro del palco. */
 @media (min-width: 1024px) {
   .imp-root .imp-tecniche__gabbia {
     --_imp-t-zona: calc((var(--imp-colonna) * 7 + var(--imp-canalino) * 6) * 2 / 3);
     grid-template-columns: repeat(12, minmax(0, 1fr));
-    grid-template-rows: auto minmax(0, var(--_imp-t-zona));
+    grid-template-rows: auto minmax(auto, var(--_imp-t-zona));
     align-content: center;
     column-gap: var(--imp-canalino);
     row-gap: var(--imp-sp-6);
@@ -205,7 +211,7 @@
     flex-direction: column;
     justify-content: flex-end;
     gap: var(--imp-sp-6);
-    grid-row: 1 / 3;
+    grid-row: 2;
     grid-column: 9 / 13;
     align-self: end;
     padding-inline-start: var(--imp-sp-5);
@@ -401,7 +407,7 @@
   transform-origin: 50% 50%;
   transform:
     perspective(1400px)
-    rotateX(calc(var(--_imp-t-giro) * -10deg))
+    rotateX(calc(var(--_imp-t-giro) * 12deg))
     rotateY(calc(var(--_imp-t-giro) * var(--_imp-t-gradi)));
 }
 
@@ -437,8 +443,9 @@
    Taglio colorato: la pila. Sette biglietti di Cotone (data-carta="cotone"
    sul biglietto in cima), uno dietro l'altro a --_imp-t-foglio di distanza,
    sfalsati di un paio di px come in una pila fatta a mano. Ogni fetta ha la
-   sua faccia di destra e di sopra dipinte in --imp-taglio (Citrino sul
-   Cotone), con una riga d'ombra dove un biglietto tocca l'altro. Girando di
+   sua faccia di destra e di sopra dipinte con --_imp-t-bordo, il taglio
+   della carta del sito (Citrino sul Cotone, verde notte sul Citrino, Grafite
+   sulla Cipria), con una riga d'ombra dove un biglietto tocca l'altro. Girando di
    tre quarti si vede il blocco dei bordi dipinti, non un contorno.
    -------------------------------------------------------------------------- */
 .imp-root .imp-tecniche__pila {
@@ -455,12 +462,6 @@
   transform: translate3d(var(--imp-t-dx, 0px), var(--imp-t-dy, 0px), calc(var(--imp-t-k, 0) * var(--_imp-t-foglio) * -1));
 }
 
-/* Le fette dietro hanno un fronte (si vede solo dove sporgono dalla pila). */
-.imp-root .imp-tecniche__fetta + .imp-tecniche__fetta {
-  background-color: var(--imp-carta);
-  box-shadow: inset 0 0 0 1px var(--imp-taglio);
-}
-
 .imp-root .imp-tecniche__fetta::before,
 .imp-root .imp-tecniche__fetta::after {
   content: "";
@@ -474,11 +475,11 @@
   inline-size: var(--_imp-t-foglio);
   transform-origin: 100% 50%;
   transform: rotateY(-90deg);
-  background-color: var(--imp-taglio);
+  background-color: var(--_imp-t-bordo);
   background-image:
-    linear-gradient(90deg, color-mix(in srgb, var(--imp-taglio) 55%, var(--imp-carta-ombra)) 0 1px, transparent 1px),
-    repeating-linear-gradient(180deg, color-mix(in srgb, var(--imp-taglio) 90%, var(--imp-carta-ombra)) 0 2px, transparent 2px 9px),
-    linear-gradient(color-mix(in srgb, var(--imp-taglio) 86%, var(--imp-carta-ombra)), color-mix(in srgb, var(--imp-taglio) 78%, var(--imp-carta-ombra)));
+    linear-gradient(90deg, color-mix(in srgb, var(--_imp-t-bordo) 55%, var(--imp-carta-ombra)) 0 1px, transparent 1px),
+    repeating-linear-gradient(180deg, color-mix(in srgb, var(--_imp-t-bordo) 90%, var(--imp-carta-ombra)) 0 2px, transparent 2px 9px),
+    linear-gradient(color-mix(in srgb, var(--_imp-t-bordo) 86%, var(--imp-carta-ombra)), color-mix(in srgb, var(--_imp-t-bordo) 78%, var(--imp-carta-ombra)));
 }
 
 /* Faccia di sopra, verso la luce. */
@@ -488,10 +489,10 @@
   block-size: var(--_imp-t-foglio);
   transform-origin: 50% 0;
   transform: rotateX(-90deg);
-  background-color: var(--imp-taglio);
+  background-color: var(--_imp-t-bordo);
   background-image:
-    linear-gradient(0deg, color-mix(in srgb, var(--imp-taglio) 60%, var(--imp-carta-ombra)) 0 1px, transparent 1px),
-    repeating-linear-gradient(90deg, color-mix(in srgb, var(--imp-taglio) 92%, var(--imp-carta-luce)) 0 3px, transparent 3px 11px);
+    linear-gradient(0deg, color-mix(in srgb, var(--_imp-t-bordo) 60%, var(--imp-carta-ombra)) 0 1px, transparent 1px),
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--_imp-t-bordo) 92%, var(--imp-carta-luce)) 0 3px, transparent 3px 11px);
 }
 
 /* --------------------------------------------------------------------------

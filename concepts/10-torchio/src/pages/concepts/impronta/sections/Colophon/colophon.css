@@ -69,10 +69,11 @@
 }
 
 /* --------------------------------------------------------------------------
-   La frase: Hanken 18 → 21, giustezza da colophon (36ch), a epigrafe.
+   La frase: Hanken 18 → 21, giustezza da colophon (31em, 3 righe a 1440),
+   a epigrafe.
    -------------------------------------------------------------------------- */
 .imp-root .imp-colophon__testo {
-  max-inline-size: 36ch;
+  max-inline-size: 31em;
   margin-block-start: var(--imp-sp-6);
   font-size: var(--imp-fs-lead);
   line-height: var(--imp-lh-lead);
@@ -281,7 +282,7 @@
 
 .imp-root .imp-colophon__bottega-citta::before {
   content: "·";
-  margin-inline-end: 0.5em;
+  margin-inline-end: 0.3em;
 }
 
 /* --------------------------------------------------------------------------

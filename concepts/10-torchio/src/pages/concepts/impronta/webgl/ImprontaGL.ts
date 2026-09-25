@@ -64,10 +64,12 @@ import { CARTE, LAMINA as LAMINA_TOKEN } from '../styles/tokens';
 import { Atlante, tipoTexel, type Slot } from './atlas';
 import {
   aggiornato,
+  firmaStile,
   impacchetta,
   misuraInAttesa,
   nuovoStato,
   ordinaPerDisegno,
+  punteggio,
   selezionaBlocchi,
   serveDisegno,
   sulloSchermo,
@@ -106,10 +108,19 @@ export const SCALA_MASCHERA_MAX = 1.5;
 export const ATTESA_PRIMO_FRAME_MAX = 3000;
 /** Disegni di maschere (canvas 2D) avviati per frame. */
 const DISEGNI_PER_FRAME = 2;
-/** Cotture per frame prima della comparsa (canvas invisibile: si recupera in fretta). */
-const COTTURE_PER_FRAME_ATTESA = 6;
-/** Cotture per frame a GL acceso: 3 draw call in più al massimo (budget §8). */
+/**
+ * Cotture per frame prima della comparsa. Giro 2 (performance-auditor P5): 3
+ * e non più 6, così l'avvio non si concentra in un solo task lungo.
+ */
+const COTTURE_PER_FRAME_ATTESA = 3;
+/** Cotture per frame a GL acceso quando tutto ciò che è in vista è già disegnato: 3 draw call in più (budget §8). */
 const COTTURE_PER_FRAME = 1;
+/**
+ * Cotture per frame a GL acceso quando un blocco in vista aspetta la sua
+ * maschera (entrato di colpo con un salto d'ancora o su uno schermo grande):
+ * recuperare in fretta conta più del budget di draw call di quei pochi frame.
+ */
+const COTTURE_PER_FRAME_RECUPERO = 2;
 /** Attributo scritto sui fantasmi che il GL non sta disegnando (vedi docs/shader-engineer.md). */
 export const ATTR_FUORI_GL = 'data-imp-gl';
 /** dt del primo frame dopo un risveglio del ticker (contratto di core/ticker.ts). */
@@ -179,6 +190,10 @@ export class ImprontaGL {
   private readonly candidati: ReliefBlock[] = [];
   private readonly selezione: ReliefBlock[] = [];
   private readonly disegnati = new Set<string>();
+  /** Appoggi riusati per ordinare disegni e cotture (niente allocazioni per frame). */
+  private readonly daOrdinare: ReliefBlock[] = [];
+  /** Un blocco sullo schermo non è stato disegnato nell'ultimo frame. */
+  private mancanoInVista = false;
   private readonly misuraBuffer = new Vector2();
 
   /** Viewport applicato (per accorgersi dei cambi). */
@@ -452,35 +467,39 @@ export class ImprontaGL {
       const radice = this.canvas.closest('.imp-root');
       if (radice === null || radice.getAttribute('data-gl') === 'on') {
         this.rifaiDopoComparsa = false;
-        for (const st of this.stati.values()) st.daRifare = true;
+        // Giro 2: si ridisegnano solo le maschere il cui fantasma ha
+        // davvero cambiato stile (di solito la sola parola dell'hero).
+        for (const b of registry.all()) {
+          const st = this.stati.get(b.id);
+          if (st === undefined || st.firma === '' || !b.el.isConnected) continue;
+          if (firmaStile(b.el) !== st.firma) st.daRifare = true;
+        }
       } else {
         return true;
       }
     }
 
-    let avviati = 0;
+    // Blocchi che chiedono un disegno, in ordine: slot riservato (Banco,
+    // cambia a ogni tasto), poi sullo schermo per priorità e area in vista
+    // (i pezzi grandi prima), poi quelli entro una viewport (IO del registro).
     let inAttesa = false;
-    // Prima i blocchi a slot riservato (Banco: cambiano a ogni tasto), poi
-    // quelli sullo schermo, poi quelli entro una viewport (IO del registro).
-    for (let passo = 0; passo < 3 && avviati < DISEGNI_PER_FRAME; passo += 1) {
-      for (const b of registry.all()) {
-        if (avviati >= DISEGNI_PER_FRAME) break;
-        if (!b.visibile) continue;
-        const riservato = b.spec.slot !== undefined;
-        const schermo = sulloSchermo(b, this.cssW, this.cssH);
-        if (passo === 0 && !riservato) continue;
-        if (passo === 1 && (riservato || !schermo)) continue;
-        if (passo === 2 && (riservato || schermo)) continue;
-        const stato = this.stati.get(b.id);
-        if (stato === undefined) continue;
-        if (serveDisegno(b, stato, now)) {
-          this.avviaDisegno(b, stato);
-          avviati += 1;
-        } else if (misuraInAttesa(stato)) {
-          inAttesa = true;
-        }
-      }
+    const lista = this.daOrdinare;
+    lista.length = 0;
+    for (const b of registry.all()) {
+      if (!b.visibile) continue;
+      const stato = this.stati.get(b.id);
+      if (stato === undefined) continue;
+      if (serveDisegno(b, stato, now)) lista.push(b);
+      else if (misuraInAttesa(stato)) inAttesa = true;
     }
+    this.ordinaPerUrgenza(lista);
+    const n = Math.min(lista.length, DISEGNI_PER_FRAME);
+    for (let i = 0; i < n; i += 1) {
+      const b = lista[i];
+      const stato = b === undefined ? undefined : this.stati.get(b.id);
+      if (b !== undefined && stato !== undefined) this.avviaDisegno(b, stato);
+    }
+    lista.length = 0;
     // Un cambio di misura aspetta ATTESA_MISURA: il ticker resta sveglio fino ad allora.
     return inAttesa;
   };
@@ -500,7 +519,12 @@ export class ImprontaGL {
     this.applicaViewport();
 
     // 1. Cotture delle maschere pronte.
-    const cotte = this.cuociPronte(this.primoFrame ? COTTURE_PER_FRAME : COTTURE_PER_FRAME_ATTESA);
+    const limiteCotture = !this.primoFrame
+      ? COTTURE_PER_FRAME_ATTESA
+      : this.mancanoInVista
+        ? COTTURE_PER_FRAME_RECUPERO
+        : COTTURE_PER_FRAME;
+    const cotte = this.cuociPronte(limiteCotture);
     let ancora = this.haPronte();
 
     // 2. Culling: blocchi sullo schermo, massimo 8.
@@ -696,6 +720,7 @@ export class ImprontaGL {
     stato.inCorso = versione;
     stato.daRifare = false;
     stato.diversoDa = Number.NaN;
+    stato.firma = b.el.isConnected ? firmaStile(b.el) : '';
     this.diagnostica.disegniMaschera += 1;
 
     let canvas: HTMLCanvasElement | null = null;
@@ -735,19 +760,39 @@ export class ImprontaGL {
     return false;
   }
 
-  /** Cuoce fino a `limite` maschere pronte: prima quelle a slot riservato, poi le altre. */
+  /**
+   * Ordine di urgenza per disegni e cotture: slot riservato, poi sullo
+   * schermo per `punteggio` (priorità, area in vista, centro), poi il resto.
+   */
+  private ordinaPerUrgenza(lista: ReliefBlock[]): void {
+    if (lista.length < 2) return;
+    const vw = this.cssW;
+    const vh = this.cssH;
+    const chiave = (b: ReliefBlock): number => {
+      const riservato = b.spec.slot !== undefined ? 1e14 : 0;
+      const schermo = sulloSchermo(b, vw, vh) ? 1e12 : 0;
+      return riservato + schermo + punteggio(b, vw, vh);
+    };
+    lista.sort((a, b) => chiave(b) - chiave(a));
+  }
+
+  /** Cuoce fino a `limite` maschere pronte, nell'ordine di urgenza. */
   private cuociPronte(limite: number): number {
-    let fatte = 0;
-    for (let passo = 0; passo < 2 && fatte < limite; passo += 1) {
-      for (const b of registry.all()) {
-        if (fatte >= limite) break;
-        const riservato = b.spec.slot !== undefined;
-        if ((passo === 0) !== riservato) continue;
-        const stato = this.stati.get(b.id);
-        if (stato === undefined || stato.pronta === null) continue;
-        if (this.cuoci(b, stato)) fatte += 1;
-      }
+    const lista = this.daOrdinare;
+    lista.length = 0;
+    for (const b of registry.all()) {
+      const stato = this.stati.get(b.id);
+      if (stato !== undefined && stato.pronta !== null) lista.push(b);
     }
+    this.ordinaPerUrgenza(lista);
+    let fatte = 0;
+    for (const b of lista) {
+      if (fatte >= limite) break;
+      const stato = this.stati.get(b.id);
+      if (stato === undefined || stato.pronta === null) continue;
+      if (this.cuoci(b, stato)) fatte += 1;
+    }
+    lista.length = 0;
     return fatte;
   }
 
@@ -909,15 +954,18 @@ export class ImprontaGL {
    * Scrive solo quando cambia.
    */
   private scriviFantasmi(): void {
+    let mancano = false;
     for (const b of registry.all()) {
       const stato = this.stati.get(b.id);
       if (stato === undefined) continue;
       const fuori = b.visibile && sulloSchermo(b, this.cssW, this.cssH) && !this.disegnati.has(b.id);
+      if (fuori && b.versione !== stato.versioneFallita) mancano = true;
       if (fuori === stato.fuori) continue;
       stato.fuori = fuori;
       if (fuori) b.el.setAttribute(ATTR_FUORI_GL, 'fuori');
       else b.el.removeAttribute(ATTR_FUORI_GL);
     }
+    this.mancanoInVista = mancano;
   }
 
   private avviaAttesa(): void {

@@ -81,8 +81,8 @@ const Leva = forwardRef<ComandiLeva, LevaProps>(function Leva(
         aria-describedby={descrittaDa}
         data-in-corso={inCorso ? '' : undefined}
       >
-        <span className="imp-banco__leva-premuta" aria-hidden="true" />
         <span className="imp-ix-leva__binario" aria-hidden="true">
+          <span className="imp-banco__leva-premuta" />
           <span className="imp-banco__leva-fermo" />
           <span className="imp-ix-leva__corsa">
             <span className="imp-ix-leva__carrello">

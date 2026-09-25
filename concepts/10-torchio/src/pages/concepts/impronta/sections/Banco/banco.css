@@ -26,7 +26,8 @@
    -------------------------------------------------------------------------- */
 .imp-root .imp-banco {
   --imp-banco-sticky: var(--imp-sp-5);
-  --imp-banco-luce-scelta: var(--imp-carta-luce);
+  /* Dove si scrive la carta è "sollevata": più chiara sulle carte colorate. */
+  --imp-banco-campo: var(--imp-carta-luce);
   position: relative;
 }
 
@@ -62,6 +63,11 @@
   gap: var(--imp-sp-7);
   inline-size: 100%;
   max-inline-size: 38rem;
+}
+
+/* Su Cotone la luce è bianco puro: il campo sparirebbe. Lì è un poco più scuro della carta. */
+.imp-root[data-carta='cotone'] .imp-banco {
+  --imp-banco-campo: color-mix(in srgb, var(--imp-carta) 78%, var(--imp-carta-ombra));
 }
 
 /* --------------------------------------------------------------------------
@@ -134,71 +140,256 @@
 
 /* "cos'è?" accanto alla legenda della tecnica. */
 .imp-root .imp-banco__cose {
-  position: absolute;
-  inset-block-start: 0;
-  inset-inline-end: 0;
+  justify-self: start;
   display: inline-flex;
   align-items: center;
   min-block-size: 44px;
-  margin-block-start: -10px;
-  padding-inline: var(--imp-sp-2) 0;
+  margin-block: calc(var(--imp-sp-3) * -1) calc(var(--imp-sp-1) * -1);
   font-size: var(--imp-fs-piccolo);
   font-weight: 500;
 }
 
 /* --------------------------------------------------------------------------
-   Scelte come fogli di carta (radio veri, imp-ix-scelta)
-   Scelto = bordo d'inchiostro 3 px + la parola "scelta". Le regole qui
-   sono più specifiche dell'hover di imp-ix-premibile, così il bordo di
-   una scelta non sparisce sotto il puntatore.
+   Scelte senza schede (giro 2). Radio veri (imp-ix-scelta: input a
+   copertura, anello di fuoco sull'etichetta). Scelto = una riga premuta
+   d'inchiostro 3 px sotto la voce, con il labbro di luce sotto, più la parola
+   "scelta". Nessun fondo, nessun bordino, nessuna ombra.
    -------------------------------------------------------------------------- */
-.imp-root .imp-banco__scelte {
-  display: grid;
-  gap: var(--imp-sp-2);
+.imp-root .imp-banco .imp-ix-scelta {
+  box-shadow: none;
 }
 
-.imp-root .imp-banco__scelte--prodotti,
-.imp-root .imp-banco__scelte--legature {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.imp-root .imp-banco .imp-ix-scelta:hover,
+.imp-root .imp-banco .imp-ix-scelta:has(.imp-ix-scelta__input:checked) {
+  box-shadow: none;
 }
 
-.imp-root .imp-banco__scelte--tecniche,
-.imp-root .imp-banco__scelte--quando {
-  grid-template-columns: minmax(0, 1fr);
+.imp-root .imp-banco__riga-scelte {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--imp-sp-2) var(--imp-sp-5);
 }
 
-.imp-root .imp-banco__scelte--tirature {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+.imp-root .imp-banco__voce {
+  display: inline-grid;
+  justify-items: start;
+  align-content: end;
+  min-block-size: 48px;
+  padding-block-start: var(--imp-sp-2);
 }
 
-.imp-root .imp-banco .imp-banco__scelta {
-  display: grid;
-  grid-template-rows: auto auto;
-  align-content: center;
-  align-items: start;
-  row-gap: 2px;
-  min-block-size: 56px;
-  padding: var(--imp-sp-3) var(--imp-sp-3) var(--imp-sp-2);
-  background-color: var(--imp-banco-luce-scelta);
-  color: var(--imp-inchiostro);
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--imp-carta-ombra) 45%, transparent),
-    inset 0 -2px 0 var(--imp-ix-solco);
+.imp-root .imp-banco__voce-nome,
+.imp-root .imp-banco__voce-numero {
+  position: relative;
+  padding-block-end: 7px;
+}
+
+.imp-root .imp-banco__voce-nome {
+  font-size: var(--imp-fs-bottone);
+  line-height: var(--imp-lh-interfaccia);
+  font-weight: 500;
+}
+
+.imp-root .imp-banco__voce-numero {
+  font-family: var(--imp-font-display);
+  font-size: clamp(1.625rem, 1.3rem + 1.2vw, 2.125rem);
+  line-height: 1;
+  font-weight: 750;
+  font-variation-settings: 'wdth' 100, 'wght' 750;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  font-synthesis: none;
+}
+
+/* La riga premuta: sotto il puntatore un filo, scelta 3 px con il labbro di luce. */
+.imp-root .imp-banco__voce-nome::after,
+.imp-root .imp-banco__voce-numero::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  block-size: 1px;
+  background-color: var(--imp-ix-solco);
+  transition: block-size var(--imp-ix-rapido, 140ms) var(--imp-ix-curva-sfoglia, ease);
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .imp-root .imp-banco .imp-banco__scelta:hover:not(:has(.imp-ix-scelta__input:disabled)) {
-    box-shadow:
-      inset 0 0 0 1px color-mix(in srgb, var(--imp-carta-ombra) 70%, transparent),
-      inset 0 -3px 0 var(--imp-ix-solco);
+  .imp-root .imp-banco__voce:hover:not(:has(.imp-ix-scelta__input:disabled)) :is(.imp-banco__voce-nome, .imp-banco__voce-numero)::after {
+    block-size: 2px;
+    background-color: var(--imp-inchiostro);
   }
 }
 
-.imp-root .imp-banco .imp-banco__scelta:has(.imp-ix-scelta__input:checked),
-.imp-root .imp-banco .imp-banco__scelta:has(.imp-ix-scelta__input:checked):hover {
-  box-shadow: inset 0 0 0 var(--imp-bordo-scelto) var(--imp-inchiostro);
+.imp-root .imp-banco :is(.imp-banco__voce, .imp-banco__formato):has(.imp-ix-scelta__input:checked) :is(.imp-banco__voce-nome, .imp-banco__voce-numero) {
+  font-weight: 700;
 }
 
+.imp-root .imp-banco :is(.imp-banco__voce, .imp-banco__formato):has(.imp-ix-scelta__input:checked) :is(.imp-banco__voce-nome, .imp-banco__voce-numero)::after {
+  block-size: 3px;
+  background-color: var(--imp-inchiostro);
+  box-shadow: 0 1px 0 var(--imp-carta-luce);
+}
+
+.imp-root .imp-banco .imp-banco__voce:active:not(:has(.imp-ix-scelta__input:disabled)) {
+  transform: translateY(1px);
+}
+
+/* La parola "scelta": riga riservata anche vuota, niente salti. */
+.imp-root .imp-banco__segno {
+  display: block;
+  min-block-size: 1.35em;
+  margin-block-start: 3px;
+  font-size: var(--imp-fs-nota);
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+/* La tecnica: le prime due lettere del testo, stampate nella tecnica. */
+.imp-root .imp-banco__riga-scelte--tecniche {
+  gap: var(--imp-sp-2) var(--imp-sp-6);
+}
+
+.imp-root .imp-banco__campione-tecnica {
+  --imp-press: 1;
+  --imp-rilievo: 2.2;
+  display: block;
+  margin-block-end: var(--imp-sp-1);
+  font-family: var(--imp-font-display);
+  font-size: 2.75rem;
+  line-height: 0.9;
+  font-weight: 800;
+  font-variation-settings: 'wdth' 112.5, 'wght' 800;
+  font-synthesis: none;
+}
+
+/* Cosa stampi: i quattro formati in scala (mm × --imp-banco-k), sul bancone. */
+.imp-root .imp-banco__banchetto {
+  container-type: inline-size;
+}
+
+.imp-root .imp-banco__formati {
+  --imp-banco-k: min(0.62px, calc((100cqw - 3 * var(--imp-sp-5)) * 0.78 / 593));
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: var(--imp-sp-3);
+}
+
+.imp-root .imp-banco .imp-banco__formato {
+  display: grid;
+  grid-template-rows: calc(var(--imp-banco-k) * 297 + 6px) auto auto auto;
+  justify-items: start;
+  align-content: end;
+  min-inline-size: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.imp-root .imp-banco__sagoma-posto {
+  display: flex;
+  align-items: flex-end;
+  block-size: 100%;
+  padding-block-end: 6px;
+}
+
+.imp-root .imp-banco .imp-banco__sagoma {
+  display: block;
+  inline-size: calc(var(--imp-banco-k) * 85);
+  block-size: calc(var(--imp-banco-k) * 55);
+  transition: transform var(--imp-ix-rapido, 140ms) var(--imp-ix-curva-sfoglia, ease);
+}
+
+.imp-root .imp-banco__sagoma[data-prodotto='partecipazione'] {
+  inline-size: calc(var(--imp-banco-k) * 148);
+  block-size: calc(var(--imp-banco-k) * 105);
+}
+
+.imp-root .imp-banco__sagoma[data-prodotto='intestata'] {
+  inline-size: calc(var(--imp-banco-k) * 210);
+  block-size: calc(var(--imp-banco-k) * 297);
+}
+
+.imp-root .imp-banco__sagoma[data-prodotto='libro'] {
+  inline-size: calc(var(--imp-banco-k) * 150);
+  block-size: calc(var(--imp-banco-k) * 210);
+}
+
+/* Un segno d'inchiostro per pezzo, dove cadrebbe il testo: la sagoma si riconosce. */
+.imp-root .imp-banco__sagoma::after {
+  content: '';
+  position: absolute;
+  background-color: var(--imp-inchiostro-velato);
+}
+
+.imp-root .imp-banco__sagoma[data-prodotto='biglietto']::after {
+  inset-inline-start: 12%;
+  inset-block-end: 22%;
+  inline-size: 46%;
+  block-size: 3px;
+}
+
+.imp-root .imp-banco__sagoma[data-prodotto='partecipazione']::after {
+  inset-inline-start: 30%;
+  inset-block-start: 40%;
+  inline-size: 40%;
+  block-size: 4px;
+}
+
+.imp-root .imp-banco__sagoma[data-prodotto='intestata']::after {
+  inset-inline-start: 12%;
+  inset-block-start: 8%;
+  inline-size: 34%;
+  block-size: 3px;
+}
+
+.imp-root .imp-banco__sagoma[data-prodotto='libro']::after {
+  inset-inline-start: 22%;
+  inset-block-start: 22%;
+  inline-size: 50%;
+  block-size: 5px;
+}
+
+/* Il dorso del libro nella sagoma. */
+.imp-root .imp-banco__sagoma[data-prodotto='libro']::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 8%;
+  inline-size: 1px;
+  background-color: color-mix(in srgb, var(--imp-carta-ombra) 70%, transparent);
+}
+
+.imp-root .imp-banco__formato:has(.imp-ix-scelta__input:checked) .imp-banco__sagoma {
+  outline: var(--imp-bordo-scelto) solid var(--imp-inchiostro);
+  outline-offset: 3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .imp-root .imp-banco__formato:hover:not(:has(.imp-ix-scelta__input:disabled)) .imp-banco__sagoma {
+    transform: translateY(-2px);
+  }
+}
+
+.imp-root .imp-banco__formato-misura {
+  font-size: var(--imp-fs-nota);
+  line-height: 1.3;
+  font-weight: 500;
+}
+
+/* Sotto i 380 px di colonna la misura sta nella sagoma e nel riepilogo, non sotto il nome. */
+@container (max-width: 380px) {
+  .imp-root .imp-banco__formato-misura {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* Campi del taglio colorato: testi della casella. */
 .imp-root .imp-banco__scelta-testo {
   display: grid;
   gap: 2px;
@@ -217,29 +408,6 @@
   font-weight: 500;
 }
 
-.imp-root .imp-banco__scelta-numero {
-  font-family: var(--imp-font-display);
-  font-size: 1.375rem;
-  line-height: 1;
-  font-weight: 750;
-  font-variation-settings: 'wdth' 100, 'wght' 750;
-  font-variant-numeric: tabular-nums;
-  font-synthesis: none;
-}
-
-/* La parola "scelta": riga riservata anche vuota, niente salti. */
-.imp-root .imp-banco__segno {
-  display: block;
-  min-block-size: 1.35em;
-  font-size: var(--imp-fs-nota);
-  line-height: 1.35;
-  font-weight: 600;
-}
-
-.imp-root .imp-banco .imp-banco__scelta--numero {
-  padding-block: var(--imp-sp-2);
-}
-
 /* Taglio colorato: una casella vera, resa come un quadratino premuto. */
 .imp-root .imp-banco .imp-banco__taglio {
   display: grid;
@@ -256,7 +424,7 @@
   position: relative;
   inline-size: 28px;
   block-size: 28px;
-  background-color: var(--imp-carta-luce);
+  background-color: var(--imp-banco-campo);
   box-shadow:
     inset 0 0 0 1px var(--imp-inchiostro),
     inset 2px 2px 0 var(--imp-ix-solco);
@@ -390,7 +558,7 @@
   padding: 0 var(--imp-sp-4);
   border: 0;
   border-radius: var(--imp-raggio);
-  background-color: var(--imp-carta-luce);
+  background-color: var(--imp-banco-campo);
   color: var(--imp-inchiostro);
   -webkit-text-fill-color: var(--imp-inchiostro);
   font-family: var(--imp-font-testo);
@@ -520,59 +688,113 @@
   gap: var(--imp-sp-3);
 }
 
-/* La pista in lamina (DESIGN.md: leva), più specifica del fondo trasparente di imp-ix-leva. */
-.imp-root .imp-banco .imp-banco__leva.imp-lamina {
-  overflow: hidden;
-  background-color: var(--imp-lamina);
-  background-image: var(--imp-lamina-sfumatura);
-  color: var(--imp-su-lamina);
-  box-shadow: inset 0 0 0 1px var(--imp-lamina-bordo);
+/*
+ * La leva (giro 2): niente pista d'argento. È un solco inciso nella carta,
+ * lungo quanto la colonna; il manico tondo in lamina ci scorre dentro fino al
+ * fermo, il punto in cui la pressa tocca il foglio. L'etichetta sta sopra il
+ * solco, in inchiostro sulla carta. Il bottone è tutta l'area (alta 108 px).
+ */
+.imp-root .imp-banco .imp-banco__leva {
+  --imp-ix-maniglia: 60px;
+  --imp-banco-solco: 22px;
+  display: block;
+  min-block-size: 112px;
+  padding: 0;
+  overflow: visible;
+  background: none;
+  box-shadow: none;
 }
 
 .imp-root .imp-banco .imp-banco__leva .imp-ix-leva__binario {
+  inset: auto 0 22px 0;
+  block-size: var(--imp-banco-solco);
+  border-radius: 0;
+  background-color: var(--imp-secco-fondo);
   box-shadow:
-    inset 0 2px 0 color-mix(in srgb, var(--imp-lamina-scura) 70%, transparent),
-    inset 0 -1px 0 var(--imp-lamina-chiara);
+    inset 0 3px 2px -1px color-mix(in srgb, var(--imp-carta-ombra) 85%, transparent),
+    inset 0 -1px 0 var(--imp-carta-luce),
+    0 1px 0 var(--imp-carta-luce);
 }
 
-/* La corsa già fatta: la lamina si rovescia dietro il manico, come argento premuto. */
+.imp-root .imp-banco .imp-banco__leva .imp-ix-leva__corsa {
+  inset-inline: 0 var(--imp-ix-maniglia);
+}
+
+/* La corsa fatta: il solco si scurisce dietro il manico (lineare nel tempo, è il progresso). */
 .imp-root .imp-banco__leva-premuta {
   position: absolute;
-  inset: 0;
-  background-image: var(--imp-lamina-sfumatura-premuta);
-  transform: scaleX(var(--imp-hold, 0));
-  transform-origin: 0 50%;
-  pointer-events: none;
+  inset-block: 4px;
+  inset-inline-start: 4px;
+  inline-size: calc((100% - 8px) * var(--imp-hold, 0));
+  background-color: color-mix(in srgb, var(--imp-inchiostro) 72%, var(--imp-carta));
+  box-shadow: inset 0 2px 0 color-mix(in srgb, var(--imp-carta-ombra) 60%, transparent);
+}
+
+/* Il fermo in fondo al solco: dove la pressa tocca il foglio. */
+.imp-root .imp-banco__leva-fermo {
+  position: absolute;
+  inset-block: -8px;
+  inset-inline-end: 8px;
+  inline-size: 3px;
+  background-color: var(--imp-inchiostro);
+  box-shadow: 1px 0 0 var(--imp-carta-luce);
 }
 
 .imp-root .imp-banco .imp-banco__leva .imp-ix-leva__maniglia {
-  background-color: var(--imp-lamina-riflesso);
-  background-image: linear-gradient(135deg, var(--imp-lamina-riflesso) 20%, var(--imp-lamina-chiara) 55%, var(--imp-lamina) 100%);
+  background-color: var(--imp-lamina-chiara);
+  background-image: radial-gradient(
+    circle at 34% 30%,
+    var(--imp-lamina-riflesso) 0 18%,
+    var(--imp-lamina-chiara) 34%,
+    var(--imp-lamina) 62%,
+    var(--imp-lamina-scura) 100%
+  );
   box-shadow:
-    inset 0 0 0 2px var(--imp-lamina-bordo),
-    inset -3px -3px 0 color-mix(in srgb, var(--imp-lamina-profonda) 55%, transparent),
-    inset 3px 3px 0 var(--imp-lamina-riflesso);
+    inset 0 0 0 1.5px var(--imp-lamina-bordo),
+    inset -3px -4px 0 color-mix(in srgb, var(--imp-lamina-profonda) 45%, transparent),
+    0 3px 0 color-mix(in srgb, var(--imp-sito-ombra) 60%, transparent),
+    0 7px 10px -6px color-mix(in srgb, var(--imp-sito-ombra) 80%, transparent);
+  transition: box-shadow var(--imp-ix-rapido, 140ms) linear;
 }
 
+/* Tenuta: il manico affonda nel solco, l'ombra si accorcia. */
 .imp-root .imp-banco .imp-banco__leva[data-stato='tenendo'] .imp-ix-leva__maniglia,
 .imp-root .imp-banco .imp-banco__leva[data-stato='completo'] .imp-ix-leva__maniglia {
   box-shadow:
-    inset 0 0 0 2px var(--imp-lamina-bordo),
-    inset 4px 4px 0 color-mix(in srgb, var(--imp-lamina-profonda) 55%, transparent);
+    inset 0 0 0 1.5px var(--imp-lamina-bordo),
+    inset 3px 4px 0 color-mix(in srgb, var(--imp-lamina-profonda) 40%, transparent),
+    0 1px 0 color-mix(in srgb, var(--imp-sito-ombra) 60%, transparent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .imp-root .imp-banco .imp-banco__leva:hover:not([aria-disabled='true']) .imp-ix-leva__maniglia {
+    box-shadow:
+      inset 0 0 0 2.5px var(--imp-lamina-bordo),
+      inset -3px -4px 0 color-mix(in srgb, var(--imp-lamina-profonda) 45%, transparent),
+      0 3px 0 color-mix(in srgb, var(--imp-sito-ombra) 60%, transparent),
+      0 7px 10px -6px color-mix(in srgb, var(--imp-sito-ombra) 80%, transparent);
+  }
 }
 
 .imp-root .imp-banco .imp-banco__leva[data-stato='armato'] .imp-ix-leva__binario {
-  box-shadow: inset 0 0 0 3px var(--imp-su-lamina);
+  box-shadow:
+    inset 0 0 0 2px var(--imp-inchiostro),
+    inset 0 3px 2px -1px color-mix(in srgb, var(--imp-carta-ombra) 85%, transparent);
 }
 
 .imp-root .imp-banco .imp-banco__leva-testo {
-  padding-inline: calc(var(--imp-ix-maniglia) + 20px) var(--imp-sp-4);
-  text-align: center;
-  font-size: var(--imp-fs-leva);
-  line-height: var(--imp-lh-interfaccia);
-  font-weight: 600;
-  color: var(--imp-su-lamina);
-  -webkit-text-fill-color: var(--imp-su-lamina);
+  position: relative;
+  display: block;
+  padding: var(--imp-sp-2) 0 0;
+  text-align: start;
+  font-family: var(--imp-font-display);
+  font-size: 1.375rem;
+  line-height: 1.1;
+  font-weight: 750;
+  font-variation-settings: 'wdth' 100, 'wght' 750;
+  font-synthesis: none;
+  color: var(--imp-inchiostro);
+  -webkit-text-fill-color: var(--imp-inchiostro);
 }
 
 .imp-root .imp-banco__leva[data-in-corso] {
@@ -625,7 +847,7 @@
   min-block-size: var(--imp-bottone-h);
   margin-block-start: var(--imp-sp-3);
   padding-inline: var(--imp-sp-6);
-  background-color: var(--imp-carta-luce);
+  background-color: var(--imp-banco-campo);
   box-shadow:
     inset 0 0 0 1px var(--imp-inchiostro),
     inset 0 -2px 0 var(--imp-ix-solco);
@@ -665,11 +887,7 @@
 }
 
 /* Il canvas sta dietro a tutto: sopra la prova disegnata dallo shader il vassoio resta solo un solco. */
-@media (min-width: 1024px) {
-  .imp-root[data-gl='on'] .imp-banco__vassoio {
-    background-color: transparent;
-  }
-}
+
 
 .imp-root .imp-banco__piano {
   display: flex;
@@ -689,12 +907,6 @@
   display: grid;
   place-items: center;
   container-type: size;
-  background-color: var(--imp-secco-fondo);
-  box-shadow:
-    inset 2px 2px 0 var(--imp-ix-solco),
-    inset -1px -1px 0 var(--imp-ix-labbro),
-    inset 0 calc(var(--imp-banco-leva) * 26px) calc(var(--imp-banco-leva) * 40px) calc(var(--imp-banco-leva) * -14px)
-      color-mix(in srgb, var(--imp-carta-ombra) 45%, transparent);
 }
 
 .imp-root .imp-banco__posa {
@@ -715,8 +927,12 @@
 }
 
 .imp-root .imp-banco__prova {
-  /* La prova si guarda da vicino: il solco è più marcato che sul foglio del sito. */
-  --imp-rilievo: calc(2.6 + var(--imp-banco-leva) * 1.4);
+  /*
+   * La prova si guarda da vicino: il solco è più marcato che sul foglio del
+   * sito, e affonda con la leva. Tetto a 3: oltre, le due ombre nette del
+   * fallback si leggono come una seconda copia (lo "sdoppio" del giro 1).
+   */
+  --imp-rilievo: calc(2.2 + var(--imp-banco-leva) * 0.8);
   position: absolute;
   inset: 0;
   container-type: inline-size;
@@ -804,7 +1020,7 @@
 }
 
 .imp-root .imp-banco__riga--secondaria {
-  --imp-rilievo: 1.8;
+  --imp-rilievo: 1.6;
   font-family: var(--imp-font-testo);
   font-weight: 500;
   line-height: 1.25;
@@ -813,7 +1029,12 @@
 
 /* Il campo vuoto mostra l'esempio, premuto più leggero. */
 .imp-root .imp-banco__riga--esempio {
-  --imp-rilievo: 1.7;
+  --imp-rilievo: 1.5;
+}
+
+/* La lamina ha due ombre nette (drop-shadow): profondità fissa e bassa, mai doppia. */
+.imp-root .imp-banco__riga.imp-caldo {
+  --imp-rilievo: 1.1;
 }
 
 .imp-root .imp-banco__riga--esempio:is(.imp-inchiostro, .imp-caldo) {

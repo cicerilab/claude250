@@ -141,3 +141,34 @@ cambia il pezzo in vista. Forced colors: bordo di sistema sui pezzi.
   Il taglio delle pagine è DOM fuori dal pezzo, non va nello shader.
 - **accessibility-auditor**: provare l'anello di focus sul "Prova la tua"
   su Grafite (lamina con bordo `--imp-lamina-bordo`).
+
+---
+
+## Giro 2
+
+Voti del giro 1: Per chi 6,5 (awwwards-jury §5), più responsive-tester
+(punti 2, 3, 5), accessibility-auditor M1, shader-engineer ("Chiara Zanin").
+Cosa è cambiato, solo nei miei tre file:
+
+| Critica | Correzione |
+|---|---|
+| Tre bottoni "Prova la tua" in lamina in fila | Via. Sotto ogni pezzo un **link testuale** d'inchiostro (`imp-ix-link` + freccina disegnata col bordo) con il testo `provaAria` del copywriter: "Prova la tua partecipazione", "Prova il tuo biglietto", "Prova il tuo libro". Anche l'**oggetto è cliccabile** (clic sul tavolo = clic sul link; tastiera e lettori usano il link). Nessun bottone nella sezione. |
+| "Noncello" tagliato (1440, 2560) | Titolo a 10,5cqi, wdth 112,5, a capo parola per parola: sta nei 76cqi interni della copertina a ogni larghezza (verificato con script: nessun figlio del pezzo supera il bordo, 375-2560). |
+| Copertina enorme e vuota | Copertina al 70% della partecipazione; "poesie" in testa con filetto come nome di collana, titolo sotto, autrice al piede. |
+| Biglietto minuscolo e isolato | Biglietto a 0,82 della partecipazione (≈ 310 px a 1440), **appoggiato sull'angolo** della partecipazione e sovrapposto di ~40 px (i pezzi si toccano, sono sul bancone). Nel mazzo 84% del posto. |
+| "Chiara Zanin" esce dal biglietto | Nome a 9,6cqi (≈ 72cqi di riga, 82cqi disponibili). |
+| Tre blocchi di testo uguali (la card tornata) | Didascalia da catalogo: nome (Anybody 20-22), una nota di due righe ("per chi si sposa." in 600 + righe velate), prezzo, link. Posizioni diverse: partecipazione sotto a sinistra, biglietto sotto il biglietto più in basso e rientrato, copertina **a bandiera destra** sotto il libro. |
+| Composizione a 1440 | Tutti i posti in una sola cella della griglia, posizionati in frazioni di `--_p` (4 colonne): scala coerente fino a 2560, nessuna colonna vuota fissa. |
+| Frecce coperte dai fissi (375, 768) | Nomi e frecce **sopra** la fila, subito dopo l'intro: con la sezione in vista non stanno più nella fascia dei fissi in basso. Sotto la fila, `padding-block-end` = piede + altezza del segnapagina. |
+| Copertina vuota col GL a 2560 | `priorita` 4 ai tre pezzi e 2 alla busta (blocks.ts sceglie per priorità); le mie regole di trasparenza hanno `:not([data-imp-gl="fuori"])`: se il GL non disegna un pezzo, il DOM resta visibile. Il fondo del pezzo in quel caso dipende da `relief-fallback.css` (art-director). |
+| M1, annuncio doppio Cipria/Citrino | Al clic prima `cambiaCarta(...)`, **poi** (a onda finita) `aggiornaProva`. Se il prodotto cambia annuncia il banco (Banco.tsx, carta già scambiata: giusta); se è lo stesso il banco tace e annuncio io `bancoImpostato`. Un solo annuncio, con la carta giusta. Il banco si aggiorna ~700 ms dopo il clic, mentre la pagina sta ancora viaggiando. |
+
+Stringhe: la "collana" chiesta dalla giuria non c'è in `testi.ts`; uso
+`rilievo[2]` ("poesie") come nome di collana. Se il copywriter vuole un nome
+vero (per esempio una collana della casa editrice), va aggiunto a
+`PER_CHI.pezzi[2].rilievo` e a `alt`.
+
+Verifica giro 2: server mio `npx vite --port 8107 --strictPort` (chiuso alla
+fine), Playwright con i font serviti da `page.route` + `fetch` di Node.
+Screenshot in `/tmp/claude-0/shots-per-chi/giro2/`:
+`{375,768,1440,2560}-{citrino,cotone}-{gl0,gl}(-b).png`.

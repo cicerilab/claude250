@@ -23,7 +23,8 @@
  *   (una o due righe, spezzate tra le parole), la riga "La tua prova è in
  *   stampa." sostituisce il sottotitolo, la pressa si riarma e riscende;
  * - l'invito "luce col telefono" resta nel flusso, sotto il bottone.
- * Il dial della luce è passato nella testata (giuria: allineato alla gabbia).
+ * Il dial della luce (solo desktop) sta sotto "ta", chiuso sul margine
+ * esterno come la parola (giuria: allineato alla gabbia, accanto alla parola).
  *
  * Nessuna informazione solo nel rilievo; nessun accesso a window/document a
  * livello di modulo.
@@ -32,8 +33,9 @@
 import { useCallback, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import './hero.css';
 
-import { ANNUNCI, COMUNI, HERO as TESTI_HERO, RILIEVI, TESTATA } from '../../content/testi';
+import { ANNUNCI, COMUNI, HERO as TESTI_HERO, LUCE, RILIEVI, TESTATA } from '../../content/testi';
 import { attivaGyro, rifiutaInvito, useGyro } from '../../interaction/gyroPermission';
+import { useLuceDial } from '../../interaction/light';
 import { ATTESA_PRESSA, HERO as MOTO_HERO } from '../../motion/choreography';
 import { usePressione } from '../../motion/usePressione';
 import { useRelief } from '../../relief/useRelief';
@@ -184,6 +186,25 @@ function InvitoLuce({ onEsito }: { onEsito: (annuncio: string | null) => void })
   );
 }
 
+/**
+ * Dial "Direzione della luce" (solo da 1024 px): sotto "ta", chiuso sul
+ * margine esterno come la parola, alla linea del bottone.
+ */
+function DialLuce() {
+  const dial = useLuceDial();
+  return (
+    <div className="imp-hero__luce">
+      <span className="imp-hero__luce-etichetta" aria-hidden="true">
+        {LUCE.etichetta}
+      </span>
+      <div className="imp-ix-dial" {...dial.contenitoreProps}>
+        <span className="imp-ix-dial__icona" aria-hidden="true" />
+        <input className="imp-ix-dial__input" {...dial.inputProps} />
+      </div>
+    </div>
+  );
+}
+
 export default function Hero() {
   const testoCliente = useImpronta((s) => s.testoCliente);
   const cliente = testoCliente !== null;
@@ -231,7 +252,7 @@ export default function Hero() {
 
   const esitoInvito = useCallback((testo: string | null) => {
     // Un NBSP in coda rende "nuovo" lo stesso testo per aria-live.
-    if (testo !== null) setAnnuncio((prima) => (prima === testo ? `${testo} ` : testo));
+    if (testo !== null) setAnnuncio((prima) => (prima === testo ? `${testo}\u00a0` : testo));
     // La riga dell'invito sparisce: il fuoco torna sul bottone che le sta sopra.
     ctaRef.current?.focus({ preventScroll: true });
   }, []);
@@ -275,6 +296,8 @@ export default function Hero() {
               {annuncio}
             </p>
           </div>
+
+          <DialLuce />
         </div>
 
         {/* "impronta" ripete il marchio (decorativa); il testo del cliente no. */}
