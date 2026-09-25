@@ -255,3 +255,87 @@ Soluzione:
 ## 5. Chiusura
 
 Server di sviluppo sulla porta 8101 chiuso a fine lavoro. Nessun commit.
+
+---
+
+# Giro 2
+
+Voti del giro 1: Hero 5, Testata 6 (docs/awwwards-jury.md §2 e §5). Punti
+applicati, solo nei miei file (Hero.tsx, hero.css, Testata.tsx, testata.css):
+
+## Hero ricomposto
+- **La parola è l'oggetto**: "impron" / "ta" su due righe premute con lo
+  stesso corpo. La prima riga riempie l'area viva al pixel (misura del DOM dei
+  gemelli invisibili, `100cqi / em`), la seconda chiude sul margine esterno
+  (`text-align: right`: box a tutta larghezza, così la pressa non cambia la
+  misura del blocco e lo shader legge l'allineamento dal computed style).
+  Altezza: 1440×900 circa 360 px (40%); 2560×1440 circa 600 px; 375 due righe
+  da circa 85 px (prima una sola da 61). Tetto: 42svh per tutte le righe.
+- **Titolo agganciato**: da 1024 px il blocco in inchiostro sta nel vuoto a
+  sinistra di "ta" (colonne 1-7). L'ultima riga del titolo sta sulla linea di
+  base di "ta", e in ogni caso a 16 px sotto la discendente della "p".
+  Il titolo scala a `min(titolo-1, 3,55cqi)` per restare su due righe in sette
+  colonne. Sotto i 1024 px il blocco sta sotto "ta", a 24-40 px dalla linea di
+  base.
+- **Niente vuoti**: l'hero è alto quanto il suo contenuto (via il
+  `min-height: 100svh` e il frontespizio del giro 1, che a 768 lasciava 380 px
+  vuoti). A 375, 768, 1440 e 2560 la sezione dopo comincia nella prima
+  schermata.
+- **2560**: l'hero non è più dentro `.imp-page` (1680 px al massimo). Usa
+  tutta la finestra con i margini da libro, quindi la parola è grande quanto
+  la copertina. Le sezioni dopo restano nella gabbia.
+- **Dial della luce**: sotto "ta", chiuso sul margine esterno, alla linea del
+  bottone (non più isolato a metà pagina). L'etichetta resta
+  `LUCE.etichetta` ("luce").
+- **Testo del cliente** dopo l'invio: una o due righe spezzate tra le parole
+  (più uguali possibile), sempre sopra al blocco in inchiostro.
+
+## Testata
+- **Marchio sull'asse**: da 641 px sta al centro della riga, come una testata
+  di giornale (in alto a sinistra c'è il bottone del sito, quindi l'asse del
+  margine interno a x 86 non è libero). È alto 26 px da 1200 px; tra 1024 e
+  1199 parte dopo il bottone del sito, perché le voci gli arriverebbero sopra.
+  La riga è chiusa su margini simmetrici (margine interno da entrambi i lati).
+- **Voce corrente vera**: si accende solo in lavori, legatoria e bottega; in
+  tecniche, carta, banco, colophon e hero nessuna voce.
+- **Un solo "Prova la tua" per schermo**: la testata osserva tutti gli
+  `a[href="#banco"]` del contenuto (IntersectionObserver più
+  MutationObserver, esclusi i propri `data-imp-richiamo`). Finché uno è in
+  vista (hero, pezzi di Per chi, legatoria, colophon), il bottone della
+  testata esce (le voci scivolano a destra, solo `transform`) e il richiamo
+  mobile in basso non compare. Risolve anche il doppio bottone a 375 e la
+  freccia "›" coperta a 768 (responsive-tester).
+- **Lamina**: resta solo sul bottone dell'hero (le classi sono
+  dell'art-director). "Prova la tua" della testata e dell'angolo in basso sono
+  in inchiostro pieno sulla carta.
+- **Indice mobile**: il foglio ora scende dalla riga in alto, dove sta il
+  bottone (la giuria notava il triangolo in su per un menu che scende). Il
+  triangolo punta in giù, "indice" è a 15 px invece di 14, e il foglio si
+  richiude tirando in su la linguetta al piede. Da 641 px scende sotto la riga,
+  sul lato destro, lontano dal bottone del sito.
+
+## Accessibilità
+- **A2 punto 3**: dopo uno spostamento del fuoco fuori dalla testata, per
+  400 ms la riga mobile non rientra, così non copre l'elemento appena portato
+  in vista.
+- **A3**: `.imp-segnapagina` è nascosto con `@media (max-height: 34rem)`.
+- **B5**: tolti gli annunci "Indice aperto." / "Indice chiuso.".
+
+## Verifica
+- `npm run typecheck` e `npm run lint` verdi.
+- Server mio `npx vite --port 8103 --strictPort`, chiuso alla fine. Font veri
+  serviti con `page.route`.
+- Screenshot in `/tmp/claude-0/shots-hero/giro2/`: hero `hero-{375,768,1440,2560}-{gl,gl0}-{citrino,cotone}.png`,
+  più `scroll-{375,768,1440}-{900,2600}.png` e `indice-375.png`. Manca 2560
+  con GL: lo scatto ha superato il tempo limite in SwiftShader.
+
+## Richieste
+- **copywriter**: la giuria chiede per il dial un'etichetta parlante tipo
+  "sposta la luce". Oggi c'è `LUCE.etichetta = 'luce'`; se si vuole, serve una
+  nuova chiave (per esempio `LUCE.etichettaLunga`).
+- **interaction-designer**: A4 (lampeggio con i radio delle carte, anche
+  nell'indice) si corregge in `paperWave.ts`, limitando la frequenza dei
+  cambi.
+- **per-chi, legatoria, colophon**: il richiamo della testata e quello in
+  basso si nascondono da soli quando i loro link al banco sono in vista.
+  Nessun obbligo di toglierli per causa mia.

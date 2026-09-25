@@ -376,15 +376,21 @@
   font-weight: 500;
 }
 
-/* Sotto i 380 px di colonna la misura sta nella sagoma e nel riepilogo, non sotto il nome. */
-@container (max-width: 380px) {
-  .imp-root .imp-banco__formato-misura {
-    position: absolute;
-    inline-size: 1px;
-    block-size: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
+/*
+ * Colonna stretta (telefono): due per riga, stessa scala. La prima riga
+ * (biglietto, partecipazione) è alta quanto la partecipazione, la seconda
+ * quanto il foglio A4: niente carta vuota sopra i pezzi piccoli.
+ */
+@container (max-width: 440px) {
+  .imp-root .imp-banco__formati {
+    --imp-banco-k: min(0.5px, calc((100cqw - var(--imp-sp-5)) / 2 / 220));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: var(--imp-sp-5);
+    column-gap: var(--imp-sp-5);
+  }
+
+  .imp-root .imp-banco .imp-banco__formato:is([data-prodotto='biglietto'], [data-prodotto='partecipazione']) {
+    grid-template-rows: calc(var(--imp-banco-k) * 105 + 10px) auto auto auto;
   }
 }
 
@@ -1000,6 +1006,8 @@
 .imp-root .imp-banco__riga {
   display: block;
   min-inline-size: 0;
+  /* Il cambio di tecnica avviene sotto la platina (ristampa): sostituzione secca, niente dissolvenza. */
+  transition: none;
 }
 
 .imp-root .imp-banco__riga--principale {
@@ -1026,7 +1034,8 @@
 
 /* Il campo vuoto mostra l'esempio, premuto più leggero. */
 .imp-root .imp-banco__riga--esempio {
-  --imp-rilievo: 2.4;
+  /* L'esempio si legge come la prova vera (giuria: "riquadro vuoto"); che è un esempio lo dice la nota. */
+  --imp-rilievo: 3.2;
 }
 
 /* L'inchiostro si legge da sé: il solco resta un filo. */

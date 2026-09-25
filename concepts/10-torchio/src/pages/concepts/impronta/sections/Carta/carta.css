@@ -167,7 +167,7 @@
 }
 
 .imp-root .imp-carta__secco {
-  --imp-rilievo: 1.9;
+  --imp-rilievo: 1.3;
   display: block;
   inline-size: max-content;
   font-family: var(--imp-font-display);
@@ -185,11 +185,11 @@
 /* Grafite: il solco è quasi del colore della carta, serve più luce e più
    ombra per leggerlo di luce radente. */
 .imp-root .imp-carta__striscia--grafite .imp-carta__secco {
-  --imp-rilievo: 2.2;
+  --imp-rilievo: 1.7;
 }
 
 .imp-root .imp-carta__striscia--cipria .imp-carta__secco {
-  --imp-rilievo: 2;
+  --imp-rilievo: 1.5;
 }
 
 /* --------------------------------------------------------------------------

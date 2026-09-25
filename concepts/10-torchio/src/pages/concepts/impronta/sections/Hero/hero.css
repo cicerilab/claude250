@@ -26,7 +26,7 @@
 
 @media (min-width: 1024px) {
   .imp-root .imp-hero {
-    padding-block: clamp(16px, 3svh, 40px) var(--imp-sp-8);
+    padding-block: clamp(20px, 4svh, 56px) var(--imp-sp-8);
   }
 }
 
