@@ -193,7 +193,7 @@ export function indiceCarta(carta: CartaGL | undefined | null): number {
 export interface PresetCarta {
   /** Grammatura, solo documentale e per lo spessore. */
   grammatura: number;
-  /** Ampiezza della fibra (macchie di formazione e micro rilievo), 0..0,1. */
+  /** Moltiplicatore della fibra (micro rilievo e macchie di formazione), 1 = carta media. */
   fibra: number;
   /** Quanto le facce illuminate vanno verso il colore "luce" della carta, 0..1. */
   luceForza: number;
@@ -212,10 +212,10 @@ export interface PresetCarta {
  *   per staccare il solco dal fondo.
  */
 export const PRESET_CARTA: Readonly<Record<CartaGL, PresetCarta>> = {
-  citrino: { grammatura: 300, fibra: 0.032, luceForza: 0.85, ombraForza: 0.8, assorbimento: 0.5, spessorePx: 1 },
-  cotone: { grammatura: 600, fibra: 0.045, luceForza: 0.95, ombraForza: 0.85, assorbimento: 0.7, spessorePx: 1.8 },
-  cipria: { grammatura: 350, fibra: 0.034, luceForza: 0.85, ombraForza: 0.8, assorbimento: 0.55, spessorePx: 1.1 },
-  grafite: { grammatura: 400, fibra: 0.022, luceForza: 0.8, ombraForza: 1, assorbimento: 0.4, spessorePx: 1.3 },
+  citrino: { grammatura: 300, fibra: 1, luceForza: 0.85, ombraForza: 0.8, assorbimento: 0.5, spessorePx: 1 },
+  cotone: { grammatura: 600, fibra: 1.4, luceForza: 0.95, ombraForza: 0.85, assorbimento: 0.7, spessorePx: 1.8 },
+  cipria: { grammatura: 350, fibra: 1.05, luceForza: 0.85, ombraForza: 0.8, assorbimento: 0.55, spessorePx: 1.1 },
+  grafite: { grammatura: 400, fibra: 0.7, luceForza: 0.8, ombraForza: 1, assorbimento: 0.4, spessorePx: 1.3 },
 };
 
 /** Colore in sRGB 0..1. Lo shader lavora in sRGB perché la carta piatta deve uguagliare al byte il CSS. */
@@ -332,7 +332,7 @@ export function puntoLuce(
  * di contatto dei pezzi appoggiati, w = scurimento del fondo del solco.
  */
 export const CARTA_GLOBALE = {
-  pendenzaFibra: 0.09,
+  pendenzaFibra: 0.03,
   sensibilitaLuce: 2.2,
   ombraContatto: 0.45,
   fondoSolco: 0.1,

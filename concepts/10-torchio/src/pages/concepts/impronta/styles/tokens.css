@@ -1,0 +1,341 @@
+/* ==========================================================================
+   IMPRONTA · design tokens (art-director)
+   --------------------------------------------------------------------------
+   Unico file in cui vivono i colori e le misure del concept. Tutte le
+   sezioni usano queste variabili, mai hex diretti.
+
+   Come funziona il cambio carta
+   - `.imp-root[data-carta="…"]` imposta la carta di tutto il sito.
+   - `[data-carta="…"]` su un elemento interno (i pezzi di "Per chi", la
+     prova del banco, le strisce della sezione carta) ridefinisce le stesse
+     variabili solo per quell'elemento e i suoi figli.
+   - Le variabili `--imp-sito-*` sono definite SOLO su `.imp-root`: dentro un
+     pezzo di carta diversa dicono ancora com'è la carta del sito sotto
+     (servono per l'ombra di appoggio, che cade sul foglio del sito).
+
+   Contrasti WCAG calcolati in docs/art-director.md (tabella completa).
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Font di ripiego con metriche tarate (niente salto al cambio font).
+   Misure prese dai file woff2 serviti da Google Fonts (Anybody v13,
+   Hanken Grotesk v12) contro Arial/Liberation Sans, testo italiano di prova.
+   - Hanken 400 vs Arial: larghezza 100,2%, ascent 1,000, descent 0,303.
+   - Anybody wdth 100 wght 700 vs Arial Bold: larghezza 112,3%,
+     ascent 0,795, descent 0,240 (tarato sui titoli, non sulle parole larghe:
+     quelle sono fantasmi a riga singola in contenitori già dimensionati).
+   I nomi sono prefissati: nessun conflitto con altre pagine del sito.
+   -------------------------------------------------------------------------- */
+@font-face {
+  font-family: "Impronta Hanken Ripiego";
+  src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("Arimo"), local("Helvetica Neue"), local("Helvetica");
+  font-weight: 100 900;
+  font-style: normal;
+  size-adjust: 100.2%;
+  ascent-override: 99.8%;
+  descent-override: 30.24%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Impronta Anybody Ripiego";
+  src: local("Arial Bold"), local("Arial-BoldMT"), local("Liberation Sans Bold"), local("Arimo Bold"), local("Helvetica Neue Bold"), local("Helvetica Bold");
+  font-weight: 100 900;
+  font-style: normal;
+  size-adjust: 112.3%;
+  ascent-override: 70.79%;
+  descent-override: 21.37%;
+  line-gap-override: 0%;
+}
+
+/* --------------------------------------------------------------------------
+   1. Token comuni (non dipendono dalla carta)
+   -------------------------------------------------------------------------- */
+.imp-root {
+  /* Famiglie */
+  --imp-font-display: "Anybody", "Impronta Anybody Ripiego", Arial, sans-serif;
+  --imp-font-testo: "Hanken Grotesk", "Impronta Hanken Ripiego", "Helvetica Neue", Arial, sans-serif;
+
+  /* Scala tipografica fluida: valore a 375 px → valore a 1440 px.
+     Formula: clamp(min, min - pendenza*375 + pendenza*100vw, max).
+     Tutto in rem sul valore fisso, così lo zoom del browser funziona. */
+  --imp-fs-titolo-1: clamp(1.875rem, calc(1.435rem + 1.878vw), 3.125rem);   /* H1 hero 30 → 50 */
+  --imp-fs-titolo-2: clamp(1.875rem, calc(1.215rem + 2.817vw), 3.75rem);    /* H2 sezioni 30 → 60 */
+  --imp-fs-titolo-3: clamp(1.375rem, calc(1.199rem + 0.751vw), 1.875rem);   /* H3 22 → 30 */
+  --imp-fs-nome: clamp(1.25rem, calc(1.206rem + 0.188vw), 1.375rem);        /* parola-nome 20 → 22 */
+  --imp-fs-secco-grande: clamp(2rem, calc(1.384rem + 2.629vw), 3.75rem);    /* indirizzo, nomi carta 32 → 60 */
+  --imp-fs-prezzo: clamp(1.75rem, calc(1.398rem + 1.502vw), 2.75rem);       /* prezzo in lamina 28 → 44 */
+  --imp-fs-marchio: 1.25rem;                                                /* IMPRONTA in testata, 20 */
+  --imp-fs-lead: clamp(1.125rem, calc(1.059rem + 0.282vw), 1.3125rem);      /* sottotitolo hero 18 → 21 */
+  --imp-fs-corpo: clamp(1.0625rem, calc(1.04rem + 0.094vw), 1.125rem);      /* corpo 17 → 18 */
+  --imp-fs-piccolo: clamp(0.9375rem, calc(0.915rem + 0.094vw), 1rem);       /* didascalie, colophon 15 → 16 */
+  --imp-fs-nota: 0.875rem;                                                  /* 14, minimo assoluto */
+  --imp-fs-bottone: 1.0625rem;                                              /* 17 */
+  --imp-fs-leva: 1.125rem;                                                  /* 18 */
+  --imp-fs-campo: 1.0625rem;                                                /* 17: niente zoom iOS */
+
+  /* Interlinea */
+  --imp-lh-secco: 0.86;
+  --imp-lh-titolo-1: 1.04;
+  --imp-lh-titolo-2: 1;
+  --imp-lh-titolo-3: 1.08;
+  --imp-lh-nome: 1;
+  --imp-lh-corpo: 1.55;
+  --imp-lh-lead: 1.45;
+  --imp-lh-piccolo: 1.5;
+  --imp-lh-interfaccia: 1.15;
+
+  /* Spaziatura tra le lettere (em) */
+  --imp-trk-secco: -0.01em;
+  --imp-trk-titolo: -0.012em;
+  --imp-trk-titolo-3: -0.005em;
+  --imp-trk-nome: 0em;
+  --imp-trk-marchio: 0.04em;
+  --imp-trk-corpo: 0em;
+  --imp-trk-piccolo: 0.005em;
+
+  /* Assi di Anybody (valori "di arrivo", cioè a pressione 1).
+     Le parole premute usano solo valori che il canvas 2D sa disegnare:
+     75, 87.5, 100, 112.5, 125, 150 (vedi CANVAS_STRETCH in tokens.ts). */
+  --imp-wdth-hero: 100;
+  --imp-wght-hero: 900;
+  --imp-hero-em: 5.479;           /* larghezza di "impronta" in em a wght 900, tracking incluso */
+  --imp-wdth-titolo-1: 100;
+  --imp-wght-titolo-1: 700;
+  --imp-wdth-titolo-2: 100;
+  --imp-wght-titolo-2: 750;
+  --imp-wdth-titolo-3: 100;
+  --imp-wght-titolo-3: 650;
+  --imp-wdth-nome: 150;
+  --imp-wght-nome: 800;
+  --imp-wdth-secco-grande: 112.5;
+  --imp-wght-secco-grande: 800;
+  --imp-wdth-prezzo: 125;
+  --imp-wght-prezzo: 900;
+  --imp-wdth-marchio: 150;
+  --imp-wght-marchio: 800;
+  --imp-wght-corpo: 400;
+  --imp-wght-corpo-forte: 600;
+  --imp-wght-interfaccia: 500;
+  --imp-wght-bottone: 600;
+
+  /* Pressione (0 → 1). Scritta dal motion-designer sugli elementi premuti.
+     Qui il default: tutto già premuto (pagina statica, reduced motion). */
+  --imp-press: 1;
+  --imp-rilievo: 1;               /* profondità relativa del blocco (spec.profondita) */
+  --imp-press-wdth-riposo: 0.8;   /* larghezza a pressione 0 = 80% di quella di arrivo */
+  --imp-press-wght-riposo: 700;   /* peso a pressione 0 */
+
+  /* Direzione della luce per il rilievo CSS: vettore unitario che punta
+     VERSO la luce, in coordinate schermo (x a destra, y in basso).
+     Default: luce in alto a sinistra (azimut 135°, x = cos, y = -sin). */
+  --imp-luce-x: -0.7071;
+  --imp-luce-y: -0.7071;
+
+  /* Griglia da libro (canone 2:3:4:6 semplificato: interno 1u, testa 1,5u,
+     esterno 2u, piede 3u). Su mobile i margini laterali sono 20 px. */
+  --imp-pagina-max: 1680px;
+  --imp-vw: min(100vw, var(--imp-pagina-max));
+  --imp-u: clamp(20px, calc(var(--imp-vw) * 0.06), 101px);
+  --imp-margine-interno: 20px;
+  --imp-margine-esterno: 20px;
+  --imp-testa: clamp(48px, calc(var(--imp-u) * 1.5), 128px);
+  --imp-piede: clamp(96px, calc(var(--imp-u) * 3), 240px);
+  --imp-colonne: 4;
+  --imp-canalino: 21px;
+  --imp-area-viva: calc(var(--imp-vw) - var(--imp-margine-interno) - var(--imp-margine-esterno));
+  --imp-colonna: calc((var(--imp-area-viva) - (var(--imp-colonne) - 1) * var(--imp-canalino)) / var(--imp-colonne));
+  --imp-giustezza: 62ch;
+  --imp-giustezza-stretta: 44ch;
+
+  /* Corpo della parola dell'hero: riempie l'area viva, mai tagliata. */
+  --imp-fs-secco-hero: calc(var(--imp-area-viva) / var(--imp-hero-em));
+
+  /* Spazi (multipli di 4 px) */
+  --imp-sp-1: 0.25rem;  /* 4 */
+  --imp-sp-2: 0.5rem;   /* 8 */
+  --imp-sp-3: 0.75rem;  /* 12 */
+  --imp-sp-4: 1rem;     /* 16 */
+  --imp-sp-5: 1.5rem;   /* 24 */
+  --imp-sp-6: 2rem;     /* 32 */
+  --imp-sp-7: 3rem;     /* 48 */
+  --imp-sp-8: 4rem;     /* 64 */
+  --imp-sp-9: 6rem;     /* 96 */
+  --imp-sp-10: 8rem;    /* 128 */
+
+  /* Misure di interfaccia */
+  --imp-tocco-min: 44px;
+  --imp-bottone-h: 52px;
+  --imp-bottone-h-grande: 56px;
+  --imp-leva-h: 72px;
+  --imp-campo-h: 56px;
+  --imp-testata-h: 64px;
+  --imp-testata-h-fissa: 56px;
+  --imp-segnapagina-h: 56px;
+  --imp-raggio: 0;
+  --imp-raggio-leva: 999px;       /* unica eccezione: il manico della leva */
+
+  /* Lamina argento: unico accento. Solo marchio, prezzo, leva/bottone. */
+  --imp-lamina: #C8CDD2;
+  --imp-lamina-chiara: #DDE1E5;
+  --imp-lamina-scura: #A7AEB5;
+  --imp-lamina-riflesso: #EEF1F3;
+  --imp-lamina-profonda: #7E868E; /* solo nella sfumatura delle lettere in lamina */
+  --imp-su-lamina: #17231D;       /* testo sulla lamina, su tutte le carte */
+  /* Superfici (bottone, leva, targhetta): satinato quasi piatto, due toni. */
+  --imp-lamina-sfumatura: linear-gradient(100deg, var(--imp-lamina-chiara) 0%, var(--imp-lamina) 55%, var(--imp-lamina-scura) 100%);
+  --imp-lamina-sfumatura-premuta: linear-gradient(100deg, var(--imp-lamina-scura) 0%, var(--imp-lamina) 60%, var(--imp-lamina-chiara) 100%);
+  /* Lettere in lamina: escursione più ampia, chiaro in alto e scuro in basso,
+     così la forma si legge anche su Citrino e Cipria (stessa luminanza
+     dell'argento). Ferma, mai animata. */
+  --imp-lamina-sfumatura-testo: linear-gradient(176deg, var(--imp-lamina-riflesso) 10%, var(--imp-lamina) 46%, var(--imp-lamina-profonda) 92%);
+
+  /* Anello di focus */
+  --imp-focus-spessore: 3px;
+  --imp-focus-distanza: 3px;
+
+  /* Sottolineature dei link (niente colore: solo inchiostro e spessore) */
+  --imp-sottolineatura: 0.07em;
+  --imp-sottolineatura-hover: 0.14em;
+  --imp-sottolineatura-distanza: 0.2em;
+
+  /* Stati */
+  --imp-bordo-scelto: 3px;        /* bordo interno di una scelta attiva */
+  --imp-bordo-errore: 3px;        /* campo non valido (niente rosso: inchiostro + segno "!") */
+  --imp-opacita-disabilitato: 0.5;
+
+  /* Livelli */
+  --imp-z-canvas: 0;
+  --imp-z-contenuto: 1;
+  --imp-z-testata: 10;
+  --imp-z-onda: 20;
+}
+
+/* Breakpoint: 600 (margini da libro) e 1024 (desktop). */
+@media (min-width: 600px) {
+  .imp-root {
+    --imp-margine-interno: var(--imp-u);
+    --imp-margine-esterno: calc(var(--imp-u) * 2);
+    --imp-colonne: 8;
+    --imp-canalino: 22px;
+    --imp-wdth-hero: 125;
+    --imp-hero-em: 6.819;
+  }
+}
+
+@media (min-width: 1024px) {
+  .imp-root {
+    --imp-colonne: 12;
+    --imp-canalino: 24px;
+    --imp-wdth-hero: 150;
+    --imp-hero-em: 8.158;
+    --imp-wdth-titolo-2: 110;
+    --imp-wdth-secco-grande: 150;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. Le quattro carte
+   Ogni blocco vale sia per la carta del sito (.imp-root[data-carta]) sia
+   per un foglio interno ([data-carta] dentro .imp-root).
+   Senza attributo, .imp-root è Citrino.
+   -------------------------------------------------------------------------- */
+.imp-root,
+.imp-root[data-carta="citrino"],
+.imp-root [data-carta="citrino"] {
+  color-scheme: light;
+  --imp-carta: #E4CF3F;
+  --imp-carta-luce: #F5E97E;
+  --imp-carta-ombra: #9C8A1E;
+  --imp-carta-costa: #BCA92D;
+  --imp-secco-fondo: #D8C43A;
+  --imp-inchiostro: #17231D;
+  --imp-inchiostro-velato: #505327;
+  --imp-lamina-bordo: #17231D;
+  --imp-taglio: #17231D;
+  --imp-spessore: 3px;
+  /* Fibra statica: macchie scure (ombra) e chiare (luce), senso della fibra orizzontale. */
+  --imp-fibra: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9 .24' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.612 0 0 0 0 0.541 0 0 0 0 0.118 0.42 0 0 0 -0.22'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.62 .18' numOctaves='3' seed='13' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.961 0 0 0 0 0.914 0 0 0 0 0.494 -0.46 0 0 0 0.2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+}
+
+.imp-root[data-carta="cotone"],
+.imp-root [data-carta="cotone"] {
+  color-scheme: light;
+  --imp-carta: #F1F1EE;
+  --imp-carta-luce: #FFFFFF;
+  --imp-carta-ombra: #B9BAB3;
+  --imp-carta-costa: #D2D3CE;
+  --imp-secco-fondo: #E8E8E5;
+  --imp-inchiostro: #17231D;
+  --imp-inchiostro-velato: #545D58;
+  --imp-lamina-bordo: #17231D;
+  --imp-taglio: #E4CF3F;
+  --imp-spessore: 6px;
+  /* Fibra statica: macchie scure (ombra) e chiare (luce), senso della fibra orizzontale. */
+  --imp-fibra: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9 .24' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.725 0 0 0 0 0.729 0 0 0 0 0.702 0.46 0 0 0 -0.24'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.62 .18' numOctaves='3' seed='13' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 -0.5 0 0 0 0.22'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+}
+
+.imp-root[data-carta="cipria"],
+.imp-root [data-carta="cipria"] {
+  color-scheme: light;
+  --imp-carta: #E8B9B3;
+  --imp-carta-luce: #F7D8D3;
+  --imp-carta-ombra: #A9776F;
+  --imp-carta-costa: #C5958E;
+  --imp-secco-fondo: #DEAEA8;
+  --imp-inchiostro: #231518;
+  --imp-inchiostro-velato: #5A4343;
+  --imp-lamina-bordo: #231518;
+  --imp-taglio: #2A2C2F;
+  --imp-spessore: 4px;
+  /* Fibra statica: macchie scure (ombra) e chiare (luce), senso della fibra orizzontale. */
+  --imp-fibra: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9 .24' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.663 0 0 0 0 0.467 0 0 0 0 0.435 0.42 0 0 0 -0.22'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.62 .18' numOctaves='3' seed='13' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.969 0 0 0 0 0.847 0 0 0 0 0.827 -0.46 0 0 0 0.2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+}
+
+.imp-root[data-carta="grafite"],
+.imp-root [data-carta="grafite"] {
+  color-scheme: dark;
+  --imp-carta: #2A2C2F;
+  --imp-carta-luce: #44474B;
+  --imp-carta-ombra: #141517;
+  --imp-carta-costa: #373A3D;
+  --imp-secco-fondo: #232528;
+  --imp-inchiostro: #ECEBE6;
+  --imp-inchiostro-velato: #B6B6B3;
+  --imp-lamina-bordo: #A7AEB5;
+  --imp-taglio: #E4CF3F;
+  --imp-spessore: 5px;
+  /* Fibra statica: macchie scure (ombra) e chiare (luce), senso della fibra orizzontale. */
+  --imp-fibra: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9 .24' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.078 0 0 0 0 0.082 0 0 0 0 0.09 0.5 0 0 0 -0.27'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.62 .18' numOctaves='3' seed='13' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.267 0 0 0 0 0.278 0 0 0 0 0.294 -0.52 0 0 0 0.24'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+}
+
+/* --------------------------------------------------------------------------
+   3. Token derivati, ricalcolati su ogni foglio (radice e fogli interni).
+   Una variabile che contiene var() si risolve sull'elemento dove è
+   dichiarata: per questo il blocco vale anche per [data-carta] interni.
+   -------------------------------------------------------------------------- */
+.imp-root,
+.imp-root [data-carta] {
+  --imp-focus-colore: var(--imp-inchiostro);
+  --imp-selezione-fondo: var(--imp-inchiostro);
+  --imp-selezione-testo: var(--imp-carta);
+
+  /* Profondità (vedi DESIGN.md §6). Tutte le ombre sono tinte della carta. */
+  --imp-ombra-costa: 0 var(--imp-spessore) 0 0 var(--imp-carta-costa);
+  --imp-ombra-testata: 0 1px 0 0 var(--imp-carta-costa), 0 10px 14px -14px var(--imp-carta-ombra);
+  --imp-ombra-segnapagina: 0 -1px 0 0 var(--imp-carta-costa), 0 -10px 14px -14px var(--imp-carta-ombra);
+  --imp-ombra-indice: 0 -1px 0 0 var(--imp-carta-costa), 0 -24px 40px -28px var(--imp-carta-ombra);
+  --imp-ombra-premuto: inset 0 2px 3px -1px color-mix(in srgb, var(--imp-carta-ombra) 70%, transparent);
+}
+
+/* Solo sulla radice: com'è la carta del sito sotto ai fogli interni. */
+.imp-root {
+  --imp-sito-carta: var(--imp-carta);
+  --imp-sito-ombra: var(--imp-carta-ombra);
+  --imp-sito-costa: var(--imp-carta-costa);
+  --imp-sito-inchiostro: var(--imp-inchiostro);
+}

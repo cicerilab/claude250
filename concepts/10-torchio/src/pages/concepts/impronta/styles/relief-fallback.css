@@ -1,0 +1,247 @@
+/* ==========================================================================
+   IMPRONTA · rilievo in CSS (art-director)
+   --------------------------------------------------------------------------
+   È la prima pittura del sito (data-gl="pending") e il fallback completo
+   senza WebGL (data-gl="off"). Deve reggere da solo: carta piena con fibra,
+   lettere premute con due livelli di luce e ombra tinti della carta, lamina
+   argento ferma. Niente oro, niente bagliori, niente animazioni qui: quando
+   qualcosa si muove è perché il ticker cambia --imp-press o --imp-luce-x/y.
+
+   Classi materiali (si combinano con la classe di sezione):
+     .imp-secco       lettera premuta senza inchiostro (a secco)
+     .imp-inchiostro  lettera premuta e inchiostrata (a un colore)
+     .imp-caldo       lettera premuta in lamina argento (lamina a caldo)
+     .imp-lamina      superficie in lamina (bottone, leva, targhetta prezzo)
+     .imp-foglio      pezzo di carta appoggiato sul foglio del sito
+     .imp-taglio      modificatore di .imp-foglio: bordo tinto (taglio colorato)
+     .imp-costa       spessore della carta visto di taglio (strisce "La carta")
+     .imp-fibra       fibra della carta su qualsiasi superficie
+     .imp-pressa      parola a riga singola che si allarga sotto la pressa
+
+   Variabili lette (tutte con default in tokens.css):
+     --imp-press      0..1 pressione del blocco (0 piatto, 1 premuto)
+     --imp-rilievo    profondità relativa del blocco (default 1)
+     --imp-luce-x/y   vettore unitario verso la luce (default in alto a sx)
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Carta del sito: fibra solo quando lo shader non c'è (pending/off).
+   Il colore di fondo lo dà base.css con var(--imp-carta).
+   -------------------------------------------------------------------------- */
+.imp-root:not([data-gl="on"]) {
+  background-image: var(--imp-fibra);
+}
+
+.imp-root .imp-fibra {
+  background-image: var(--imp-fibra);
+}
+
+/* --------------------------------------------------------------------------
+   Unità del rilievo.
+   --_imp-d: passo del bisello, proporzionale al corpo (0,016 em), mai sotto
+   0,6 px, scalato da pressione e profondità.
+   --_imp-dx / --_imp-dy: lo stesso passo proiettato sulla direzione della luce.
+   Il lato verso la luce riceve l'ombra (la parete del solco è in ombra),
+   il lato opposto riceve la luce (il labbro della carta che la prende):
+   è la lettura di una lettera PREMUTA dentro il foglio, non in rilievo.
+   -------------------------------------------------------------------------- */
+.imp-root :is(.imp-secco, .imp-inchiostro, .imp-caldo) {
+  --_imp-d: calc(max(0.6px, 0.016em) * var(--imp-press) * var(--imp-rilievo));
+  --_imp-dx: calc(var(--_imp-d) * var(--imp-luce-x));
+  --_imp-dy: calc(var(--_imp-d) * var(--imp-luce-y));
+  font-kerning: normal;
+  text-rendering: geometricPrecision;
+}
+
+/* --------------------------------------------------------------------------
+   .imp-secco · a secco
+   Il fondo del solco è appena più scuro della carta (la fibra compressa).
+   A pressione 0 la lettera ha il colore della carta e nessuna ombra: sparisce.
+   Uso: solo per ripetere un testo già leggibile altrove (aria-hidden) o per
+   parole decorative. Mai testo di lettura a secco.
+   -------------------------------------------------------------------------- */
+.imp-root .imp-secco {
+  color: var(--imp-secco-fondo);
+  text-shadow:
+    calc(var(--_imp-dx) * -1) calc(var(--_imp-dy) * -1) 0 var(--imp-carta-luce),
+    calc(var(--_imp-dx) * -2.2) calc(var(--_imp-dy) * -2.2) calc(var(--_imp-d) * 1.6) color-mix(in srgb, var(--imp-carta-luce) 55%, transparent),
+    calc(var(--_imp-dx) * 0.9) calc(var(--_imp-dy) * 0.9) 0 color-mix(in srgb, var(--imp-carta-ombra) 78%, transparent),
+    calc(var(--_imp-dx) * 1.8) calc(var(--_imp-dy) * 1.8) calc(var(--_imp-d) * 1.4) color-mix(in srgb, var(--imp-carta-ombra) 34%, transparent);
+}
+
+/* Il fondo del solco segue la pressione: piatto a 0, pieno a 1. */
+@supports (color: color-mix(in srgb, red calc(10% * 1), blue)) {
+  .imp-root .imp-secco {
+    color: color-mix(in srgb, var(--imp-carta), var(--imp-secco-fondo) calc(100% * var(--imp-press)));
+  }
+}
+
+/* --------------------------------------------------------------------------
+   .imp-inchiostro · a un colore
+   Inchiostro pieno nel solco, bisello più corto: si vede soprattutto il
+   labbro di luce sul lato lontano dalla lampada.
+   Può portare testo di lettura (contrasto AA su tutte le carte).
+   -------------------------------------------------------------------------- */
+.imp-root .imp-inchiostro {
+  color: var(--imp-inchiostro);
+  text-shadow:
+    calc(var(--_imp-dx) * -0.9) calc(var(--_imp-dy) * -0.9) 0 var(--imp-carta-luce),
+    calc(var(--_imp-dx) * -1.8) calc(var(--_imp-dy) * -1.8) calc(var(--_imp-d) * 1.2) color-mix(in srgb, var(--imp-carta-luce) 45%, transparent),
+    calc(var(--_imp-dx) * 0.7) calc(var(--_imp-dy) * 0.7) calc(var(--_imp-d) * 0.8) color-mix(in srgb, var(--imp-carta-ombra) 45%, transparent);
+}
+
+/* --------------------------------------------------------------------------
+   .imp-caldo · lamina a caldo
+   Argento satinato: sfumatura ferma a due toni (chiaro in alto a sinistra,
+   scuro in basso a destra), nessun riflesso che si muove, nessun bagliore.
+   Le ombre del solco sono drop-shadow (le text-shadow coprirebbero la
+   sfumatura ritagliata sul testo).
+   Solo tre usi nel sito: marchio, prezzo, leva.
+   -------------------------------------------------------------------------- */
+.imp-root .imp-caldo {
+  color: var(--imp-lamina);
+  background-image: var(--imp-lamina-sfumatura-testo);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter:
+    drop-shadow(calc(var(--_imp-dx) * 1.1) calc(var(--_imp-dy) * 1.1) 0 var(--imp-carta-ombra))
+    drop-shadow(calc(var(--_imp-dx) * -0.9) calc(var(--_imp-dy) * -0.9) 0 var(--imp-carta-luce));
+}
+
+/* Se il ritaglio sul testo non è supportato: argento pieno, ben leggibile
+   come forma, ombre invariate. */
+@supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+  .imp-root .imp-caldo {
+    background-image: none;
+    -webkit-text-fill-color: currentColor;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   .imp-lamina · superficie in lamina
+   Per il bottone "Prova la tua", la leva, la targhetta del prezzo.
+   Testo sempre in --imp-su-lamina (verde notte scuro, 7,2:1 anche sul tono
+   più scuro della sfumatura). Filo di bordo 1 px in inchiostro (o argento
+   scuro su Grafite) perché su Citrino e Cipria l'argento ha la stessa
+   luminanza della carta: il bordo rende il bottone riconoscibile (3:1).
+   Gli stati :hover / :active / :focus-visible li scrive l'interaction-designer
+   usando --imp-lamina-sfumatura-premuta e --imp-ombra-premuto.
+   -------------------------------------------------------------------------- */
+.imp-root .imp-lamina {
+  background-color: var(--imp-lamina);
+  background-image: var(--imp-lamina-sfumatura);
+  color: var(--imp-su-lamina);
+  -webkit-text-fill-color: var(--imp-su-lamina);
+  border-radius: var(--imp-raggio);
+  box-shadow: inset 0 0 0 1px var(--imp-lamina-bordo);
+}
+
+/* --------------------------------------------------------------------------
+   .imp-foglio · un pezzo di carta appoggiato sul foglio del sito
+   Il pezzo prende i colori della propria carta (mettere data-carta sul
+   pezzo); lo spessore (costa) è della sua carta; l'ombra di appoggio cade
+   sulla carta del sito (--imp-sito-ombra), corta e tinta: è un cartoncino
+   spesso sul bancone, non una scheda che fluttua.
+   -------------------------------------------------------------------------- */
+.imp-root .imp-foglio {
+  position: relative;
+  background-color: var(--imp-carta);
+  background-image: var(--imp-fibra);
+  color: var(--imp-inchiostro);
+  border-radius: var(--imp-raggio);
+  box-shadow:
+    var(--imp-foglio-bordo, 0 0 0 0 transparent),
+    0 var(--imp-spessore) 0 0 var(--imp-costa-colore, var(--imp-carta-costa)),
+    0 calc(var(--imp-spessore) + 1px) 0 0 color-mix(in srgb, var(--imp-sito-ombra) 55%, transparent),
+    0 calc(var(--imp-spessore) + 3px) calc(var(--imp-spessore) * 2 + 6px) calc(var(--imp-spessore) * -1) color-mix(in srgb, var(--imp-sito-ombra) 50%, transparent);
+}
+
+/* .imp-taglio · taglio colorato: il bordo del cartoncino è tinto.
+   Da sopra si vede come un filo sul perimetro, di taglio come la costa. */
+.imp-root .imp-foglio.imp-taglio {
+  --imp-costa-colore: var(--imp-taglio);
+  --imp-foglio-bordo: inset 0 0 0 1.5px var(--imp-taglio);
+}
+
+/* --------------------------------------------------------------------------
+   .imp-costa · lo spessore della carta visto di taglio
+   Per le strisce della sezione "La carta": una banda sotto il foglio alta
+   quanto --imp-spessore (Citrino 3, Cotone 6, Cipria 4, Grafite 5 px).
+   L'elemento deve stare sopra al successivo (position/z-index della sezione).
+   -------------------------------------------------------------------------- */
+.imp-root .imp-costa {
+  box-shadow:
+    0 var(--imp-spessore) 0 0 var(--imp-costa-colore, var(--imp-carta-costa)),
+    0 calc(var(--imp-spessore) + 1px) 0 0 color-mix(in srgb, var(--imp-carta-ombra) 60%, transparent);
+}
+
+/* --------------------------------------------------------------------------
+   .imp-pressa · la parola che si allarga sotto la pressa
+   Solo per parole su UNA riga, in un elemento a blocco largo quanto il suo
+   contenitore (così animare gli assi non cambia il box e non sposta nulla).
+   Larghezza di arrivo e peso di arrivo si passano con:
+     --imp-wdth-arrivo (default 150) e --imp-wght-arrivo (default 900).
+   A pressione p: wdth = arrivo * (0,8 + 0,2 p), wght = 700 + (arrivo - 700) p.
+   -------------------------------------------------------------------------- */
+.imp-root .imp-pressa {
+  --_imp-wdth: calc(var(--imp-wdth-arrivo, 150) * (var(--imp-press-wdth-riposo) + (1 - var(--imp-press-wdth-riposo)) * var(--imp-press)));
+  --_imp-wght: calc(var(--imp-press-wght-riposo) + (var(--imp-wght-arrivo, 900) - var(--imp-press-wght-riposo)) * var(--imp-press));
+  display: block;
+  white-space: nowrap;
+  font-family: var(--imp-font-display);
+  font-weight: var(--_imp-wght);
+  font-variation-settings: "wdth" var(--_imp-wdth), "wght" var(--_imp-wght);
+  font-synthesis: none;
+}
+
+/* --------------------------------------------------------------------------
+   Con lo shader acceso, i fantasmi registrati (.imp-relief, classe dello
+   scaffold) diventano trasparenti: restano per layout, selezione e misura.
+   Gli assi si fermano allo stato di arrivo: la discesa la fa lo shader.
+   -------------------------------------------------------------------------- */
+.imp-root[data-gl="on"] .imp-relief:is(.imp-secco, .imp-inchiostro, .imp-caldo) {
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+  filter: none;
+  background-image: none;
+}
+
+.imp-root[data-gl="on"] .imp-relief.imp-pressa {
+  --_imp-wdth: var(--imp-wdth-arrivo, 150);
+  --_imp-wght: var(--imp-wght-arrivo, 900);
+}
+
+.imp-root[data-gl="on"] .imp-relief:is(.imp-foglio, .imp-costa) {
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+}
+
+/* --------------------------------------------------------------------------
+   Contrasto alto richiesto dal sistema: il rilievo diventa inchiostro pieno
+   e le superfici perdono le sfumature. Niente informazione si perde.
+   -------------------------------------------------------------------------- */
+@media (forced-colors: active) {
+  .imp-root :is(.imp-secco, .imp-inchiostro, .imp-caldo) {
+    color: CanvasText;
+    -webkit-text-fill-color: CanvasText;
+    text-shadow: none;
+    filter: none;
+    background-image: none;
+  }
+
+  .imp-root .imp-lamina {
+    background-image: none;
+    border: 1px solid ButtonText;
+    -webkit-text-fill-color: ButtonText;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .imp-root .imp-secco {
+    color: var(--imp-inchiostro);
+    text-shadow: none;
+  }
+}
