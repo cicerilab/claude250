@@ -204,7 +204,8 @@ Derivati per carta (in `tokens.css`):
 | `--imp-secco-fondo` | `#D8C43A` | `#E8E8E5` | `#DEAEA8` | `#232528` | fondo del solco a secco. Decorativo |
 | `--imp-carta-costa` | `#BCA92D` | `#D2D3CE` | `#C5958E` | `#373A3D` | spessore visto di taglio. Decorativo |
 | `--imp-taglio` | `#17231D` | `#E4CF3F` | `#2A2C2F` | `#E4CF3F` | colore del taglio colorato (preso da un'altra carta del sistema) |
-| `--imp-lamina-bordo` | `#17231D` | `#17231D` | `#231518` | `#A7AEB5` | filo del bottone in lamina (≥ 3:1 sul fondo) |
+| `--imp-lamina-bordo` | `#5E656C` | `#5E656C` | `#5E656C` | `#A7AEB5` | filo d'acciaio del bordo in lamina (3,38-6,24:1 sul fondo) |
+| `--imp-superficie` | `#EBD958` | `#E2E3DF` | `#EFC7C1` | `#36383C` | superficie sollevata (tasti, campi, pannelli): tinta, mai bianco |
 | `--imp-spessore` | 3px | 6px | 4px | 5px | costa delle strisce "La carta" |
 | `--imp-spessore-pezzo` | 1px | 1.8px | 1.1px | 1.3px | costa di un pezzo appoggiato (uguale al GL) |
 
@@ -215,7 +216,7 @@ Derivati per carta (in `tokens.css`):
 | `--imp-lamina` | `#C8CDD2` | argento base, colore di ripiego |
 | `--imp-lamina-chiara` | `#DDE1E5` | lato verso la luce |
 | `--imp-lamina-scura` | `#A7AEB5` | lato in ombra delle superfici |
-| `--imp-lamina-riflesso` | `#EEF1F3` | testa delle lettere in lamina |
+| `--imp-lamina-riflesso` | `#F4F6F8` | banda di riflesso stretta, testa delle lettere |
 | `--imp-lamina-profonda` | `#7E868E` | piede delle lettere in lamina (solo lì) |
 | `--imp-su-lamina` | `#17231D` | testo sopra la lamina, su tutte le carte |
 
@@ -257,7 +258,8 @@ bottone "Prova la tua" e leva. Mai su link, icone, bordi, hover, badge.
    "pressione" del sito: sotto la pressa la parola si allarga e si ingrassa.
    Mai il corsivo, mai sotto 20 px, mai testo di lettura, mai larghezza sotto
    75 (sarebbe il condensato del vecchio TORCHIO).
-2. **Hanken Grotesk** 400 / 500 / 600 (variabile, un solo file). Per leggere:
+2. **Hanken Grotesk** 400 / 500 / 600 (variabile, un solo file, caricato come
+   gamma `wght@400..600`: un solo `@font-face`). Per leggere:
    corpo, didascalie, bottoni, campi, colophon. Grottesco caldo, non neutro
    come Inter, aperto a 17 px su carta colorata.
 
@@ -338,8 +340,12 @@ Lo scambio al caricamento non sposta le righe del testo.
 
 ### Bottone "Prova la tua" (unico richiamo al preventivo)
 
-- Superficie `.imp-lamina`: argento satinato fermo (sfumatura a 100°, dal
-  chiaro allo scuro), filo di bordo 1 px `--imp-lamina-bordo`, raggio 0.
+- Superficie `.imp-lamina` (giro 2): metallo, non bottone grigio. Grana
+  spazzolata orizzontale ferma sopra una sfumatura a quattro toni (scuro,
+  base, banda di riflesso stretta al 45-51%, base, scuro); bordo con luce in
+  alto e ombra in basso dentro un filo d'acciaio `--imp-lamina-bordo`
+  (`--imp-lamina-bordi`), mai un filo nero; raggio 0. La banda si sposta un
+  poco con `--imp-luce-x`.
 - Testo Hanken 17 / 600, `--imp-su-lamina`, su una riga sola. Altezza 52 px
   (56 nell'hero), padding orizzontale 28 px, larghezza piena su mobile.
 - Hover: sfumatura premuta, niente spostamento. Active: `translateY(1px)` +
@@ -366,7 +372,8 @@ Lo scambio al caricamento non sposta le righe del testo.
 
 ### Scelte (carta, tecnica, tiratura, cosa stampi)
 
-- Radio veri resi come rettangoli di carta a raggio 0, altezza minima 48 px.
+- Radio veri resi come rettangoli di carta a raggio 0, altezza minima 48 px,
+  su `.imp-superficie` (mai schede bianche con bordino e ombra).
 - Scelta attiva: bordo interno inchiostro 3 px + parola scritta.
 - Le quattro carte nel banco: quadrati 64 × 64 (72 su mobile) del colore
   della carta, con costa, nome sotto in Hanken.
@@ -374,8 +381,9 @@ Lo scambio al caricamento non sposta le righe del testo.
 ### Campi
 
 - Etichetta sopra (Hanken 15-16 / 600, inchiostro), campo alto 56 px, fondo
-  `--imp-carta-luce` (il foglio "sollevato" dove si scrive), filo inchiostro
-  1 px sotto, 2 px al focus più anello.
+  `--imp-superficie` (classe `.imp-superficie`: tinta, mai bianco puro;
+  labbro di luce in alto e costa sotto, niente bordino intorno), filo
+  inchiostro 1 px sotto, 2 px al focus più anello.
 - Testo 17 px. Placeholder mai come etichetta; se c'è, in
   `--imp-inchiostro-velato` (AA).
 - Errore sotto il campo, inchiostro, con "!" e bordo 3 px.
@@ -397,9 +405,9 @@ Lo scambio al caricamento non sposta le righe del testo.
 
 | Tecnica | Classe | Resa senza WebGL |
 |---|---|---|
-| a secco | `.imp-secco` | lettera color fondo del solco, labbro chiaro verso il basso a destra, parete scura verso la luce |
+| a secco | `.imp-secco` | fondo del solco = carta + 24% d'ombra; parete in ombra piena (0,02 em) verso la luce, labbro di luce netto dall'altra parte, secondo gradino con sfocatura ≤ 1 px |
 | a un colore | `.imp-inchiostro` | inchiostro pieno, labbro chiaro corto |
-| lamina a caldo | `.imp-caldo` | argento con sfumatura verticale ferma (riflesso in testa, profondo al piede), filo scuro e chiaro |
+| lamina a caldo | `.imp-caldo` | argento a quattro fermate per riga (riflesso in testa, banda chiara a metà occhio, piede profondo), filo scuro e chiaro fra 0,6 e 1,2 px: mai una seconda copia sfalsata |
 | taglio colorato | `.imp-foglio.imp-taglio` | bordo e costa del cartoncino tinti con `--imp-taglio` |
 
 ## 5. Layout Principles
@@ -449,7 +457,8 @@ solco), non sopra.
 | Livello | Cosa | Trattamento |
 |---|---|---|
 | -1 | lettera premuta | solco: parete scura verso la luce, labbro chiaro dall'altra parte (`.imp-secco`, `.imp-inchiostro`, `.imp-caldo`) |
-| 0 | carta del sito | pieno, fibra statica quasi invisibile |
+| 0 | carta del sito | pieno, fibra statica quasi invisibile (un solo SVG per carta) |
+| 0,5 | superficie sollevata (tasti, campi) | `--imp-superficie` + `--imp-ombra-superficie`: labbro di luce, costa 1 px, ombra corta |
 | 1 | pezzo appoggiato | costa di 1-1,8 px + ombra di appoggio corta tinta (`.imp-foglio`) |
 | 2 | testata fissa, segnapagina | costa 1 px + ombra tinta cortissima (`--imp-ombra-testata`) |
 | 3 | indice mobile | foglio che sale: costa + ombra verso l'alto (`--imp-ombra-indice`) |
@@ -497,6 +506,9 @@ sparisce.
 - Niente filetti, onde o divisori tra le sezioni.
 - Niente oro, lamina olografica, gradienti colorati, glow, testo sfumato
   fuori dalla lamina.
+- Niente bianco puro come superficie su Cotone, niente schede con bordino:
+  le superfici sono `--imp-superficie`.
+- Niente filo nero intorno alla lamina: il bordo è luce, ombra e acciaio.
 - Niente grana animata o velo di rumore sopra il testo.
 - Niente cursore custom, niente bottoni magnetici.
 - Niente informazione affidata solo al rilievo, alla luce o al colore della

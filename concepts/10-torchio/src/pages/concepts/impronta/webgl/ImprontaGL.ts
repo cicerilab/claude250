@@ -48,6 +48,7 @@ import {
   OrthographicCamera,
   Scene,
   type ShaderMaterial,
+  type WebGLRenderTarget,
   Vector2,
   WebGLRenderer,
   type PlaneGeometry,
@@ -228,6 +229,9 @@ export class ImprontaGL {
   private rifaiDopoComparsa = false;
 
   private togli: Array<() => void> = [];
+  /** compileAsync in corso: il contesto non si può perdere finché three la sta aspettando. */
+  private compilazione: Promise<unknown> | null = null;
+  private gpuLiberata = false;
 
   constructor(opzioni: OpzioniImprontaGL) {
     this.canvas = opzioni.canvas;
@@ -290,7 +294,8 @@ export class ImprontaGL {
 
     const r = this.renderer;
     this.fibra = creaTexturaFibra(datiFibra);
-    const atlante = new Atlante(tipoTexel(r, this.grossolano));
+    const memoria = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
+    const atlante = new Atlante(tipoTexel(r, this.grossolano, memoria));
     this.atlante = atlante;
 
     const rilievo = creaMaterialeRilievo({
@@ -318,10 +323,49 @@ export class ImprontaGL {
     this.mesh = mesh;
     this.scene.add(mesh);
 
-    // Compilazione dei tre programmi adesso, non al primo scroll.
-    for (const m of [this.blur, this.composite, rilievo]) {
+    // Giro 2 (performance-auditor P5): prima l'avvio compilava i tre
+    // programmi e li usava per la prima volta nello stesso task (~950 ms in
+    // SwiftShader, 100-300 ms stimati su un telefono). Adesso ogni programma
+    // ha due task suoi, separati da un setTimeout:
+    //   1. `compileAsync`: con KHR_parallel_shader_compile il driver compila
+    //      e collega in parallelo e three aspetta senza bloccare; senza
+    //      l'estensione il costo si sposta al primo uso;
+    //   2. primo uso su un bersaglio minuscolo (verifica del link, uniform,
+    //      allocazione del render target): per il composite è l'atlante, così
+    //      anche l'allocazione dei suoi 16-32 MB cade in un task a parte.
+    const riscaldo: ReadonlyArray<readonly [ShaderMaterial, WebGLRenderTarget]> = [
+      [this.blur, atlante.blurA],
+      [this.composite, atlante.target],
+      [rilievo, atlante.blurB],
+    ];
+    for (const [m, bersaglio] of riscaldo) {
       mesh.material = m;
-      r.compile(this.scene, this.camera);
+      this.compilazione = r.compileAsync(this.scene, this.camera);
+      await this.compilazione;
+      this.compilazione = null;
+      if (this.smontato) {
+        this.liberaGpu();
+        return;
+      }
+      await cedi();
+      if (this.smontato) {
+        this.liberaGpu();
+        return;
+      }
+      bersaglio.viewport.set(0, 0, 1, 1);
+      bersaglio.scissor.set(0, 0, 1, 1);
+      bersaglio.scissorTest = true;
+      r.setRenderTarget(bersaglio);
+      r.render(this.scene, this.camera);
+      r.setRenderTarget(null);
+      bersaglio.scissorTest = false;
+      bersaglio.viewport.set(0, 0, bersaglio.width, bersaglio.height);
+      bersaglio.scissor.set(0, 0, bersaglio.width, bersaglio.height);
+      await cedi();
+      if (this.smontato) {
+        this.liberaGpu();
+        return;
+      }
     }
     mesh.material = rilievo;
 
@@ -361,7 +405,20 @@ export class ImprontaGL {
       this.fantasmi.delete(id);
     }
     this.stati.clear();
+    this.diagnostica.stato = 'smontato';
 
+    // three controlla lo stato dei programmi di compileAsync con un
+    // setTimeout finché non sono pronti: perdere il contesto adesso lo
+    // lascerebbe a interrogare per sempre. Il GPU si libera appena finisce
+    // (avvia() se ne accorge da `smontato`).
+    if (this.compilazione !== null) return;
+    this.liberaGpu();
+  }
+
+  /** Libera materiali, texture, render target e contesto. Una volta sola. */
+  private liberaGpu(): void {
+    if (this.gpuLiberata) return;
+    this.gpuLiberata = true;
     if (this.mesh !== null) this.scene.remove(this.mesh);
     this.geometria?.dispose();
     this.rilievo?.dispose();
@@ -384,7 +441,6 @@ export class ImprontaGL {
     } catch {
       // contesto già perso: niente da liberare
     }
-    this.diagnostica.stato = 'smontato';
   }
 
   /* ----------------------------------------------------------------------- */

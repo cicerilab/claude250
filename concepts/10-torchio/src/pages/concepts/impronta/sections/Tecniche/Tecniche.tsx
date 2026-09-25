@@ -79,20 +79,11 @@ const PROFONDITA: Record<IdTecnica, number> = {
 };
 
 /**
- * La pila del taglio colorato: biglietti di Cotone 600 g (la carta su cui il
- * copy dice che il taglio rende meglio), bordo in Citrino (`--imp-taglio`
- * del Cotone). Sfalsamenti in px di una pila fatta a mano: mai allineata.
+ * Il taglio colorato si mostra su una pila di biglietti di Cotone 600 g (la
+ * carta su cui il copy dice che il taglio rende meglio). Il colore del bordo
+ * lo decide il CSS: il taglio della carta del sito, che le contrasta.
  */
 const CARTA_TAGLIO: Carta = 'cotone';
-const PILA: ReadonlyArray<readonly [number, number]> = [
-  [0, 0],
-  [1.5, -1],
-  [-1, 0.5],
-  [2, 1.5],
-  [0.5, -1.5],
-  [-1.5, 1],
-  [1, 0.5],
-];
 
 /** Id del titolo della sezione (aria-labelledby). */
 const ID_TITOLO = 'imp-tecniche-titolo';
@@ -207,8 +198,9 @@ function TornaAlBanco() {
 
 /**
  * La lastra: un biglietto della carta del sito con la parola premuta; nel
- * taglio colorato, il biglietto in cima a una pila di Cotone col bordo
- * dipinto. Ogni fetta della pila ha la sua faccia di destra e di sopra.
+ * taglio colorato, il biglietto in cima a una pila di Cotone: la faccia di
+ * destra della pila (tutti i bordi dipinti, uno accanto all'altro) è
+ * `.imp-tecniche__pila`, girata di 90° dietro al fronte.
  */
 function Lastra({
   id,
@@ -232,17 +224,7 @@ function Lastra({
       className={taglio ? 'imp-tecniche__foglio imp-foglio imp-tecniche__foglio--pila' : 'imp-tecniche__foglio imp-foglio'}
       data-carta={taglio ? CARTA_TAGLIO : undefined}
     >
-      {taglio ? (
-        <span className="imp-tecniche__pila">
-          {PILA.map(([dx, dy], k) => (
-            <span
-              key={k}
-              className="imp-tecniche__fetta"
-              style={{ '--imp-t-k': String(k), '--imp-t-dx': `${dx}px`, '--imp-t-dy': `${dy}px` } as CSSProperties}
-            />
-          ))}
-        </span>
-      ) : null}
+      {taglio ? <span className="imp-tecniche__pila" /> : null}
       <div
         ref={parolaRef}
         {...(attesa ? ATTESA_PRESSA : {})}

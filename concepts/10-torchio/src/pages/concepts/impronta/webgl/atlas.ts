@@ -23,11 +23,13 @@
  * y dal BASSO. Gli scaffali crescono verso l'alto. Così `uBlockUv.y` (v0) è
  * il bordo basso dello slot, come vuole relief.frag.glsl.
  *
- * FORMATO. HalfFloat se il contesto sa renderizzarci (WebGL2 con
- * EXT_color_buffer_float) e il dispositivo è un desktop (puntatore fine):
- * pareti più pulite nei corpi grandi, 32 MB di GPU. Sui telefoni resta a
- * 8 bit (16 MB, il budget di tech-architect §8): il webgl-artist l'ha
- * provato, la fibra fa da dithering.
+ * FORMATO. Di norma 8 bit: 16 MB, il budget di tech-architect §8 (il
+ * webgl-artist l'ha provato: la fibra fa da dithering). HalfFloat (32 MB,
+ * pareti più pulite nei corpi molto grandi) solo se il contesto sa
+ * renderizzarci (WebGL2 con EXT_color_buffer_float), il puntatore è fine
+ * E `navigator.deviceMemory` dice almeno 8 GB. Giro 2 (performance-auditor
+ * P6): senza `deviceMemory` (Safari, Firefox) si resta a 8 bit, così il
+ * doppio della memoria va solo a chi certamente l'ha.
  *
  * Nessun accesso a window/document.
  */
@@ -71,12 +73,17 @@ interface Scaffale {
   readonly slot: Slot[];
 }
 
+/** Memoria minima dichiarata dal dispositivo (GB) per l'atlante HalfFloat. */
+export const MEMORIA_HALF_FLOAT_GB = 8;
+
 /**
- * Tipo dei texel dei render target: HalfFloat solo se renderizzabile e su
- * desktop (vedi testa del file).
+ * Tipo dei texel dei render target: HalfFloat solo se renderizzabile, su
+ * desktop e con almeno MEMORIA_HALF_FLOAT_GB dichiarati (vedi testa del file).
+ * @param memoriaGb `navigator.deviceMemory` (undefined se il browser non la dà)
  */
-export function tipoTexel(renderer: WebGLRenderer, grossolano: boolean): TextureDataType {
+export function tipoTexel(renderer: WebGLRenderer, grossolano: boolean, memoriaGb: number | undefined): TextureDataType {
   if (grossolano) return UnsignedByteType;
+  if (memoriaGb === undefined || !(memoriaGb >= MEMORIA_HALF_FLOAT_GB)) return UnsignedByteType;
   if (!renderer.capabilities.isWebGL2) return UnsignedByteType;
   return renderer.extensions.has('EXT_color_buffer_float') ? HalfFloatType : UnsignedByteType;
 }

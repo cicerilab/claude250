@@ -16,7 +16,7 @@ Ho letto anche `webgl/presets.ts`, `webgl/materials.ts` e
 | `DESIGN.md` (root del concept) | design system in formato Stitch: tema, palette con ruoli, tipografia, componenti, layout, profondità, do/don't, responsive, prompt guide |
 | `src/pages/concepts/impronta/styles/tokens.css` | `@font-face` di ripiego tarati, token comuni su `.imp-root`, quattro carte su `[data-carta]`, token derivati, breakpoint |
 | `src/pages/concepts/impronta/styles/tokens.ts` | `CARTE` (hex + vec3 sRGB + vec3 lineari), `LAMINA`, `FONT_CSS_URL`, stop del canvas, metriche e larghezze misurate di Anybody, scala `TIPO`, `GRIGLIA`, funzioni pure (margini, corpo dell'hero, assi di pressione, vettore luce, contrasto) |
-| `src/pages/concepts/impronta/styles/relief-fallback.css` | classi materiali `.imp-secco`, `.imp-inchiostro`, `.imp-caldo`, `.imp-segno-caldo`, `.imp-lamina`, `.imp-foglio`, `.imp-taglio`, `.imp-costa`, `.imp-fibra`, `.imp-pressa`, `.imp-assi`, spegnimento con GL acceso, contrasto forzato |
+| `src/pages/concepts/impronta/styles/relief-fallback.css` | classi materiali `.imp-secco`, `.imp-inchiostro`, `.imp-caldo`, `.imp-segno-caldo`, `.imp-lamina`, `.imp-foglio`, `.imp-taglio`, `.imp-costa`, `.imp-fibra`, `.imp-superficie`, `.imp-pressa`, spegnimento (con eccezione `fuori`) con GL acceso, contrasto forzato |
 
 Verifiche fatte: `tsc --strict --noUncheckedIndexedAccess` su `tokens.ts`
 verde; pagina di prova (scratch, fuori dal repo) renderizzata con Chromium di
@@ -375,15 +375,100 @@ come maschera in `.imp-segno-caldo` (verificato a schermo).
 | indirizzo della bottega | `.imp-pressa .imp-secco` | `var(--imp-wdth-secco-grande)` (112,5 / 150) | `var(--imp-wght-secco-grande)` (800) |
 | tutto il resto (titoli, pezzi, prova, prezzo, nomi carta) | nessuna `.imp-pressa` | assi fissi della voce | la pressione si vede solo nel rilievo |
 
-`.imp-assi` resta disponibile ma, con i profili del motion senza `assi`,
-non serve a nessun blocco. Quindi la richiesta al motion-designer del §4
+`.imp-assi` è stata tolta al giro 2 (codice morto, performance-auditor P4). Quindi la richiesta al motion-designer del §4
 (sul `wdth` 120→150 fisso) è chiusa.
+
+---
+
+## 6. Giro 2 (giuria: Design 6, Usabilità 5,5; interventi n.1, n.4-5, n.7-8)
+
+Fonti: `awwwards-jury.md` §1, §4, §5; `performance-auditor.md` P1, P4, P7;
+`responsive-tester.md` punto 6; `shader-engineer.md` §10. Nessuna classe o
+variabile esistente rinominata (verificato con grep sui componenti): ho
+cambiato valori e aggiunto token.
+
+### 6.1 Cosa ho cambiato
+
+| Problema (chi lo ha visto) | Cosa ho fatto | File |
+|---|---|---|
+| Rilievo quasi invisibile, "watermark" (giuria n.1) | `.imp-secco`: passo 0,02 em (min 1 px, era 0,016 / 0,6 px); parete in ombra al 100% senza sfocatura; labbro di luce netto; secondo gradino con sfocatura ≤ 1 px (`--_imp-sfuma`); fondo del solco a carta + 24% d'ombra. `.imp-inchiostro` con lo stesso bordo netto | `relief-fallback.css` |
+| Lamina = "bottone grigio di Windows" con filo nero (giuria n.4) | `--imp-lamina-sfumatura` a quattro toni con banda di riflesso stretta (45-51%); `--imp-lamina-grana` spazzolata orizzontale; `--imp-lamina-bordi`: filo d'acciaio + luce in alto + ombra in basso; `--imp-lamina-bordo` da inchiostro a acciaio `#5E656C` (Grafite resta `#A7AEB5`); la banda segue un poco `--imp-luce-x`. `--imp-lamina-sfumatura-testo` a quattro fermate. `--imp-lamina-riflesso` `#F4F6F8` | `tokens.css`, `relief-fallback.css`, `tokens.ts` |
+| Su Cotone il sito diventa schede bianche con bordino (giuria n.5) | Nuovo `--imp-superficie` per carta (Citrino `#EBD958`, Cotone `#E2E3DF`, Cipria `#EFC7C1`, Grafite `#36383C`), `--imp-ombra-superficie` (labbro di luce, costa 1 px, ombra corta) e classe `.imp-superficie`. Mai bianco puro | `tokens.css`, `relief-fallback.css`, `tokens.ts` (`CARTE[id].superficie`) |
+| Nome sdoppiato a pressione 1 (responsive-tester 6) | `.imp-caldo`: bordo scuro e chiaro sempre tra 0,6 e 1,2 px (`clamp`), l'ombra non si legge più come seconda copia | `relief-fallback.css` |
+| Copertina vuota col GL (shader-engineer §10) | Tutte le regole di spegnimento con `data-gl="on"` hanno `:not([data-imp-gl="fuori"])`: un fantasma che il GL non disegna torna al rilievo CSS completo (ombre, lamina, foglio, costa, assi della pressa) | `relief-fallback.css` |
+| P7: Hanken in tre `@font-face` | `FONT_CSS_URL` con `Hanken+Grotesk:wght@400..600` | `tokens.ts` |
+| P4: CSS oltre budget | Fibra: un solo SVG per carta (feMerge di macchie scure e chiare) invece di due, −1 KB non compresso; tolta `.imp-assi` (inutilizzata) | `tokens.css`, `relief-fallback.css` |
+| P1: variabili per-frame su `.imp-root` | Verificato: le mie regole leggono `--imp-luce-x/y` e `--imp-press` ereditate, funzionano uguale se l'interaction-designer le scrive sui fantasmi o sulla sezione. Nessuna modifica necessaria | |
+
+### 6.2 Verifica a schermo
+
+Dev server `npx vite --port 8104 --strictPort` (chiuso alla fine), font
+serviti con `page.route` + `fetch` di Node, `?gl=0&carta=…`. Screenshot di
+hero, tecniche, banco e colophon a 1440 e 375 su Citrino, Cotone, Cipria,
+Grafite (32 immagini, guardate), più ingrandimenti 2× di banco, per-chi e
+bottone.
+- Secco: "Pordenone" nelle tecniche, "Chiara Zanin" sulla prova, *impronta*
+  su Cotone e IMPRONTA nel colophon su Grafite ora si leggono come solchi
+  netti anche senza WebGL.
+- Lamina: "170 €" / "180 €" argento con banda chiara e piede scuro, nessuno
+  sdoppio; il marchio in testata leggibile su tutte le carte; i bottoni sono
+  metallo spazzolato con filo d'acciaio, visibili anche su Cotone.
+- Rimasto fuori dai miei file (lavori in corso degli altri durante il test):
+  hero a 1440 con la gabbia ancora a zero nel primo passaggio (hero builder
+  al lavoro); i campi e le scelte del banco su Cotone usano ancora
+  `--imp-carta-luce` come fondo (bianco puro): serve la richiesta qui sotto.
+
+### 6.3 Contrasti ricalcolati (48 coppie con soglia, tutte passano)
+
+Stesso script dell'appendice, con il bordo d'acciaio, la superficie tinta e
+il riflesso della lamina. Righe nuove o cambiate:
+
+| Carta | Coppia | Primo piano | Fondo | Rapporto | Soglia | Esito |
+|---|---|---|---|---|---|---|
+| citrino | bordo lamina su carta, non-testo 3:1 | `#5E656C` | `#E4CF3F` | **3.74:1** | 3:1 | passa |
+| citrino | inchiostro su superficie sollevata (tasti, campi) | `#17231D` | `#EBD958` | **11.28:1** | 4.5:1 | passa |
+| citrino | inchiostro velato su superficie (placeholder) | `#505327` | `#EBD958` | **5.60:1** | 4.5:1 | passa |
+| citrino | anello di focus su superficie, non-testo 3:1 | `#17231D` | `#EBD958` | **11.28:1** | 3:1 | passa |
+| cotone | bordo lamina su carta, non-testo 3:1 | `#5E656C` | `#F1F1EE` | **5.22:1** | 3:1 | passa |
+| cotone | inchiostro su superficie sollevata (tasti, campi) | `#17231D` | `#E2E3DF` | **12.58:1** | 4.5:1 | passa |
+| cotone | inchiostro velato su superficie (placeholder) | `#545D58` | `#E2E3DF` | **5.28:1** | 4.5:1 | passa |
+| cotone | anello di focus su superficie, non-testo 3:1 | `#17231D` | `#E2E3DF` | **12.58:1** | 3:1 | passa |
+| cipria | bordo lamina su carta, non-testo 3:1 | `#5E656C` | `#E8B9B3` | **3.38:1** | 3:1 | passa |
+| cipria | inchiostro su superficie sollevata (tasti, campi) | `#231518` | `#EFC7C1` | **11.42:1** | 4.5:1 | passa |
+| cipria | inchiostro velato su superficie (placeholder) | `#5A4343` | `#EFC7C1` | **5.87:1** | 4.5:1 | passa |
+| cipria | anello di focus su superficie, non-testo 3:1 | `#231518` | `#EFC7C1` | **11.42:1** | 3:1 | passa |
+| grafite | bordo lamina su carta, non-testo 3:1 | `#A7AEB5` | `#2A2C2F` | **6.24:1** | 3:1 | passa |
+| grafite | inchiostro su superficie sollevata (tasti, campi) | `#ECEBE6` | `#36383C` | **9.84:1** | 4.5:1 | passa |
+| grafite | inchiostro velato su superficie (placeholder) | `#B6B6B3` | `#36383C` | **5.78:1** | 4.5:1 | passa |
+| grafite | anello di focus su superficie, non-testo 3:1 | `#ECEBE6` | `#36383C` | **9.84:1** | 3:1 | passa |
+| lamina | testo su riflesso della lamina (banda stretta) | `#17231D` | `#F4F6F8` | **14.97:1** | 4.5:1 | passa |
+
+Tutte le altre righe del §2 restano invariate (i colori delle carte e degli
+inchiostri non cambiano).
+
+### 6.4 Richieste ad altri agent (giro 2)
+
+- **section-builder-banco** (`banco.css` righe con
+  `background-color: var(--imp-carta-luce)`: 259, 393, 628) e
+  **section-builder-bottega** (`bottega.css` 223): per tasti, campi e
+  pannelli usare `var(--imp-superficie)` + `box-shadow:
+  var(--imp-ombra-superficie)` (o la classe `.imp-superficie`), scelta attiva
+  con `inset 0 0 0 var(--imp-bordo-scelto) var(--imp-inchiostro)` in più.
+  `--imp-carta-luce` resta il colore del labbro del rilievo, non un fondo.
+- **section-builder-banco** (`banco.css` 526-560) e **interaction-designer**
+  (`interaction.css` 154, 384-424): dove ricostruite la lamina a mano
+  (`background-color: var(--imp-lamina)` + `inset 0 0 0 1px
+  var(--imp-lamina-bordo)`), usate `background-image: var(--imp-lamina-grana),
+  var(--imp-lamina-sfumatura)` e `box-shadow: var(--imp-lamina-bordi)`, o la
+  classe `.imp-lamina`: così leva e bottoni hanno lo stesso metallo.
+- **webgl-artist**: `CARTE[id].superficie` e `LAMINA.riflesso` sono nuovi o
+  cambiati in `tokens.ts` se servono allo shader.
 
 ---
 
 ## Appendice: script dei contrasti
 
-Eseguito con `node colori.mjs` (Node 22). Riproduce la tabella del §2.
+Eseguito con `node colori.mjs` (Node 22). Versione del giro 2: riproduce il §2 e il §6.3.
 
 ```js
 const hex2rgb = h => [1,3,5].map(i => parseInt(h.slice(i,i+2),16));
@@ -400,7 +485,8 @@ const CARTE = {
   cipria:  { carta:'#E8B9B3', luce:'#F7D8D3', ombra:'#A9776F', inchiostro:'#231518' },
   grafite: { carta:'#2A2C2F', luce:'#44474B', ombra:'#141517', inchiostro:'#ECEBE6' },
 };
-const LAMINA = { base:'#C8CDD2', chiara:'#DDE1E5', scura:'#A7AEB5', suLamina:'#17231D', riflesso:'#EEF1F3', profonda:'#7E868E' };
+const LAMINA = { base:'#C8CDD2', chiara:'#DDE1E5', scura:'#A7AEB5', suLamina:'#17231D', riflesso:'#F4F6F8', profonda:'#7E868E' };
+const SUP = { citrino:'#EBD958', cotone:'#E2E3DF', cipria:'#EFC7C1', grafite:'#36383C' }; // giro 2
 const TAGLIO = { citrino:'#17231D', cotone:'#E4CF3F', cipria:'#2A2C2F', grafite:'#E4CF3F' };
 
 const rows = []; const f = n => n.toFixed(2);
@@ -409,7 +495,7 @@ for (const [id, c] of Object.entries(CARTE)) {
     seccoFondo: mix(c.carta, c.ombra, id==='grafite' ? 0.30 : 0.16),
     costa: id==='grafite' ? mix(c.carta, c.luce, 0.5) : mix(c.carta, c.ombra, 0.55),
     velato: over(c.inchiostro, c.carta, 0.72),
-    laminaBordo: id==='grafite' ? LAMINA.scura : c.inchiostro,
+    laminaBordo: id==='grafite' ? LAMINA.scura : '#5E656C', // giro 2: acciaio
     taglio: TAGLIO[id] };
   const t = (nome, fg, bg, soglia) => rows.push([id, nome, fg, bg, f(cr(fg,bg)), soglia]);
   t('inchiostro su carta (testo normale)', d.inchiostro, d.carta, 4.5);
@@ -427,7 +513,11 @@ for (const [id, c] of Object.entries(CARTE)) {
   t('costa su carta', d.costa, d.carta, 0);
   t('lamina profonda su carta', LAMINA.profonda, d.carta, 0);
   t('inchiostro su fondo del solco', d.inchiostro, d.seccoFondo, 4.5);
+  t('inchiostro su superficie', d.inchiostro, SUP[id], 4.5);
+  t('inchiostro velato su superficie', d.velato, SUP[id], 4.5);
+  t('anello di focus su superficie', d.inchiostro, SUP[id], 3);
 }
+rows.push(['lamina','testo su riflesso', LAMINA.suLamina, LAMINA.riflesso, f(cr(LAMINA.suLamina,LAMINA.riflesso)), 4.5]);
 rows.push(['lamina','testo su lamina chiara', LAMINA.suLamina, LAMINA.chiara, f(cr(LAMINA.suLamina,LAMINA.chiara)), 4.5]);
 rows.push(['lamina','testo su lamina base', LAMINA.suLamina, LAMINA.base, f(cr(LAMINA.suLamina,LAMINA.base)), 4.5]);
 rows.push(['lamina','testo su lamina scura', LAMINA.suLamina, LAMINA.scura, f(cr(LAMINA.suLamina,LAMINA.scura)), 4.5]);

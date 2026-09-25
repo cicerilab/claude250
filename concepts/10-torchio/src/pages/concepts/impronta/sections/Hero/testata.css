@@ -45,11 +45,15 @@
 }
 
 .imp-root .imp-testata__barra {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--imp-sp-4);
   block-size: 100%;
+  /* Giro 2: testata chiusa su margini simmetrici (il margine interno da
+     entrambi i lati), a tutta finestra come la parola dell'hero. */
+  padding-inline: var(--imp-margine-interno);
 }
 
 /* Marchio IMPRONTA in lamina (maschera dell'SVG del vector-artist). */
@@ -106,22 +110,43 @@
 }
 
 .imp-root .imp-testata__richiamo {
+  --_imp-slot: 9.5rem;
   justify-content: flex-end;
   flex: none;
-  min-inline-size: 9.25rem;
+  inline-size: var(--_imp-slot);
 }
 
-.imp-root .imp-testata__cta {
+/*
+ * "Prova la tua" della testata e dell'angolo in basso: inchiostro pieno sulla
+ * carta, come una riga stampata a un colore. La lamina resta all'hero (un
+ * solo punto di lusso per schermo, giuria giro 1 §3).
+ */
+.imp-root .imp-testata__cta,
+.imp-root .imp-segnapagina {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-block-size: var(--imp-tocco-min);
   padding-inline: var(--imp-sp-5);
+  color: var(--imp-carta);
+  background-color: var(--imp-inchiostro);
   font-size: var(--imp-fs-bottone);
   font-weight: var(--imp-wght-bottone);
   line-height: var(--imp-lh-interfaccia);
   text-decoration: none;
   white-space: nowrap;
+}
+
+.imp-root .imp-testata__cta {
+  inline-size: 100%;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .imp-root :is(.imp-testata__cta, .imp-segnapagina):hover {
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.25em;
+  }
 }
 
 .imp-root .imp-testata__sul-banco {
@@ -152,19 +177,19 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: var(--imp-fs-nota);
+  font-size: var(--imp-fs-piccolo);
   font-weight: var(--imp-wght-interfaccia);
   line-height: 1;
   color: var(--imp-inchiostro-velato);
 }
 
-/* Il foglio dell'indice sale dal basso: un triangolo pieno che punta in su. */
+/* Il foglio dell'indice scende da qui: un triangolo pieno che punta in giù. */
 .imp-root .imp-testata__indice-parola::after {
   content: "";
   inline-size: 0;
   block-size: 0;
-  border-inline: 4px solid transparent;
-  border-block-end: 5px solid currentColor;
+  border-inline: 5px solid transparent;
+  border-block-start: 6px solid currentColor;
 }
 
 .imp-root .imp-testata__indice-sezione {
@@ -195,10 +220,18 @@
   }
 }
 
-/* Da 641 px il bottone del sito è in alto a sinistra: il marchio parte dopo. */
+/* Da 641 px il bottone del sito è in alto a sinistra: il marchio va sull'asse
+   della pagina, al centro (una testata di giornale), non schiacciato a lato. */
 @media (min-width: 641px) {
+  .imp-root .imp-testata__marchio {
+    position: absolute;
+    inset-inline-start: 50%;
+    inset-block-start: 50%;
+    transform: translate(-50%, -50%);
+  }
+
   .imp-root .imp-testata__barra {
-    padding-inline-start: max(var(--imp-margine-interno), 244px);
+    justify-content: flex-end;
   }
 }
 
@@ -207,31 +240,69 @@
 @media (min-width: 1024px) {
   .imp-root .imp-testata {
     --_imp-h: var(--imp-testata-h);
-    --_imp-segno-h: 18px;
+    --_imp-segno-h: 20px;
     inset-block-start: calc(var(--imp-testata-h-fissa) - var(--imp-testata-h));
     padding-block-start: calc(var(--imp-testata-h) - var(--imp-testata-h-fissa));
     transform: none;
   }
 
   .imp-root .imp-testata__barra {
-    justify-content: flex-start;
+    justify-content: flex-end;
     gap: 0;
-    /* Il marchio sulla terza colonna della gabbia, mai sotto il bottone del sito. */
-    padding-inline-start: max(244px, calc(var(--imp-margine-interno) + 2 * (var(--imp-colonna) + var(--imp-canalino))));
   }
 
   .imp-root .imp-testata__nav {
     display: block;
-    margin-inline-start: auto;
+    transition: transform var(--imp-dur-segnapagina-entra, 240ms) var(--imp-ease-sfoglia, ease-out);
   }
 
   .imp-root .imp-testata__richiamo {
     display: inline-flex;
-    margin-inline-start: var(--imp-sp-7);
+    margin-inline-start: var(--imp-sp-6);
+    transition:
+      opacity var(--imp-dur-segnapagina-entra, 240ms) linear,
+      visibility 0s linear 0s;
+  }
+
+  /*
+   * Un altro "Prova la tua" è in vista (quello dell'hero, dei pezzi…): il
+   * bottone della testata si toglie e le voci scivolano sul margine destro
+   * (solo transform: nessun salto di layout). Tornano quando serve.
+   */
+  .imp-root .imp-testata__barra:not([data-cta]) .imp-testata__nav {
+    transform: translateX(calc(var(--_imp-slot, 9.5rem) + var(--imp-sp-6)));
+  }
+
+  .imp-root .imp-testata__barra:not([data-cta]) .imp-testata__richiamo {
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity var(--imp-dur-segnapagina-esce, 200ms) linear,
+      visibility 0s linear var(--imp-dur-segnapagina-esce, 200ms);
+  }
+
+  .imp-root .imp-testata__nav,
+  .imp-root .imp-testata__barra {
+    --_imp-slot: 9.5rem;
   }
 
   .imp-root .imp-testata__indice {
     display: none;
+  }
+}
+
+/* Tra 1024 e 1199 px le voci arriverebbero sotto il marchio al centro: il
+   marchio parte dopo il bottone del sito. */
+@media (min-width: 1024px) and (max-width: 1199.98px) {
+  .imp-root .imp-testata__marchio {
+    inset-inline-start: 244px;
+    transform: translateY(-50%);
+  }
+}
+
+@media (min-width: 1200px) {
+  .imp-root .imp-testata {
+    --_imp-segno-h: 26px;
   }
 }
 
@@ -248,18 +319,9 @@
   inset-inline-end: max(12px, env(safe-area-inset-right));
   inset-block-end: max(env(safe-area-inset-bottom), 14px);
   z-index: var(--imp-z-testata);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-block-size: var(--imp-tocco-min);
   padding-inline: 18px;
   font-size: 1rem;
-  font-weight: var(--imp-wght-bottone);
-  line-height: var(--imp-lh-interfaccia);
-  text-decoration: none;
-  white-space: nowrap;
   box-shadow:
-    inset 0 0 0 1px var(--imp-lamina-bordo),
     0 1px 0 0 var(--imp-carta-costa),
     0 8px 14px -10px var(--imp-carta-ombra);
   transform: translateY(calc(100% + 24px + env(safe-area-inset-bottom)));
@@ -290,6 +352,14 @@
   }
 }
 
+/* Finestra bassa (zoom al 400%, telefono in orizzontale): niente fissi in
+   basso che coprano il contenuto (accessibility-auditor A3). */
+@media (max-height: 34rem) {
+  .imp-root .imp-segnapagina {
+    display: none;
+  }
+}
+
 /* ------------------------------------------------------------------ indice (dialog modale) */
 
 .imp-root .imp-indice {
@@ -315,16 +385,19 @@
 .imp-root .imp-indice__foglio {
   position: absolute;
   inset-inline: 0;
-  inset-block-end: 0;
+  inset-block-start: 0;
   display: flex;
   flex-direction: column;
   block-size: 78vh;
   block-size: 78svh;
-  padding-block-end: env(safe-area-inset-bottom);
+  padding-block-start: env(safe-area-inset-top);
   background-color: var(--imp-carta);
   background-image: var(--imp-fibra);
-  box-shadow: var(--imp-ombra-indice);
-  transform: translateY(100%);
+  /* Il foglio scende dalla testata: costa in basso e ombra tinta verso il basso. */
+  box-shadow:
+    0 1px 0 0 var(--imp-carta-costa),
+    0 24px 40px -28px var(--imp-carta-ombra);
+  transform: translateY(-100%);
   transition: transform var(--imp-dur-indice-scende, 240ms) var(--imp-ease-sfoglia-via, ease-in);
   will-change: transform;
 }
@@ -348,6 +421,13 @@
   min-block-size: 72px;
   padding-block: var(--imp-sp-4) var(--imp-sp-2);
   padding-inline: var(--imp-margine-interno) var(--imp-margine-esterno);
+}
+
+/* Il piede del foglio: da qui lo si tira su per richiuderlo. */
+.imp-root .imp-indice__piede {
+  position: relative;
+  flex: none;
+  block-size: 32px;
   touch-action: none;
   cursor: grab;
   user-select: none;
@@ -357,7 +437,7 @@
 /* La linguetta da tirare giù: un rettangolo premuto nella carta. */
 .imp-root .imp-indice__linguetta {
   position: absolute;
-  inset-block-start: 8px;
+  inset-block-start: 14px;
   inset-inline-start: 50%;
   inline-size: 40px;
   block-size: 4px;
@@ -572,6 +652,15 @@
   .imp-root .imp-indice__testa,
   .imp-root .imp-indice__corpo {
     padding-inline: var(--imp-sp-6);
+  }
+
+  /* Da 641 px la riga in alto ha il bottone del sito a sinistra: il foglio
+     scende sotto la riga, dal lato destro dove sta "indice". */
+  .imp-root .imp-indice__foglio {
+    inset-inline-start: auto;
+    inset-inline-end: var(--imp-margine-interno);
+    inset-block-start: var(--imp-testata-h-fissa);
+    block-size: min(78svh, calc(100svh - var(--imp-testata-h-fissa) - 24px));
   }
 }
 

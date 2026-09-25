@@ -48,17 +48,18 @@ import './carta.css';
 
 import { ANNUNCI, CARTA as TESTI, CARTE, ORDINE_CARTE } from '../../content/testi';
 import { useMagnete } from '../../interaction/light';
-import { cambiaCarta, origineDaEvento, type Punto } from '../../interaction/paperWave';
+import { cambiaCarta, INTERVALLO_MINIMO_MS, origineDaEvento, type Punto } from '../../interaction/paperWave';
 import { ATTESA_PRESSA, CARTA as COREOGRAFIA } from '../../motion/choreography';
 import { usePressione } from '../../motion/usePressione';
 import { selCarta, store, useImpronta, type Carta as TipoCarta } from '../../state/store';
 
 /**
- * Distanza minima tra due onde partite da questa sezione (ms). WCAG 2.3.1:
- * al massimo tre cambi di luminosità al secondo; 400 ms tiene anche il
- * passo Citrino → Grafite → Citrino sotto quella soglia.
+ * Distanza minima tra due onde partite da questa sezione (ms): la stessa di
+ * paperWave (INTERVALLO_MINIMO_MS, 450 ms, WCAG 2.3.1). paperWave già accoda
+ * i cambi troppo vicini; qui serve in più a fare di una raffica di frecce
+ * un'onda sola, partita quando ci si ferma.
  */
-const INTERVALLO_ONDE = 400;
+const INTERVALLO_ONDE = INTERVALLO_MINIMO_MS;
 
 /** Spazio indivisibile: rende "nuovo" per aria-live un annuncio ripetuto. */
 const NBSP = ' ';

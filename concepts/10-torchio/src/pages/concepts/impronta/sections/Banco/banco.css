@@ -878,7 +878,7 @@
   z-index: var(--imp-z-contenuto);
   block-size: 42vh;
   block-size: 42svh;
-  min-block-size: 260px;
+  min-block-size: min(260px, 42svh);
   margin-inline: calc(var(--imp-margine-interno) * -1) calc(var(--imp-margine-esterno) * -1);
   padding: var(--imp-sp-3) var(--imp-margine-esterno) var(--imp-sp-2) var(--imp-margine-interno);
   background-color: var(--imp-carta);
@@ -1310,9 +1310,24 @@
     --imp-banco-sopra: var(--imp-testata-h-fissa);
   }
 
-  /* I controlli raggiunti col fuoco non finiscono sotto la lastra ferma. */
-  .imp-root .imp-banco :is(.imp-banco__campo, .imp-banco__scelta, .imp-banco__carta, .imp-banco__taglio, .imp-banco__leva-blocco, .imp-banco__esito, .imp-banco__cose) {
-    scroll-margin-block-start: calc(42svh + var(--imp-testata-h-fissa) + var(--imp-sp-4));
+  /*
+   * I controlli raggiunti col fuoco non finiscono sotto la lastra ferma
+   * (accessibility-auditor A2): lo scroll-margin sta sull'elemento che riceve
+   * il fuoco, non sul contenitore. In basso resta posto per i bottoni fissi.
+   */
+  .imp-root .imp-banco :is(.imp-banco__input, .imp-ix-scelta__input, .imp-banco__leva, .imp-banco__cose, .imp-ix-dial__input, .imp-banco__bozza-bottone, .imp-banco__altra, .imp-banco__esito) {
+    scroll-margin-block: calc(42svh + var(--imp-testata-h-fissa) + var(--imp-sp-4)) calc(52px + var(--imp-sp-6));
+  }
+
+  /* Il successo va SOPRA la lastra, e la lastra smette di stare ferma. */
+  .imp-root .imp-banco__esito--ok {
+    order: -2;
+    scroll-margin-block-start: calc(var(--imp-testata-h-fissa) + var(--imp-sp-4));
+  }
+
+  .imp-root .imp-banco[data-invio='sent'] .imp-banco__lastra {
+    position: relative;
+    inset-block-start: 0;
   }
 
   .imp-root .imp-banco__leva-testo {
@@ -1357,9 +1372,9 @@
 /* --------------------------------------------------------------------------
    Invio: la pressa resta giù; dopo l'invio le scelte restano come record
    -------------------------------------------------------------------------- */
-.imp-root .imp-banco[data-invio='sent'] .imp-banco__scelta:not(:has(.imp-ix-scelta__input:checked)),
-.imp-root .imp-banco[data-invio='sending'] .imp-banco__scelta:not(:has(.imp-ix-scelta__input:checked)) {
-  background-color: transparent;
+.imp-root .imp-banco[data-invio='sent'] :is(.imp-banco__voce, .imp-banco__formato):not(:has(.imp-ix-scelta__input:checked)),
+.imp-root .imp-banco[data-invio='sending'] :is(.imp-banco__voce, .imp-banco__formato):not(:has(.imp-ix-scelta__input:checked)) {
+  opacity: 0.62;
 }
 
 /* --------------------------------------------------------------------------
@@ -1369,11 +1384,6 @@
   .imp-root .imp-banco__lastra {
     --imp-banco-banda: 50px;
     --imp-banco-margine: 28px;
-  }
-
-  .imp-root .imp-banco__scelte--tecniche,
-  .imp-root .imp-banco__scelte--quando {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .imp-root .imp-banco__luce-nome {
@@ -1398,13 +1408,10 @@
     --imp-banco-sopra: 0px;
   }
 
+  /* Al massimo 42svh in tutto, bottone del sito compreso (responsive-tester 7). */
   .imp-root .imp-banco__lastra {
-    block-size: calc(42svh + 64px);
-    padding-block-start: 68px;
-  }
-
-  .imp-root .imp-banco :is(.imp-banco__campo, .imp-banco__scelta, .imp-banco__carta, .imp-banco__taglio, .imp-banco__leva-blocco, .imp-banco__esito, .imp-banco__cose) {
-    scroll-margin-block-start: calc(42svh + 64px + var(--imp-sp-4));
+    block-size: 42svh;
+    padding-block-start: 64px;
   }
 
   .imp-root .imp-banco__lastra[data-tastiera] .imp-banco__piano {
@@ -1432,27 +1439,24 @@
     align-items: start;
   }
 
-  .imp-root .imp-banco {
-    padding-block-end: max(var(--imp-sp-8), calc(var(--imp-piede) - 32vh));
-  }
-
-  /* Spazio sotto la leva: quando la leva è a metà schermo la lastra ferma è ancora intera. */
   .imp-root .imp-banco__colonna {
     grid-column: 8 / span 5;
     grid-row: 1;
     max-inline-size: none;
-    padding-block-end: 32vh;
   }
 
-  .imp-root .imp-banco__posa {
-    --_imp-banco-presenza: var(--imp-banco-presenza);
+  /* Il successo prende il posto della leva, accanto alla prova che resta ferma. */
+  .imp-root .imp-banco__esito--ok {
+    grid-column: 8 / span 5;
+    grid-row: 2;
+    margin-block-start: var(--imp-sp-5);
   }
 
   .imp-root .imp-banco__lastra {
     --imp-banco-banda: 64px;
-    --imp-banco-margine: 48px;
+    --imp-banco-margine: 16px;
     grid-column: 1 / span 6;
-    grid-row: 1;
+    grid-row: 1 / span 2;
     inset-block-start: var(--imp-banco-sticky);
     display: grid;
     gap: var(--imp-sp-5);
@@ -1495,12 +1499,8 @@
     line-height: var(--imp-lh-corpo);
   }
 
-  .imp-root .imp-banco__scelte--tecniche {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .imp-root .imp-banco__scelte--quando {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .imp-root .imp-banco :is(.imp-banco__input, .imp-ix-scelta__input, .imp-banco__leva, .imp-banco__cose, .imp-ix-dial__input, .imp-banco__bozza-bottone, .imp-banco__altra, .imp-banco__esito) {
+    scroll-margin-block: calc(var(--imp-testata-h-fissa) + var(--imp-sp-4)) var(--imp-sp-6);
   }
 
   .imp-root .imp-banco__campione {
@@ -1538,15 +1538,35 @@
    Contrasto forzato: i fogli diventano rettangoli di sistema, niente si perde
    -------------------------------------------------------------------------- */
 @media (forced-colors: active) {
-  .imp-root .imp-banco .imp-banco__scelta,
   .imp-root .imp-banco__input,
   .imp-root .imp-banco__casella,
-  .imp-root .imp-banco__vassoio {
+  .imp-root .imp-banco__prova {
     border: 1px solid CanvasText;
   }
 
-  .imp-root .imp-banco .imp-banco__scelta:has(.imp-ix-scelta__input:checked) {
+  .imp-root .imp-banco :is(.imp-banco__voce, .imp-banco__formato):has(.imp-ix-scelta__input:checked) {
     outline: 3px solid Highlight;
     outline-offset: -3px;
+  }
+}
+
+/*
+ * Finestra bassa (zoom al 200-400%, telefono di traverso): la lastra non
+ * resta ferma, altrimenti copre tutto quello che si compila (A3, WCAG 1.4.10).
+ */
+@media (max-height: 34rem) {
+  .imp-root .imp-banco__lastra {
+    position: relative;
+    inset-block-start: 0;
+    block-size: auto;
+    min-block-size: 0;
+  }
+
+  .imp-root .imp-banco__vassoio {
+    block-size: min(60vh, 20rem);
+  }
+
+  .imp-root .imp-banco :is(.imp-banco__input, .imp-ix-scelta__input, .imp-banco__leva, .imp-banco__cose, .imp-ix-dial__input, .imp-banco__bozza-bottone, .imp-banco__altra, .imp-banco__esito) {
+    scroll-margin-block: var(--imp-sp-4);
   }
 }

@@ -407,7 +407,6 @@
   transform-origin: 50% 50%;
   transform:
     perspective(1400px)
-    rotateX(calc(var(--_imp-t-giro) * 12deg))
     rotateY(calc(var(--_imp-t-giro) * var(--_imp-t-gradi)));
 }
 
@@ -440,59 +439,42 @@
 }
 
 /* --------------------------------------------------------------------------
-   Taglio colorato: la pila. Sette biglietti di Cotone (data-carta="cotone"
-   sul biglietto in cima), uno dietro l'altro a --_imp-t-foglio di distanza,
-   sfalsati di un paio di px come in una pila fatta a mano. Ogni fetta ha la
-   sua faccia di destra e di sopra dipinte con --_imp-t-bordo, il taglio
-   della carta del sito (Citrino sul Cotone, verde notte sul Citrino, Grafite
-   sulla Cipria), con una riga d'ombra dove un biglietto tocca l'altro. Girando di
-   tre quarti si vede il blocco dei bordi dipinti, non un contorno.
+   Taglio colorato: la pila. Il biglietto in cima è di Cotone
+   (data-carta="cotone"); dietro ce ne sono altri sei. Girando di tre quarti
+   si vede la faccia di destra della pila: sette bordi dipinti affiancati,
+   ognuno spesso --_imp-t-foglio, con una riga d'ombra dove un biglietto
+   tocca l'altro e due toni alterni, perché il pennello non passa mai uguale.
+   Il colore è --_imp-t-bordo, il taglio della carta del sito (Citrino sul
+   Cotone, verde notte sul Citrino, Grafite sulla Cipria): una faccia piena,
+   non un contorno.
    -------------------------------------------------------------------------- */
 .imp-root .imp-tecniche__pila {
+  --_imp-t-fogli: 7;
   position: absolute;
-  inset: 0;
-  transform-style: preserve-3d;
-  pointer-events: none;
-}
-
-.imp-root .imp-tecniche__fetta {
-  position: absolute;
-  inset: 0;
-  transform-style: preserve-3d;
-  transform: translate3d(var(--imp-t-dx, 0px), var(--imp-t-dy, 0px), calc(var(--imp-t-k, 0) * var(--_imp-t-foglio) * -1));
-}
-
-.imp-root .imp-tecniche__fetta::before,
-.imp-root .imp-tecniche__fetta::after {
-  content: "";
-  position: absolute;
-}
-
-/* Faccia di destra, in ombra (la luce viene da sinistra in alto). */
-.imp-root .imp-tecniche__fetta::before {
   inset-block: 0;
   inset-inline-end: 0;
-  inline-size: var(--_imp-t-foglio);
+  inline-size: calc(var(--_imp-t-foglio) * var(--_imp-t-fogli));
   transform-origin: 100% 50%;
   transform: rotateY(-90deg);
+  pointer-events: none;
   background-color: var(--_imp-t-bordo);
   background-image:
-    linear-gradient(90deg, color-mix(in srgb, var(--_imp-t-bordo) 55%, var(--imp-carta-ombra)) 0 1px, transparent 1px),
-    repeating-linear-gradient(180deg, color-mix(in srgb, var(--_imp-t-bordo) 90%, var(--imp-carta-ombra)) 0 2px, transparent 2px 9px),
-    linear-gradient(color-mix(in srgb, var(--_imp-t-bordo) 86%, var(--imp-carta-ombra)), color-mix(in srgb, var(--_imp-t-bordo) 78%, var(--imp-carta-ombra)));
-}
-
-/* Faccia di sopra, verso la luce. */
-.imp-root .imp-tecniche__fetta::after {
-  inset-inline: 0;
-  inset-block-start: 0;
-  block-size: var(--_imp-t-foglio);
-  transform-origin: 50% 0;
-  transform: rotateX(-90deg);
-  background-color: var(--_imp-t-bordo);
-  background-image:
-    linear-gradient(0deg, color-mix(in srgb, var(--_imp-t-bordo) 60%, var(--imp-carta-ombra)) 0 1px, transparent 1px),
-    repeating-linear-gradient(90deg, color-mix(in srgb, var(--_imp-t-bordo) 92%, var(--imp-carta-luce)) 0 3px, transparent 3px 11px);
+    repeating-linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--_imp-t-bordo) 55%, var(--imp-carta-ombra)) 0 1px,
+      transparent 1px var(--_imp-t-foglio)
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 var(--_imp-t-foglio),
+      color-mix(in srgb, var(--_imp-t-bordo) 90%, var(--imp-carta-luce)) var(--_imp-t-foglio) calc(var(--_imp-t-foglio) * 2)
+    ),
+    repeating-linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--_imp-t-bordo) 92%, var(--imp-carta-ombra)) 0 2px,
+      transparent 2px 11px
+    ),
+    linear-gradient(90deg, color-mix(in srgb, var(--_imp-t-bordo) 80%, var(--imp-carta-ombra)), var(--_imp-t-bordo));
 }
 
 /* --------------------------------------------------------------------------
