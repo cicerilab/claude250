@@ -15,7 +15,7 @@
    - < 1024 px: mazzo di interaction.css (scroll-snap), pezzi di larghezza
      fissa dentro una "tavola" di altezza comune; la didascalia cambia con il
      pezzo. Il pezzo successivo sporge da destra.
-   - Dentro i pezzi i corpi sono in cqi (il pezzo è un contenitore): il
+   - Dentro i pezzi i corpi sono in cqi (il wrapper del pezzo è un contenitore): il
      biglietto resta un biglietto a ogni larghezza. Mai sotto 14 px.
 
    Tutti i selettori iniziano con .imp-root. Solo variabili di tokens.css.
@@ -87,6 +87,9 @@
 
 .imp-root .imp-perchi__foglio {
   inset: 0;
+  /* Il contenitore dei cqi è il wrapper, non il pezzo: il padding del pezzo
+     in cqi si risolverebbe altrimenti sul contenitore sopra (o sulla finestra). */
+  container-type: inline-size;
 }
 
 /* L'elemento registrato: NON ruotato, riempie il wrapper. */
@@ -94,7 +97,6 @@
   position: relative;
   inline-size: 100%;
   block-size: 100%;
-  container-type: inline-size;
   overflow: hidden;
   display: flex;
   flex-direction: column;
