@@ -177,9 +177,5 @@ ruotato (`--imp-tecniche-giro: 1`). Rilievo `tracking: 'doc'`.
 - **shader-engineer**: la parola è `tracking: 'live'`, `priorita: 3`; nel taglio
   il blocco viene tolto dal registro (e rimesso tornando indietro), quindi il
   numero di blocchi cambia durante lo scroll. Il giro non serve allo shader.
-- **section-builder-hero** (testata): nelle mie schermate la voce corrente
-  della testata resta "lavori" mentre si è nelle Tecniche (le Tecniche non
-  hanno voce, ux §2: la voce accesa dovrebbe essere quella della sezione
-  precedente o nessuna, da verificare con l'ux).
 - **section-builder-banco**: il link "cos'è?" deve essere un
   `<a href="#tecniche">` dentro `#banco`, così compare "Torna al banco".
