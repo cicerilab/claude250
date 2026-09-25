@@ -206,14 +206,12 @@ function Lastra({
   id,
   parola,
   parolaRef,
-  foglioRef,
   registrata,
   attesa,
 }: {
   id: IdTecnica;
   parola: string;
   parolaRef: RefObject<HTMLDivElement>;
-  foglioRef?: RefObject<HTMLDivElement>;
   registrata: boolean;
   attesa: boolean;
 }) {
@@ -223,7 +221,7 @@ function Lastra({
     .join(' ');
   return (
     <div
-      ref={foglioRef}
+      data-imp-var={VAR.tecnicheGiro}
       className={taglio ? 'imp-tecniche__foglio imp-foglio imp-tecniche__foglio--pila' : 'imp-tecniche__foglio imp-foglio'}
       data-carta={taglio ? CARTA_TAGLIO : undefined}
     >
@@ -245,9 +243,6 @@ function Lastra({
 function TecnichePin({ parola, carta }: { parola: string; carta: Carta }) {
   const pinRef = useRef<HTMLDivElement>(null);
   const parolaRef = useRef<HTMLDivElement>(null);
-  const foglioRef = useRef<HTMLDivElement>(null);
-  const corsaRef = useRef<HTMLSpanElement>(null);
-  const giroScritto = useRef('');
   const dalBanco = useArrivoDalBanco();
 
   /** Voce corrente nell'elenco: cambia subito al passo (è un indice). */
@@ -282,21 +277,13 @@ function TecnichePin({ parola, carta }: { parola: string; carta: Carta }) {
 
   const progresso = useScrollProgress(pinRef, {
     intervallo: MOTO.intervallo,
-    // Le variabili del progresso vanno solo sugli elementi foglia che le
-    // leggono, mai su un antenato alto (ricalcolo di stile di tutta la
-    // sezione a ogni frame): --imp-tecniche-p sulla corsa, dalla fase
-    // `write` del hook; --imp-tecniche-giro sul biglietto, scritto qui sotto
-    // solo quando cambia alla quarta cifra.
+    // Le variabili del progresso vanno solo sulle foglie che le leggono
+    // (`data-imp-var`, motion-designer giro 2), mai su tutto il pin: la
+    // corsa legge --imp-tecniche-p, il biglietto --imp-tecniche-giro.
     variabile: VAR.tecnicheP,
-    bersaglio: corsaRef,
     passi: MOTO.passi,
     isteresi: MOTO.isteresi,
-    onProgresso: (p) => {
-      const giro = giroTecniche(p).toFixed(4);
-      if (giro === giroScritto.current) return;
-      giroScritto.current = giro;
-      foglioRef.current?.style.setProperty(VAR.tecnicheGiro, giro);
-    },
+    derivate: { [VAR.tecnicheGiro]: giroTecniche },
     onPasso: (indice, precedente) => {
       setPasso(indice);
       if (precedente === -1) {
@@ -316,7 +303,7 @@ function TecnichePin({ parola, carta }: { parola: string; carta: Carta }) {
           <Testa statica={false} />
 
           <div className="imp-tecniche__zona" aria-hidden="true">
-            <Lastra id={id} parola={parola} parolaRef={parolaRef} foglioRef={foglioRef} registrata={!taglio} attesa />
+            <Lastra id={id} parola={parola} parolaRef={parolaRef} registrata={!taglio} attesa />
           </div>
 
           <div className="imp-tecniche__lato">
@@ -345,7 +332,7 @@ function TecnichePin({ parola, carta }: { parola: string; carta: Carta }) {
                 })}
               </ol>
               <div className="imp-tecniche__corsa" aria-hidden="true">
-                <span ref={corsaRef} className="imp-tecniche__corsa-fatta" />
+                <span className="imp-tecniche__corsa-fatta" data-imp-var={VAR.tecnicheP} />
               </div>
             </div>
 

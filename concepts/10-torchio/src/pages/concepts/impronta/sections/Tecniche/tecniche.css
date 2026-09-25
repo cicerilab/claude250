@@ -2,9 +2,9 @@
    IMPRONTA · sezione 3, "La stessa parola, quattro volte" (#tecniche)
    section-builder-tecniche. Tutti i selettori partono da .imp-root.
    --------------------------------------------------------------------------
-   Variabili lette (scritte solo sull'elemento foglia che le usa, e
-   registrate con @property senza eredità: cambiarle a ogni frame non
-   ricalcola lo stile del resto della sezione):
+   Variabili lette (useScrollProgress le scrive solo sulle foglie marcate
+   data-imp-var, e sono registrate con @property senza eredità: cambiarle a
+   ogni frame non ricalcola lo stile del resto della sezione):
      --imp-tecniche-p     0..1 progresso del pin, sulla corsa
      --imp-tecniche-giro  0..1 giro di tre quarti del taglio, sul biglietto
      --imp-press          0..1 pressione della parola (usePressione)
