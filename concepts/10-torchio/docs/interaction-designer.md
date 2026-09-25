@@ -98,13 +98,15 @@ dormire (render on demand, 0 frame da fermo).
 
 - `runtime.light.{azimuth, elevation}` (letti dal WebGL) e `runtime.markDirty()`
   a ogni cambio.
-- `--imp-luce-x`, `--imp-luce-y` su `.imp-root`, **solo** con
+- `--imp-luce-x`, `--imp-luce-y` su `.imp-root`, calcolate con
+  `vettoreLuce(azimut)` di `styles/tokens.ts` (art-director), **solo** con
   `data-gl` diverso da `on`, al massimo 30 volte al secondo: il `text-shadow`
   del fallback CSS gira con la luce.
 - `--imp-ix-dial-az` sui soli contenitori dei dial (l'icona ruota anche col
   WebGL acceso), stesso limite di 30 Hz.
-- `track('c10_luce_mossa', { concept: 10, fonte })` una volta per visita, alla
-  prima interazione vera (non l'arco).
+- Nessun evento di analytics: nel sito vero `track()` accetta solo
+  `apri_concept` e `demo_prenotazione` (docs/integrazione-sito.md), e la luce
+  mossa non è un evento utile. Nessun mio file chiama `track`.
 
 ### 2.5 Reduced motion
 
@@ -258,7 +260,7 @@ const leva = useHoldToConfirm({
   onInizio: () => impostaInvio('holding'),
   onAnnulla: () => impostaInvio('idle'),
   onProgress: (p) => registry.setPressione(idProva, pressioneLeva(p, BANCO_RIPOSO)),
-  onCompleta: (via) => { track('concept_prova_invio', { concept: 10, prodotto, tecnica, tiratura }); void invia(); },
+  onCompleta: (via) => { track('demo_prenotazione', { concept: 10, prodotto, tecnica, tiratura, via }); void invia(); },
   magnete: 6,
 });
 
@@ -422,32 +424,14 @@ tech-architect §6; le uniche aggiunte sono segnate con **(aggiunta)**.
 
 ### 11.1 `core/ticker.ts`
 
-```ts
-export type TickPhase = 'read' | 'update' | 'write';
-
-/**
- * dt: secondi dall'ultimo frame, limitato a [0, 0.1].
- * now: performance.now() in ms (stesso orologio di performance.now() negli handler).
- * Ritorna true se il chiamante è ancora in movimento e vuole altri frame.
- */
-export type TickCallback = (dt: number, now: number) => boolean | void;
-
-export interface Ticker {
-  /** Registra nella fase indicata (default 'update'); sveglia il ticker. Ritorna la funzione per togliersi. */
-  add(cb: TickCallback, phase?: TickPhase): () => void;
-  /** Chiede almeno un altro frame (il ticker si era fermato). */
-  wake(): void;
-  readonly running: boolean;
-}
-
-export const ticker: Ticker;
-```
-
-Semantica richiesta: in ogni frame si eseguono le fasi `read` → `update` →
-`write`, e dentro una fase i callback in ordine di registrazione. Il ticker
-continua finché nell'ultimo frame almeno un callback ha restituito `true` o è
-stato chiamato `wake()`; altrimenti si ferma (0 frame da fermo). Un callback
-può togliersi durante il proprio frame. Si ferma con la scheda nascosta.
+**Unico contratto per tutti: quello del motion-designer, docs/motion-designer.md
+§4.1** (fasi `read | update | write | render`, `TickFn = (dt, now) => boolean |
+void`, `add(fn, fase?)`, `wake()`, `running`, dt in secondi limitato a
+[0, 0.05], `now` = timestamp di rAF sulla base di `performance.now()`,
+aggiunta e rimozione sicure durante il frame, arresto a riposo e con la
+scheda nascosta). I miei file usano solo `ticker.add(fn, 'update' | 'write')`
+e `ticker.wake()`, e reggono `now` leggermente precedente ai
+`performance.now()` letti negli handler (differenze negative limitate a 0).
 
 ### 11.2 `state/runtime.ts`
 
@@ -516,9 +500,18 @@ Semantica richiesta:
 
 ### 11.4 `@/lib/analytics`
 
-```ts
-export function track(name: string, props?: Record<string, unknown>): void;
-```
+Non lo importo più. Firma del sito (docs/integrazione-sito.md):
+`track(event: TrackEvent, params?)`, con `apri_concept` e `demo_prenotazione`
+per i concept; l'esempio della leva in §6.3 usa `demo_prenotazione`.
+
+### 11.4 bis Zona del "Torna in Ciceri Lab"
+
+`ConceptBackButton` del sito è fisso in alto a sinistra (desktop) e in basso a
+sinistra sotto i 640 px. Nessun mio elemento è fisso lì: l'unico elemento
+fisso è il velo dell'onda (a tutto schermo, sotto il contenuto,
+`pointer-events: none`). L'invito "luce col telefono" sta nel flusso
+dell'hero, sotto il bottone "Prova la tua", non fisso: il section-builder-hero
+non deve metterlo in basso a sinistra né renderlo `position: fixed`.
 
 ### 11.5 `Impronta.tsx`
 
@@ -536,14 +529,25 @@ export function track(name: string, props?: Record<string, unknown>): void;
 
 ## 12. Richieste ad altri agent
 
-- **art-director**: `--imp-z-onda: 20` in `tokens.css` metterebbe l'onda
+- **art-director**: fatto quanto chiesto in art-director.md: `vettoreLuce()`
+  per `--imp-luce-x/y`; focus con `--imp-focus-spessore/-distanza`; hover
+  della lamina con `--imp-lamina-sfumatura-premuta`; active con
+  `--imp-ombra-premuto` + `translateY(1px)`; scelta con `--imp-bordo-scelto`;
+  nessun cambio di colore al passaggio. Unica differenza voluta: il colore
+  dell'anello è `--imp-sito-inchiostro` (non `--imp-focus-colore`) perché
+  dentro un pezzo su un'altra carta l'anello cade sulla carta del sito;
+  `.imp-ix-anello-interno` usa `--imp-focus-colore`. La funzione `limitaLuce`
+  citata nel tuo doc non esiste in `tokens.ts`: puntatore, dito e giroscopio
+  sono già limitati a 85-185°, il dial no (scelta esplicita). `--imp-z-onda: 20` in `tokens.css` metterebbe l'onda
   **sopra** il testo. Il velo usa `--imp-z-canvas` (0): va bene lasciare
   `--imp-z-onda` inutilizzato o allinearlo a 0. Ho usato i tuoi token
   (`--imp-focus-*`, `--imp-sito-inchiostro`, `--imp-sottolineatura*`,
   `--imp-lamina-sfumatura*`, `--imp-ombra-premuto`, `--imp-lamina-bordo`,
   `--imp-leva-h`, `--imp-raggio-leva`, `--imp-opacita-disabilitato`); i default
   di `--imp-luce-x/-y` restano solo in `tokens.css`.
-- **motion-designer**: uso `seguiAngoloDt`, `seguiDt`, `Molla`,
+- **motion-designer**: lo scambio al 45% con velo invertito e bordo sfumato
+  (`statoOnda`) è già in `paperWave.ts`; la transizione dell'inchiostro usa
+  `--imp-dur-inchiostro`. Uso `seguiAngoloDt`, `seguiDt`, `Molla`,
   `LEVA.durata`, `LEVA.mollaRisalita`, `CARTA.onda`, `statoOnda`. La
   variabile `--imp-hold` sul bottone è il progress lineare; la pressione della
   prova la calcoli tu con `pressioneLeva`.

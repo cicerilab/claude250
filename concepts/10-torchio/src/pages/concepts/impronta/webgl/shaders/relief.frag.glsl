@@ -250,10 +250,20 @@ void main() {
     foil = h0.b * B.y * smoothstep(0.15, 0.55, press);
   }
 
+  // --- Copertura dell'inchiostro (serve già alla luce) ----------------------
+  float cop = 0.0;
+  if (inkQuota > 0.0) {
+    // La fibra sposta la soglia: il bordo diventa irregolare come sulla carta
+    // vera. Limitata a 0,3..0,7: il bordo trema di qualche decimo di px, non cola.
+    float soglia = clamp(0.5 - assorb * carta.ink.a * 0.6, 0.3, 0.7);
+    cop = smoothstep(soglia - 0.12, soglia + 0.12, inkMorbido) * inkQuota;
+  }
+
   // --- Luce diffusa tinta della carta --------------------------------------
-  // La lamina riempie la fibra (sotto il metallo si vede appena) e il fondo
-  // del solco è carta schiacciata, più liscia del foglio.
-  vec2 pendFibra = fibN * uPaper.x * carta.fondo.a * (1.0 - 0.9 * foil) * (1.0 - 0.5 * fondoSolco);
+  // La lamina e l'inchiostro riempiono la fibra (sotto si vede appena) e il
+  // fondo del solco è carta schiacciata, più liscia del foglio.
+  vec2 pendFibra = fibN * uPaper.x * carta.fondo.a
+    * (1.0 - 0.9 * foil) * (1.0 - 0.6 * cop) * (1.0 - 0.5 * fondoSolco);
   vec3 n = normalize(vec3(grad + pendFibra, 1.0));
   // 0 sul foglio piatto: la carta piatta resta il suo colore esatto.
   float t = (dot(n, L) - L.z) * uPaper.y * uLight.w;
@@ -275,13 +285,9 @@ void main() {
   col = mix(col, carta.ombra.rgb, contatto * uPaper.z * carta.ombra.a);
 
   // --- Inchiostro opaco, bevuto dalla fibra --------------------------------
-  if (inkQuota > 0.0) {
-    // La fibra sposta la soglia: il bordo diventa irregolare come sulla carta vera.
-    // Limitata a 0,3..0,7: il bordo trema di qualche decimo di px, non cola.
-    float soglia = clamp(0.5 - assorb * carta.ink.a * 0.6, 0.3, 0.7);
-    float cop = smoothstep(soglia - 0.12, soglia + 0.12, inkMorbido) * inkQuota;
-    // Film sottile: segue metà della luce del solco e lascia trasparire la formazione.
-    vec3 inkCol = carta.ink.rgb + (col - base) * 0.45 + vec3(formazione * 0.025);
+  if (cop > 0.0) {
+    // Film sottile: segue un terzo della luce del solco e lascia trasparire la formazione.
+    vec3 inkCol = carta.ink.rgb + (col - base) * 0.35 + vec3(formazione * 0.02);
     float densita = 0.93 + 0.07 * clamp(0.5 + assorb * 2.0, 0.0, 1.0);
     col = mix(col, inkCol, cop * densita);
   }
@@ -291,7 +297,7 @@ void main() {
     vec3 nf = normalize(vec3(grad + pendFibra, 1.0));
     // Spazzolatura: la fibra stirata lungo la venatura dà righe sottili e
     // lunghe, il segno del rullo della lamina. Un solo campione in più, solo qui.
-    float spazz = texture2D(tFiber, vec2(locale.x / (FIBRA_LATO * 12.0), locale.y / FIBRA_LATO * 2.0)).a - 0.5;
+    float spazz = texture2D(tFiber, vec2(locale.x / (FIBRA_LATO * 12.0), locale.y / FIBRA_LATO * 3.0)).a - 0.5;
     vec3 V = vec3(0.0, 0.0, 1.0);
     vec3 Lp = normalize(vec3(uLightPos.xy - p, max(uLightPos.z, 1.0)));
     vec3 H = normalize(Lp + V);
@@ -308,7 +314,7 @@ void main() {
     float lt = ht * 0.25;
     float lb = hb * 0.25;
     float largo = exp(-(lt * lt + lb * lb) / (hn * hn));
-    float riflesso = min(stretto, 1.0) * uLaminaParam.z + largo * uLaminaParam.w * 0.35 * (1.0 + spazz * 1.1);
+    float riflesso = min(stretto, 1.0) * uLaminaParam.z + largo * uLaminaParam.w * 0.35 * (1.0 + spazz * 0.75);
     riflesso *= mix(0.6, 1.0, uLightPos.w) * uLight.w;
 
     float diff = clamp(dot(nf, L) * 0.5 + 0.5, 0.0, 1.0);

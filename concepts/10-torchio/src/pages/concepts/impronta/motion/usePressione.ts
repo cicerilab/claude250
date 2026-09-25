@@ -7,8 +7,8 @@
  *   ritorno elastico della carta;
  * - la integra nel ticker (fase `update`) e la passa al registro dei
  *   rilievi con `registry.setPressione(id, v)`, che la porta allo shader;
- * - scrive nella fase `write` `--imp-press` (e, se il profilo lo chiede,
- *   `--imp-wdth` / `--imp-wght`) e `data-imp-pressa` sull'elemento, così il
+ * - scrive nella fase `write` SOLO `--imp-press` e `data-imp-pressa`
+ *   sull'elemento (gli assi di Anybody li deriva il CSS `.imp-pressa`), così il
  *   fallback CSS e i titoli DOM si muovono con lo stesso valore del GL;
  * - espone i gesti successivi: hover, battuta di una lettera, ristampa con
  *   un'altra tecnica, leva (premi, risali, urto).
@@ -39,7 +39,6 @@ import {
   LEVA,
   RISTAMPA,
   VAR,
-  assiPer,
   ritardoConSfasamento,
   type ProfiloPressione,
   type StatoPressa,
@@ -250,12 +249,6 @@ class MotorePressione {
     if (!forza && Math.abs(v - this.scritto) < 1e-4) return;
     this.scritto = v;
     el.style.setProperty(VAR.press, v.toFixed(4));
-    const assi = this.profilo.assi;
-    if (assi !== null) {
-      const { wdth, wght } = assiPer(assi, v);
-      el.style.setProperty(VAR.wdth, wdth.toFixed(2));
-      el.style.setProperty(VAR.wght, wght.toFixed(1));
-    }
   }
 
   private scriviStato(stato: StatoPressa): void {

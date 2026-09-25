@@ -582,7 +582,7 @@
  * Solo il colore: il fondo lo cambia il velo.
  */
 .imp-root {
-  transition: color 240ms linear;
+  transition: color var(--imp-dur-inchiostro, 240ms) linear;
 }
 
 /* ================================================================== 11. reduced motion */

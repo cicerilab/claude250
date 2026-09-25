@@ -51,10 +51,14 @@ nullo alla sesta cifra); `conSoste` è monotona; l'isteresi non cambia passo a
    `registry` (per il GL) e su variabili CSS inline (per DOM e fallback)
    dentro le fasi `update` e `write` del ticker. Nessun rAF proprio, nessun
    listener `scroll`.
-5. **Il motion scrive solo `--imp-press`** sui blocchi premuti. Gli assi di
-   Anybody li deriva il CSS dell'art-director (`.imp-pressa`, wdth 120 → 150,
-   wght 700 → 900) e con il GL acceso restano fermi all'arrivo: la discesa la
-   fa lo shader. Una sola fonte, nessun doppione.
+5. **Il motion scrive solo `--imp-press`** (0..1) sui blocchi premuti, mai
+   `font-variation-settings` né variabili d'asse. La traduzione in assi di
+   Anybody la fa il CSS dell'art-director (`.imp-pressa`: larghezza d'arrivo
+   per 0,8 + 0,2 p, peso da 700 all'arrivo), che conosce l'arrivo di ogni
+   titolo e lo adatta alla larghezza: a 375 px l'arrivo dell'hero è più
+   stretto, così la parola non scende a 40 px. In JS, se servisse, c'è
+   `assiPressione()` in `styles/tokens.ts`. Con il GL acceso gli assi restano
+   fermi all'arrivo e la discesa la fa lo shader. Una sola fonte.
 6. **Una pressa per blocco, una volta sola.** Il testo in inchiostro è fermo
    dal primo frame. Niente fade-up, niente reveal, niente loop.
 7. **Reduced motion = stato finale immediato** ovunque, con due sole
@@ -388,9 +392,9 @@ viaggioAncora: { attivo(): boolean; inizia(): void; finisce(): void; ascolta(fn)
 Esporta: `VAR`, `ATTR`, `ATTESA_PRESSA`, `PROFILI`, `RISTAMPA`, `BATTUTA`,
 `LEVA`, `HOVER`, `ESEMPIO_LEGGERO`, `INTERVALLI`, `HERO`, `PER_CHI`,
 `TECNICHE`, `CARTA`, `LEGATORIA`, `BANCO`, `BOTTEGA`, `COLOPHON`,
-`SEGNAPAGINA`, `INDICE`, `ANCORE`, `GL`, `ASSI_TITOLO`,
+`SEGNAPAGINA`, `INDICE`, `ANCORE`, `GL`,
 `LARGHEZZA_STRETTA` (768), `LARGHEZZA_TESTATA` (1024) e le funzioni pure
-`eStretto`, `ritardoConSfasamento`, `assiPer`, `pressioneLeva`,
+`eStretto`, `ritardoConSfasamento`, `pressioneLeva`,
 `scrollPerBordo`, `progressoIntervallo`, `scrollPerProgresso`,
 `indiceConIsteresi`, `giroTecniche`, `gradiGiroTecniche`,
 `progressoSaltoTecnica`, `raggioFinaleOnda`, `statoOnda`, `conSoste`,
@@ -413,7 +417,7 @@ Notazione delle timeline: `t` in ms dall'innesco; "valore" è la pressione
 | 0 (prima pittura, anche prerender) | Carta piena, testi in inchiostro già al loro posto e leggibili (LCP = H1 nel DOM). I blocchi premuti nascono con `data-imp-pressa="attesa"` nel markup, quindi piatti. Nessun preloader. | markup + CSS art-director |
 | 0 | Hero: `usePressione` con `ingresso: 'montaggio'` aspetta `document.fonts.ready`, al massimo 450 ms | motion |
 | font pronti (≤ 450) + 160 | **La pressa scende** sulla parola *impronta*: 1100 ms di curva `pressa` | motion |
-| + 638 | contatto (58%): rilievo pieno, assi 150/900 | motion + CSS `.imp-pressa` |
+| + 638 | contatto (58%): rilievo pieno, assi all'arrivo (dal CSS) | motion + CSS `.imp-pressa` |
 | + 750 circa | la carta restituisce l'1,7%, poi lo 0,3% | motion |
 | + 1100 | fermo. `data-imp-pressa="premuta"` | motion |
 | in parallelo | l'arco lentissimo della luce parte solo nell'hero (interaction) | interaction |
@@ -431,9 +435,11 @@ non da una comparsa.
 | H1, sottotitolo, "Prova la tua" | nessuno | nessuno | fermi dal primo frame |
 | dial della luce | nessuno | nessuno | fermo |
 
-Assi: con il GL spento o non ancora pronto, `.imp-pressa` porta la parola da
-wdth 120 / wght 700 a 150 / 900 insieme alla pressione. Con il GL acceso gli
-assi del DOM sono fermi a 150/900 (trasparente) e la stretta orizzontale
+Assi: il motion scrive solo `--imp-press`. Con il GL spento o non ancora
+pronto è `.imp-pressa` (art-director) a portare la parola dall'80% della sua
+larghezza d'arrivo e peso 700 all'arrivo pieno, con l'arrivo tarato per ogni
+larghezza di schermo. Con il GL acceso gli assi del DOM sono fermi
+all'arrivo (testo trasparente) e la stretta orizzontale
 `mix(0.8, 1.0, pressione)` la fa lo shader (tech-architect §7.4).
 
 **Dopo l'invio** (testo del cliente nell'hero, ux-architect 5.1): quando
@@ -550,8 +556,8 @@ Timeline di una **ristampa** (`comandi.ristampa(alFondo)`):
   ristampe si fondono in una sola, quella della tecnica di arrivo. Il fuoco
   resta sul bottone.
 - "Torna al banco" in fondo: `arrivaAllAncora('banco')`.
-- La parola campione non cambia assi durante la ristampa (profilo con
-  `assi: null`, e il CSS la tiene a 150/900): l'asse si muove una volta sola
+- La parola campione non cambia assi durante la ristampa (non ha la classe
+  `.imp-pressa`: i suoi assi sono fissi nel CSS): l'asse si muove una volta sola
   per blocco (trend-researcher 5.1).
 - Il taglio colorato ruota il contenitore DOM con
   `transform: perspective(1400px) rotateY(calc(var(--imp-tecniche-giro) * -32deg))`
@@ -832,7 +838,6 @@ tutti i miei hook tolgono i loro abbonamenti al ticker e i loro observer.
 | Variabile | Dove | Valori | Letta da |
 |---|---|---|---|
 | `--imp-press` | ogni blocco con `usePressione` (o il suo `bersaglio`) | 0..1, 4 decimali | `relief-fallback.css` (ombre, assi di `.imp-pressa`), CSS di sezione |
-| `--imp-wdth`, `--imp-wght` | solo se un profilo ha `assi` (di default nessuno) | numeri | titoli premuti senza `.imp-pressa` |
 | `--imp-scroll-p` | elemento di `useScrollProgress` senza `variabile` | 0..1 | CSS di sezione |
 | `--imp-tecniche-p` | contenitore delle Tecniche | 0..1 | CSS Tecniche (posizione dell'indicatore, se serve) |
 | `--imp-tecniche-giro` | contenitore delle Tecniche | 0..1 | `rotateY` del taglio colorato |
@@ -943,7 +948,11 @@ con `useImpronta` e cambiano comportamento anche se cambia a pagina aperta.
   `arrivaAllAncora`.
 - **section-builder** (tutti): `{...ATTESA_PRESSA}` sul markup di ogni blocco
   premuto; nessuna durata propria; nessuna animazione d'ingresso sui testi;
-  per il pin delle Tecniche altezze da `TECNICHE.altezzaSvh`.
+  per il pin delle Tecniche altezze da `TECNICHE.altezzaSvh`; nessun
+  `font-variation-settings` scritto da JS (la larghezza sotto la pressa è
+  `.imp-pressa` + `--imp-press`). I miei file non chiamano `track()`: gli
+  eventi sono solo `apri_concept` e `demo_prenotazione`
+  (`docs/integrazione-sito.md`), e nessuno dei due è un evento di movimento.
 - **shader-engineer**: §10.
 
 ---

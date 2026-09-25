@@ -246,6 +246,40 @@
 }
 
 /* --------------------------------------------------------------------------
+   Stato della pressa scritto dal motion-designer (docs/motion-designer.md §8.3)
+   - data-imp-pressa="attesa": è nel markup prerenderizzato, prima che la
+     pressa parta. Il blocco nasce piatto (--imp-press: 0) invece di nascere
+     premuto, appiattirsi all'idratazione e ripremersi (lampo pieno/piatto/
+     pieno). Vale per il blocco e per i figli (la variabile si eredita), quindi
+     anche quando le classi materiali sono su un elemento interno.
+   - "in-corso" / "premuta": nessuna regola qui, perché il motion scrive
+     --imp-press inline sull'elemento e l'inline vince comunque.
+   - Con reduced motion la regola non si applica: tutto resta premuto (1).
+   A pressione 0 nessun testo sparisce tranne il secco, che è sempre la
+   ripetizione di un testo leggibile altrove: l'inchiostro resta pieno, la
+   lamina resta argento, .imp-pressa resta un blocco della stessa misura.
+   data-imp-agganciato (fermate della Legatoria) non tocca queste classi.
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  .imp-root:not([data-motion="reduced"]) [data-imp-pressa="attesa"] {
+    --imp-press: 0;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Cambio carta: l'inchiostro passa al nuovo colore in --imp-dur-inchiostro
+   (motion §8.2), lineare. Solo `color` e `-webkit-text-fill-color` di testi
+   il cui colore NON dipende dalla pressione: niente transizioni su
+   text-shadow, filter o sul colore di .imp-secco, perché li cambia il ticker
+   a ogni frame e una transizione CSS li farebbe arrivare in ritardo.
+   -------------------------------------------------------------------------- */
+.imp-root :is(.imp-inchiostro, .imp-caldo, .imp-lamina) {
+  transition-property: color, -webkit-text-fill-color;
+  transition-duration: var(--imp-dur-inchiostro, 240ms);
+  transition-timing-function: linear;
+}
+
+/* --------------------------------------------------------------------------
    Con lo shader acceso, i fantasmi registrati (.imp-relief, classe dello
    scaffold) diventano trasparenti: restano per layout, selezione e misura.
    Gli assi si fermano allo stato di arrivo: la discesa la fa lo shader.

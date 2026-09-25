@@ -36,10 +36,6 @@ import { MOLLE, type ParametriMolla } from './spring';
 export const VAR = {
   /** 0..1 su ogni blocco premuto. Il fallback CSS scala le ombre con questo. */
   press: '--imp-press',
-  /** Asse width (numero). Scritto solo se il profilo ha `assi` (default: no, lo fa `.imp-pressa`). */
-  wdth: '--imp-wdth',
-  /** Asse weight (numero). Come sopra. */
-  wght: '--imp-wght',
   /** Progresso generico di una sezione, se non se ne indica un altro. */
   scrollP: '--imp-scroll-p',
   /** 0..1 lungo il pin delle Tecniche (sul contenitore alto della sezione). */
@@ -92,13 +88,6 @@ export function eStretto(larghezzaViewport: number): boolean {
 /* Profili di pressione                                                */
 /* ------------------------------------------------------------------ */
 
-export interface AssiPressione {
-  /** Asse width da..a mentre la pressione va da 0 a 1. */
-  readonly wdth: readonly [number, number];
-  /** Asse weight da..a mentre la pressione va da 0 a 1. */
-  readonly wght: readonly [number, number];
-}
-
 export interface ProfiloPressione {
   readonly nome: string;
   /** Ritardo dall'innesco alla partenza della discesa (ms). */
@@ -111,22 +100,19 @@ export interface ProfiloPressione {
   readonly riposo: number;
   /** rootMargin dell'IntersectionObserver di ingresso. */
   readonly margine: string;
-  /** Assi di Anybody pilotati dalla pressione, o null. */
-  readonly assi: AssiPressione | null;
   /** Attesa massima (ms) del segnale `attendi` (font) prima di premere comunque. */
   readonly attesaMax: number;
   /** Pressione su hover/focus (feedback), o null se il blocco non reagisce. */
   readonly hover: number | null;
 }
 
-/**
- * Gli assi dei titoli premuti li calcola il CSS dell'art-director dalla sola
- * `--imp-press` (classe `.imp-pressa` in relief-fallback.css: wdth 120 → 150,
- * wght 700 → 900, fermi all'arrivo con il GL acceso). Per questo i profili
- * hanno `assi: null` e il motion scrive solo `--imp-press`. `ASSI_TITOLO`
- * resta per un eventuale titolo premuto senza `.imp-pressa`.
+/*
+ * Il motion scrive SOLO `--imp-press` (0..1). La traduzione in assi di
+ * Anybody (wdth, wght) la fa il CSS dell'art-director (`.imp-pressa` in
+ * relief-fallback.css), che conosce l'arrivo di ogni titolo e lo adatta alla
+ * larghezza (a 375 px l'arrivo è più stretto). In JS, se servisse, c'è
+ * `assiPressione()` in styles/tokens.ts. Nessun font-variation-settings qui.
  */
-export const ASSI_TITOLO: AssiPressione = { wdth: [120, 150], wght: [700, 900] };
 
 /** Il bordo inferiore della viewport arretrato del 30%: "la sezione entra al 30%". */
 const ENTRA_AL_30 = '0px 0px -30% 0px';
@@ -140,7 +126,6 @@ export const PROFILI = {
     sfasamento: 0,
     riposo: 1,
     margine: '0px',
-    assi: null,
     attesaMax: 450,
     hover: null,
   },
@@ -152,7 +137,6 @@ export const PROFILI = {
     sfasamento: 150,
     riposo: 0.86,
     margine: ENTRA_AL_30,
-    assi: null,
     attesaMax: 0,
     hover: 1,
   },
@@ -164,7 +148,6 @@ export const PROFILI = {
     sfasamento: 0,
     riposo: 1,
     margine: '0px 0px -35% 0px',
-    assi: null,
     attesaMax: 0,
     hover: null,
   },
@@ -176,7 +159,6 @@ export const PROFILI = {
     sfasamento: 90,
     riposo: 0.84,
     margine: ENTRA_AL_30,
-    assi: null,
     attesaMax: 0,
     hover: 1,
   },
@@ -188,7 +170,6 @@ export const PROFILI = {
     sfasamento: 0,
     riposo: 0.78,
     margine: '0px 0px -25% 0px',
-    assi: null,
     attesaMax: 0,
     hover: null,
   },
@@ -200,7 +181,6 @@ export const PROFILI = {
     sfasamento: 0,
     riposo: 1,
     margine: '0px 0px -25% 0px',
-    assi: null,
     attesaMax: 0,
     hover: null,
   },
@@ -212,7 +192,6 @@ export const PROFILI = {
     sfasamento: 0,
     riposo: 1,
     margine: '0px 0px -25% 0px',
-    assi: null,
     attesaMax: 0,
     hover: null,
   },
@@ -224,7 +203,6 @@ export const PROFILI = {
     sfasamento: 0,
     riposo: 1,
     margine: '0px 0px -15% 0px',
-    assi: null,
     attesaMax: 0,
     hover: null,
   },
@@ -237,11 +215,6 @@ export function ritardoConSfasamento(profilo: ProfiloPressione, indice: number):
   return profilo.ritardo + profilo.sfasamento * Math.max(0, Math.floor(indice));
 }
 
-/** Valori degli assi per una pressione data (per il DOM e per il fallback). */
-export function assiPer(assi: AssiPressione, pressione: number): { wdth: number; wght: number } {
-  const p = clamp01(pressione);
-  return { wdth: lerp(assi.wdth[0], assi.wdth[1], p), wght: lerp(assi.wght[0], assi.wght[1], p) };
-}
 
 /* ------------------------------------------------------------------ */
 /* Gesti di pressione dopo l'ingresso                                  */

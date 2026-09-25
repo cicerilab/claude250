@@ -303,9 +303,10 @@ carta: `className="imp-carta__striscia imp-costa" data-carta="cotone"`.
 - `index.html`: colore di fondo inline `#E4CF3F` (Citrino), e `#2A2C2F` se
   parte Grafite.
 - Ordine di import come in §3.1.
+- In `base.css`, su `.imp-root`: `transition: color var(--imp-dur-inchiostro, 240ms) linear` (il testo semplice segue la carta come le mie classi; niente transizione sul fondo, lo cambia l’onda).
 
-**motion-designer**
-- `ASSI_TITOLO` scrive wdth 120→150 anche su mobile e tablet, dove la parola
+**motion-designer** (risolta, vedi §5)
+- `ASSI_TITOLO` scriveva wdth 120→150 anche su mobile e tablet, dove la parola
   dell'hero arriva a 100 e 125 (altrimenti a 375 px sarebbe di 40 px). Due
   strade: (a) usare `assiPressione(wdthPer('seccoHero', vw), 900, p)` di
   `tokens.ts`; (b) scrivere solo `--imp-press` e lasciare che `.imp-pressa`
@@ -337,6 +338,46 @@ carta: `className="imp-carta__striscia imp-costa" data-carta="cotone"`.
 
 **vector-artist**: nessuna. Il marchio `fill="currentColor"` funziona anche
 come maschera in `.imp-segno-caldo` (verificato a schermo).
+
+---
+
+## 5. Risposta al motion-designer (docs/motion-designer.md §8 e §11)
+
+**Fatto in `relief-fallback.css`** (verificato in Chromium):
+
+1. **Prima pittura senza lampi.**
+   `@media (prefers-reduced-motion: no-preference) { .imp-root:not([data-motion="reduced"]) [data-imp-pressa="attesa"] { --imp-press: 0; } }`.
+   Il blocco prerenderizzato nasce piatto: il secco non si vede, la parola
+   `.imp-pressa` è a wdth 120 / wght 700 dentro lo stesso box, l'inchiostro è
+   pieno. Con reduced motion resta a 1 (verificato: wdth 150 / wght 900 con
+   ombre). La variabile si eredita, quindi la regola vale anche se le classi
+   materiali stanno su un figlio del blocco con l'attributo.
+2. **Coerenza con gli altri stati del §8.3.** `in-corso` e `premuta` non
+   hanno regole: il motion scrive `--imp-press` inline, e l'inline vince
+   sull'attributo (verificato: inline 0,5 → wdth 135 / wght 800).
+   `data-imp-agganciato` non tocca le mie classi (lo usa solo il CSS della
+   Legatoria).
+3. **Transizione dell'inchiostro al cambio carta.** `color` e
+   `-webkit-text-fill-color` su `.imp-inchiostro`, `.imp-caldo`, `.imp-lamina`
+   in `var(--imp-dur-inchiostro, 240ms)` lineare. Non metto transizioni su
+   `text-shadow`, `filter` e sul colore di `.imp-secco`, perché dipendono da
+   `--imp-press` e il ticker li cambia a ogni frame: una transizione li farebbe
+   arrivare in ritardo. Le ombre cambiano colore insieme alla carta. Il
+   colore base del testo (`.imp-root`, `base.css`) è dello scaffold: gli
+   chiedo la stessa transizione.
+
+**Gli assi li calcola solo il CSS.** Il motion scrive solo `--imp-press`;
+`.imp-pressa` copre tutte le parole che si allargano:
+
+| Blocco | Classi | `--imp-wdth-arrivo` | `--imp-wght-arrivo` |
+|---|---|---|---|
+| parola dell'hero (e i nomi dopo l'invio) | `.imp-pressa .imp-secco` | `var(--imp-wdth-hero)` (100 / 125 / 150) | `var(--imp-wght-hero)` (900) |
+| indirizzo della bottega | `.imp-pressa .imp-secco` | `var(--imp-wdth-secco-grande)` (112,5 / 150) | `var(--imp-wght-secco-grande)` (800) |
+| tutto il resto (titoli, pezzi, prova, prezzo, nomi carta) | nessuna `.imp-pressa` | assi fissi della voce | la pressione si vede solo nel rilievo |
+
+`.imp-assi` resta disponibile ma, con i profili del motion senza `assi`,
+non serve a nessun blocco. Quindi la richiesta al motion-designer del §4
+(sul `wdth` 120→150 fisso) è chiusa.
 
 ---
 
