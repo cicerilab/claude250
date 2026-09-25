@@ -210,6 +210,8 @@ export class ImprontaGL {
   private smontato = false;
   private numeroFrame = 0;
   private disegnatoFramePrima = false;
+  /** Dopo la comparsa: le maschere vanno ridisegnate appena il DOM mostra data-gl="on". */
+  private rifaiDopoComparsa = false;
 
   private togli: Array<() => void> = [];
 
@@ -442,6 +444,21 @@ export class ImprontaGL {
     if (!this.pronto || this.perso || this.spento) return false;
     this.applicaViewport();
 
+    // Con data-gl="on" relief-fallback.css porta i fantasmi agli assi di
+    // arrivo (wdth/wght finali): la loro scatola non cambia, quindi nessun
+    // ResizeObserver se ne accorge, ma i glifi sì. Le maschere cotte durante
+    // l'attesa (assi a metà pressa, o font di ripiego) si ridisegnano una
+    // volta, appena React ha scritto l'attributo sulla radice.
+    if (this.rifaiDopoComparsa) {
+      const radice = this.canvas.closest('.imp-root');
+      if (radice === null || radice.getAttribute('data-gl') === 'on') {
+        this.rifaiDopoComparsa = false;
+        for (const st of this.stati.values()) st.daRifare = true;
+      } else {
+        return true;
+      }
+    }
+
     let avviati = 0;
     let inAttesa = false;
     // Prima i blocchi a slot riservato (Banco: cambiano a ogni tasto), poi
@@ -575,7 +592,8 @@ export class ImprontaGL {
       this.diagnostica.stato = 'acceso';
       this.disegnatoFramePrima = false;
       impostaGL('on');
-      return ancora;
+      this.rifaiDopoComparsa = true;
+      return true;
     }
 
     // 9. Qualità: solo frame di render continuo senza cotture.

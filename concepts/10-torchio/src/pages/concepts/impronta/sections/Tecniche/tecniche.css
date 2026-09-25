@@ -28,7 +28,7 @@
   --_imp-t-wdth: 100;
   --_imp-t-em: 0.7;
   --_imp-t-gradi: -18deg;
-  --_imp-t-costa: 7px;
+  --_imp-t-costa: 9px;
   display: flow-root;
   position: relative;
   padding-block-end: var(--imp-piede);
@@ -37,14 +37,14 @@
 @media (min-width: 600px) {
   .imp-root .imp-tecniche {
     --_imp-t-wdth: 112.5;
-    --_imp-t-em: 0.78;
+    --_imp-t-em: 0.82;
   }
 }
 
 @media (min-width: 768px) {
   .imp-root .imp-tecniche {
     --_imp-t-gradi: -32deg;
-    --_imp-t-costa: 11px;
+    --_imp-t-costa: 16px;
   }
 }
 
@@ -348,8 +348,11 @@
   justify-content: flex-start;
 }
 
+/* Un cartoncino spesso: costa di 2,5 px invece di quella di un pezzo
+   appoggiato, così sulla stessa carta del sito il foglio si stacca. */
 .imp-root .imp-tecniche__foglio {
   --_imp-t-giro: 0;
+  --imp-spessore-pezzo: 2.5px;
   inline-size: min(100cqi, calc(100cqb * 85 / 55));
   aspect-ratio: 85 / 55;
   container-type: inline-size;
@@ -359,6 +362,12 @@
   transform-style: preserve-3d;
   transform-origin: 50% 50%;
   transform: perspective(1400px) rotateY(calc(var(--_imp-t-giro) * var(--_imp-t-gradi)));
+}
+
+@media (min-width: 1024px) {
+  .imp-root .imp-tecniche__palco .imp-tecniche__zona {
+    align-items: flex-start;
+  }
 }
 
 /* Il giro vale solo per il taglio colorato: durante la ristampa verso

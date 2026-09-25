@@ -86,10 +86,36 @@
 }
 
 /* Tratti dritti: una riga d'inchiostro che si srotola dall'alto. */
+/* Tratti dritti. Sotto, il percorso a matita (tratteggio sottile, come la
+   guida degli schemi); sopra, la riga d'inchiostro che si srotola
+   dall'alto (scaleY) mentre il filo attraversa il suo intervallo. */
 .imp-root .imp-legatoria__tratto {
+  position: relative;
   display: block;
   inline-size: var(--filo-spessore);
   margin-inline-start: calc(var(--filo-x) - var(--filo-spessore) / 2);
+}
+
+.imp-root .imp-legatoria__tratto::before,
+.imp-root .imp-legatoria__tratto::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+}
+
+.imp-root .imp-legatoria__tratto::before {
+  inset-inline-start: calc(50% - 0.5px * var(--filo-s));
+  inline-size: calc(1px * var(--filo-s));
+  background-image: repeating-linear-gradient(
+    to bottom,
+    currentColor 0 calc(1.5px * var(--filo-s)),
+    transparent calc(1.5px * var(--filo-s)) calc(5px * var(--filo-s))
+  );
+  opacity: 0.5;
+}
+
+.imp-root .imp-legatoria__tratto::after {
+  inset-inline: 0;
   background-color: currentColor;
   transform-origin: 50% 0;
   transform: scaleY(var(--filo-l));
@@ -124,7 +150,7 @@
   display: grid;
   grid-template-columns: var(--filo-colonna) minmax(0, 1fr);
   column-gap: var(--filo-canalino);
-  padding-block-end: var(--imp-sp-8);
+  padding-block-end: var(--imp-sp-7);
 }
 
 /* Lo schema: su 375 sta sopra il testo, allineato al filo del margine. */
@@ -398,11 +424,7 @@
   }
 
   .imp-root .imp-legatoria__opzioni {
-    grid-template-columns: repeat(4, max-content);
-  }
-
-  .imp-root .imp-legatoria__opzione {
-    min-inline-size: 8.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
   }
 
   .imp-root .imp-legatoria__prova {
@@ -472,7 +494,7 @@
 }
 
 @media (forced-colors: active) {
-  .imp-root .imp-legatoria__tratto {
+  .imp-root .imp-legatoria__tratto::after {
     background-color: CanvasText;
     forced-color-adjust: none;
   }
