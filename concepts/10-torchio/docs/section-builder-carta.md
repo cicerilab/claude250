@@ -149,3 +149,30 @@ Testi: solo `CARTA.titolo`, `CARTA.intro`, `CARTA.campioni`,
 - **shader-engineer**: nessun blocco registrato da questa sezione; nulla da
   disegnare sotto le strisce oltre al foglio e all'onda.
 - **copywriter**: nessuna stringa mancante.
+
+---
+
+## Giro 2
+
+Da `awwwards-jury.md` (Carta 7), `accessibility-auditor.md` (M4),
+`responsive-tester.md` (intro rientrata). Solo `Carta.tsx` e `carta.css`.
+
+| Richiesta | Fatto |
+|---|---|
+| Niente `writing-mode` verticale (tell 9.F, CD §4.5) | Il nome a secco è **orizzontale, enorme**, in testa a ogni striscia, e il bordo destro lo taglia come un campione tagliato dal foglio: `.imp-carta__campo-secco` arriva fino al bordo (margine negativo = padding) con `overflow-x: clip` e `overflow-y: visible` (ascendenti e discendenti interi, nessun `overflow: hidden` sulla riga a 0,86). Corpo sulla larghezza del foglio: 27cqi (< 600), 21cqi (600-1023), 44cqi (≥ 1024). Riempie anche la metà alta della striscia, prima vuota |
+| Strisce a vivo a 2560 | Il gruppo è largo `100vw` e parte dal bordo della finestra (`margin-inline-start: (100vw - --imp-vw) / -2 - margine interno`), non più da `.imp-a-vivo` (che si fermava a 1680). Striscia alta `clamp(34rem, 72svh, 50rem)` |
+| Intro allineata al margine interno | Titolo e riga Hanken nella stessa campata (c1-c7), stesso x |
+| Filetto sotto "per tutto" (tell 9.F) | Tolto |
+| Nomi a secco di Cipria e Grafite poco visibili | `--imp-rilievo` locale sul nome: 1,3 (Citrino, Cotone), 1,5 Cipria, 1,7 Grafite. Verificato a schermo su tutte e quattro con pressione a riposo 0,84 |
+| "Da listino" a 375 | Le fasce ora hanno il nome enorme tagliato in testa e sotto due colonne (nome e misure / scelta e uso): stessa idea della 1440 |
+| M4: le frecce spostano il fuoco ma non scelgono | Schema radio WAI-ARIA vero: le frecce (e Home/Fine) spostano il fuoco **e** scelgono; `aria-checked` segue subito, il sito segue quando ci si ferma per `INTERVALLO_MINIMO_MS` (450 ms, da paperWave): una raffica di frecce fa un'onda sola. Col tocco l'onda parte subito, salvo un'altra partita da meno di 450 ms (allora aspetta il resto; paperWave accoda comunque). Tab non cambia mai carta. Verificato: 3 frecce di fila → un solo cambio di `data-carta` (Grafite), annuncio a onda finita, `scrollY` fermo; uguale con reduced motion |
+
+Verifica: dev server mio sulla 8108 (chiuso a fine giro). Font serviti via
+`page.route` (curl, perché il fetch di Node non passa dal proxy della
+sandbox). Screenshot di finestra, non di pagina intera: la cattura a pagina
+intera ridimensiona la finestra e rifotografa i nomi a metà pressa (sembravano
+spariti su Cipria e Grafite; con la cattura della finestra e la pressa finita
+si vedono). In `/tmp/claude-0/shots-carta/giro2/`:
+`carta-{375,768,1440,2560}-{citrino,cotone,cipria,grafite}-gl0.png` e
+`carta-{375,768,1440,2560}-{cotone,grafite}.png` (WebGL acceso).
+Typecheck e lint verdi.
