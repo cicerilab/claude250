@@ -13,7 +13,8 @@
  * pezzi esistono e dove stanno lo decide `legatoria.css`: un pezzo nascosto
  * misura 0 e non conta nella lunghezza.
  *
- * Ogni pezzo riceve da Legatoria.tsx `--filo-da` e `--filo-a` (frazioni 0..1
+ * Ogni pezzo porta `data-imp-var="--imp-filo-p"` (lo scrive lì il motion) e
+ * riceve da Legatoria.tsx `--filo-da` e `--filo-a` (frazioni 0..1
  * della lunghezza totale, misurata in px veri) e si disegna quando
  * `--imp-filo-p` (motion, `useFilo`) attraversa il suo intervallo. Tutto in
  * CSS: nessun calcolo per frame qui.
@@ -30,6 +31,14 @@
 
 import { forwardRef, memo } from 'react';
 import { FILI, type Legatura as LegaturaSvg } from '../../assets/svg';
+import { VAR } from '../../motion/choreography';
+
+/**
+ * Giro 2 del motion-designer: `useScrollProgress` scrive `--imp-filo-p` solo
+ * sulle foglie marcate `data-imp-var`, cioè sui pezzi del filo, e non più su
+ * tutto il corpo della sezione a ogni frame.
+ */
+const VAR_FILO = VAR.filoP;
 
 /** Unità del viewBox comune ai quattro schemi (vector-artist §3.1). */
 export const SCHEMA_W = 240;
@@ -84,6 +93,7 @@ export const SchemaFilo = memo(
         ref={ref}
         className="imp-legatoria__schema imp-legatoria__pezzo"
         data-legatura={legatura}
+        data-imp-var={VAR_FILO}
         aria-hidden="true"
         dangerouslySetInnerHTML={MARKUP[legatura]}
       />
@@ -120,6 +130,7 @@ export const TrattoFilo = forwardRef<HTMLSpanElement, TrattoProps>(function Trat
       ref={ref}
       className={`imp-legatoria__tratto imp-legatoria__tratto--${verso} imp-legatoria__tratto--${ruolo} imp-legatoria__pezzo`}
       data-verso-tratto={verso}
+      data-imp-var={VAR_FILO}
       aria-hidden="true"
     />
   );
@@ -137,6 +148,7 @@ export const NodoFilo = forwardRef<SVGSVGElement>(function NodoFilo(_props, ref)
     <svg
       ref={ref}
       className="imp-legatoria__nodo imp-legatoria__pezzo"
+      data-imp-var={VAR_FILO}
       viewBox={`0 0 ${lato} ${lato}`}
       aria-hidden="true"
       focusable="false"

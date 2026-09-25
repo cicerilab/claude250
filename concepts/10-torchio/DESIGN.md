@@ -10,7 +10,7 @@ colors:
   citrino-inchiostro: "#17231D"
   cotone: "#F1F1EE"
   cotone-luce: "#FFFFFF"
-  cotone-ombra: "#B9BAB3"
+  cotone-ombra: "#A2A39B"
   cotone-inchiostro: "#17231D"
   cipria: "#E8B9B3"
   cipria-luce: "#F7D8D3"
@@ -192,7 +192,7 @@ sono gli stessi per tutte: cambiare carta significa cambiare
 | Carta | `--imp-carta` fondo | `--imp-carta-luce` | `--imp-carta-ombra` | `--imp-inchiostro` | Uso |
 |---|---|---|---|---|---|
 | **Citrino** 300 g | `#E4CF3F` | `#F5E97E` | `#9C8A1E` | `#17231D` verde notte | default, identità |
-| **Cotone** 600 g | `#F1F1EE` | `#FFFFFF` | `#B9BAB3` | `#17231D` verde notte | biglietti, carta intestata |
+| **Cotone** 600 g | `#F1F1EE` | `#FFFFFF` | `#A2A39B` | `#17231D` verde notte | biglietti, carta intestata |
 | **Cipria** 350 g | `#E8B9B3` | `#F7D8D3` | `#A9776F` | `#231518` bruno notte | partecipazioni, nascite |
 | **Grafite** 400 g | `#2A2C2F` | `#44474B` | `#141517` | `#ECEBE6` inchiostro bianco | modo scuro, editoria d'arte |
 
@@ -201,8 +201,8 @@ Derivati per carta (in `tokens.css`):
 | Variabile | Citrino | Cotone | Cipria | Grafite | Ruolo |
 |---|---|---|---|---|---|
 | `--imp-inchiostro-velato` | `#505327` | `#545D58` | `#5A4343` | `#B6B6B3` | voci non correnti (inchiostro al 72% già composto). AA garantito |
-| `--imp-secco-fondo` | `#D8C43A` | `#E8E8E5` | `#DEAEA8` | `#232528` | fondo del solco a secco. Decorativo |
-| `--imp-carta-costa` | `#BCA92D` | `#D2D3CE` | `#C5958E` | `#373A3D` | spessore visto di taglio. Decorativo |
+| `--imp-secco-fondo` | `#D8C43A` | `#E4E5E1` | `#DEAEA8` | `#232528` | fondo del solco a secco. Decorativo |
+| `--imp-carta-costa` | `#BCA92D` | `#C6C6C0` | `#C5958E` | `#373A3D` | spessore visto di taglio. Decorativo |
 | `--imp-taglio` | `#17231D` | `#E4CF3F` | `#2A2C2F` | `#E4CF3F` | colore del taglio colorato (preso da un'altra carta del sistema) |
 | `--imp-lamina-bordo` | `#5E656C` | `#5E656C` | `#5E656C` | `#A7AEB5` | filo d'acciaio del bordo in lamina (3,38-6,24:1 sul fondo) |
 | `--imp-superficie` | `#EBD958` | `#E2E3DF` | `#EFC7C1` | `#36383C` | superficie sollevata (tasti, campi, pannelli): tinta, mai bianco |
@@ -462,6 +462,8 @@ solco), non sopra.
 | 1 | pezzo appoggiato | costa di 1-1,8 px + ombra di appoggio corta tinta (`.imp-foglio`) |
 | 2 | testata fissa, segnapagina | costa 1 px + ombra tinta cortissima (`--imp-ombra-testata`) |
 | 3 | indice mobile | foglio che sale: costa + ombra verso l'alto (`--imp-ombra-indice`) |
+
+Compressione al contatto: `--imp-press-urto` (0..1, un solo picco per pressa, lo scrive il motion) aggiunge al secco e all'inchiostro un alone d'ombra corto attorno al solco; a riposo non esiste.
 
 Regole: ogni ombra è tinta della carta; nessuna ombra grande e morbida;
 nessun bagliore; nessun `backdrop-filter`; niente z-index oltre i quattro

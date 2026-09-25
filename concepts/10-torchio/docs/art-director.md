@@ -135,14 +135,14 @@ stesso). **Tutte le 35 coppie con soglia passano.**
 | cotone | inchiostro su carta (testo normale, AA 4.5) | `#17231D` | `#F1F1EE` | **14.33:1** | 4.5:1 | passa |
 | cotone | inchiostro su carta (testo grande, AA 3) | `#17231D` | `#F1F1EE` | **14.33:1** | 3:1 | passa |
 | cotone | inchiostro su luce del rilievo (caso peggiore shader) | `#17231D` | `#FFFFFF` | **16.22:1** | 4.5:1 | passa |
-| cotone | inchiostro su ombra del rilievo (caso peggiore shader) | `#17231D` | `#B9BAB3` | **8.29:1** | 4.5:1 | passa |
+| cotone | inchiostro su ombra del rilievo (caso peggiore shader) | `#17231D` | `#A2A39B` | **6.37:1** | 4.5:1 | passa |
 | cotone | inchiostro velato 72% su carta (testo normale) | `#545D58` | `#F1F1EE` | **6.02:1** | 4.5:1 | passa |
 | cotone | anello di focus (inchiostro) su carta, non-testo 3:1 | `#17231D` | `#F1F1EE` | **14.33:1** | 3:1 | passa |
 | cotone | bordo lamina su carta, non-testo 3:1 | `#17231D` | `#F1F1EE` | **14.33:1** | 3:1 | passa |
 | cotone | inchiostro su fondo del solco (testo in un pezzo premuto) | `#17231D` | `#E8E8E5` | **13.21:1** | 4.5:1 | passa |
 | cotone | lamina (piena) su carta | `#C8CDD2` | `#F1F1EE` | 1.41:1 | nessuna | decorativo |
 | cotone | fondo solco a secco su carta | `#E8E8E5` | `#F1F1EE` | 1.08:1 | nessuna | decorativo |
-| cotone | ombra rilievo su carta | `#B9BAB3` | `#F1F1EE` | 1.73:1 | nessuna | decorativo |
+| cotone | ombra rilievo su carta | `#A2A39B` | `#F1F1EE` | 2.25:1 | nessuna | decorativo |
 | cotone | luce rilievo su carta | `#FFFFFF` | `#F1F1EE` | 1.13:1 | nessuna | decorativo |
 | cotone | taglio colorato su carta | `#E4CF3F` | `#F1F1EE` | 1.40:1 | nessuna | decorativo (si distingue per saturazione, e la tecnica è spiegata a parole) |
 | cotone | costa su carta | `#D2D3CE` | `#F1F1EE` | 1.33:1 | nessuna | decorativo |
@@ -446,6 +446,27 @@ il riflesso della lamina. Righe nuove o cambiate:
 Tutte le altre righe del §2 restano invariate (i colori delle carte e degli
 inchiostri non cambiano).
 
+### 6.5 Seguito giro 2: urto della pressa e Cotone
+
+- **`--imp-press-urto`** (motion-designer G2.4): default 0 in `tokens.css`.
+  In `relief-fallback.css` diventa `--_imp-urto`, un'ombra in più su
+  `.imp-secco` e `.imp-inchiostro` (quindi anche sulle parole `.imp-pressa`):
+  sfocatura `max(2px, 0,06 em) × urto`, spostata di 0,6 passi verso la luce,
+  colore `--imp-carta-ombra` al 38% × urto. A riposo raggio 0 e colore
+  trasparente, quindi non esiste; un solo picco per pressa, nessun lampo.
+  Verificato in Chromium: con urto 0 l'ultima ombra è `transparent 0 0 0`,
+  con urto 1 è un alone di 8,7 px a 145 px di corpo.
+- **Cotone più leggibile a secco** (segnalazione della bottega): l'ombra del
+  rilievo passa da `#B9BAB3` a `#A2A39B` (sulla carta da 1,73:1 a 2,25:1,
+  come Citrino 2,19:1); di conseguenza `--imp-carta-costa` `#C6C6C0` e
+  `--imp-secco-fondo` `#E4E5E1`. Il bianco del labbro di luce non può salire
+  oltre `#FFFFFF`: il guadagno viene tutto dall'ombra. Testo: inchiostro su
+  ombra (caso peggiore dello shader) da 8,29:1 a **6,37:1**, sempre AA; tutte
+  le altre coppie di Cotone invariate. `tokens.ts` aggiornato (hex, sRGB,
+  lineare): lo shader riceve la stessa ombra più scura senza altri interventi.
+  Con `--imp-rilievo` 2,4 della bottega il solco ora è netto (screenshot
+  guardato su Cotone a 1440).
+
 ### 6.4 Richieste ad altri agent (giro 2)
 
 - **section-builder-banco** (`banco.css` righe con
@@ -481,7 +502,7 @@ const over = (fg, bg, alpha) => mix(bg, fg, alpha);
 
 const CARTE = {
   citrino: { carta:'#E4CF3F', luce:'#F5E97E', ombra:'#9C8A1E', inchiostro:'#17231D' },
-  cotone:  { carta:'#F1F1EE', luce:'#FFFFFF', ombra:'#B9BAB3', inchiostro:'#17231D' },
+  cotone:  { carta:'#F1F1EE', luce:'#FFFFFF', ombra:'#A2A39B', inchiostro:'#17231D' },
   cipria:  { carta:'#E8B9B3', luce:'#F7D8D3', ombra:'#A9776F', inchiostro:'#231518' },
   grafite: { carta:'#2A2C2F', luce:'#44474B', ombra:'#141517', inchiostro:'#ECEBE6' },
 };

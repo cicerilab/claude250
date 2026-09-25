@@ -123,6 +123,7 @@
      Qui il default: tutto già premuto (pagina statica, reduced motion). */
   --imp-press: 1;
   --imp-rilievo: 1;               /* profondità relativa del blocco (spec.profondita) */
+  --imp-press-urto: 0;            /* 0..1, picco al contatto della pressa (motion G2.4), 0 a riposo */
   --imp-press-wdth-riposo: 0.8;   /* larghezza a pressione 0 = 80% di quella di arrivo */
   --imp-press-wght-riposo: 700;   /* peso a pressione 0 */
 
@@ -273,10 +274,10 @@
   color-scheme: light;
   --imp-carta: #F1F1EE;
   --imp-carta-luce: #FFFFFF;
-  --imp-carta-ombra: #B9BAB3;
+  --imp-carta-ombra: #A2A39B;     /* giro 2: più scura, il solco su Cotone si legge come su Citrino (2,25:1) */
   --imp-superficie: #E2E3DF;   /* superficie sollevata (tasti, campi, pannelli): tinta, mai bianco */
-  --imp-carta-costa: #D2D3CE;
-  --imp-secco-fondo: #E8E8E5;
+  --imp-carta-costa: #C6C6C0;
+  --imp-secco-fondo: #E4E5E1;
   --imp-inchiostro: #17231D;
   --imp-inchiostro-velato: #545D58;
   --imp-lamina-bordo: #5E656C;

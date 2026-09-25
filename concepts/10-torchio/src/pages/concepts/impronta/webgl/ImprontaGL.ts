@@ -124,6 +124,18 @@ const COTTURE_PER_FRAME = 1;
 const COTTURE_PER_FRAME_RECUPERO = 2;
 /** Attributo scritto sui fantasmi che il GL non sta disegnando (vedi docs/shader-engineer.md). */
 export const ATTR_FUORI_GL = 'data-imp-gl';
+/**
+ * Segni nella timeline di Performance per chi misura l'avvio
+ * (performance-auditor): `impronta-gl:<passo>`. Costano niente.
+ */
+function segna(passo: string): void {
+  try {
+    performance.mark(`impronta-gl:${passo}`);
+  } catch {
+    // Performance API assente: niente segni
+  }
+}
+
 /** dt del primo frame dopo un risveglio del ticker (contratto di core/ticker.ts). */
 const DT_RISVEGLIO = 1 / 60;
 
@@ -289,8 +301,10 @@ export class ImprontaGL {
       new Promise<void>((risolvi) => {
         window.setTimeout(risolvi, 0);
       });
+    segna('avvio');
     const datiFibra = await generaFibraAPezzi(cedi);
     if (this.smontato) return;
+    segna('fibra');
 
     const r = this.renderer;
     this.fibra = creaTexturaFibra(datiFibra);
@@ -342,6 +356,7 @@ export class ImprontaGL {
       mesh.material = m;
       this.compilazione = r.compileAsync(this.scene, this.camera);
       await this.compilazione;
+      segna(`compilato-${m.name}`);
       this.compilazione = null;
       if (this.smontato) {
         this.liberaGpu();
@@ -361,6 +376,7 @@ export class ImprontaGL {
       bersaglio.scissorTest = false;
       bersaglio.viewport.set(0, 0, bersaglio.width, bersaglio.height);
       bersaglio.scissor.set(0, 0, bersaglio.width, bersaglio.height);
+      segna(`primo-uso-${m.name}`);
       await cedi();
       if (this.smontato) {
         this.liberaGpu();
@@ -670,6 +686,7 @@ export class ImprontaGL {
       this.primoFrame = true;
       window.clearTimeout(this.timerAttesa);
       this.diagnostica.stato = 'acceso';
+      segna('primo-frame');
       impostaGL('on');
       this.rifaiDopoComparsa = true;
       return true;
