@@ -352,8 +352,8 @@ const Prova = forwardRef<ComandiProva, ProvaProps>(function Prova(
               <input className="imp-ix-dial__input" {...dial.inputProps} />
             </div>
           </div>
+          <p className="imp-banco__totale-lastra">{TESTI_BANCO.prezzo.rigaMobile(totale)}</p>
         </div>
-        <p className="imp-banco__totale-lastra">{TESTI_BANCO.prezzo.rigaMobile(totale)}</p>
         <div className="imp-banco__striscia" data-carta={carta} aria-hidden="true">
           {attiva ? (
             <span
