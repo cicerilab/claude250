@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>IMPRONTA, tipografia e legatoria a Pordenone | CiceriLab</title>
+    <meta
+      name="description"
+      content="Stampa a rilievo e legatoria a mano a Pordenone. Scrivi il tuo testo, scegli la carta e guarda la prova premuta, con il prezzo subito."
+    />
+    <meta name="theme-color" content="#E4CF3F" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!--
+      Colore di fondo prima di React (solo app standalone, non si porta):
+      Citrino di default, Grafite se la carta salvata (o ?carta=) è grafite,
+      oppure se il sistema è scuro e non c'è una scelta salvata
+      (ux-architect §1, art-director §4). Tutto in try/catch: con lo storage
+      bloccato resta Citrino.
+    -->
+    <style>
+      html,
+      body {
+        margin: 0;
+        background-color: #e4cf3f;
+      }
+      html.imp-avvio-grafite,
+      html.imp-avvio-grafite body {
+        background-color: #2a2c2f;
+      }
+    </style>
+    <script>
+      (function () {
+        var carta = null;
+        try {
+          var q = new URLSearchParams(window.location.search).get('carta');
+          var salvata = window.localStorage.getItem('impronta:carta');
+          var valide = ['citrino', 'cotone', 'cipria', 'grafite'];
+          if (valide.indexOf(salvata) >= 0) carta = salvata;
+          else if (valide.indexOf(q) >= 0) carta = q;
+        } catch (e) {}
+        var scuro = false;
+        try {
+          scuro = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        } catch (e) {}
+        if (carta === 'grafite' || (carta === null && scuro)) {
+          document.documentElement.className += ' imp-avvio-grafite';
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

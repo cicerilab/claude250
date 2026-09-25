@@ -1,0 +1,254 @@
+/* ==========================================================================
+   IMPRONTA · base (scaffold)
+   --------------------------------------------------------------------------
+   Reset leggero e tipografia di base, TUTTO sotto .imp-root (tech-architect
+   §5): nel sito vero questo CSS resta caricato anche fuori dalla pagina, e lo
+   scope evita che tocchi altre pagine. Niente selettori su html, body, :root
+   o * nudi. Nessun hex: solo variabili di tokens.css (art-director).
+
+   Ordine di import (Impronta.tsx): tokens.css → base.css → layout.css →
+   relief-fallback.css → interaction.css → CSS delle sezioni.
+
+   Selettori con :where() dove possibile: specificità minima, così i CSS di
+   sezione (che iniziano tutti con .imp-root) vincono senza forzature.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Radice: la carta del sito
+   - fondo pieno della carta attiva (la fibra la aggiunge relief-fallback.css
+     quando il WebGL non c'è);
+   - inchiostro, famiglia e corpo del testo di lettura;
+   - transizione SOLO sul colore del testo (art-director §4): il fondo lo
+     cambia l'onda di paperWave.ts, mai una transizione CSS.
+   - NIENTE container-type, transform, filter o contain qui: renderebbero la
+     radice il blocco contenitore dei figli `position: fixed` (canvas, velo
+     dell'onda), che devono restare agganciati alla finestra.
+   -------------------------------------------------------------------------- */
+.imp-root {
+  position: relative;
+  isolation: isolate;
+  min-block-size: 100vh;
+  min-block-size: 100svh;
+  background-color: var(--imp-carta);
+  color: var(--imp-inchiostro);
+  font-family: var(--imp-font-testo);
+  font-size: var(--imp-fs-corpo);
+  font-weight: var(--imp-wght-corpo);
+  line-height: var(--imp-lh-corpo);
+  letter-spacing: var(--imp-trk-corpo);
+  font-kerning: normal;
+  font-optical-sizing: auto;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: clip;
+  transition: color var(--imp-dur-inchiostro, 240ms) linear;
+}
+
+/* --------------------------------------------------------------------------
+   Reset scoped
+   -------------------------------------------------------------------------- */
+.imp-root,
+.imp-root :where(*, *::before, *::after) {
+  box-sizing: border-box;
+}
+
+.imp-root :where(h1, h2, h3, h4, h5, h6, p, figure, blockquote, dl, dd, ol, ul, fieldset, legend, pre, address) {
+  margin: 0;
+}
+
+.imp-root :where(ol, ul)[role="list"],
+.imp-root :where(ol, ul):where(.imp-lista) {
+  padding: 0;
+  list-style: none;
+}
+
+.imp-root :where(fieldset) {
+  min-inline-size: 0;
+  padding: 0;
+  border: 0;
+}
+
+.imp-root :where(legend) {
+  padding: 0;
+}
+
+.imp-root :where(img, svg, video, canvas) {
+  display: block;
+  max-inline-size: 100%;
+}
+
+.imp-root :where(img, video) {
+  block-size: auto;
+}
+
+.imp-root :where(button, input, select, textarea) {
+  margin: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+}
+
+.imp-root :where(button) {
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+  border-radius: var(--imp-raggio);
+  text-align: inherit;
+}
+
+.imp-root :where(button:disabled, [aria-disabled="true"]) {
+  cursor: default;
+}
+
+.imp-root :where(input, select, textarea) {
+  border-radius: var(--imp-raggio);
+}
+
+.imp-root :where(a) {
+  color: inherit;
+  text-decoration-thickness: var(--imp-sottolineatura);
+  text-underline-offset: var(--imp-sottolineatura-distanza);
+}
+
+.imp-root :where(strong, b) {
+  font-weight: var(--imp-wght-corpo-forte);
+}
+
+.imp-root :where(p, li, dd, figcaption, blockquote) {
+  text-wrap: pretty;
+  overflow-wrap: break-word;
+}
+
+.imp-root :where([hidden]) {
+  display: none;
+}
+
+/* Il fuoco programmatico sui titoli (arrivo alle ancore, tabindex=-1) non
+   disegna l'anello: non è un controllo. L'anello dei controlli è di
+   interaction.css. */
+.imp-root :where(h1, h2, h3, section, main, footer)[tabindex="-1"]:focus {
+  outline: none;
+}
+
+/* --------------------------------------------------------------------------
+   Tipografia di base
+   Titoli in Anybody con gli assi FISSI della loro voce (art-director §1.2):
+   la pressione sui titoli si vede solo nel rilievo, mai nella larghezza.
+   Assi solo tramite variabili (--imp-wdth / --imp-wght).
+   -------------------------------------------------------------------------- */
+.imp-root :where(h1, h2, h3) {
+  font-family: var(--imp-font-display);
+  font-synthesis: none;
+  text-wrap: balance;
+  font-variation-settings: "wdth" var(--imp-wdth), "wght" var(--imp-wght);
+  font-weight: var(--imp-wght);
+}
+
+.imp-root :where(h1) {
+  --imp-wdth: var(--imp-wdth-titolo-1);
+  --imp-wght: var(--imp-wght-titolo-1);
+  font-size: var(--imp-fs-titolo-1);
+  line-height: var(--imp-lh-titolo-1);
+  letter-spacing: var(--imp-trk-titolo);
+}
+
+.imp-root :where(h2) {
+  --imp-wdth: var(--imp-wdth-titolo-2);
+  --imp-wght: var(--imp-wght-titolo-2);
+  font-size: var(--imp-fs-titolo-2);
+  line-height: var(--imp-lh-titolo-2);
+  letter-spacing: var(--imp-trk-titolo);
+}
+
+.imp-root :where(h3) {
+  --imp-wdth: var(--imp-wdth-titolo-3);
+  --imp-wght: var(--imp-wght-titolo-3);
+  font-size: var(--imp-fs-titolo-3);
+  line-height: var(--imp-lh-titolo-3);
+  letter-spacing: var(--imp-trk-titolo-3);
+}
+
+/* Qualsiasi elemento in Anybody: niente grassetti o corsivi finti. */
+.imp-root :where(.imp-relief, .imp-display) {
+  font-synthesis: none;
+}
+
+.imp-root :where(.imp-display) {
+  font-family: var(--imp-font-display);
+}
+
+.imp-root :where(small, .imp-piccolo) {
+  font-size: var(--imp-fs-piccolo);
+  line-height: var(--imp-lh-piccolo);
+  letter-spacing: var(--imp-trk-piccolo);
+}
+
+.imp-root :where(.imp-nota) {
+  font-size: var(--imp-fs-nota);
+  line-height: var(--imp-lh-piccolo);
+}
+
+.imp-root ::selection {
+  background: var(--imp-selezione-fondo);
+  color: var(--imp-selezione-testo);
+}
+
+/* --------------------------------------------------------------------------
+   Classi condivise dello scaffold
+   -------------------------------------------------------------------------- */
+
+/* Solo lettori di schermo. */
+.imp-root .imp-sr {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Il fantasma DOM del rilievo: resta nel layout anche quando è trasparente
+   (data-gl="on", vedi relief-fallback.css). Mai a capo dentro una parola. */
+.imp-root .imp-relief {
+  font-synthesis: none;
+}
+
+/* --------------------------------------------------------------------------
+   Link di salto (primi due elementi tabulabili, ux-architect §2.1):
+   nascosti finché non hanno il fuoco, poi in alto al centro, sopra la
+   testata. Al centro e non a sinistra: in alto a sinistra c'è il bottone
+   "Torna in Ciceri Lab" del sito (z-index altissimo), che li coprirebbe.
+   -------------------------------------------------------------------------- */
+.imp-root .imp-salto {
+  position: fixed;
+  inset-block-start: var(--imp-sp-3);
+  inset-inline-start: 50%;
+  z-index: calc(var(--imp-z-testata) + 1);
+  min-block-size: var(--imp-tocco-min);
+  display: inline-flex;
+  align-items: center;
+  padding-inline: var(--imp-sp-4);
+  background-color: var(--imp-carta);
+  color: var(--imp-inchiostro);
+  font-size: var(--imp-fs-bottone);
+  font-weight: var(--imp-wght-bottone);
+  line-height: var(--imp-lh-interfaccia);
+  text-decoration: underline;
+  box-shadow: 0 0 0 var(--imp-focus-spessore) var(--imp-inchiostro);
+  white-space: nowrap;
+  transform: translate(-50%, calc(-100% - var(--imp-sp-7)));
+}
+
+.imp-root .imp-salto:focus,
+.imp-root .imp-salto:focus-visible {
+  transform: translate(-50%, 0);
+  outline: none;
+}

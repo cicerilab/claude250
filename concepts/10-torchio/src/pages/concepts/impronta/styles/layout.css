@@ -1,0 +1,96 @@
+/* ==========================================================================
+   IMPRONTA · layout (scaffold)
+   --------------------------------------------------------------------------
+   Gabbia della pagina da libro (art-director §1.4, DESIGN.md): margini
+   interno/esterno/testa/piede, pagina massima 1680, griglia a 4/8/12
+   colonne. Tutto sotto .imp-root, solo variabili di tokens.css.
+
+   Classi:
+     .imp-contenuto  strato del contenuto, SOPRA canvas e velo dell'onda
+     .imp-main       il <main> (nessuno stile di layout proprio)
+     .imp-page       la gabbia: larghezza massima + margini da libro
+     .imp-block      una sezione: testa e piede da libro
+     .imp-griglia    griglia a colonne della pagina
+     .imp-giustezza  riga di lettura (62ch), .imp-giustezza--stretta (44ch)
+     .imp-gl         il canvas WebGL (shader-engineer), fisso a tutto schermo
+     .imp-a-vivo     esce dalla gabbia fino ai bordi (solo strisce della carta)
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Livelli (tokens: canvas 0, contenuto 1, testata 10).
+   Il contenuto sta sopra il canvas e sopra il velo dell'onda
+   (interaction/paperWave.ts lo aggiunge a .imp-root al livello del canvas).
+   -------------------------------------------------------------------------- */
+.imp-root .imp-contenuto {
+  position: relative;
+  z-index: var(--imp-z-contenuto);
+}
+
+.imp-root .imp-main {
+  display: block;
+}
+
+/* Canvas WebGL: fisso, sotto l'inchiostro, invisibile finché il primo frame
+   completo non è pronto (data-gl="on"), poi 300 ms di opacità lineare
+   (motion-designer §7.5). Mai interattivo. */
+.imp-root .imp-gl {
+  position: fixed;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  z-index: var(--imp-z-canvas);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--imp-dur-gl, 300ms) linear;
+}
+
+.imp-root[data-gl="on"] .imp-gl {
+  opacity: 1;
+}
+
+/* --------------------------------------------------------------------------
+   La gabbia della pagina
+   -------------------------------------------------------------------------- */
+.imp-root .imp-page {
+  inline-size: 100%;
+  max-inline-size: var(--imp-pagina-max);
+  margin-inline: auto;
+  padding-inline: var(--imp-margine-interno) var(--imp-margine-esterno);
+}
+
+/* Una sezione: testa e piede da libro. L'arrivo alle ancore lo calcola
+   motion/useScrollProgress.ts (margineAncora); scroll-margin serve solo al
+   salto nativo (senza JS). */
+.imp-root .imp-block {
+  padding-block: var(--imp-testa) var(--imp-piede);
+  scroll-margin-block-start: var(--imp-sp-5);
+}
+
+@media (min-width: 1024px) {
+  .imp-root .imp-block {
+    scroll-margin-block-start: calc(var(--imp-testata-h-fissa) + var(--imp-sp-5));
+  }
+}
+
+/* Griglia della pagina: 4 colonne (mobile), 8 (≥ 600), 12 (≥ 1024).
+   Le sezioni scelgono le campate con grid-column. */
+.imp-root .imp-griglia {
+  display: grid;
+  grid-template-columns: repeat(var(--imp-colonne), minmax(0, 1fr));
+  column-gap: var(--imp-canalino);
+  align-items: start;
+}
+
+.imp-root .imp-giustezza {
+  max-inline-size: var(--imp-giustezza);
+}
+
+.imp-root .imp-giustezza--stretta {
+  max-inline-size: var(--imp-giustezza-stretta);
+}
+
+/* A vivo: esce dalla gabbia fino ai bordi della pagina (le strisce della
+   sezione carta). Usarlo solo dentro .imp-page. */
+.imp-root .imp-a-vivo {
+  margin-inline: calc(var(--imp-margine-interno) * -1) calc(var(--imp-margine-esterno) * -1);
+}
