@@ -167,12 +167,14 @@ function useArrivoDalBanco(): boolean {
 /* ------------------------------------------------------------------ pezzi comuni */
 
 function Testa({ statica }: { statica: boolean }) {
+  // Il copy può lasciare l'intro vuota (copywriter, giro 2): niente <p> vuoto.
+  const intro: string = TESTI.intro.trim();
   return (
     <header className={statica ? 'imp-tecniche__testa imp-tecniche__testa--statica' : 'imp-tecniche__testa'}>
       <h2 id={ID_TITOLO} className="imp-tecniche__titolo" tabIndex={-1}>
         {TESTI.titolo}
       </h2>
-      <p className="imp-tecniche__intro">{TESTI.intro}</p>
+      {intro.length > 0 ? <p className="imp-tecniche__intro">{intro}</p> : null}
     </header>
   );
 }

@@ -44,8 +44,8 @@ export interface CompositoioProps {
   carta: Carta;
   /** In stampa o già inviata: le scelte restano visibili ma ferme. */
   fermo: boolean;
-  /** Riepilogo in parole: su mobile sta qui, non nella lastra. */
-  riepilogo: string;
+  /** Riepilogo in parole: sotto i 1024 px sta qui (null sopra: lo rende la lastra, una volta sola). */
+  riepilogo: string | null;
   contatto: string;
   contattoRef: RefObject<HTMLInputElement>;
   tastieraContatto: 'tel' | 'email';
@@ -366,11 +366,13 @@ export default function Compositoio({
       </fieldset>
 
       {/* ---------- riepilogo in parole (solo sotto i 1024 px: sopra sta sotto la lastra) */}
-      <div className="imp-banco__riepilogo-stretto">
-        <p className="imp-banco__riepilogo">{riepilogo}</p>
-        <p className="imp-banco__dipende">{BANCO.prezzo.dipende}</p>
-        <p className="imp-banco__ristampa">{BANCO.prezzo.ristampa}</p>
-      </div>
+      {riepilogo !== null ? (
+        <div className="imp-banco__riepilogo-stretto">
+          <p className="imp-banco__riepilogo">{riepilogo}</p>
+          <p className="imp-banco__dipende">{BANCO.prezzo.dipende}</p>
+          <p className="imp-banco__ristampa">{BANCO.prezzo.ristampa}</p>
+        </div>
+      ) : null}
 
       {/* ---------- dove ti scriviamo */}
       <div className="imp-banco__gruppo imp-banco__gruppo--contatto">

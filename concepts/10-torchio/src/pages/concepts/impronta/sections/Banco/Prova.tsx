@@ -60,8 +60,8 @@ export interface ProvaProps {
   /** Campi scritti (store.prova.campi): le righe si compongono sulla forma mostrata. */
   campi: Readonly<Record<string, string>>;
   totale: number;
-  /** Riepilogo in parole (figcaption). */
-  riepilogo: string;
+  /** Riepilogo in parole (figcaption, da 1024 px); null sotto: sta nel compositoio. */
+  riepilogo: string | null;
   /** Testo alternativo della prova (`BANCO.prova.alt`). */
   alt: string;
   /** Tastiera aperta su mobile: la lastra diventa la striscia. */
@@ -391,11 +391,13 @@ const Prova = forwardRef<ComandiProva, ProvaProps>(function Prova(
           ) : null}
         </div>
       </div>
-      <figcaption className="imp-banco__didascalia">
-        <span className="imp-banco__riepilogo">{riepilogo}</span>
-        <span className="imp-banco__dipende">{TESTI_BANCO.prezzo.dipende}</span>
-        <span className="imp-banco__ristampa">{TESTI_BANCO.prezzo.ristampa}</span>
-      </figcaption>
+      {riepilogo !== null ? (
+        <figcaption className="imp-banco__didascalia">
+          <span className="imp-banco__riepilogo">{riepilogo}</span>
+          <span className="imp-banco__dipende">{TESTI_BANCO.prezzo.dipende}</span>
+          <span className="imp-banco__ristampa">{TESTI_BANCO.prezzo.ristampa}</span>
+        </figcaption>
+      ) : null}
       <p className="imp-sr">
         {alt} {TESTI_BANCO.senzaWebgl.sr}
       </p>

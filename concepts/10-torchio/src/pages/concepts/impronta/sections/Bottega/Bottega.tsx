@@ -7,7 +7,8 @@
  *    (`.imp-pressa`, profilo `BOTTEGA` del motion-designer), e sotto il suo
  *    gemello leggibile in inchiostro (`<address>`) con i recapiti in corpo
  *    piccolo, come la riga dell'editore in fondo a un frontespizio:
- *    telefono, email, Google Maps (nuova scheda);
+ *    "Chiama la bottega", "Scrivi alla bottega", Google Maps (nuova
+ *    scheda), più la nota che i recapiti sono di esempio;
  * 3. una riga di testo con lo stato "aperto adesso / chiuso adesso",
  *    calcolato sull'ora vera di Pordenone (Europe/Rome);
  * 4. a sinistra gli orari, a destra "chi c'è" come frase, la storia e tre
@@ -42,8 +43,6 @@ const TESTI_SEZIONE = {
   chiTitolo: 'Chi c\'è',
   recapitiAria: 'Telefono, email e mappa',
   oggi: 'oggi',
-  aperto: 'Aperto adesso',
-  chiuso: 'Chiuso adesso',
   /** Tre macchine dal brand-strategist §1.5, una riga ciascuna. */
   macchine: [
     { nome: 'La platina Heidelberg a stella', uso: 'stampa biglietti e partecipazioni, a secco e a un colore.' },
@@ -117,7 +116,7 @@ function orario(minuti: number): string {
 
 interface StatoBottega {
   aperta: boolean;
-  /** Il seguito della frase: fino a quando, o quando riapre (minuscolo). */
+  /** La frase dopo lo stato: fino a quando, o quando riapriamo. */
   dettaglio: string;
   /** "A Pordenone sono le 17.42." */
   ora: string;
@@ -135,15 +134,15 @@ function calcolaStato({ giorno, minuti }: OraRoma): StatoBottega {
     const mancano = inCorso[1] - minuti;
     const dettaglio =
       mancano <= 30
-        ? `chiude alle ${orario(inCorso[1])}, tra ${mancano} ${mancano === 1 ? 'minuto' : 'minuti'}.`
-        : `fino alle ${orario(inCorso[1])}.`;
+        ? `Chiudiamo alle ${orario(inCorso[1])}, tra ${mancano} ${mancano === 1 ? 'minuto' : 'minuti'}.`
+        : `Fino alle ${orario(inCorso[1])}.`;
     return { aperta: true, dettaglio, ora, rigaOggi };
   }
 
   const piuTardi = oggi.find(([apre]) => apre > minuti);
   if (piuTardi !== undefined) {
     const giaAperta = oggi.some(([, chiude]) => chiude <= minuti);
-    const verbo = giaAperta ? 'riapre' : 'apre';
+    const verbo = giaAperta ? 'Riapriamo' : 'Apriamo';
     return { aperta: false, dettaglio: `${verbo} oggi alle ${orario(piuTardi[0])}.`, ora, rigaOggi };
   }
 
@@ -152,7 +151,7 @@ function calcolaStato({ giorno, minuti }: OraRoma): StatoBottega {
     const prima = SETTIMANA[g]?.[0];
     if (prima === undefined) continue;
     const quando = passo === 1 ? 'domani' : NOMI_GIORNO[g];
-    return { aperta: false, dettaglio: `riapre ${quando} alle ${orario(prima[0])}.`, ora, rigaOggi };
+    return { aperta: false, dettaglio: `Riapriamo ${quando} alle ${orario(prima[0])}.`, ora, rigaOggi };
   }
 
   return { aperta: false, dettaglio: '', ora, rigaOggi };
@@ -286,15 +285,16 @@ export default function Bottega() {
                 </a>
               </li>
             </ul>
+            <p className="imp-bottega__nota-recapiti imp-nota">{t.recapitiNota}</p>
           </div>
 
           <p className="imp-bottega__stato" data-stato={stato === null ? 'attesa' : stato.aperta ? 'aperta' : 'chiusa'}>
             {stato !== null && (
               <>
                 <strong className="imp-bottega__stato-parola">
-                  {stato.aperta ? TESTI_SEZIONE.aperto : TESTI_SEZIONE.chiuso}
-                </strong>
-                , {stato.dettaglio} {stato.ora}
+                  {stato.aperta ? t.stato.aperto : t.stato.chiuso}
+                </strong>{' '}
+                {stato.dettaglio} {stato.ora}
               </>
             )}
           </p>

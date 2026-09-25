@@ -50,11 +50,13 @@ export interface TokenCarta {
   readonly inchiostroVelato: string;
   /** Fondo del solco a secco (la fibra compressa). Decorativo. */
   readonly seccoFondo: string;
+  /** Superficie sollevata (tasti, campi, pannelli): tinta, mai bianco. */
+  readonly superficie: string;
   /** Spessore della carta visto di taglio. Decorativo. */
   readonly costa: string;
   /** Colore del taglio colorato su questa carta (preso da un'altra carta del sistema). */
   readonly taglio: string;
-  /** Filo del bottone in lamina su questa carta (≥ 3:1 sul fondo). */
+  /** Filo d'acciaio del bordo in lamina su questa carta (≥ 3:1 sul fondo). */
   readonly laminaBordo: string;
   readonly srgb: ColoriVec3;
   readonly lin: ColoriVec3;
@@ -79,9 +81,10 @@ const CARTE_COLORI = {
     inchiostro: '#17231D',
     inchiostroVelato: '#505327',
     seccoFondo: '#D8C43A',
+    superficie: '#EBD958',
     costa: '#BCA92D',
     taglio: '#17231D',
-    laminaBordo: '#17231D',
+    laminaBordo: '#5E656C',
     srgb: {
       fondo: [0.89412, 0.81176, 0.24706],
       luce: [0.96078, 0.91373, 0.49412],
@@ -109,9 +112,10 @@ const CARTE_COLORI = {
     inchiostro: '#17231D',
     inchiostroVelato: '#545D58',
     seccoFondo: '#E8E8E5',
+    superficie: '#E2E3DF',
     costa: '#D2D3CE',
     taglio: '#E4CF3F',
-    laminaBordo: '#17231D',
+    laminaBordo: '#5E656C',
     srgb: {
       fondo: [0.9451, 0.9451, 0.93333],
       luce: [1, 1, 1],
@@ -139,9 +143,10 @@ const CARTE_COLORI = {
     inchiostro: '#231518',
     inchiostroVelato: '#5A4343',
     seccoFondo: '#DEAEA8',
+    superficie: '#EFC7C1',
     costa: '#C5958E',
     taglio: '#2A2C2F',
-    laminaBordo: '#231518',
+    laminaBordo: '#5E656C',
     srgb: {
       fondo: [0.9098, 0.72549, 0.70196],
       luce: [0.96863, 0.84706, 0.82745],
@@ -169,6 +174,7 @@ const CARTE_COLORI = {
     inchiostro: '#ECEBE6',
     inchiostroVelato: '#B6B6B3',
     seccoFondo: '#232528',
+    superficie: '#36383C',
     costa: '#373A3D',
     taglio: '#E4CF3F',
     laminaBordo: '#A7AEB5',
@@ -223,14 +229,14 @@ export const LAMINA = {
   base: '#C8CDD2',
   chiara: '#DDE1E5',
   scura: '#A7AEB5',
-  riflesso: '#EEF1F3',
+  riflesso: '#F4F6F8',
   profonda: '#7E868E',
   suLamina: '#17231D',
   srgb: {
     base: [0.78431, 0.80392, 0.82353],
     chiara: [0.86667, 0.88235, 0.89804],
     scura: [0.6549, 0.68235, 0.7098],
-    riflesso: [0.93333, 0.9451, 0.95294],
+    riflesso: [0.95686, 0.96471, 0.97255],
     profonda: [0.49412, 0.52549, 0.55686],
     suLamina: [0.0902, 0.13725, 0.11373],
   },
@@ -238,7 +244,7 @@ export const LAMINA = {
     base: [0.57758, 0.6105, 0.64448],
     chiara: [0.72306, 0.75294, 0.78354],
     scura: [0.38643, 0.42327, 0.46208],
-    riflesso: [0.85499, 0.87962, 0.89627],
+    riflesso: [0.90466, 0.92158, 0.93869],
     profonda: [0.20864, 0.2384, 0.2705],
     suLamina: [0.00857, 0.01681, 0.01229],
   },
@@ -250,12 +256,14 @@ export const LAMINA = {
 
 /**
  * Anybody variabile (wdth 50..150, wght 100..900, solo tondo) + Hanken
- * Grotesk 400/500/600 (è un variabile: Google serve un solo file).
+ * Grotesk variabile 400..600: con la gamma (non l'elenco 400;500;600)
+ * Google dichiara UN solo @font-face per subset invece di tre sullo stesso
+ * file (performance-auditor P7).
  * Verificato il 25/09/2026: 200 da fonts.googleapis.com, woff2 latin
  * Anybody 57 KB, Hanken 35 KB.
  */
 export const FONT_CSS_URL =
-  'https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@50..150,100..900&family=Hanken+Grotesk:wght@400;500;600&display=swap';
+  'https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@50..150,100..900&family=Hanken+Grotesk:wght@400..600&display=swap';
 
 export const FONT_PRECONNECT = ['https://fonts.googleapis.com', 'https://fonts.gstatic.com'] as const;
 

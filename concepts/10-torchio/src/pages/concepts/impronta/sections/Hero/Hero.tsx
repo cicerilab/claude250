@@ -1,63 +1,145 @@
 /**
- * IMPRONTA · Hero, "la pressa" (`#inizio`). section-builder-hero.
+ * IMPRONTA · Hero, "la pressa" (`#inizio`). section-builder-hero, giro 2.
  *
- * Cosa c'è (ux-architect 5.1, copywriter HERO, motion-designer 6.1):
- * - la parola *impronta* premuta a secco, larga esattamente quanto l'area
- *   viva della pagina (margini da libro), registrata nel registro dei rilievi
- *   (lo shader la disegna quando c'è, il fallback CSS la disegna da subito);
- *   la pressa scende una volta sola al montaggio, dopo i font;
- * - l'h1 in inchiostro, il sottotitolo e l'unico bottone "Prova la tua":
- *   fermi e leggibili dal primo frame (LCP = h1 nel DOM, mai il canvas);
- * - su desktop il dial "Direzione della luce" in basso a destra del blocco
- *   di testo (ux-architect 6.3);
- * - l'invito "luce col telefono" NEL FLUSSO sotto "Prova la tua", solo quando
- *   gyroPermission lo chiede (mai fisso, mai in basso a sinistra: lì c'è il
- *   bottone "Torna in Ciceri Lab" del sito);
- * - dopo l'invio dal banco: al posto di *impronta* il testo del cliente,
- *   adattato alla larghezza, e la riga "La tua prova è in stampa." al posto
- *   del sottotitolo; la pressa si riarma e riscende sui suoi nomi.
+ * Composizione (giuria giro 1, §2 Hero): la parola *impronta* è l'OGGETTO,
+ * non un'intestazione. È spezzata in due righe premute, "impron" e "ta",
+ * alla stessa misura di corpo: la prima riempie l'area viva al pixel, la
+ * seconda è allineata al margine esterno. Insieme occupano circa il 40%
+ * dell'altezza della prima schermata. Il blocco in inchiostro (h1,
+ * sottotitolo, "Prova la tua") è agganciato alla parola:
+ * - da 1024 px sta nel vuoto a sinistra di "ta", appeso alla sua linea
+ *   della x (il titolo pende dalla parola come una didascalia dal cliché);
+ * - sotto i 1024 px sta subito sotto "ta", a 24-40 px dalla linea di base.
+ * L'hero è alto quanto il suo contenuto: nessun vuoto a nessuna larghezza.
  *
- * Nessuna informazione vive solo nel rilievo: la parola è aria-hidden (ripete
- * il marchio) oppure, col testo del cliente, ha il suo gemello in `.imp-sr`.
- * Nessun accesso a window/document a livello di modulo.
+ * Tecnica (invariata dal giro 1 dove non detto):
+ * - ogni riga è un blocco a rilievo (`useRelief`) con la sua pressa
+ *   (`usePressione`, profilo dell'hero, al montaggio dopo i font);
+ * - il corpo si calcola dalla riga più lunga: stima in em alle tre larghezze
+ *   d'arrivo prima della misura, poi misura del DOM (gemelli invisibili a
+ *   100 px con gli assi d'arrivo) e `100cqi / em` in CSS, con un tetto sul
+ *   42% dell'altezza della finestra;
+ * - dopo l'invio dal banco il testo del cliente prende il posto della parola
+ *   (una o due righe, spezzate tra le parole), la riga "La tua prova è in
+ *   stampa." sostituisce il sottotitolo, la pressa si riarma e riscende;
+ * - l'invito "luce col telefono" resta nel flusso, sotto il bottone.
+ * Il dial della luce è passato nella testata (giuria: allineato alla gabbia).
+ *
+ * Nessuna informazione solo nel rilievo; nessun accesso a window/document a
+ * livello di modulo.
  */
 
 import { useCallback, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import './hero.css';
 
-import { ANNUNCI, COMUNI, HERO as TESTI_HERO, LUCE, RILIEVI, TESTATA } from '../../content/testi';
+import { ANNUNCI, COMUNI, HERO as TESTI_HERO, RILIEVI, TESTATA } from '../../content/testi';
 import { attivaGyro, rifiutaInvito, useGyro } from '../../interaction/gyroPermission';
-import { useLuceDial } from '../../interaction/light';
 import { ATTESA_PRESSA, HERO as MOTO_HERO } from '../../motion/choreography';
-import { usePressione, type ComandiPressione } from '../../motion/usePressione';
+import { usePressione } from '../../motion/usePressione';
 import { useRelief } from '../../relief/useRelief';
 import { useImpronta } from '../../state/store';
 import { stimaLarghezzaEm, TIPO } from '../../styles/tokens';
 
-/** Id stabili (una sola hero nella pagina). */
 const ID_TITOLO = 'imp-hero-titolo';
-const ID_SOTTO = 'imp-hero-sotto';
 
-/** Priorità del blocco nell'elenco dello shader: la parola dell'hero viene prima di tutto. */
+/** Priorità dei blocchi dell'hero nell'elenco dello shader. */
 const PRIORITA_PAROLA = 10;
 
-/** Corpo (px) del gemello invisibile che misura il testo del cliente (vedi hero.css). */
+/** Corpo (px) dei gemelli invisibili che misurano le righe (vedi hero.css). */
 const CORPO_MISURA = 100;
 
+/** Lettere che restano sulla seconda riga della parola: im·pron / ta. */
+const CODA_PAROLA = 2;
+
 /**
- * Larghezza in em del testo del cliente alle tre larghezze d'arrivo della
- * parola (100 sotto 600 px, 125 fino a 1023, 150 da 1024), a peso 900 e con
- * il tracking della voce: il CSS sceglie quella giusta e calcola il corpo
- * perché il testo riempia l'area viva senza superarla.
+ * Le righe della parola premuta.
+ * - "impronta" → "impron" / "ta" (l'ultima sillaba scende, come in un
+ *   manifesto composto a mano);
+ * - testo del cliente con più parole → due righe spezzate tra le parole,
+ *   il più possibile uguali;
+ * - una parola sola → una riga.
  */
-function variabiliCliente(testo: string): CSSProperties {
+function righeDi(testo: string, cliente: boolean): string[] {
+  const t = testo.trim();
+  if (!cliente) return [t.slice(0, -CODA_PAROLA), t.slice(-CODA_PAROLA)];
+  const parole = t.split(/\s+/).filter((p) => p.length > 0);
+  if (parole.length < 2) return [t];
+  let migliore = 1;
+  let scarto = Number.POSITIVE_INFINITY;
+  for (let i = 1; i < parole.length; i += 1) {
+    const a = parole.slice(0, i).join(' ').length;
+    const b = parole.slice(i).join(' ').length;
+    const d = Math.abs(a - b);
+    if (d < scarto) {
+      scarto = d;
+      migliore = i;
+    }
+  }
+  return [parole.slice(0, migliore).join(' '), parole.slice(migliore).join(' ')];
+}
+
+/** Stima (em) della riga più lunga alle tre larghezze d'arrivo, prima della misura del DOM. */
+function variabiliStima(righe: readonly string[]): CSSProperties {
   const tracking = TIPO.seccoHero.trackingEm;
-  const em = (wdth: number): string => stimaLarghezzaEm(testo, wdth, TIPO.seccoHero.wght, tracking).toFixed(4);
+  const em = (wdth: number): string =>
+    Math.max(...righe.map((r) => stimaLarghezzaEm(r, wdth, TIPO.seccoHero.wght, tracking))).toFixed(4);
   return {
     '--imp-hero-em-s': em(TIPO.seccoHero.wdth.s),
     '--imp-hero-em-m': em(TIPO.seccoHero.wdth.m),
     '--imp-hero-em-l': em(TIPO.seccoHero.wdth.l),
+    '--imp-hero-righe': String(righe.length),
   } as CSSProperties;
+}
+
+interface PropsRiga {
+  testo: string;
+  indice: number;
+  cliente: boolean;
+}
+
+/** Una riga premuta: blocco a rilievo con la sua pressa. */
+function RigaPremuta({ testo, indice, cliente }: PropsRiga) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Testo che cambia a pagina aperta (arriva il testo del cliente): prima la
+  // pressa si riarma, poi cambia la spec (motion-designer 6.1). Questo effetto
+  // è dichiarato prima di useRelief, quindi gira prima nello stesso commit.
+  const comandiRef = useRef<ReturnType<typeof usePressione> | null>(null);
+  const testoPrima = useRef(testo);
+  useLayoutEffect(() => {
+    if (testoPrima.current === testo) return;
+    testoPrima.current = testo;
+    comandiRef.current?.riarma();
+  }, [testo]);
+
+  const reliefId = useRelief(ref, {
+    kind: 'text',
+    text: testo,
+    tecnica: 'secco',
+    profondita: 1,
+    tracking: 'doc',
+    priorita: PRIORITA_PAROLA,
+  });
+
+  const attendiFont = useCallback((): Promise<unknown> => document.fonts.ready, []);
+  comandiRef.current = usePressione(ref, {
+    profilo: MOTO_HERO.profilo,
+    reliefId,
+    indice,
+    ingresso: cliente ? 'vista' : 'montaggio',
+    attendi: attendiFont,
+  });
+
+  return (
+    <div
+      ref={ref}
+      {...ATTESA_PRESSA}
+      className={`imp-hero__riga imp-hero__riga--${indice + 1} imp-relief imp-secco imp-pressa`}
+      aria-hidden="true"
+    >
+      {testo}
+    </div>
+  );
 }
 
 /** "Muovi la luce inclinando il telefono": riga nel flusso, sotto il bottone. */
@@ -102,163 +184,109 @@ function InvitoLuce({ onEsito }: { onEsito: (annuncio: string | null) => void })
   );
 }
 
-/** Dial "Direzione della luce" (solo desktop, lo nasconde il CSS sotto 1024 px). */
-function DialLuce() {
-  const dial = useLuceDial();
-  return (
-    <div className="imp-hero__luce">
-      <span className="imp-hero__luce-etichetta" aria-hidden="true">
-        {LUCE.etichetta}
-      </span>
-      <div className="imp-ix-dial" {...dial.contenitoreProps}>
-        <span className="imp-ix-dial__icona" aria-hidden="true" />
-        <input className="imp-ix-dial__input" {...dial.inputProps} />
-      </div>
-    </div>
-  );
-}
-
 export default function Hero() {
   const testoCliente = useImpronta((s) => s.testoCliente);
-
+  const cliente = testoCliente !== null;
   const parola = testoCliente ?? TESTI_HERO.parola;
+  const righe = useMemo(() => righeDi(parola, cliente), [parola, cliente]);
+  const chiaveRighe = righe.join('\n');
+
+  const pianoRef = useRef<HTMLDivElement>(null);
+  const misureRef = useRef<HTMLSpanElement>(null);
   const ctaRef = useRef<HTMLAnchorElement>(null);
-  const parolaRef = useRef<HTMLDivElement>(null);
   const [annuncio, setAnnuncio] = useState('');
 
-  /*
-   * Riarmo della pressa quando arriva il testo del cliente a pagina aperta
-   * (motion-designer 6.1: prima riarma, poi cambia il testo). Questo effetto
-   * è dichiarato PRIMA di useRelief, quindi nello stesso commit gira prima
-   * dell'aggiornamento della spec nel registro.
-   */
-  const comandiRef = useRef<ComandiPressione | null>(null);
-  const clientePrima = useRef<string | null>(testoCliente);
-  useLayoutEffect(() => {
-    if (clientePrima.current === testoCliente) return;
-    clientePrima.current = testoCliente;
-    comandiRef.current?.riarma();
-  }, [testoCliente]);
-
-  const reliefId = useRelief(parolaRef, {
-    kind: 'text',
-    text: parola,
-    tecnica: 'secco',
-    profondita: 1,
-    tracking: 'doc',
-    priorita: PRIORITA_PAROLA,
-  });
-
-  const attendiFont = useCallback((): Promise<unknown> => document.fonts.ready, []);
-  const pressa = usePressione(parolaRef, {
-    profilo: MOTO_HERO.profilo,
-    reliefId,
-    ingresso: testoCliente !== null ? 'vista' : 'montaggio',
-    attendi: attendiFont,
-  });
-  comandiRef.current = pressa;
-
-  const stileParola = useMemo(() => (testoCliente !== null ? variabiliCliente(testoCliente) : undefined), [testoCliente]);
+  const stileStima = useMemo(() => variabiliStima(righe), [righe]);
 
   /*
-   * Testo del cliente: la stima in em è buona al ±4%, la misura del DOM è
-   * esatta. Un gemello invisibile a 100 px con gli assi d'ARRIVO (non quelli
-   * che la pressa sta animando) dà la larghezza vera in em; il CSS la usa per
-   * riempire l'area viva al pixel. Si rimisura quando cambia (font caricati,
-   * larghezza d'arrivo diversa oltre 600 o 1024 px).
+   * Misura del DOM: i gemelli invisibili (100 px, assi d'ARRIVO, non quelli
+   * che la pressa sta animando) danno la larghezza vera in em della riga più
+   * lunga; il CSS la usa per riempire l'area viva al pixel. Si rimisura
+   * quando i gemelli cambiano misura (font caricati, larghezza d'arrivo
+   * diversa oltre 600 o 1024 px).
    */
-  const pianoRef = useRef<HTMLDivElement>(null);
-  const misuraRef = useRef<HTMLSpanElement>(null);
   useLayoutEffect(() => {
     const piano = pianoRef.current;
-    const misura = misuraRef.current;
-    if (piano === null || misura === null) return undefined;
+    const misure = misureRef.current;
+    if (piano === null || misure === null) return undefined;
     let vivo = true;
     const aggiorna = (): void => {
       if (!vivo) return;
-      const larghezza = misura.getBoundingClientRect().width;
-      if (larghezza > 0) piano.style.setProperty('--imp-hero-em-misurato', (larghezza / CORPO_MISURA).toFixed(4));
+      let massimo = 0;
+      for (const figlio of Array.from(misure.children)) {
+        massimo = Math.max(massimo, figlio.getBoundingClientRect().width);
+      }
+      if (massimo > 0) piano.style.setProperty('--imp-hero-em-misurato', (massimo / CORPO_MISURA).toFixed(4));
     };
     aggiorna();
     const osservatore = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(aggiorna) : null;
-    osservatore?.observe(misura);
+    for (const figlio of Array.from(misure.children)) osservatore?.observe(figlio);
     void document.fonts.ready.then(aggiorna);
     return () => {
       vivo = false;
       osservatore?.disconnect();
       piano.style.removeProperty('--imp-hero-em-misurato');
     };
-  }, [testoCliente]);
+  }, [chiaveRighe]);
 
   const esitoInvito = useCallback((testo: string | null) => {
     // Un NBSP in coda rende "nuovo" lo stesso testo per aria-live.
-    if (testo !== null) setAnnuncio((prima) => (prima === testo ? `${testo}\u00a0` : testo));
+    if (testo !== null) setAnnuncio((prima) => (prima === testo ? `${testo} ` : testo));
     // La riga dell'invito sparisce: il fuoco torna sul bottone che le sta sopra.
     ctaRef.current?.focus({ preventScroll: true });
   }, []);
 
-  // Il clic su "Prova la tua" lo gestisce Impronta.tsx (link interni delegati).
-  // data-imp-hero-cta serve alla testata mobile: il richiamo in basso compare
-  // solo quando questo bottone è uscito dallo schermo.
-
   return (
-    <section
-      id="inizio"
-      className="imp-hero imp-page"
-      aria-labelledby={ID_TITOLO}
-      data-imp-luce=""
-    >
-      <div ref={pianoRef} className="imp-hero__piano">
-        <div
-          ref={parolaRef}
-          {...ATTESA_PRESSA}
-          className="imp-hero__parola imp-relief imp-secco imp-pressa"
-          data-cliente={testoCliente !== null ? '' : undefined}
-          style={stileParola}
-          aria-hidden="true"
-        >
-          {parola}
+    <section id="inizio" className="imp-hero" aria-labelledby={ID_TITOLO} data-imp-luce="">
+      <div
+        ref={pianoRef}
+        className="imp-hero__piano"
+        style={stileStima}
+        data-righe={righe.length}
+        data-cliente={cliente ? '' : undefined}
+      >
+        <div className="imp-hero__composizione">
+          {righe.map((r, i) => (
+            <RigaPremuta key={i} testo={r} indice={i} cliente={cliente} />
+          ))}
+
+          <div className="imp-hero__testo">
+            <h1 id={ID_TITOLO} className="imp-hero__titolo imp-inchiostro">
+              {TESTI_HERO.titolo}
+            </h1>
+
+            <p className="imp-hero__sotto">{cliente ? TESTI_HERO.dopoInvio : TESTI_HERO.sottotitolo}</p>
+
+            {/* Il clic lo gestisce Impronta.tsx (link # delegati). data-imp-richiamo:
+                la testata nasconde i suoi "Prova la tua" mentre questo è in vista. */}
+            <a
+              ref={ctaRef}
+              href="#banco"
+              className="imp-hero__cta imp-lamina imp-ix-premibile"
+              aria-label={TESTATA.provaAria}
+              data-imp-richiamo="hero"
+            >
+              {COMUNI.provaLaTua}
+            </a>
+
+            <InvitoLuce onEsito={esitoInvito} />
+
+            <p className="imp-sr" aria-live="polite">
+              {annuncio}
+            </p>
+          </div>
         </div>
-        {/* "impronta" ripete il marchio (decorativa); il testo del cliente no: gemello per i lettori di schermo. */}
-        {testoCliente !== null ? (
-          <>
-            <p className="imp-sr">{RILIEVI.heroParolaCliente.alt(testoCliente)}</p>
-            <span className="imp-hero__misura" aria-hidden="true">
-              <span ref={misuraRef} className="imp-hero__misura-testo">
-                {testoCliente}
-              </span>
+
+        {/* "impronta" ripete il marchio (decorativa); il testo del cliente no. */}
+        {cliente ? <p className="imp-sr">{RILIEVI.heroParolaCliente.alt(parola)}</p> : null}
+
+        <span ref={misureRef} className="imp-hero__misure" aria-hidden="true">
+          {righe.map((r, i) => (
+            <span key={i} className="imp-hero__misura">
+              {r}
             </span>
-          </>
-        ) : null}
-      </div>
-
-      <div className="imp-hero__testo imp-griglia">
-        <h1 id={ID_TITOLO} className="imp-hero__titolo imp-inchiostro">
-          {TESTI_HERO.titolo}
-        </h1>
-
-        <p id={ID_SOTTO} className="imp-hero__sotto">
-          {testoCliente !== null ? TESTI_HERO.dopoInvio : TESTI_HERO.sottotitolo}
-        </p>
-
-        <div className="imp-hero__azioni">
-          <a
-            ref={ctaRef}
-            href="#banco"
-            className="imp-hero__cta imp-lamina imp-ix-premibile"
-            aria-label={TESTATA.provaAria}
-            data-imp-hero-cta=""
-          >
-            {COMUNI.provaLaTua}
-          </a>
-          <DialLuce />
-        </div>
-
-        <InvitoLuce onEsito={esitoInvito} />
-
-        <p className="imp-sr" aria-live="polite">
-          {annuncio}
-        </p>
+          ))}
+        </span>
       </div>
     </section>
   );

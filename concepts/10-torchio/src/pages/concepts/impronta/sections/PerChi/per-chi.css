@@ -454,6 +454,9 @@
   .imp-root .imp-perchi__posto--libro {
     justify-self: end;
     inline-size: calc(var(--_p) * 0.7);
+    /* non incollata al margine: il vuoto fra biglietto e copertina resta
+       più stretto di quello a destra (bancone, non griglia) */
+    margin-inline-end: calc((100% - var(--_p) * 2.414) * 0.3);
     margin-block-start: calc(var(--_p) * 0.05);
     z-index: 1;
   }

@@ -5,9 +5,12 @@
  * interaction/useHoldToConfirm.ts (900 ms, doppia pressione breve entro 6 s,
  * clic dei lettori di schermo, Spazio e Invio tenuti, annunci), il magnete
  * sobrio della maniglia è attachMagnete (6 px, si spegne man mano che la leva
- * scende). La pista è in lamina, il manico tondo è l'unico tondo del sito.
+ * scende). Giro 2: niente più pista in lamina. La guida è un solco inciso
+ * nella carta, il manico tondo in lamina ci scorre dentro fino al fermo (il
+ * punto in cui la pressa tocca il foglio); la corsa fatta resta scura nel
+ * solco. Il manico è l'unico tondo del sito.
  *
- * - `button` vero, nome accessibile `BANCO.leva.aria`, `aria-describedby` →
+ * - `button` vero, nome accessibile = etichetta visibile, `aria-describedby` →
  *   promessa e totale (sopra la leva, scritti dal Banco);
  * - l'etichetta visibile cambia con lo stato: "Premi di nuovo per
  *   confermare" quando è armata, "La pressa è giù" mentre si spedisce;
@@ -74,20 +77,21 @@ const Leva = forwardRef<ComandiLeva, LevaProps>(function Leva(
     <div className="imp-banco__leva-blocco">
       <button
         {...leva.buttonProps}
-        className="imp-banco__leva imp-ix-leva imp-lamina"
-        aria-label={BANCO.leva.aria}
+        className="imp-banco__leva imp-ix-leva"
         aria-describedby={descrittaDa}
         data-in-corso={inCorso ? '' : undefined}
       >
         <span className="imp-banco__leva-premuta" aria-hidden="true" />
         <span className="imp-ix-leva__binario" aria-hidden="true">
+          <span className="imp-banco__leva-fermo" />
           <span className="imp-ix-leva__corsa">
             <span className="imp-ix-leva__carrello">
               <span className="imp-ix-leva__maniglia" />
             </span>
           </span>
         </span>
-        <span className="imp-ix-leva__testo imp-banco__leva-testo" aria-hidden="true">
+        {/* Il nome accessibile è l'etichetta visibile (WCAG 2.5.3): cambia con lo stato. */}
+        <span className="imp-ix-leva__testo imp-banco__leva-testo">
           {etichetta}
         </span>
       </button>

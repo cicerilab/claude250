@@ -158,7 +158,10 @@ export default function Banco() {
     if (totaleAnnunciato.current === prezzo.totale) return undefined;
     const timer = window.setTimeout(() => {
       totaleAnnunciato.current = prezzo.totale;
-      annuncia(ANNUNCI.prezzo(prezzo.totale, cambiato.current ?? undefined));
+      // Solo se la scelta è partita dal banco o il fuoco è qui: la carta
+      // cambiata dalla sezione Carta o dall'indice non fa parlare un banco lontano.
+      const dalBanco = cambiato.current !== null || sezioneRef.current?.contains(document.activeElement) === true;
+      if (dalBanco) annuncia(ANNUNCI.prezzo(prezzo.totale, cambiato.current ?? undefined));
       cambiato.current = null;
     }, ATTESA_ANNUNCIO_PREZZO);
     return () => window.clearTimeout(timer);
@@ -299,14 +302,15 @@ export default function Banco() {
           carta: cartaInvio,
           via,
         });
-        annuncia(ANNUNCI.successo(cartaInvio, giorno));
+        // Il nome si imprime una volta ancora, a pressione piena.
+        provaRef.current?.contatto();
+        // Nessun annuncio: il fuoco va sulla frase e il lettore la legge (una volta sola).
       },
       (errore: unknown) => {
         if (errore instanceof ErroreInvio && errore.motivo === 'annullato') return;
         impostaInvio('error');
         levaRef.current?.reset();
         setEsito({ tipo: 'ko' });
-        annuncia(ANNUNCI.fallito);
       },
     );
   };
@@ -421,7 +425,7 @@ export default function Banco() {
           <h2 id="imp-banco-titolo" className="imp-banco__titolo" tabIndex={-1}>
             {BANCO.titolo}
           </h2>
-          <p className="imp-banco__intro">{BANCO.intro}</p>
+          {BANCO.intro ? <p className="imp-banco__intro">{BANCO.intro}</p> : null}
         </header>
 
         <div className="imp-banco__banco">
@@ -444,7 +448,7 @@ export default function Banco() {
               prova={prova}
               carta={carta}
               fermo={fermo}
-              riepilogo={riepilogo}
+              riepilogo={stretto ? riepilogo : null}
               contatto={contatto}
               contattoRef={contattoRef}
               tastieraContatto={tastieraPer(contatto)}
@@ -493,22 +497,25 @@ export default function Banco() {
                 </div>
               ) : null}
 
-              {inviata && esito?.tipo === 'ok' ? (
-                <div ref={esitoRef} className="imp-banco__esito imp-banco__esito--ok" tabIndex={-1}>
-                  <p className="imp-banco__esito-frase">{BANCO.successo.frase(esito.carta, esito.giorno)}</p>
-                  <p className="imp-banco__firma">{BANCO.successo.firma}</p>
-                  <button
-                    type="button"
-                    className="imp-banco__altra imp-ix-premibile"
-                    aria-label={BANCO.successo.altraAria}
-                    onClick={provaAltraCosa}
-                  >
-                    {BANCO.successo.altra}
-                  </button>
-                </div>
-              ) : null}
             </div>
           </div>
+
+          {/* Successo: fuori dalla colonna, così su mobile sta SOPRA la lastra
+              (ordine -2) e su desktop al posto della leva, accanto alla prova. */}
+          {inviata && esito?.tipo === 'ok' ? (
+            <div ref={esitoRef} className="imp-banco__esito imp-banco__esito--ok" tabIndex={-1}>
+              <p className="imp-banco__esito-frase">{BANCO.successo.frase(esito.carta, esito.giorno)}</p>
+              <p className="imp-banco__firma">{BANCO.successo.firma}</p>
+              <button
+                type="button"
+                className="imp-banco__altra imp-ix-premibile"
+                aria-label={BANCO.successo.altraAria}
+                onClick={provaAltraCosa}
+              >
+                {BANCO.successo.altra}
+              </button>
+            </div>
+          ) : null}
 
           <Prova
             ref={provaRef}
@@ -519,7 +526,7 @@ export default function Banco() {
             legatura={prova.legatura}
             campi={prova.campi}
             totale={prezzo.totale}
-            riepilogo={riepilogo}
+            riepilogo={stretto ? null : riepilogo}
             alt={alt}
             tastiera={tastiera}
             rigaAttiva={campoAttivo}

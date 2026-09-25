@@ -714,3 +714,58 @@ Osservazioni non bloccanti (da girare ai proprietari se servono):
 6. Lo smontaggio completo (html/body, lenis, ticker, font) è scritto e letto,
    ma nello standalone non si può navigare fuori dalla pagina (tutte le rotte
    tornano a `/concept-10`): va provato al porting, cambiando pagina nel sito.
+
+---
+
+## Giro 2 (loop QA)
+
+Richieste dall'orchestratore su `docs/accessibility-auditor.md` A2 e
+`docs/performance-auditor.md` P3. Toccati solo `styles/base.css` e
+`core/lenis.ts`.
+
+1. **A2, fuoco coperto (WCAG 2.4.11)** · `styles/base.css`: aggiunto
+   `html:has(.imp-root) { scroll-padding-block: … }`. In alto, su ogni
+   larghezza: testata 56 px + 16 px = 72 px (la testata fissa del desktop è
+   `--imp-testata-h-fissa`, 56 px; quella mobile rientra in alto a 56 px). In
+   basso sotto i 1024 px: segnapagina 56 px + 24 px + `env(safe-area-inset-bottom)`
+   (80 px), che copre anche "Torna in Ciceri Lab" in basso (~58 px); da 1024 px
+   16 px. I valori si possono sovrascrivere con `--imp-scroll-pad-testa/-piede`.
+   È l'unico selettore su `html` del concept, limitato alla pagina da
+   `:has(.imp-root)` (i browser senza `:has` ignorano la regola, come prima).
+   Misurato: `72px / 16px` a 1440, `72px / 80px` a 375. Le parti di A2 sul
+   banco (`scroll-margin` sugli input) e sulla testata (rientro della riga)
+   restano ai loro proprietari.
+2. **P3, chunk Concept10 oltre budget** · `core/lenis.ts`: lenis ora arriva con
+   `import('lenis')` dinamico dentro `avviaScroll`. La firma di `getLenis()`
+   non cambia; la usano `core/ticker.ts`, `motion/useScrollProgress.ts` e
+   `sections/Hero/Testata.tsx`, che gestiscono già `null`. Finché lenis non
+   c'è, lo scroll è nativo con il listener passivo che sveglia il ticker (lo
+   stesso ramo del reduced motion). Lo smontaggio annulla anche un caricamento
+   in corso. Se l'import fallisce resta lo scroll nativo.
+3. **Pesi dopo il giro 2** (`npm run build`):
+
+   | Chunk | Peso gz | Note |
+   |---|---|---|
+   | `Concept10` JS | **57,30 KB** | era 62,55, budget 60 |
+   | `lenis` | 5,64 KB | chunk a parte |
+   | `react` | 52,32 KB | |
+   | `index` | 22,28 KB | webgl, lazy |
+   | `three` | 112,82 KB | lazy |
+   | CSS | 21,40 KB | budget 20 |
+
+   Il CSS resta sopra budget: P4 è dei section-builder e dell'art-director. Le
+   utility `.imp-piccolo` e `.imp-nota` di `base.css` restano: le sezioni sono
+   invitate a usarle invece di riscrivere la terna tipografica.
+4. **Verifiche**: typecheck, lint e build verdi. `npx vite --port 8114
+   --strictPort` + Playwright su `/concept-10#banco` a 1440, 375 e 375 con
+   reduced motion:
+   - lenis c'è a 1440 e a 375 (classe `lenis` su `<html>`) e manca con reduced motion;
+   - la rotella scorre;
+   - si arriva al banco con `bancoTop` 80 px (1440) e 24 px (375);
+   - **zero errori in console**, esclusi i font di Google bloccati dal proxy della sandbox.
+
+   Server chiuso.
+5. **Nota su `interaction/light.ts`** (non è un mio file): in una prima prova il
+   dev server, in HMR, ha mostrato `ReferenceError: arcoVietatoQui is not defined`
+   mentre un altro agent lo stava modificando. Con il server riavviato da zero
+   l'errore non c'è più e il typecheck è verde.

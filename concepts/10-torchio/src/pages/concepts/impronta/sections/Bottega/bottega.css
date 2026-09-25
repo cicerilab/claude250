@@ -122,6 +122,11 @@
   block-size: 100%;
 }
 
+/* "Telefono ed email sono di esempio": piccola, sotto i link. */
+.imp-root .imp-bottega__nota-recapiti {
+  margin: 0;
+}
+
 /* Lo stato di adesso: una riga di testo. Spazio riservato prima del primo
    effetto (prerender), così niente salta. */
 .imp-root .imp-bottega__stato {
@@ -276,6 +281,10 @@
     grid-template-columns: auto minmax(0, 1fr);
     align-items: center;
     column-gap: var(--imp-sp-6);
+  }
+
+  .imp-root .imp-bottega__nota-recapiti {
+    grid-column: 1 / -1;
   }
 
   .imp-root .imp-bottega__orari {
