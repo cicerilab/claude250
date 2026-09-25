@@ -1,0 +1,4 @@
+# Screenshot di QA: cambiano a ogni giro, non si versionano.
+# Quelli finali per Luca vanno in docs/screenshot/.
+*
+!.gitignore
