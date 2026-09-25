@@ -166,7 +166,9 @@ export function raggiSmusso(
  */
 export function margineMaschera(tecnica: TecnicaGL, corpoPx: number): number {
   const [, , r3] = raggiSmusso(tecnica, corpoPx, 1);
-  return Math.ceil(r3 * 2.6 + 2);
+  // Almeno 11 px: l'alone dell'urto (giro 2) legge l'altezza fino a 9 px
+  // dalle lettere e non deve finire tagliato dal bordo dello slot.
+  return Math.max(11, Math.ceil(r3 * 2.6 + 2));
 }
 
 /** Profondità del solco in px CSS a pressione 1. */

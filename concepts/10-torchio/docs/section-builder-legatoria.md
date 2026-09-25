@@ -156,3 +156,60 @@ con `scrollWidth`).
   riga dedicata alla legatoria, basta sostituire quella voce della lista.
 - Id duplicato `freccia` nella pagina: non viene da questa sezione (è lo SVG della
   freccia inserito due volte altrove).
+
+---
+
+## Giro 2
+
+Voti del giro 1 (giuria): Legatoria 6/10. Richieste applicate, solo nei miei
+tre file (`Legatoria.tsx`, `legatoria.css`, `Filo.tsx`). Le sezioni 2-5 qui
+sopra descrivono il giro 1: dove sono in conflitto vale questa.
+
+### Cosa è cambiato
+
+| Richiesta | Fatto |
+|---|---|
+| Filo protagonista a tutta area (non in 280 px) | Da 600 px **serpentina**: schemi grandi alternati a sinistra e a destra (4 colonne su 8, 5 su 12: 476 × 595 px a 1440, 560 × 700 a 2560), il filo attraversa la pagina in orizzontale da uno all'altro. Su 375 il filo corre nel margine esterno (10 px dal bordo), entra nello schema a sinistra, ne esce e torna nel margine passando sotto il nome. |
+| Nomi agganciati ai punti del filo | Da 600 px un **laccio** parte dal primo foro dello schema (brossura 164,68; cartonato 92,64; giapponese 122,92) e arriva al nodo accanto al nome, che sta all'altezza di quel foro; si tende con l'aggancio (`scaleX(--imp-filo-aggancio)`). Nel punto metallico il filo non cuce: il laccio si aggancia al filo che passa accanto alle graffe (x 16), così non lo attraversa. Su 375 il filo stesso sottolinea il nome. I numeri grigi dei fori sono nascosti (quote da disegno tecnico, giuria punto 11). |
+| Via il prezzo ripetuto | Cifra `euro(LEGATORIA_A_COPIA)` + `voci[].prezzoDopoCifra` ("a copia, solo la legatura"), cifra leggibile (non più `aria-hidden`), corpo titolo-3 invece del corpo prezzo. `LEGATORIA.riferimento` una volta sola in fondo; tolta `tiraturaMinima` (lo dice già il riferimento). |
+| Via le scelte finali con bordino | Niente tile. La scelta della legatura è un **radio vero sul nodo** di ogni fermata (cerchio d'inchiostro 22-24 px, area di tocco 44 × 44, scelto = pieno con occhiello + parola "scelta"), dentro un `fieldset` con legenda `BANCO.legatura.legenda` per i lettori di schermo. |
+| Testo a 375 non rientrato di 56 px | Testo a tutta area viva (335 px); rientra solo la riga del nome (36 px) per lasciare posto al nodo. |
+| Un solo "Prova la tua" | Uno solo, **tipografico** (Anybody titolo-3, niente lamina: la lamina resta della testata): il filo scende dall'ultimo schema, lo sottolinea e si chiude nel nodo. Sopra, una riga dice cosa porterà al banco: "Libro o libretto, legatura giapponese". |
+| B1 Firefox | Tutti gli `stroke-dashoffset` con l'unità: `calc((1 - var(--filo-l)) * 1px)`, graffe `calc((1 - var(--imp-filo-aggancio, 1)) * 1px)`, dasharray `1px 2px`. Verificato in Firefox 1495: la brossura si cuce a metà (`firefox-citrino-1440-00.png`). |
+| B6 (la scelta cambia da sola) | I radio non si spuntano mai da soli. Il tempo di lettura vale solo come default del link, ed è scritto in chiaro sopra il link (e nella sua `aria-describedby`). |
+| Motion giro 2, foglie `data-imp-var` | Ogni pezzo del filo (tratti, schemi, nodo) porta `data-imp-var="--imp-filo-p"`: il motion scrive la variabile solo lì, non più sul corpo della sezione. `--imp-filo-aggancio` resta sulle fermate. |
+| Copywriter giro 2 | Intro accorciata, `prezzoDopoCifra`, `riferimento`, `BOTTEGA.tempi` in una frase: tutti usati. |
+
+### Come è fatto il filo adesso
+
+Pezzi per fermata, in ordine: `entra` (orizzontale in testa) ─ `scende` ─
+schema ─ `esce` ─ `traversa` ─ `coda`; in fondo `fine-scende` ─
+`fine-traversa` ─ nodo. Il CSS decide quali esistono per larghezza (su 375
+`esce` e `traversa` portano il filo sotto il nome e nel margine; da 600 sono
+`display: none` e misurano 0). Le x derivano tutte da `--filo-w`:
+`--filo-xd` (schema a sinistra, 16/240), `--filo-xrov` (schema a destra,
+`100% - w + xd`), `--filo-xr` (margine esterno, `100% + 10px`). La misura in
+`Legatoria.tsx` somma larghezza dei tratti orizzontali, altezza dei
+verticali, `FILI[].lunghezza × scala` degli schemi e la circonferenza del
+nodo; le soste restano i punti di fine cucitura.
+
+### Verifica giro 2
+
+- `npx tsc -p tsconfig.app.json --noEmit` verde (l'errore segnalato veniva da
+  un salvataggio a metà durante il lavoro); ESLint sulla cartella Legatoria:
+  zero errori e zero avvisi.
+- Dev server mio `npx vite --port 8110 --strictPort`, chiuso alla fine.
+  Font veri via `page.route` + curl; le altre sezioni sostituite da stub per
+  velocità.
+- Screenshot in `/tmp/claude-0/shots-legatoria/g2/`, `?gl=0`:
+  - Citrino: `chromium-citrino-375-00…06`, `-768-00…03`,
+    `-1440-00…06`, `-2560-00…03` (tutti senza SwiftShader tranne 375 e 1440);
+  - Cotone: `chromium-cotone-768-00…03`, `-1440-00…03`, `-2560-00…03`;
+  - reduced motion: `chromium-cotone-375-rid-00/01` (tutto cucito);
+  - Firefox: `firefox-citrino-1440-00/01`, `firefox-citrino-375-00/01`.
+- Nessuno scroll orizzontale (scrollWidth = larghezza) a 375, 768, 1440 e 2560.
+  Nessun id duplicato in `#legatoria`. Clic sul nodo della giapponese e poi su
+  "Prova la tua": bozza `{"prodotto":"libro", …, "legatura":"giapponese"}`.
+- Nota ambiente: in Chromium con `--use-angle=swiftshader` gli screenshot a
+  768 e 2560 escono con riquadri ripetuti (artefatto di composizione della
+  cattura, non della pagina): rifatti senza quei flag, la pagina è pulita.

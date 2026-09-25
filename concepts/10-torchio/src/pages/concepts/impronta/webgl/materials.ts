@@ -51,7 +51,10 @@
  *   uBlockA[i]     [pressione, rotazione_rad, profondità_buffer, carta_pezzo]
  *                   pressione 0..~1.03 (il micro rimbalzo può superare 1),
  *                   rotazione oraria come CSS, carta_pezzo -1 = foglio
- *   uBlockB[i]     [inchiostro 0/1, lamina 0/1, stringiMin, spessore_buffer]
+ *   uBlockB[i]     [inchiostro 0/1, lamina 0/1, stringiMin_e_urto, spessore_buffer]
+ *                   z impacchetta due valori (giro 2): floor(z) = stringiMin × 100,
+ *                   fract(z) / 0,99 = urto 0..1 (carta schiacciata attorno al
+ *                   solco al contatto, dal motion-designer). Nessun vec4 in più.
  *
  * Totale: 9 + 16 + 32 = 57 vec4 nel fragment (sotto i 64 garantiti in
  * pratica anche dai telefoni WebGL1; WebGL2 ne garantisce 224).
@@ -438,6 +441,12 @@ export interface DatiBloccoFrame {
   rotazioneGradi: number;
   /** Parte statica, da `parametriBlocco()` di presets.ts. */
   statici: ParametriBloccoGL;
+  /**
+   * Urto 0..1 (giro 2, facoltativo): picco al contatto della pressa, 0 a
+   * riposo (`usePressione`, `--imp-press-urto`). Scurisce e abbassa per un
+   * istante la carta attorno al solco. Se manca vale 0.
+   */
+  urto?: number;
 }
 
 /**
@@ -466,7 +475,8 @@ export function scriviBlocco(m: MaterialeRilievo, i: number, b: DatiBloccoFrame)
   const bb = u.uBlockB.value;
   bb[o] = b.statici.inchiostro;
   bb[o + 1] = b.statici.lamina;
-  bb[o + 2] = b.statici.stringiMin;
+  const urto = Math.max(0, Math.min(1, b.urto ?? 0));
+  bb[o + 2] = Math.round(b.statici.stringiMin * 100) + urto * 0.99;
   bb[o + 3] = b.statici.spessoreBuffer;
 }
 

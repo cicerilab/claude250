@@ -39,7 +39,8 @@
 //   uBlockUv[i]   u0, v0 (bordo BASSO dello slot), du, dv nell'atlante
 //   uBlockA[i]    x = pressione 0..~1.03, y = rotazione rad (oraria, come CSS),
 //                 z = profondità px buffer a pressione 1, w = carta del pezzo (-1 = foglio)
-//   uBlockB[i]    x = inchiostro 0/1, y = lamina 0/1, z = larghezza a pressione 0,
+//   uBlockB[i]    x = inchiostro 0/1, y = lamina 0/1,
+//                 z = floor: larghezza a pressione 0 × 100, fract / 0.99: urto 0..1,
 //                 w = spessore della costa px buffer
 //
 // Define (da materials.ts): MAX_BLOCCHI, HEIGHT_BIAS, FIBRA_LATO
@@ -153,6 +154,8 @@ void main() {
   // di contatto che si vedrebbe sotto (per la fascia di 1 px del bordo).
   float coperturaPezzo = 1.0;
   float contattoSotto = 0.0;
+  // Urto (giro 2): la carta attorno al solco schiacciata per un istante.
+  float alone = 0.0;
 
   vec2 tx = 1.0 / uMeta.xy;
   float scalaH = 1.0 / (1.0 - HEIGHT_BIAS);
@@ -210,7 +213,9 @@ void main() {
 
     // --- Rilievo dalla mappa d'altezza -------------------------------------
     float press = A.x;
-    float s = mix(B.z, 1.0, clamp(press, 0.0, 1.0));
+    float stringiMin = floor(B.z) / 100.0;
+    float urto = fract(B.z) / 0.99;
+    float s = mix(stringiMin, 1.0, clamp(press, 0.0, 1.0));
     vec2 l = (q + meta) / R.zw;
     l.x /= s;
     if (l.x < 0.0 || l.x > 1.0 || l.y < 0.0 || l.y > 1.0) continue;
@@ -250,6 +255,25 @@ void main() {
     ombraPortata = occ;
     fondoSolco = h0.a * clamp(press, 0.0, 1.0);
 
+    // Alone dell'urto: quanto il punto è vicino alle lettere, misurato con
+    // quattro campioni a 6 px CSS, spostati lontano dalla luce come un'ombra
+    // morbida. Solo mentre l'urto è acceso (qualche centinaio di ms).
+    alone = 0.0;
+    if (urto > 0.004) {
+      float r = 6.0 * dpr;
+      vec2 c0 = -LdLoc * r * 0.5;
+      float somma = 0.0;
+      for (int k = 0; k < 4; k++) {
+        float a = float(k) * 1.5708 + 0.7854;
+        vec2 o = c0 + vec2(cos(a), sin(a)) * r;
+        vec2 uvk = nelloSlot(uv + vec2(o.x / pxTex.x * tx.x, -o.y / pxTex.y * tx.y), U, tx);
+        somma += clamp((texture2D(tAtlas, uvk).r - HEIGHT_BIAS) * scalaH, 0.0, 1.0);
+      }
+      // Solo attorno: dentro il solco l'alone si spegne (lì c'è già il fondo).
+      float dentro = clamp((h0.r - HEIGHT_BIAS) * scalaH * 1.5, 0.0, 1.0);
+      alone = somma * 0.25 * urto * (1.0 - dentro);
+    }
+
     // Inchiostro e lamina passano sulla carta solo quando la forma la tocca.
     inkMorbido = h0.g;
     inkQuota = B.x * smoothstep(0.05, 0.35, press);
@@ -282,6 +306,9 @@ void main() {
   col = mix(col, carta.ombra.rgb, contro * carta.ombra.a);
   // Fondo del solco: la carta schiacciata è un poco più scura.
   col = mix(col, carta.ombra.rgb, fondoSolco * uPaper.w * carta.ombra.a);
+  // Urto: la carta schiacciata attorno alle lettere si abbassa e scurisce per
+  // un istante, poi torna. Mai oltre un terzo verso l'ombra.
+  col = mix(col, carta.ombra.rgb, alone * 0.33 * carta.ombra.a);
   // Ombra portata, corta e tinta.
   // Giro 2: ombra piena (la parete del solco sul lato in ombra arriva al
   // colore "ombra" della carta, non a metà strada).

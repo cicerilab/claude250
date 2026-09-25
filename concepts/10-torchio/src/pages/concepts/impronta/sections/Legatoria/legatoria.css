@@ -625,6 +625,12 @@
     --filo-gy: 100;
   }
 
+  /* 600-1023: quattro colonne; il nome lungo può andare su due righe. */
+  .imp-root .imp-legatoria__nome {
+    white-space: normal;
+    min-inline-size: 0;
+  }
+
   .imp-root .imp-legatoria__nome-riga {
     padding-block-end: 0;
     padding-inline-start: 0;
@@ -718,6 +724,10 @@
 
   .imp-root .imp-legatoria__testa {
     max-inline-size: calc(var(--imp-colonna) * 6 + var(--imp-canalino) * 5);
+  }
+
+  .imp-root .imp-legatoria__nome {
+    white-space: nowrap;
   }
 
   .imp-root .imp-legatoria__testo {
