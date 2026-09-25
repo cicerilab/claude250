@@ -135,46 +135,53 @@ function Ricomincia() {
   const aperta = fase === 'domanda' || fase === 'lavoro';
 
   return (
-    <div className="imp-colophon__ricomincia">
-      {aperta ? (
-        <div className="imp-colophon__domanda" role="group" aria-labelledby={idDomanda}>
-          <p id={idDomanda} className="imp-colophon__domanda-testo">
-            {TESTI.ricomincia.domanda}
-          </p>
-          <div className="imp-colophon__domanda-scelte">
-            <button
-              ref={siRef}
-              type="button"
-              className="imp-colophon__bottone imp-colophon__bottone--pieno imp-ix-premibile"
-              onClick={conferma}
-              disabled={fase === 'lavoro'}
-            >
-              {TESTI.ricomincia.si}
-            </button>
-            <button
-              type="button"
-              className="imp-colophon__bottone imp-ix-premibile"
-              onClick={annulla}
-              disabled={fase === 'lavoro'}
-            >
-              {TESTI.ricomincia.no}
-            </button>
+    <>
+      <div className="imp-colophon__ricomincia">
+        {aperta ? (
+          <div
+            className="imp-colophon__domanda"
+            role="group"
+            aria-labelledby={idDomanda}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape' && fase === 'domanda') {
+                e.stopPropagation();
+                annulla();
+              }
+            }}
+          >
+            <p id={idDomanda} className="imp-colophon__domanda-testo">
+              {TESTI.ricomincia.domanda}
+            </p>
+            <div className="imp-colophon__domanda-scelte">
+              <button
+                ref={siRef}
+                type="button"
+                className="imp-colophon__bottone imp-colophon__bottone--pieno imp-ix-premibile"
+                onClick={conferma}
+                disabled={fase === 'lavoro'}
+              >
+                {TESTI.ricomincia.si}
+              </button>
+              <button
+                type="button"
+                className="imp-colophon__bottone imp-ix-premibile"
+                onClick={annulla}
+                disabled={fase === 'lavoro'}
+              >
+                {TESTI.ricomincia.no}
+              </button>
+            </div>
           </div>
-        </div>
-      ) : (
-        <button
-          ref={bottoneRef}
-          type="button"
-          className="imp-colophon__bottone imp-ix-premibile"
-          onClick={chiedi}
-        >
-          {TESTI.ricomincia.bottone}
-        </button>
-      )}
+        ) : (
+          <button ref={bottoneRef} type="button" className="imp-colophon__bottone imp-ix-premibile" onClick={chiedi}>
+            {TESTI.ricomincia.bottone}
+          </button>
+        )}
+      </div>
       <p className="imp-colophon__esito imp-ix-annuncio" aria-live="polite" role="status">
         {fase === 'fatto' ? TESTI.ricomincia.fatto : ''}
       </p>
-    </div>
+    </>
   );
 }
 
@@ -247,12 +254,7 @@ export default function Colophon() {
           </p>
           <p className="imp-colophon__finzione">{TESTI.finzione}</p>
           <p className="imp-colophon__firma">
-            <a
-              href={CICERILAB_URL}
-              target="_blank"
-              rel="noopener"
-              className="imp-colophon__firma-link imp-ix-link"
-            >
+            <a href={CICERILAB_URL} target="_blank" rel="noopener" className="imp-colophon__firma-link imp-ix-link">
               {TESTI.conceptDi}
               <span className="imp-sr">, {COMUNI.nuovaScheda}</span>
               <Freccia />

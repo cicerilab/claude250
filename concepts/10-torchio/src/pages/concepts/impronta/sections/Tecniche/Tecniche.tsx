@@ -258,7 +258,7 @@ function TecnichePin({ parola, carta, stretto }: { parola: string; carta: Carta;
           {stretto ? null : <Testa statica={false} />}
 
           <div className="imp-tecniche__indice">
-            <ol className="imp-tecniche__elenco" aria-label={TESTI.elencoAria}>
+            <ol className="imp-tecniche__elenco imp-lista" aria-label={TESTI.elencoAria}>
               {VOCI.map((v, i) => {
                 const corrente = i === passo;
                 return (
@@ -308,7 +308,7 @@ function TecnichePin({ parola, carta, stretto }: { parola: string; carta: Carta;
             </div>
           </div>
 
-          <ol className="imp-tecniche__voci">
+          <ol className="imp-tecniche__voci imp-lista">
             {VOCI.map((v, i) => (
               <li key={v.id} className="imp-tecniche__voce" data-corrente={i === mostrata ? 'true' : 'false'}>
                 <Spiegazione voce={v} parola={parola} carta={carta} />
@@ -362,7 +362,7 @@ function TecnicheStatiche({ parola, carta }: { parola: string; carta: Carta }) {
   return (
     <div className="imp-page imp-tecniche__statica">
       <Testa statica />
-      <ol className="imp-tecniche__blocchi" aria-label={TESTI.elencoAria}>
+      <ol className="imp-tecniche__blocchi imp-lista" aria-label={TESTI.elencoAria}>
         {VOCI.map((v) => (
           <li key={v.id} className="imp-tecniche__blocco">
             <FoglioStatico voce={v} parola={parola} />

@@ -1,1 +1,582 @@
-/* STUB dello scaffold: vuoto. Lo scrive il section-builder-hero (tech-architect §4). Tutti i selettori iniziano con .imp-root. */
+/* ==========================================================================
+   IMPRONTA · testata, richiamo in basso e indice (section-builder-hero)
+   --------------------------------------------------------------------------
+   - Testata sulla stessa carta del sito, nessuna barra di un altro colore.
+     Appena la pagina scorre (data-attaccata): fondo pieno della carta, costa
+     di 1 px e ombra tinta cortissima (--imp-ombra-testata): un foglio sopra
+     l'altro. Desktop 64 px nell'hero, 56 px attaccata; mobile 56 px.
+   - Zona del bottone "Torna in Ciceri Lab" del sito: in alto a sinistra
+     (≈ 230 × 44) da 641 px in su, in basso a sinistra (≈ 210 × 44) sotto.
+     Qui non ci va nessun contenuto: il marchio parte dopo, il richiamo in
+     basso sta a destra.
+   - Movimenti: solo transform, con le durate e le curve del motion-designer
+     (--imp-dur-segnapagina-*, --imp-dur-indice-*, --imp-ease-sfoglia*), che
+     con reduced motion valgono 0 ms.
+   Nessun hex: solo variabili --imp-*. Tutti i selettori partono da .imp-root.
+   ========================================================================== */
+
+/* ------------------------------------------------------------------ testata */
+
+.imp-root .imp-testata {
+  --_imp-h: var(--imp-testata-h-fissa);
+  --_imp-segno-h: 14px;
+  position: sticky;
+  inset-block-start: 0;
+  z-index: var(--imp-z-testata);
+  block-size: var(--_imp-h);
+  transition: transform var(--imp-dur-segnapagina-entra, 240ms) var(--imp-ease-sfoglia, ease-out);
+}
+
+.imp-root .imp-testata[data-attaccata] {
+  background-color: var(--imp-carta);
+  box-shadow: var(--imp-ombra-testata);
+}
+
+/* La fibra CSS solo quando lo shader non c'è (con il GL la carta la disegna lui). */
+.imp-root:not([data-gl="on"]) .imp-testata[data-attaccata] {
+  background-image: var(--imp-fibra);
+}
+
+/* Sotto 1024 px la riga si toglie di mezzo scorrendo in giù (costa inclusa). */
+.imp-root .imp-testata[data-via] {
+  transform: translateY(calc(-100% - 16px));
+  transition-duration: var(--imp-dur-segnapagina-esce, 200ms);
+  transition-timing-function: var(--imp-ease-sfoglia-via, ease-in);
+}
+
+.imp-root .imp-testata__barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--imp-sp-4);
+  block-size: 100%;
+}
+
+/* Marchio IMPRONTA in lamina (maschera dell'SVG del vector-artist). */
+.imp-root .imp-testata__marchio {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  min-block-size: var(--imp-tocco-min);
+  color: inherit;
+  text-decoration: none;
+}
+
+.imp-root .imp-testata__segno {
+  display: block;
+  block-size: var(--_imp-segno-h);
+  inline-size: calc(var(--_imp-segno-h) * 9.41);
+}
+
+/* Voci e richiamo: solo da 1024 px. */
+.imp-root .imp-testata__nav,
+.imp-root .imp-testata__richiamo {
+  display: none;
+}
+
+.imp-root .imp-testata__voci {
+  display: flex;
+  align-items: center;
+  gap: var(--imp-sp-6);
+  margin: 0;
+}
+
+.imp-root .imp-testata__voce {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--imp-tocco-min);
+  font-size: 0.9375rem;
+  font-weight: var(--imp-wght-interfaccia);
+  line-height: var(--imp-lh-interfaccia);
+  text-transform: lowercase;
+  text-decoration-line: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .imp-root .imp-testata__voce:hover {
+    text-decoration-line: underline;
+  }
+}
+
+/* Voce corrente: sottolineata 2 px in inchiostro, e aria-current lo dice. */
+.imp-root .imp-testata__voce[aria-current="location"] {
+  text-decoration-line: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.3em;
+}
+
+.imp-root .imp-testata__richiamo {
+  justify-content: flex-end;
+  flex: none;
+  min-inline-size: 9.25rem;
+}
+
+.imp-root .imp-testata__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: var(--imp-tocco-min);
+  padding-inline: var(--imp-sp-5);
+  font-size: var(--imp-fs-bottone);
+  font-weight: var(--imp-wght-bottone);
+  line-height: var(--imp-lh-interfaccia);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.imp-root .imp-testata__sul-banco {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--imp-tocco-min);
+  font-size: 0.9375rem;
+  font-weight: var(--imp-wght-interfaccia);
+  line-height: var(--imp-lh-interfaccia);
+  white-space: nowrap;
+}
+
+/* "indice · la sezione": due righe, allineate al margine destro. */
+.imp-root .imp-testata__indice {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 3px;
+  min-block-size: var(--imp-tocco-min);
+  min-inline-size: var(--imp-tocco-min);
+  padding-inline: var(--imp-sp-2) 0;
+  color: var(--imp-inchiostro);
+  text-align: end;
+}
+
+.imp-root .imp-testata__indice-parola {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--imp-fs-nota);
+  font-weight: var(--imp-wght-interfaccia);
+  line-height: 1;
+  color: var(--imp-inchiostro-velato);
+}
+
+/* Il foglio dell'indice sale dal basso: un triangolo pieno che punta in su. */
+.imp-root .imp-testata__indice-parola::after {
+  content: "";
+  inline-size: 0;
+  block-size: 0;
+  border-inline: 4px solid transparent;
+  border-block-end: 5px solid currentColor;
+}
+
+.imp-root .imp-testata__indice-sezione {
+  font-family: var(--imp-font-display);
+  font-size: var(--imp-fs-nome);
+  font-weight: var(--imp-wght-nome);
+  font-variation-settings: "wdth" var(--imp-wdth-nome), "wght" var(--imp-wght-nome);
+  font-synthesis: none;
+  line-height: var(--imp-lh-nome);
+  letter-spacing: var(--imp-trk-nome);
+  text-transform: lowercase;
+  white-space: nowrap;
+}
+
+@media (max-width: 359.98px) {
+  .imp-root .imp-testata {
+    --_imp-segno-h: 12px;
+  }
+
+  .imp-root .imp-testata__indice-sezione {
+    font-variation-settings: "wdth" 112.5, "wght" var(--imp-wght-nome);
+  }
+}
+
+@media (min-width: 600px) {
+  .imp-root .imp-testata {
+    --_imp-segno-h: 16px;
+  }
+}
+
+/* Da 641 px il bottone del sito è in alto a sinistra: il marchio parte dopo. */
+@media (min-width: 641px) {
+  .imp-root .imp-testata__barra {
+    padding-inline-start: max(var(--imp-margine-interno), 244px);
+  }
+}
+
+/* Desktop: testata completa. 64 px nell'hero; attaccata, gli 8 px in alto
+   escono dallo schermo (top: -8px) e restano 56 px: nessun salto di layout. */
+@media (min-width: 1024px) {
+  .imp-root .imp-testata {
+    --_imp-h: var(--imp-testata-h);
+    --_imp-segno-h: 18px;
+    inset-block-start: calc(var(--imp-testata-h-fissa) - var(--imp-testata-h));
+    padding-block-start: calc(var(--imp-testata-h) - var(--imp-testata-h-fissa));
+    transform: none;
+  }
+
+  .imp-root .imp-testata__barra {
+    justify-content: flex-start;
+    gap: 0;
+    /* Il marchio sulla terza colonna della gabbia, mai sotto il bottone del sito. */
+    padding-inline-start: max(244px, calc(var(--imp-margine-interno) + 2 * (var(--imp-colonna) + var(--imp-canalino))));
+  }
+
+  .imp-root .imp-testata__nav {
+    display: block;
+    margin-inline-start: auto;
+  }
+
+  .imp-root .imp-testata__richiamo {
+    display: inline-flex;
+    margin-inline-start: var(--imp-sp-7);
+  }
+
+  .imp-root .imp-testata__indice {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------------ richiamo in basso (sotto 1024 px) */
+
+/*
+ * "Prova la tua" a portata di pollice, in basso a DESTRA: in basso a sinistra
+ * c'è il bottone del sito. Entra traslando dal basso (240 ms, sfoglia) quando
+ * il bottone dell'hero è uscito dallo schermo; esce in 200 ms (sfoglia via).
+ * Nascosto: visibility hidden dopo l'uscita, quindi non riceve il fuoco.
+ */
+.imp-root .imp-segnapagina {
+  position: fixed;
+  inset-inline-end: max(12px, env(safe-area-inset-right));
+  inset-block-end: max(env(safe-area-inset-bottom), 14px);
+  z-index: var(--imp-z-testata);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: var(--imp-tocco-min);
+  padding-inline: 18px;
+  font-size: 1rem;
+  font-weight: var(--imp-wght-bottone);
+  line-height: var(--imp-lh-interfaccia);
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow:
+    inset 0 0 0 1px var(--imp-lamina-bordo),
+    0 1px 0 0 var(--imp-carta-costa),
+    0 8px 14px -10px var(--imp-carta-ombra);
+  transform: translateY(calc(100% + 24px + env(safe-area-inset-bottom)));
+  visibility: hidden;
+  transition:
+    transform var(--imp-dur-segnapagina-esce, 200ms) var(--imp-ease-sfoglia-via, ease-in),
+    visibility 0s linear var(--imp-dur-segnapagina-esce, 200ms);
+}
+
+.imp-root .imp-segnapagina[data-visibile] {
+  transform: none;
+  visibility: visible;
+  transition:
+    transform var(--imp-dur-segnapagina-entra, 240ms) var(--imp-ease-sfoglia, ease-out),
+    visibility 0s linear 0s;
+}
+
+/* Telefoni molto stretti: sopra la riga del bottone del sito, non accanto. */
+@media (max-width: 359.98px) {
+  .imp-root .imp-segnapagina {
+    inset-block-end: calc(max(env(safe-area-inset-bottom), 14px) + 48px);
+  }
+}
+
+@media (min-width: 1024px) {
+  .imp-root .imp-segnapagina {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------------ indice (dialog modale) */
+
+.imp-root .imp-indice {
+  position: fixed;
+  inset: 0;
+  inline-size: 100%;
+  max-inline-size: 100%;
+  block-size: 100%;
+  max-block-size: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  color: var(--imp-inchiostro);
+  background: transparent;
+}
+
+/* Nessun velo colorato dietro (motion-designer 7.4): il fondo resta com'è, inert. */
+.imp-root .imp-indice::backdrop {
+  background: transparent;
+}
+
+.imp-root .imp-indice__foglio {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  display: flex;
+  flex-direction: column;
+  block-size: 78vh;
+  block-size: 78svh;
+  padding-block-end: env(safe-area-inset-bottom);
+  background-color: var(--imp-carta);
+  background-image: var(--imp-fibra);
+  box-shadow: var(--imp-ombra-indice);
+  transform: translateY(100%);
+  transition: transform var(--imp-dur-indice-scende, 240ms) var(--imp-ease-sfoglia-via, ease-in);
+  will-change: transform;
+}
+
+.imp-root .imp-indice:is([data-stato="sale"], [data-stato="aperto"]) .imp-indice__foglio {
+  transform: none;
+  transition-duration: var(--imp-dur-indice-sale, 320ms);
+  transition-timing-function: var(--imp-ease-sfoglia, ease-out);
+}
+
+.imp-root .imp-indice__foglio[data-trascina] {
+  transition: none;
+}
+
+.imp-root .imp-indice__testa {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--imp-sp-4);
+  min-block-size: 72px;
+  padding-block: var(--imp-sp-4) var(--imp-sp-2);
+  padding-inline: var(--imp-margine-interno) var(--imp-margine-esterno);
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* La linguetta da tirare giù: un rettangolo premuto nella carta. */
+.imp-root .imp-indice__linguetta {
+  position: absolute;
+  inset-block-start: 8px;
+  inset-inline-start: 50%;
+  inline-size: 40px;
+  block-size: 4px;
+  transform: translateX(-50%);
+  background-color: var(--imp-secco-fondo);
+  box-shadow:
+    inset 1px 1px 0 color-mix(in srgb, var(--imp-carta-ombra) 70%, transparent),
+    0 1px 0 var(--imp-carta-luce);
+}
+
+.imp-root .imp-indice__titolo {
+  font-size: var(--imp-fs-titolo-3);
+  line-height: var(--imp-lh-titolo-3);
+  text-transform: lowercase;
+}
+
+.imp-root .imp-indice__chiudi {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--imp-sp-2);
+  min-block-size: var(--imp-tocco-min);
+  padding-inline: var(--imp-sp-3);
+  margin-inline-end: calc(var(--imp-sp-3) * -1);
+  font-size: var(--imp-fs-piccolo);
+  font-weight: var(--imp-wght-interfaccia);
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* ✕ disegnata: due tratti d'inchiostro. */
+.imp-root .imp-indice__croce {
+  position: relative;
+  inline-size: 14px;
+  block-size: 14px;
+}
+
+.imp-root .imp-indice__croce::before,
+.imp-root .imp-indice__croce::after {
+  content: "";
+  position: absolute;
+  inset-inline: -1px;
+  inset-block-start: calc(50% - 1px);
+  block-size: 2px;
+  background-color: currentColor;
+  transform: rotate(45deg);
+}
+
+.imp-root .imp-indice__croce::after {
+  transform: rotate(-45deg);
+}
+
+.imp-root .imp-indice__corpo {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-block: var(--imp-sp-2) var(--imp-sp-7);
+  padding-inline: var(--imp-margine-interno) var(--imp-margine-esterno);
+}
+
+.imp-root .imp-indice__voci {
+  margin: 0;
+}
+
+.imp-root .imp-indice__voce {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--imp-sp-4);
+  min-block-size: 52px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.imp-root .imp-indice__nome {
+  font-family: var(--imp-font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variation-settings: "wdth" 120, "wght" 700;
+  font-synthesis: none;
+  line-height: 1.05;
+  letter-spacing: -0.005em;
+}
+
+.imp-root .imp-indice__voce[aria-current="location"] .imp-indice__nome {
+  text-decoration-line: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.18em;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .imp-root .imp-indice__voce:hover .imp-indice__nome {
+    text-decoration-line: underline;
+    text-decoration-thickness: var(--imp-sottolineatura);
+    text-underline-offset: 0.18em;
+  }
+}
+
+.imp-root .imp-indice__qui {
+  flex: none;
+  font-size: var(--imp-fs-nota);
+  font-weight: var(--imp-wght-interfaccia);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.imp-root .imp-indice__sottotitolo {
+  margin-block-end: var(--imp-sp-3);
+  font-size: var(--imp-fs-piccolo);
+  font-weight: var(--imp-wght-corpo-forte);
+  line-height: var(--imp-lh-piccolo);
+}
+
+.imp-root .imp-indice__carte {
+  margin-block-start: var(--imp-sp-7);
+}
+
+.imp-root .imp-indice__campioni {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--imp-sp-3);
+  max-inline-size: 26rem;
+}
+
+.imp-root .imp-indice__carta {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--imp-sp-2);
+  cursor: pointer;
+}
+
+.imp-root .imp-indice__carta:has(.imp-ix-scelta__input:focus-visible) {
+  outline: var(--imp-focus-spessore) solid var(--imp-sito-inchiostro);
+  outline-offset: var(--imp-focus-distanza);
+}
+
+.imp-root .imp-indice__campione {
+  display: block;
+  inline-size: 56px;
+  block-size: 56px;
+  background-color: var(--imp-carta);
+}
+
+/* Carta scelta: bordo d'inchiostro del sito 3 px attorno al campione, e la parola "scelta". */
+.imp-root .imp-indice__carta[data-scelta] .imp-indice__campione {
+  outline: var(--imp-bordo-scelto) solid var(--imp-sito-inchiostro);
+  outline-offset: 3px;
+}
+
+.imp-root .imp-indice__carta-nome {
+  font-size: var(--imp-fs-piccolo);
+  font-weight: var(--imp-wght-interfaccia);
+  line-height: 1.2;
+  margin-block-start: var(--imp-sp-1);
+}
+
+.imp-root .imp-indice__carta[data-scelta] .imp-indice__carta-nome {
+  font-weight: var(--imp-wght-corpo-forte);
+}
+
+.imp-root .imp-indice__carta-scelta {
+  font-size: var(--imp-fs-nota);
+  line-height: 1.2;
+  color: var(--imp-inchiostro-velato);
+}
+
+.imp-root .imp-indice__luce {
+  margin-block-start: var(--imp-sp-7);
+}
+
+.imp-root .imp-indice__interruttore {
+  display: inline-flex;
+  gap: var(--imp-sp-2);
+}
+
+.imp-root .imp-indice__opzione {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 64px;
+  min-block-size: var(--imp-tocco-min);
+  padding-inline: var(--imp-sp-4);
+  font-size: var(--imp-fs-bottone);
+  font-weight: var(--imp-wght-interfaccia);
+  box-shadow: inset 0 0 0 1px var(--imp-inchiostro);
+}
+
+.imp-root .imp-indice__opzione[aria-pressed="true"] {
+  font-weight: var(--imp-wght-bottone);
+  box-shadow: inset 0 0 0 var(--imp-bordo-scelto) var(--imp-inchiostro);
+}
+
+.imp-root .imp-indice__opzione[aria-busy="true"] {
+  cursor: progress;
+}
+
+/* Tablet e oltre: il foglio resta una pagina, non una lenzuolata. */
+@media (min-width: 600px) {
+  .imp-root .imp-indice__foglio {
+    inset-inline-end: auto;
+    inline-size: min(100%, 36rem);
+    inset-inline-start: var(--imp-margine-interno);
+  }
+
+  .imp-root .imp-indice__testa,
+  .imp-root .imp-indice__corpo {
+    padding-inline: var(--imp-sp-6);
+  }
+}
+
+@media (forced-colors: active) {
+  .imp-root .imp-indice__foglio {
+    border-block-start: 1px solid CanvasText;
+  }
+
+  .imp-root .imp-indice__carta[data-scelta] .imp-indice__campione {
+    outline-color: Highlight;
+  }
+}

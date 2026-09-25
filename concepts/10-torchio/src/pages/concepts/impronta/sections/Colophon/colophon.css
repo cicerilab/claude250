@@ -208,6 +208,7 @@
 }
 
 .imp-root .imp-colophon__esito {
+  flex-basis: 100%;
   max-inline-size: 34ch;
   font-size: var(--imp-fs-piccolo);
   line-height: var(--imp-lh-piccolo);

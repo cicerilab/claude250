@@ -378,7 +378,7 @@ export default function Compositoio({
             ref={contattoRef}
             id={idContatto}
             className="imp-banco__input"
-            type={tastieraContatto === 'email' ? 'email' : 'tel'}
+            type="text"
             inputMode={tastieraContatto}
             name="contatto"
             value={contatto}

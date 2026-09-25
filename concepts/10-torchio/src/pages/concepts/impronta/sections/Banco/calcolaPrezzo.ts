@@ -143,7 +143,7 @@ export function calcolaPrezzo(s: SceltePrezzo): EsitoPrezzo {
  * punteggiatura di una partecipazione o di un indirizzo. Tutto il resto
  * (emoji, alfabeti non latini, simboli) resta fuori dalla prova.
  */
-const SEGNO_IN_CASSA = /[\p{Script=Latin}\p{M}\p{Nd}\s.,;:!?'’‘"“”«»()[\]&@#%+/*=°€$£×·…\-]/u;
+const SEGNO_IN_CASSA = /[\p{Script=Latin}\p{M}\p{Nd}\s.,;:!?'’‘"“”«»()[\]&@#%+/*=°€$£×·…-]/u;
 
 export interface EsitoSegni {
   /** Il testo con solo i segni che si possono comporre. */

@@ -1,1 +1,275 @@
-/* STUB dello scaffold: vuoto. Lo scrive il section-builder della sezione (tech-architect §4). Tutti i selettori iniziano con .imp-root. */
+/* ==========================================================================
+   IMPRONTA · Hero, "la pressa" (section-builder-hero)
+   --------------------------------------------------------------------------
+   Una pagina di libro (recto): la parola *impronta* premuta a secco, larga
+   esattamente quanto l'area viva tra il margine interno e quello esterno;
+   sotto, fuori centro verso l'interno, il titolo in inchiostro, il
+   sottotitolo e l'unico bottone. Il resto è carta vuota: lì gioca la luce.
+
+   Regole seguite (DESIGN.md, art-director §3.4):
+   - solo variabili --imp-*, nessun hex;
+   - colore e ombre del testo premuto li decidono le classi materiali
+     (.imp-secco, .imp-inchiostro, .imp-lamina): qui non si ridefiniscono;
+   - la parola a interlinea 0,86 non sta in un contenitore con overflow
+     nascosto (la "p" scende sotto il box);
+   - gli assi della parola li calcola .imp-pressa da --imp-press: qui si dà
+     solo l'arrivo (--imp-wdth-hero / --imp-wght-hero dei token).
+   Tutti i selettori partono da .imp-root.
+   ========================================================================== */
+
+.imp-root .imp-hero {
+  --_imp-testata: 56px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-block-size: calc(100vh - var(--_imp-testata));
+  min-block-size: calc(100svh - var(--_imp-testata));
+  /* Testa corta dopo la testata (≤ 96 px, DESIGN.md §5), piede da libro. */
+  padding-block: clamp(24px, calc(4svh + 8px), 64px) var(--imp-piede);
+  scroll-margin-block-start: 0;
+}
+
+@media (min-width: 1024px) {
+  .imp-root .imp-hero {
+    --_imp-testata: var(--imp-testata-h);
+    padding-block-start: clamp(32px, calc(14svh - var(--imp-testata-h)), 96px);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   La parola premuta
+   Il piano è un contenitore di query: la sua larghezza di contenuto È l'area
+   viva (padding della gabbia esclusi), anche con la barra di scorrimento
+   visibile. Il corpo si calcola da lì: larghezza / larghezza della parola in
+   em (tokens: 5,479 / 6,819 / 8,158 alle tre larghezze d'arrivo).
+   -------------------------------------------------------------------------- */
+.imp-root .imp-hero__piano {
+  position: relative;
+  container-type: inline-size;
+  inline-size: 100%;
+}
+
+.imp-root .imp-hero__parola {
+  --imp-wdth-arrivo: var(--imp-wdth-hero);
+  --imp-wght-arrivo: var(--imp-wght-hero);
+  font-size: var(--imp-fs-secco-hero);
+  line-height: var(--imp-lh-secco);
+  letter-spacing: var(--imp-trk-secco);
+  text-transform: none;
+  /* Il fantasma non è testo da selezionare: è materiale. Il tocco sulla
+     parola sposta la luce (è carta, per light.ts). */
+  user-select: none;
+  -webkit-user-select: none;
+  /* La "p" scende di 0,09 em sotto il box: nessun overflow nascosto qui né
+     sui contenitori, e il titolo sta ben più sotto (margine del blocco). */
+}
+
+@supports (inline-size: 1cqi) {
+  .imp-root .imp-hero__parola {
+    font-size: calc(100cqi / var(--imp-hero-em));
+  }
+}
+
+/* Dopo l'invio: il testo del cliente al posto di *impronta*. Corpo stimato
+   dalle misure di Anybody (Hero.tsx scrive la larghezza in em alle tre
+   larghezze d'arrivo), mai più grande della parola originale, con il 3% di
+   margine sull'errore della stima: il testo non supera mai il margine. */
+.imp-root .imp-hero__parola[data-cliente] {
+  --_imp-em: var(--imp-hero-em-s, var(--imp-hero-em));
+  font-size: min(var(--imp-fs-secco-hero), calc(var(--imp-area-viva) / var(--_imp-em) * 0.97));
+}
+
+@media (min-width: 600px) {
+  .imp-root .imp-hero__parola[data-cliente] {
+    --_imp-em: var(--imp-hero-em-m, var(--imp-hero-em));
+  }
+}
+
+@media (min-width: 1024px) {
+  .imp-root .imp-hero__parola[data-cliente] {
+    --_imp-em: var(--imp-hero-em-l, var(--imp-hero-em));
+  }
+}
+
+@supports (inline-size: 1cqi) {
+  .imp-root .imp-hero__parola[data-cliente] {
+    font-size: min(calc(100cqi / var(--imp-hero-em)), calc(100cqi / var(--_imp-em) * 0.97));
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Il blocco in inchiostro: ancorato al margine interno, mai centrato.
+   4 colonne (375), 8 (600-1023), 12 (1440): titolo su 8 colonne, sottotitolo
+   su 5, colonne 9-12 e margine esterno vuoti.
+   -------------------------------------------------------------------------- */
+.imp-root .imp-hero__testo {
+  margin-block-start: clamp(40px, 9svh, 112px);
+  row-gap: 0;
+}
+
+.imp-root .imp-hero__testo > * {
+  grid-column: 1 / -1;
+}
+
+.imp-root .imp-hero__titolo {
+  /* Assi, corpo e interlinea della voce titolo-1 (base.css); inchiostro con
+     il solco appena accennato (.imp-inchiostro, pressione 1 dal primo frame). */
+  max-inline-size: 22ch;
+  text-wrap: balance;
+}
+
+.imp-root .imp-hero__sotto {
+  margin-block-start: var(--imp-sp-5);
+  max-inline-size: 36ch;
+  font-size: var(--imp-fs-lead);
+  line-height: var(--imp-lh-lead);
+  color: var(--imp-inchiostro);
+  text-wrap: pretty;
+}
+
+.imp-root .imp-hero__azioni {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--imp-sp-5);
+  margin-block-start: var(--imp-sp-6);
+}
+
+/* L'unico bottone: lamina argento, raggio 0, filo di bordo (DESIGN.md §4).
+   Su mobile a larghezza piena (52 px), da 600 px a misura del testo (56 px). */
+.imp-root .imp-hero__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 100%;
+  min-block-size: var(--imp-bottone-h);
+  padding-inline: 28px;
+  font-family: var(--imp-font-testo);
+  font-size: var(--imp-fs-bottone);
+  font-weight: var(--imp-wght-bottone);
+  line-height: var(--imp-lh-interfaccia);
+  letter-spacing: 0;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* Dial della luce: solo desktop (ux-architect 6.3). */
+.imp-root .imp-hero__luce {
+  display: none;
+  align-items: center;
+  gap: var(--imp-sp-3);
+  color: var(--imp-inchiostro);
+}
+
+.imp-root .imp-hero__luce-etichetta {
+  font-size: var(--imp-fs-nota);
+  font-weight: var(--imp-wght-interfaccia);
+  line-height: var(--imp-lh-interfaccia);
+  letter-spacing: 0.01em;
+}
+
+/* --------------------------------------------------------------------------
+   Invito "luce col telefono": nel flusso, sotto il bottone, mai fisso.
+   -------------------------------------------------------------------------- */
+.imp-root .imp-hero__invito {
+  margin-block-start: var(--imp-sp-5);
+  padding-block-start: var(--imp-sp-4);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--imp-carta-ombra) 45%, transparent);
+  max-inline-size: 36ch;
+}
+
+.imp-root .imp-hero__invito-frase {
+  flex: 1 1 100%;
+  font-size: var(--imp-fs-piccolo);
+  line-height: var(--imp-lh-piccolo);
+}
+
+.imp-root .imp-hero__invito-azioni {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--imp-sp-2) var(--imp-sp-5);
+}
+
+.imp-root .imp-hero__invito-attiva {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: var(--imp-tocco-min);
+  padding-inline: var(--imp-sp-5);
+  font-size: var(--imp-fs-bottone);
+  font-weight: var(--imp-wght-bottone);
+  line-height: var(--imp-lh-interfaccia);
+  color: var(--imp-inchiostro);
+  box-shadow: inset 0 0 0 1px var(--imp-inchiostro);
+}
+
+.imp-root .imp-hero__invito-attiva[aria-busy="true"] {
+  cursor: progress;
+}
+
+.imp-root .imp-hero__invito-lascia {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--imp-fs-piccolo);
+  font-weight: var(--imp-wght-interfaccia);
+}
+
+/* --------------------------------------------------------------------------
+   600 px: margini da libro, 8 colonne, bottone a misura del testo
+   -------------------------------------------------------------------------- */
+@media (min-width: 600px) {
+  .imp-root .imp-hero__titolo {
+    grid-column: 1 / span 7;
+  }
+
+  .imp-root .imp-hero__sotto,
+  .imp-root .imp-hero__invito {
+    grid-column: 1 / span 6;
+  }
+
+  .imp-root .imp-hero__azioni {
+    grid-column: 1 / span 7;
+  }
+
+  .imp-root .imp-hero__cta {
+    inline-size: auto;
+    min-block-size: var(--imp-bottone-h-grande);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   1024 px: 12 colonne. Titolo c1-c8 su due righe, sottotitolo c1-c5,
+   bottone a sinistra e dial della luce all'estremo destro del blocco.
+   -------------------------------------------------------------------------- */
+@media (min-width: 1024px) {
+  .imp-root .imp-hero__testo {
+    margin-block-start: clamp(48px, 11svh, 120px);
+  }
+
+  .imp-root .imp-hero__titolo {
+    grid-column: 1 / span 8;
+    max-inline-size: none;
+  }
+
+  .imp-root .imp-hero__sotto,
+  .imp-root .imp-hero__invito {
+    grid-column: 1 / span 5;
+  }
+
+  .imp-root .imp-hero__azioni {
+    grid-column: 1 / span 8;
+    margin-block-start: var(--imp-sp-7);
+  }
+
+  .imp-root .imp-hero__luce {
+    display: inline-flex;
+  }
+}
+
+/* Schermi bassi (telefono in orizzontale, portatili piccoli): meno aria. */
+@media (max-height: 560px) {
+  .imp-root .imp-hero__testo {
+    margin-block-start: var(--imp-sp-6);
+  }
+}

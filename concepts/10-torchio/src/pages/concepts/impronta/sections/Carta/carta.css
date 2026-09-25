@@ -8,7 +8,8 @@
      .imp-carta__gruppo     radiogroup a vivo (.imp-a-vivo): le 4 strisce
        .imp-carta__striscia   il radio (bottone) con data-carta della sua carta
          .imp-carta__foglio     il campione: fondo, fibra, costa, si solleva
-           .imp-carta__secco      il nome a secco (decorativo, aria-hidden)
+           .imp-carta__campo-secco  contenitore del nome a secco (aria-hidden)
+             .imp-carta__secco      il nome a secco (decorativo, premuto)
            .imp-carta__scelta     "✓ la carta del sito" (solo se scelta)
            .imp-carta__dati       nome, grammatura, spessore, uso, descrizione
      .imp-carta__campioni   riga sotto le strisce
@@ -113,7 +114,7 @@
   background-color: var(--imp-carta);
   container-type: inline-size;
   container-name: imp-foglio;
-  grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
   grid-template-areas:
     "secco scelta"
     "secco dati";
@@ -145,16 +146,25 @@
 /* --------------------------------------------------------------------------
    Nome a secco: ripete il nome in inchiostro, solo materia. Fermo nei
    suoi assi (secco-grande); lo muove solo --imp-press (usePressione).
+   Il campo è un contenitore: il corpo si calcola sulla sua colonna, così il
+   nome la riempie senza mai toccare il testo vero accanto.
    -------------------------------------------------------------------------- */
-.imp-root .imp-carta__secco {
+.imp-root .imp-carta__campo-secco {
   grid-area: secco;
   align-self: center;
   display: block;
+  min-inline-size: 0;
+  container-type: inline-size;
+}
+
+.imp-root .imp-carta__secco {
+  display: block;
+  inline-size: max-content;
   font-family: var(--imp-font-display);
   font-synthesis: none;
   font-weight: var(--imp-wght-secco-grande);
   font-variation-settings: "wdth" var(--imp-wdth-secco-grande), "wght" var(--imp-wght-secco-grande);
-  font-size: clamp(2rem, 17cqi, 4.5rem);
+  font-size: max(2rem, 22cqi);
   line-height: var(--imp-lh-secco);
   letter-spacing: var(--imp-trk-secco);
   white-space: nowrap;
@@ -270,25 +280,26 @@
     min-block-size: max(var(--imp-tocco-min), 156px, 20svh);
   }
 
+  /* Tre colonne: nome a secco, dati, descrizione. Righe esplicite perché
+     i dati "escono" dal loro contenitore (display: contents) e si
+     sistemano ciascuno nella sua riga. */
   .imp-root .imp-carta__foglio {
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr) minmax(0, 1.1fr);
-    grid-template-areas:
-      "secco scelta scelta"
-      "secco dati   descrizione";
+    grid-template-rows: auto auto auto 1fr;
+    grid-template-areas: none;
     column-gap: var(--imp-sp-5);
   }
 
-  .imp-root .imp-carta__secco {
-    font-size: clamp(2.5rem, 13cqi, 5.5rem);
+  .imp-root .imp-carta__campo-secco {
+    grid-area: auto;
+    grid-column: 1;
+    grid-row: 1 / span 4;
   }
 
-  .imp-root .imp-carta__descrizione {
-    grid-area: descrizione;
-    display: block;
-    max-inline-size: 34ch;
-    font-size: var(--imp-fs-piccolo);
-    line-height: var(--imp-lh-piccolo);
-    letter-spacing: var(--imp-trk-piccolo);
+  .imp-root .imp-carta__scelta {
+    grid-area: auto;
+    grid-column: 2 / span 2;
+    grid-row: 1;
   }
 
   /* La descrizione è figlia di .imp-carta__dati nel DOM (una sola lettura
@@ -303,26 +314,18 @@
     grid-column: 2;
   }
 
-  .imp-root .imp-carta__nome { grid-row: 2; align-self: start; }
-  .imp-root .imp-carta__misure { grid-row: 3; }
-  .imp-root .imp-carta__uso { grid-row: 4; }
-  .imp-root .imp-carta__descrizione { grid-column: 3; grid-row: 2 / span 3; }
+  .imp-root .imp-carta__nome { grid-row: 2; }
+  .imp-root .imp-carta__misure { grid-row: 3; margin-block-start: var(--imp-sp-1); }
+  .imp-root .imp-carta__uso { grid-row: 4; margin-block-start: var(--imp-sp-1); }
 
-  .imp-root .imp-carta__foglio {
-    grid-template-rows: auto auto auto 1fr;
-    grid-template-areas: none;
-  }
-
-  .imp-root .imp-carta__secco {
-    grid-area: auto;
-    grid-column: 1;
-    grid-row: 1 / span 4;
-  }
-
-  .imp-root .imp-carta__scelta {
-    grid-area: auto;
-    grid-column: 2 / span 2;
-    grid-row: 1;
+  .imp-root .imp-carta__descrizione {
+    grid-column: 3;
+    grid-row: 2 / span 3;
+    display: block;
+    max-inline-size: 34ch;
+    font-size: var(--imp-fs-piccolo);
+    line-height: var(--imp-lh-piccolo);
+    letter-spacing: var(--imp-trk-piccolo);
   }
 }
 
@@ -352,12 +355,19 @@
     padding: var(--imp-sp-5) var(--imp-sp-5) calc(var(--imp-sp-6) + 2px);
   }
 
-  .imp-root .imp-carta__secco {
+  /* Qui il campo non è più un contenitore: il nome verticale si misura
+     sul foglio (altezza e larghezza della striscia). */
+  .imp-root .imp-carta__campo-secco {
+    container-type: normal;
     grid-column: 2;
     grid-row: 1 / -1;
     align-self: start;
     justify-self: end;
+  }
+
+  .imp-root .imp-carta__secco {
     writing-mode: vertical-rl;
+    inline-size: auto;
     font-size: min(14.5cqh, 30cqi);
     padding-block: 0;
     padding-inline: 0.04em;

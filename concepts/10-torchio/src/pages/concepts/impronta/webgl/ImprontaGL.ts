@@ -47,6 +47,7 @@ import {
   NoColorSpace,
   OrthographicCamera,
   Scene,
+  type ShaderMaterial,
   Vector2,
   WebGLRenderer,
   type PlaneGeometry,
@@ -157,7 +158,6 @@ export class ImprontaGL {
   readonly diagnostica: DiagnosticaGL;
 
   private readonly canvas: HTMLCanvasElement;
-  private readonly forzato: boolean;
   private readonly grossolano: boolean;
   private readonly onSpegni: (motivo: MotivoSpegnimento) => void;
 
@@ -167,7 +167,7 @@ export class ImprontaGL {
   private readonly qualita: Qualita;
 
   private geometria: PlaneGeometry | null = null;
-  private mesh: Mesh | null = null;
+  private mesh: Mesh<PlaneGeometry, ShaderMaterial> | null = null;
   private rilievo: MaterialeRilievo | null = null;
   private blur: MaterialeBlur | null = null;
   private composite: MaterialeComposite | null = null;
@@ -215,7 +215,6 @@ export class ImprontaGL {
 
   constructor(opzioni: OpzioniImprontaGL) {
     this.canvas = opzioni.canvas;
-    this.forzato = opzioni.forzato;
     this.grossolano = opzioni.grossolano;
     this.onSpegni = opzioni.onSpegni;
     this.qualita = new Qualita({ puoSpegnere: !opzioni.forzato });
@@ -298,7 +297,7 @@ export class ImprontaGL {
     this.composite = creaMaterialeComposite();
 
     this.geometria = creaGeometriaSchermo();
-    const mesh = new Mesh(this.geometria, rilievo);
+    const mesh = new Mesh<PlaneGeometry, ShaderMaterial>(this.geometria, rilievo);
     mesh.frustumCulled = false;
     this.mesh = mesh;
     this.scene.add(mesh);

@@ -142,8 +142,10 @@ function Striscia({ carta, indice, scelta, tabulabile, idBase, gruppoRef, regist
       onBlur={suSfuoco}
     >
       <span ref={foglioRef} className="imp-carta__foglio imp-fibra imp-costa imp-ix-solleva">
-        <span ref={nomeRef} {...ATTESA_PRESSA} className="imp-carta__secco imp-secco" aria-hidden="true">
-          {dati.nome}
+        <span className="imp-carta__campo-secco" aria-hidden="true">
+          <span ref={nomeRef} {...ATTESA_PRESSA} className="imp-carta__secco imp-secco">
+            {dati.nome}
+          </span>
         </span>
 
         <span className="imp-carta__scelta" aria-hidden="true">
