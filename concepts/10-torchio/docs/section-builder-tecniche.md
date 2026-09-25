@@ -179,3 +179,66 @@ ruotato (`--imp-tecniche-giro: 1`). Rilievo `tracking: 'doc'`.
   numero di blocchi cambia durante lo scroll. Il giro non serve allo shader.
 - **section-builder-banco**: il link "cos'è?" deve essere un
   `<a href="#tecniche">` dentro `#banco`, così compare "Torna al banco".
+
+---
+
+## Giro 2
+
+Voti di partenza (giuria): Tecniche 6/10. Fonti: `awwwards-jury.md` §5
+(Tecniche) e riga del section-builder, `accessibility-auditor.md` A3 e B2,
+`responsive-tester.md` punto 9, copywriter giro 2 (intro vuota),
+motion-designer giro 2 (`data-imp-var`), orchestratore (long task).
+
+### Cosa è cambiato
+
+| Problema | Intervento |
+|---|---|
+| Split-header a 1440 (titolo a sinistra, paragrafo sollevato a destra) | Titolo in alto a sinistra (c1-c7), un solo blocco. L'intro, se il copy la dà, sta sotto il titolo; oggi `TECNICHE.intro` è vuota e il `<p>` non si rende |
+| Lastra 780×500 con la parola al 60%, campo vuoto | Lastra 3:2 (679×453 a 1440, 910×607 a 2560) e parola all'85% della larghezza (574 px su 679): `85cqi / (n × em)`, em per carattere rimisurato con Anybody vero (0,8 a `wdth` 112,5, 0,71 a `wdth` 100) |
+| Vuoti sopra e sotto la lastra | Desktop: riga della lastra `minmax(auto, 2/3 della larghezza)` accanto alla colonna destra (nomi + scheda, piede allineato al piede della lastra), blocco centrato nel palco. Mobile e tablet: la lastra cresce al massimo fino a 2/3 della sua larghezza, l'aria avanzata va tra i blocchi (`align-content: space-between`), non intorno alla lastra |
+| Taglio colorato come filetto nero / wireframe | Pila vera: il biglietto in cima diventa Cotone 600 g (`data-carta="cotone"`), dietro altri sei; ruotando di tre quarti si vede la faccia di destra della pila, un blocco pieno di sette bordi dipinti affiancati (9 px ciascuno, 6 su mobile) con la riga dove un biglietto tocca l'altro e due toni alterni. Colore: il taglio della carta del sito (`--imp-taglio` fissato sulla sezione prima che il Cotone lo ridefinisca): Citrino sulla carta Cotone, verde notte sulla Citrino, Grafite sulla Cipria. Niente più contorno `.imp-taglio` sul fronte. La descrizione del rilievo per il lettore di schermo dice "carta Cotone" |
+| A 375 si entrava nel pin senza titolo | L'h2 è sempre nel palco, in alto (30 px, due righe). Sui telefoni bassi (sotto 760 px) l'eventuale intro passa ai soli lettori di schermo |
+| Indice con "◂" di testo | Tacca d'inchiostro 4 px sulla corsa verticale (desktop), barra 3 px sotto il nome (mobile), più peso 600 e ", in vista" per il lettore di schermo |
+| A3: con finestra bassa o zoom 400% il pin taglia testo e prezzo | Resa statica anche con `(max-height: 34rem)`: `useMedia` su quella query, `ridotto \|\| bassa`. Verificato a 320×256: i quattro blocchi scorrono, tutto il testo si raggiunge |
+| B2: salti "lamina" 43 e "taglio" 34 px | `min-inline-size: 44px`, centrati: a 375 misurano 52 / 76 / 44 / 44 px |
+| Long task nello scroll (variabili scritte sul pin alto) | `--imp-tecniche-p` e `--imp-tecniche-giro` vanno solo sulle foglie marcate `data-imp-var` (la corsa e il biglietto), secondo il contratto del motion giro 2, e sono registrate con `@property … inherits: false`: cambiarle non ricalcola lo stile del resto della sezione. Le proprietà animate sono solo `transform` (corsa `scaleX/Y`, biglietto `rotateY`) e le ombre di `--imp-press` del fallback. La rotazione si applica solo con `data-tecnica="taglio"` |
+
+### Misura dei long task nel pin
+
+Playwright, Chromium senza argomenti SwiftShader, 390×844, `?gl=0`, CPU 4×
+via CDP, rotella da 120 px ogni 60 ms per tutta l'altezza del pin,
+`PerformanceObserver('longtask')`. Confronto A/B sugli stessi file
+(variabili sul pin ed ereditate, contro foglie `data-imp-var` + `@property`
+non ereditata), 6 giri ciascuno, alternati:
+
+| | Long task per giro (media) | Somma per giro (media) | Max |
+|---|---|---|---|
+| prima | 5,3 | 441 ms | 170 ms |
+| dopo | 1,7 | 116 ms | 103 ms |
+
+Misura rumorosa (altri agent attivi, vite con HMR): in un giro "dopo"
+preso durante una ricarica ci sono stati 12 long task, scartato. Il resto
+dei long task non viene dalle variabili delle Tecniche (paint delle ombre
+del fallback durante la ristampa, fibra SVG).
+
+### Verifica giro 2
+
+- `tsc` sul progetto: nessun errore nei miei file (in questo momento ce ne
+  sono in `sections/Banco/Banco.tsx`, di un altro agent). ESLint sui miei
+  file: verde.
+- Dev server mio `npx vite --port 8109 --strictPort`, chiuso alla fine.
+- Font veri via `page.route` + `curl` (Anybody e Hanken caricati).
+- Screenshot in `/tmp/claude-0/shots-tecniche/`,
+  `g2-{citrino,cotone}-{375,768,1440,2560}-p{01,037,062,086,097}.png`
+  (secco, colore, lamina, inizio del giro, pila girata), ognuno preso dopo
+  l'arrivo della ristampa; `g2-citrino-1440-gl-p037.png` e `-p097.png` con
+  `?gl=1`; `g2-citrino-320-s{0..4}.png` (finestra 320×256, resa statica).
+- Nessuno scroll orizzontale a nessuna larghezza.
+
+### Scostamenti dichiarati
+
+- Rotazione massima del taglio sotto 768: -24° invece di -18° (motion §6.3),
+  perché a -18° la pila di 6 px per foglio si vedeva come una riga (la stessa
+  critica della giuria). La parola a secco resta leggibile.
+- La scheda su desktop è a destra della lastra e non sotto (già nel giro 1),
+  ora col piede allineato al piede della lastra.
