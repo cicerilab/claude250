@@ -65,8 +65,8 @@ uniform vec4 uBlockB[MAX_BLOCCHI];
 
 varying vec2 vUv;
 
-// Macchie di formazione della pasta: ±3% di albedo al massimo.
-#define MACCHIE 0.03
+// Macchie di formazione della pasta: ±2% di albedo circa.
+#define MACCHIE 0.02
 
 struct Carta {
   vec4 fondo;
@@ -167,6 +167,10 @@ void main() {
 
     vec2 meta = R.zw * 0.5;
     vec2 d = p - (R.xy + meta);
+    // Scarto veloce: fuori dal cerchio che contiene il blocco ruotato più la
+    // sua ombra di contatto non serve nemmeno la rotazione.
+    float raggio = length(meta) + 2.5 * dpr + B.w * 1.5 + 9.0 * dpr;
+    if (dot(d, d) > raggio * raggio) continue;
     float cr = cos(A.y);
     float sr = sin(A.y);
     // Dal foglio al riferimento del blocco (rotazione inversa).

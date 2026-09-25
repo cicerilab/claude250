@@ -167,6 +167,8 @@ export interface OpzioniRilievo {
   fibra: Texture | null;
   larghezzaAtlante: number;
   altezzaAtlante: number;
+  /** Lato della texture di fibra (DatiFibra.lato); default FIBRA_LATO. */
+  latoFibra?: number;
 }
 
 /**
@@ -207,7 +209,7 @@ export function creaMaterialeRilievo(opzioni: OpzioniRilievo): MaterialeRilievo 
     uniforms,
     vertexShader: fullscreenVert,
     fragmentShader: reliefFrag,
-    defines: { ...DEFINE_COMUNI },
+    defines: { ...DEFINE_COMUNI, FIBRA_LATO: (opzioni.latoFibra ?? FIBRA_LATO).toFixed(1) },
     depthTest: false,
     depthWrite: false,
     transparent: false,

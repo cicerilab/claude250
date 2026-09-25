@@ -75,24 +75,39 @@ function rumoreRipetibile(lato: number, periodo: number, rnd: () => number): Flo
   return out;
 }
 
+/** exp(-x) tabulata su 0..8 in 512 passi: il deposito delle fibre ne chiama mezzo milione. */
+const PASSI_EXP = 512;
+const MAX_EXP = 8;
+let tabellaExp: Float32Array | null = null;
+function expNeg(x: number): number {
+  if (!tabellaExp) {
+    tabellaExp = new Float32Array(PASSI_EXP + 1);
+    for (let i = 0; i <= PASSI_EXP; i++) tabellaExp[i] = Math.exp(-(i / PASSI_EXP) * MAX_EXP);
+  }
+  if (x >= MAX_EXP) return 0;
+  return tabellaExp[Math.floor(x * (PASSI_EXP / MAX_EXP))] ?? 0;
+}
+
 /**
  * Deposita un punto gaussiano (sigma in px) con avvolgimento.
  * Raggio di deposito 2 px: sufficiente per sigma fino a 1,1.
+ * `lato` deve essere una potenza di 2 (l'avvolgimento è un AND).
  */
 function deposita(buf: Float32Array, lato: number, x: number, y: number, sigma: number, amp: number): void {
   const ix = Math.floor(x);
   const iy = Math.floor(y);
-  const k = -0.5 / (sigma * sigma);
+  const k = 0.5 / (sigma * sigma);
+  const m = lato - 1;
   for (let dy = -2; dy <= 2; dy++) {
     const py = iy + dy;
     const wy = py - y;
-    const riga = (((py % lato) + lato) % lato) * lato;
+    const riga = (py & m) * lato;
     for (let dx = -2; dx <= 2; dx++) {
       const px = ix + dx;
       const wx = px - x;
-      const w = Math.exp((wx * wx + wy * wy) * k);
+      const w = expNeg((wx * wx + wy * wy) * k);
       if (w < 0.01) continue;
-      const i = riga + (((px % lato) + lato) % lato);
+      const i = riga + (px & m);
       buf[i] = (buf[i] ?? 0) + w * amp;
     }
   }
@@ -112,16 +127,46 @@ function normalizza(buf: Float32Array): void {
   for (let i = 0; i < buf.length; i++) buf[i] = ((buf[i] ?? 0) - media) / dev;
 }
 
+/**
+ * Percentile di valori non negativi con un istogramma a 2048 classi: stesso
+ * risultato di un ordinamento a meno di 1/2048 del massimo, ma lineare
+ * (l'ordinamento di 65 536 valori costava da solo 30 ms).
+ */
+function percentile(valori: Float32Array, p: number): number {
+  let max = 0;
+  for (let i = 0; i < valori.length; i++) {
+    const v = valori[i] ?? 0;
+    if (v > max) max = v;
+  }
+  if (max <= 0) return 0;
+  const classi = 2048;
+  const isto = new Uint32Array(classi);
+  const k = (classi - 1) / max;
+  for (let i = 0; i < valori.length; i++) {
+    const c = Math.floor((valori[i] ?? 0) * k);
+    isto[c] = (isto[c] ?? 0) + 1;
+  }
+  const soglia = valori.length * p;
+  let somma = 0;
+  for (let c = 0; c < classi; c++) {
+    somma += isto[c] ?? 0;
+    if (somma >= soglia) return (c + 1) / k;
+  }
+  return max;
+}
+
 function byte(v: number): number {
   const b = Math.round(v);
   return b < 0 ? 0 : b > 255 ? 255 : b;
 }
 
 /**
- * Genera i dati della fibra. Circa 6-12 ms su un telefono medio: si chiama
- * una volta sola, alla creazione della scena.
+ * Il lavoro diviso in passi: ogni `yield` è un punto in cui si può cedere il
+ * thread. Nessun passo supera circa 8 ms su un portatile.
  */
-export function generaFibra(seme: number = FIBRA_SEME, lato: number = FIBRA_LATO): DatiFibra {
+function* passiFibra(seme: number, latoRichiesto: number): Generator<void, DatiFibra, void> {
+  // Potenza di 2 tra 64 e 1024 (serve all'avvolgimento veloce e alle texture WebGL1 ripetute).
+  const lato = Math.min(1024, Math.max(64, 2 ** Math.round(Math.log2(Math.max(1, latoRichiesto)))));
   const rnd = prng(seme);
   const n = lato * lato;
 
@@ -130,6 +175,7 @@ export function generaFibra(seme: number = FIBRA_SEME, lato: number = FIBRA_LATO
   const f1 = rumoreRipetibile(lato, lato / 2, rnd); // periodo 2 px
   const f2 = rumoreRipetibile(lato, lato / 4, rnd); // periodo 4 px
   for (let i = 0; i < n; i++) feltro[i] = 0.55 * (f1[i] ?? 0) + 0.45 * (f2[i] ?? 0);
+  yield;
 
   // 2. Fibre: brevi tratti leggermente curvi, orientati di preferenza lungo
   //    la direzione di macchina (orizzontale), come nella carta in bobina.
@@ -144,16 +190,18 @@ export function generaFibra(seme: number = FIBRA_SEME, lato: number = FIBRA_LATO
     // Poche fibre scavano (le fibre sottili che si piegano nel feltro).
     const amp = (rnd() < 0.15 ? -0.6 : 1) * (0.45 + rnd() * 0.55);
     const curva = (rnd() - 0.5) * 0.05;
-    for (let s = 0; s < lunghezza; s += 0.5) {
+    for (let s = 0; s < lunghezza; s += 0.7) {
       // Rastrematura alle estremità.
       const t = s / lunghezza;
       const rastrema = Math.sin(Math.PI * t);
       deposita(fibre, lato, x, y, sigma, amp * (0.35 + 0.65 * rastrema));
-      ang += curva + (rnd() - 0.5) * 0.04;
-      x += Math.cos(ang) * 0.5;
-      y += Math.sin(ang) * 0.5;
+      ang += curva + (rnd() - 0.5) * 0.05;
+      x += Math.cos(ang) * 0.7;
+      y += Math.sin(ang) * 0.7;
     }
+    if ((f & 255) === 255) yield;
   }
+  yield;
 
   // 3. Formazione: nuvole larghe (periodi 64, 32, 16 px).
   const formazione = new Float32Array(n);
@@ -163,6 +211,8 @@ export function generaFibra(seme: number = FIBRA_SEME, lato: number = FIBRA_LATO
   for (let i = 0; i < n; i++) {
     formazione[i] = 0.55 * (m1[i] ?? 0) + 0.3 * (m2[i] ?? 0) + 0.15 * (m3[i] ?? 0);
   }
+
+  yield;
 
   normalizza(feltro);
   normalizza(fibre);
@@ -189,12 +239,11 @@ export function generaFibra(seme: number = FIBRA_SEME, lato: number = FIBRA_LATO
       // Normale di una superficie z = h(x, y): (-dh/dx, -dh/dy, 1).
       gx[riga + x] = -ddx;
       gy[riga + x] = -ddy;
-      moduli[riga + x] = Math.hypot(ddx, ddy);
+      moduli[riga + x] = Math.sqrt(ddx * ddx + ddy * ddy);
     }
   }
-  const ordinati = Array.from(moduli).sort((a, b) => a - b);
-  const p99 = ordinati[Math.floor(ordinati.length * 0.99)] ?? 1;
-  const scalaPendenza = 127 / (p99 || 1);
+  const scalaPendenza = 127 / (percentile(moduli, 0.99) || 1);
+  yield;
 
   const dati = new Uint8Array(n * 4);
   for (let i = 0; i < n; i++) {
@@ -207,6 +256,37 @@ export function generaFibra(seme: number = FIBRA_SEME, lato: number = FIBRA_LATO
     dati[o + 3] = byte(128 + ass * 48);
   }
   return { lato, dati };
+}
+
+/**
+ * Genera i dati della fibra in un colpo solo. Circa 20 ms su un portatile
+ * (50 ms la prima volta, a JIT freddo), il doppio o il triplo su un telefono
+ * medio. Per non creare un task lungo usare `generaFibraAPezzi`.
+ */
+export function generaFibra(seme: number = FIBRA_SEME, lato: number = FIBRA_LATO): DatiFibra {
+  const passi = passiFibra(seme, lato);
+  for (;;) {
+    const r = passi.next();
+    if (r.done) return r.value;
+  }
+}
+
+/**
+ * Come `generaFibra`, ma cede il thread tra un passo e l'altro chiamando
+ * `cedi()` (per esempio una promessa risolta da requestIdleCallback o da un
+ * setTimeout 0, a scelta di chi chiama). Stesso risultato, al byte.
+ */
+export async function generaFibraAPezzi(
+  cedi: () => Promise<void>,
+  seme: number = FIBRA_SEME,
+  lato: number = FIBRA_LATO,
+): Promise<DatiFibra> {
+  const passi = passiFibra(seme, lato);
+  for (;;) {
+    const r = passi.next();
+    if (r.done) return r.value;
+    await cedi();
+  }
 }
 
 /**
