@@ -512,7 +512,7 @@
 }
 
 /* --------------------------------------------------------------------------
-   Campi: dove si scrive la carta è "sollevata" (--imp-carta-luce)
+   Campi: dove si scrive la carta è "sollevata" (--imp-superficie)
    -------------------------------------------------------------------------- */
 .imp-root .imp-banco__campi {
   display: grid;
@@ -1137,8 +1137,8 @@
    Con lo shader acceso il pezzo (carta, righe, prezzo) lo disegna il GL:
    relief-fallback.css spegne il fantasma registrato, qui si spengono anche
    le righe, che sono figlie del pezzo (layer con `selettore`). Se il GL non
-   sta disegnando il pezzo in quel frame (`data-imp-gl="fuori"`, oltre gli 8
-   blocchi o maschera non ancora cotta) torna tutto il rilievo CSS.
+   sta disegnando il pezzo in quel frame (`data-imp-gl="fuori"`) le righe
+   restano: il foglio e il prezzo li riaccende relief-fallback.css (giro 2).
    -------------------------------------------------------------------------- */
 .imp-root[data-gl='on'] .imp-banco__prova.imp-relief:not([data-imp-gl='fuori']) .imp-banco__riga {
   color: transparent;
@@ -1146,25 +1146,6 @@
   text-shadow: none;
   filter: none;
   background-image: none;
-}
-
-.imp-root[data-gl='on'] .imp-banco__prova.imp-relief[data-imp-gl='fuori'] {
-  background-color: var(--imp-carta);
-  background-image: var(--imp-fibra);
-  box-shadow:
-    var(--imp-foglio-bordo, 0 0 0 0 transparent),
-    0 var(--imp-spessore-pezzo) 0 0 var(--imp-costa-colore, var(--imp-carta-costa)),
-    0 calc(var(--imp-spessore-pezzo) + 1px) 0 0 color-mix(in srgb, var(--imp-sito-ombra) 55%, transparent),
-    0 calc(var(--imp-spessore-pezzo) + 3px) calc(var(--imp-spessore-pezzo) * 2 + 8px) calc(var(--imp-spessore-pezzo) * -1 - 2px)
-      color-mix(in srgb, var(--imp-sito-ombra) 50%, transparent);
-}
-
-.imp-root[data-gl='on'] .imp-banco__prezzo.imp-relief[data-imp-gl='fuori'] {
-  background-image: var(--imp-lamina-sfumatura-testo);
-  -webkit-text-fill-color: transparent;
-  filter:
-    drop-shadow(calc(var(--_imp-dx) * 1.1) calc(var(--_imp-dy) * 1.1) 0 var(--imp-carta-ombra))
-    drop-shadow(calc(var(--_imp-dx) * -0.9) calc(var(--_imp-dy) * -0.9) 0 var(--imp-carta-luce));
 }
 
 /* --------------------------------------------------------------------------
@@ -1565,4 +1546,16 @@
   .imp-root .imp-banco :is(.imp-banco__input, .imp-ix-scelta__input, .imp-banco__leva, .imp-banco__cose, .imp-ix-dial__input, .imp-banco__bozza-bottone, .imp-banco__altra, .imp-banco__esito) {
     scroll-margin-block: var(--imp-sp-4);
   }
+}
+
+/* Sonda di misura delle righe grandi (Prova.tsx, P2): stesso corpo, wdth 100, mai a capo, invisibile. */
+.imp-root .imp-banco__sonda {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  inline-size: max-content;
+  white-space: nowrap;
+  visibility: hidden;
+  pointer-events: none;
+  font-variation-settings: 'wdth' 100, 'wght' 750;
 }

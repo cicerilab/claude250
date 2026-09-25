@@ -40,6 +40,7 @@ import {
   HOVER,
   LEVA,
   RISTAMPA,
+  SOGLIE_SCRITTURA,
   VAR,
   ritardoConSfasamento,
   type ProfiloPressione,
@@ -264,13 +265,26 @@ class MotorePressione {
   private scriviDom(forza: boolean): void {
     const el = this.el;
     if (el === null) return;
+    // Giro 2: si scrive solo su questo elemento (la foglia premuta), solo se
+    // il valore cambia oltre la soglia; a riposo si scrive il valore esatto
+    // una volta e poi più nulla (il tick si stacca).
+    const aRiposo = !this.anim.inMoto;
     const v = clamp01(this.anim.valore);
-    if (forza || Math.abs(v - this.scritto) >= 1e-4) {
+    if (
+      forza ||
+      Number.isNaN(this.scritto) ||
+      (v !== this.scritto && (aRiposo || Math.abs(v - this.scritto) >= SOGLIE_SCRITTURA.pressione))
+    ) {
       this.scritto = v;
       el.style.setProperty(VAR.press, v.toFixed(4));
     }
     const urto = this.anim.urto;
-    if (forza || Math.abs(urto - this.urtoScritto) >= 1e-3 || (urto === 0 && this.urtoScritto !== 0)) {
+    if (
+      forza ||
+      Number.isNaN(this.urtoScritto) ||
+      (urto !== this.urtoScritto &&
+        (urto === 0 || aRiposo || Math.abs(urto - this.urtoScritto) >= SOGLIE_SCRITTURA.urto))
+    ) {
       this.urtoScritto = urto;
       el.style.setProperty(VAR.pressUrto, urto.toFixed(3));
     }

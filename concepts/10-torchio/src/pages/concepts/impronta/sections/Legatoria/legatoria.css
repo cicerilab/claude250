@@ -163,7 +163,6 @@
 }
 
 /* Il filo arriva da destra: si srotola da destra. */
-.imp-root .imp-legatoria__tratto--da-destra::after,
 .imp-root .imp-legatoria__tratto--fine-traversa::after {
   transform-origin: 100% 50%;
 }
@@ -618,8 +617,11 @@
     --filo-gy: 92;
   }
 
+  /* Nel punto metallico il filo della sezione non cuce: passa accanto alle
+     graffe. Il nome è appeso lì, al filo che scorre (x 16), all'altezza
+     della prima graffa: il laccio non lo attraversa. */
   .imp-root .imp-legatoria__fermata[data-legatura="punto-metallico"] {
-    --filo-gx: 104;
+    --filo-gx: 16;
     --filo-gy: 100;
   }
 

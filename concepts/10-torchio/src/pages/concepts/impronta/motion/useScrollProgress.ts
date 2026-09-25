@@ -24,6 +24,7 @@ import {
   ATTR,
   INTERVALLI,
   LEGATORIA,
+  SOGLIE_SCRITTURA,
   VAR,
   conSoste,
   durataAncora,
@@ -226,8 +227,9 @@ class MotoreScroll {
     this.topDoc = r.top + window.scrollY;
     this.altezza = r.height;
     this.misurato = true;
+    this.azzeraFoglie();
     this.valuta(window.scrollY, this.altezzaViewport());
-    this.scrivi();
+    this.scrivi(true);
   }
 
   scrollPer(p: number): number | null {
@@ -261,18 +263,62 @@ class MotoreScroll {
     }
   }
 
-  private scrivi(): void {
-    if (!this.daScrivere) return;
+  /** Ultimo valore scritto per variabile (numero) e foglie trovate per variabile. */
+  private readonly scritti = new Map<string, number>();
+  private readonly foglie = new Map<string, HTMLElement[]>();
+  private foglieDi: HTMLElement | null = null;
+
+  /** Dimentica le foglie (nuova misura, nuovo bersaglio): si ricercano alla prossima scrittura. */
+  azzeraFoglie(): void {
+    this.foglie.clear();
+    this.foglieDi = null;
+  }
+
+  /**
+   * Dove scrivere `nome`: le foglie `[data-imp-var~="nome"]` dentro il
+   * bersaglio se ce ne sono (tutte ancora nel documento), altrimenti il
+   * bersaglio stesso.
+   */
+  private destinazioni(bersaglio: HTMLElement, nome: string): readonly HTMLElement[] {
+    if (this.foglieDi !== bersaglio) {
+      this.foglie.clear();
+      this.scritti.clear();
+      this.foglieDi = bersaglio;
+    }
+    let trovate = this.foglie.get(nome);
+    if (trovate === undefined || trovate.some((f) => !f.isConnected)) {
+      trovate = Array.from(bersaglio.querySelectorAll<HTMLElement>(`[${ATTR.variabile}~="${nome}"]`));
+      this.foglie.set(nome, trovate);
+      this.scritti.delete(nome);
+    }
+    return trovate.length > 0 ? trovate : [bersaglio];
+  }
+
+  private scriviVariabile(bersaglio: HTMLElement, nome: string, valore: number, forza: boolean): void {
+    const destinazioni = this.destinazioni(bersaglio, nome);
+    const prima = this.scritti.get(nome);
+    const estremo = valore <= 0 || valore >= 1;
+    if (!forza && prima !== undefined) {
+      if (prima === valore) return;
+      if (!estremo && Math.abs(valore - prima) < SOGLIE_SCRITTURA.scroll) return;
+    }
+    this.scritti.set(nome, valore);
+    const testo = valore.toFixed(4);
+    for (const d of destinazioni) d.style.setProperty(nome, testo);
+  }
+
+  private scrivi(forza = false): void {
+    if (!this.daScrivere && !forza) return;
     this.daScrivere = false;
     const bersaglio = this.opz.bersaglio?.current ?? this.el;
     if (bersaglio === null) return;
     const p = this.valore();
     const nome = this.opz.variabile === undefined ? VAR.scrollP : this.opz.variabile;
-    if (nome !== null) bersaglio.style.setProperty(nome, p.toFixed(4));
+    if (nome !== null) this.scriviVariabile(bersaglio, nome, p, forza);
     const derivate = this.opz.derivate;
     if (derivate !== undefined) {
       for (const [variabile, fn] of Object.entries(derivate)) {
-        bersaglio.style.setProperty(variabile, fn(p).toFixed(4));
+        this.scriviVariabile(bersaglio, variabile, fn(p), forza);
       }
     }
   }
@@ -297,7 +343,7 @@ class MotoreScroll {
     this.smettiTick();
     if (this.el !== null && this.misurato) {
       this.valuta(window.scrollY, this.altezzaViewport());
-      this.scrivi();
+      this.scrivi(true);
     }
   }
 
@@ -312,8 +358,8 @@ class MotoreScroll {
     this.smettiTick();
     const passo = this.opz.passoRidotto ?? 0;
     this.imposta(this.opz.valoreRidotto ?? 1, (this.opz.passi ?? 0) > 1 ? passo : undefined);
-    this.daScrivere = true;
-    this.scrivi();
+    this.azzeraFoglie();
+    this.scrivi(true);
   }
 }
 
@@ -504,7 +550,9 @@ class MotoreFilo {
       if (nodo === null || nodo === undefined || molla === undefined) continue;
       const v = clamp01(molla.valore);
       const prima = this.scritti[i] ?? Number.NaN;
-      if (forza || Number.isNaN(prima) || Math.abs(v - prima) > 1e-4) {
+      const fermo = molla.ferma;
+      const soglia = fermo ? 0 : SOGLIE_SCRITTURA.pressione;
+      if (forza || Number.isNaN(prima) || (v !== prima && Math.abs(v - prima) >= soglia)) {
         nodo.style.setProperty(VAR.filoAggancio, v.toFixed(4));
         this.scritti[i] = v;
       }

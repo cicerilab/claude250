@@ -94,3 +94,53 @@ scrittura (errori di sintassi transitori in Hero/Tecniche): per isolare la
 bottega lo script ha sostituito i loro moduli con uno stub via
 `page.route`, senza toccare i file. `tsc` e `eslint` puliti sui file della
 sezione.
+
+## Giro 2
+
+Voto giuria del giro 1: Bottega 6/10 (docs/awwwards-jury.md, "Bottega").
+Cosa ho cambiato, solo in `Bottega.tsx` e `bottega.css`:
+
+- **Frontespizio vero.** L'indirizzo è premuto a secco una volta sola
+  (due righe, `riga1` / `riga2`, larghe quanto l'area viva) ed è l'unico
+  elemento grande della sezione. Il gemello in inchiostro sta **sotto**,
+  in circa 20 px, sulla stessa riga dei recapiti, come la riga dell'editore
+  di un frontespizio (da 1024 in linea, sotto in colonna).
+- **Recapiti piccoli, senza segnaposto a vista.** "Chiama la bottega",
+  "Scrivi alla bottega", "Apri in Maps" con la freccia: link Hanken
+  17 → 20 px, area di tocco 44 px, niente numero gigante, niente bottoni
+  pieni. Sotto, `BOTTEGA.recapitiNota` in corpo nota. Chiavi del giro 2 del
+  copywriter (`telefono.testo/aria/href`, `email.testo/aria`,
+  `recapitiNota`); il `mailto:` e il Maps restano da `core/links.ts`.
+- **Stato orario in una riga.** `BOTTEGA.stato.aperto/chiuso` in grassetto
+  ("Adesso siamo chiusi.") più la frase calcolata sull'ora di Roma
+  ("Apriamo oggi alle 9.30.", "Riapriamo martedì alle 9.00.", "Fino alle
+  19.00.", "Chiudiamo alle 12.30, tra 20 minuti.") e "A Pordenone sono le
+  1.14.". Niente più titolo in grigio velato.
+- **"Chi c'è" come frase.** Le tre frasi di `BOTTEGA.chi` in corpo lead,
+  i nomi solo in grassetto: niente più nomi a 60 px con il ruolo lontano.
+- **Macchine ridotte a tre**, una riga ciascuna (nome in Anybody largo
+  che apre la riga, uso in Hanken), sotto la frase della storia. Le otto
+  voci a due colonne sono tolte. Tolto "Le macchine" come titolo.
+- **Colonne**: da 1024 orari (c1-c5) e "chi c'è" + piede (c7-c11).
+  Sotto, una colonna sola.
+- **B7** (accessibility-auditor): tolta la `<nav>` dei recapiti, ora è un
+  `<ul>` con `aria-label`.
+- **SEO C**: spazio vero tra le due righe premute; il link del telefono ha
+  un solo testo.
+- **Performance P4**: piede e note usano le utility `.imp-piccolo` e
+  `.imp-nota` di base.css invece di ridichiarare la terna tipografica.
+- **Art-director §6.4**: nessun fondo `--imp-carta-luce` (il bottone Maps
+  che lo usava non c'è più); nessun fondo nella sezione.
+- **Cotone**: `--imp-rilievo` 2,4 sul blocco dell'indirizzo (1,6 sulle
+  altre carte) per staccare il secco dal cotone nel fallback CSS. Resta
+  più tenue che su Citrino: è il materiale (labbro bianco su carta quasi
+  bianca), non lo tocco oltre senza l'art-director.
+
+`TESTI_SEZIONE` locale ora contiene solo `chiTitolo`, `recapitiAria`,
+`oggi` e le tre macchine.
+
+Verifica: dev server `npx vite --port 8111 --strictPort` (chiuso alla
+fine), Playwright con font serviti da `page.route` + curl (proxy),
+screenshot a 375 / 768 / 1440 / 2560 su Citrino e Cotone, più Cotone 1440
+`?gl=0`: `/tmp/claude-0/shots-bottega/g2-*.png`. Nessuno scroll
+orizzontale. `tsc` ed `eslint` puliti sui file della sezione.

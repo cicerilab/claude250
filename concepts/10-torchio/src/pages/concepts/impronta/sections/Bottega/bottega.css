@@ -72,6 +72,12 @@
   --imp-rilievo: 1.6;
 }
 
+/* Cotone è la carta più chiara: il labbro bianco quasi non si stacca. Più
+   profondità solo lì (vale per la carta del sito, non per i pezzi interni). */
+.imp-root[data-carta="cotone"] .imp-bottega__rilievo {
+  --imp-rilievo: 2.4;
+}
+
 .imp-root .imp-bottega__premuto {
   min-inline-size: 0;
   font-size: calc(var(--imp-area-viva) / var(--_imp-bottega-em));

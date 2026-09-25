@@ -68,6 +68,14 @@ export const ATTR = {
   pressa: 'data-imp-pressa',
   /** Sulle fermate della legatoria: presente quando il filo le ha raggiunte. */
   agganciato: 'data-imp-agganciato',
+  /**
+   * Sulle FOGLIE che leggono una variabile di scroll (elenco separato da
+   * spazi, es. `data-imp-var="--imp-tecniche-p"`). Se dentro il bersaglio ce
+   * n'è almeno una, `useScrollProgress` scrive la variabile solo lì e non sul
+   * contenitore: niente ricalcolo di stile dell'intero sottoalbero a ogni
+   * frame di scroll (giro 2, long task a CPU 4×).
+   */
+  variabile: 'data-imp-var',
 } as const;
 
 export type StatoPressa = 'attesa' | 'in-corso' | 'premuta';
@@ -80,6 +88,21 @@ export type StatoPressa = 'attesa' | 'in-corso' | 'premuta';
 export const ATTESA_PRESSA: Readonly<Record<'data-imp-pressa', StatoPressa>> = {
   'data-imp-pressa': 'attesa',
 };
+
+/**
+ * Soglie di scrittura nel DOM (giro 2). Sotto queste differenze la variabile
+ * CSS non si riscrive: la differenza non si vede (0,004 di pressione è meno
+ * di 0,01 px di solco su un corpo di 150 px) e ogni scrittura costa un
+ * ricalcolo di stile. Il valore finale a riposo si scrive sempre esatto.
+ */
+export const SOGLIE_SCRITTURA = {
+  /** `--imp-press` e `--imp-filo-aggancio`. */
+  pressione: 0.004,
+  /** `--imp-press-urto`. */
+  urto: 0.02,
+  /** Progressi di scroll e derivate (`--imp-tecniche-p`, `--imp-filo-p`...). */
+  scroll: 0.002,
+} as const;
 
 /** Soglia di larghezza sotto cui valgono le varianti "stretto" (mobile). */
 export const LARGHEZZA_STRETTA = 768;
