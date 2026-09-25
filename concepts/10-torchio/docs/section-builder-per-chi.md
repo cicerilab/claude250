@@ -172,3 +172,13 @@ Verifica giro 2: server mio `npx vite --port 8107 --strictPort` (chiuso alla
 fine), Playwright con i font serviti da `page.route` + `fetch` di Node.
 Screenshot in `/tmp/claude-0/shots-per-chi/giro2/`:
 `{375,768,1440,2560}-{citrino,cotone}-{gl0,gl}(-b).png`.
+
+Esito visivo giro 2: con `?gl=0` su Citrino e Cotone, a 375/768/1440/2560,
+niente testi tagliati (controllo automatico sui figli dei pezzi), biglietto
+appoggiato sulla partecipazione, copertina piena, frecce del mazzo sopra la
+fila. Col GL (SwiftShader) a 2560 la copertina ora è disegnata (titolo,
+collana, autrice). A 1440 GL una cattura mostra i pezzi del GL ~35 px sotto il
+DOM: il registro ha le misure giuste (`rectDoc` = posizione vera, verificato
+dal browser), quindi è il fotogramma in ritardo di SwiftShader dopo lo scroll,
+non il layout. Da ricontrollare su GPU vera (shader-engineer).
+Typecheck e lint verdi.
