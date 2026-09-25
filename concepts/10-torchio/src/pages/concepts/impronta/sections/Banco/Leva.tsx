@@ -67,7 +67,8 @@ const Leva = forwardRef<ComandiLeva, LevaProps>(function Leva(
 
   // Il gesto annuncia "premi di nuovo" (ANNUNCI) ma sotto la leva, a vista,
   // il testo lungo "Hai lasciato presto…" è quello del copywriter (BANCO).
-  const sotto = messaggio ?? leva.annuncio;
+  // Mentre si tiene premuto il vecchio avviso si toglie: si ricomincia pulito.
+  const sotto = messaggio ?? (leva.stato === 'tenendo' ? '' : leva.annuncio);
 
   return (
     <div className="imp-banco__leva-blocco">

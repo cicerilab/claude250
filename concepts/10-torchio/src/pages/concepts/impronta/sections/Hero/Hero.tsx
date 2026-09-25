@@ -41,6 +41,9 @@ const ID_SOTTO = 'imp-hero-sotto';
 /** Priorità del blocco nell'elenco dello shader: la parola dell'hero viene prima di tutto. */
 const PRIORITA_PAROLA = 10;
 
+/** Corpo (px) del gemello invisibile che misura il testo del cliente (vedi hero.css). */
+const CORPO_MISURA = 100;
+
 /**
  * Larghezza in em del testo del cliente alle tre larghezze d'arrivo della
  * parola (100 sotto 600 px, 125 fino a 1023, 150 da 1024), a peso 900 e con
@@ -58,7 +61,7 @@ function variabiliCliente(testo: string): CSSProperties {
 }
 
 /** "Muovi la luce inclinando il telefono": riga nel flusso, sotto il bottone. */
-function InvitoLuce({ onEsito }: { onEsito: (annuncio: string) => void }) {
+function InvitoLuce({ onEsito }: { onEsito: (annuncio: string | null) => void }) {
   const gyro = useGyro();
   const ridotto = useImpronta((s) => s.reducedMotion);
   const visibile = !ridotto && (gyro.stato === 'invito' || (gyro.inAttesa && gyro.stato !== 'attivo'));
@@ -72,8 +75,9 @@ function InvitoLuce({ onEsito }: { onEsito: (annuncio: string) => void }) {
   };
 
   const lascia = (): void => {
+    // Nessun annuncio: la luce non stava seguendo il telefono, cambia solo il fuoco.
     rifiutaInvito();
-    onEsito(ANNUNCI.tiltSpento);
+    onEsito(null);
   };
 
   return (
@@ -156,9 +160,39 @@ export default function Hero() {
 
   const stileParola = useMemo(() => (testoCliente !== null ? variabiliCliente(testoCliente) : undefined), [testoCliente]);
 
-  const esitoInvito = useCallback((testo: string) => {
+  /*
+   * Testo del cliente: la stima in em è buona al ±4%, la misura del DOM è
+   * esatta. Un gemello invisibile a 100 px con gli assi d'ARRIVO (non quelli
+   * che la pressa sta animando) dà la larghezza vera in em; il CSS la usa per
+   * riempire l'area viva al pixel. Si rimisura quando cambia (font caricati,
+   * larghezza d'arrivo diversa oltre 600 o 1024 px).
+   */
+  const pianoRef = useRef<HTMLDivElement>(null);
+  const misuraRef = useRef<HTMLSpanElement>(null);
+  useLayoutEffect(() => {
+    const piano = pianoRef.current;
+    const misura = misuraRef.current;
+    if (piano === null || misura === null) return undefined;
+    let vivo = true;
+    const aggiorna = (): void => {
+      if (!vivo) return;
+      const larghezza = misura.getBoundingClientRect().width;
+      if (larghezza > 0) piano.style.setProperty('--imp-hero-em-misurato', (larghezza / CORPO_MISURA).toFixed(4));
+    };
+    aggiorna();
+    const osservatore = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(aggiorna) : null;
+    osservatore?.observe(misura);
+    void document.fonts.ready.then(aggiorna);
+    return () => {
+      vivo = false;
+      osservatore?.disconnect();
+      piano.style.removeProperty('--imp-hero-em-misurato');
+    };
+  }, [testoCliente]);
+
+  const esitoInvito = useCallback((testo: string | null) => {
     // Un NBSP in coda rende "nuovo" lo stesso testo per aria-live.
-    setAnnuncio((prima) => (prima === testo ? `${testo}\u00a0` : testo));
+    if (testo !== null) setAnnuncio((prima) => (prima === testo ? `${testo}\u00a0` : testo));
     // La riga dell'invito sparisce: il fuoco torna sul bottone che le sta sopra.
     ctaRef.current?.focus({ preventScroll: true });
   }, []);
@@ -174,7 +208,7 @@ export default function Hero() {
       aria-labelledby={ID_TITOLO}
       data-imp-luce=""
     >
-      <div className="imp-hero__piano">
+      <div ref={pianoRef} className="imp-hero__piano">
         <div
           ref={parolaRef}
           {...ATTESA_PRESSA}
@@ -186,7 +220,16 @@ export default function Hero() {
           {parola}
         </div>
         {/* "impronta" ripete il marchio (decorativa); il testo del cliente no: gemello per i lettori di schermo. */}
-        {testoCliente !== null ? <p className="imp-sr">{RILIEVI.heroParolaCliente.alt(testoCliente)}</p> : null}
+        {testoCliente !== null ? (
+          <>
+            <p className="imp-sr">{RILIEVI.heroParolaCliente.alt(testoCliente)}</p>
+            <span className="imp-hero__misura" aria-hidden="true">
+              <span ref={misuraRef} className="imp-hero__misura-testo">
+                {testoCliente}
+              </span>
+            </span>
+          </>
+        ) : null}
       </div>
 
       <div className="imp-hero__testo imp-griglia">

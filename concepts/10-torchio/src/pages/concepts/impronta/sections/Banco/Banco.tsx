@@ -228,7 +228,8 @@ export default function Banco() {
     const campo = contattoRef.current;
     if (campo === null) return;
     campo.focus({ preventScroll: true });
-    campo.scrollIntoView({ block: 'center', behavior: 'auto' });
+    const blocco = campo.closest<HTMLElement>('.imp-banco__campo') ?? campo;
+    blocco.scrollIntoView({ block: leggiStretto() ? 'start' : 'center', behavior: 'auto' });
   }, []);
 
   const onInizio = useCallback(() => {
@@ -312,8 +313,15 @@ export default function Banco() {
 
   // Il fuoco va alla frase di esito (successo o errore).
   useEffect(() => {
-    if (esito === null) return;
-    esitoRef.current?.focus({ preventScroll: false });
+    const el = esitoRef.current;
+    if (esito === null || el === null) return;
+    el.focus({ preventScroll: true });
+    // Su mobile la lastra ferma copre il primo 42% dello schermo: la frase va
+    // subito sotto (scroll-margin nel CSS); su desktop al centro, accanto alla prova.
+    // Dopo un errore si riparte dalla leva: si porta in vista lei, il messaggio le sta sotto.
+    const bersaglio =
+      esito.tipo === 'ko' ? (sezioneRef.current?.querySelector<HTMLElement>('.imp-banco__leva-blocco') ?? el) : el;
+    bersaglio.scrollIntoView({ block: leggiStretto() ? 'start' : 'center', behavior: 'auto' });
   }, [esito]);
 
   // Il banco si smonta a metà invio: niente aggiornamenti dopo.
@@ -516,6 +524,7 @@ export default function Banco() {
             tastiera={tastiera}
             rigaAttiva={campoAttivo}
             bloccata={fermo}
+            registraGL={!stretto}
           />
         </div>
       </div>

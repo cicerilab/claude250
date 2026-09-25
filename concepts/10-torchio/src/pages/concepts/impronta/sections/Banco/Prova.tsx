@@ -38,7 +38,6 @@ import { BANCO as TESTI_BANCO, LUCE, euro } from '../../content/testi';
 import { useLuceDial } from '../../interaction/light';
 import { ATTESA_PRESSA, BANCO, pressioneLeva } from '../../motion/choreography';
 import { usePressione } from '../../motion/usePressione';
-import { ReliefText } from '../../relief/ReliefText';
 import type { ReliefLayer } from '../../relief/types';
 import { useRelief } from '../../relief/useRelief';
 import { righeDellaProva, type RigaProva } from './calcolaPrezzo';
@@ -71,6 +70,12 @@ export interface ProvaProps {
   rigaAttiva: string | null;
   /** Richiesta inviata o in stampa: la prova resta giù. */
   bloccata: boolean;
+  /**
+   * La prova va allo shader. No sotto i 1024 px: lì la lastra è un foglio
+   * fermo e opaco sopra il compositoio che scorre, e il canvas (dietro a
+   * tutto) non si vedrebbe. Lì il rilievo è sempre quello CSS.
+   */
+  registraGL: boolean;
 }
 
 /** Presenza sulla lastra: il biglietto resta più piccolo del libro, come sul bancone. */
@@ -138,13 +143,26 @@ function TestoRiga({ testo, caduta }: { testo: string; caduta: boolean }) {
 }
 
 const Prova = forwardRef<ComandiProva, ProvaProps>(function Prova(
-  { prodotto, carta, tecnica, taglio, legatura, campi, totale, riepilogo, alt, tastiera, rigaAttiva, bloccata },
+  {
+    prodotto,
+    carta,
+    tecnica,
+    taglio,
+    legatura,
+    campi,
+    totale,
+    riepilogo,
+    alt,
+    tastiera,
+    rigaAttiva,
+    bloccata,
+    registraGL,
+  },
   refComandi,
 ) {
   const lastraRef = useRef<HTMLElement>(null);
   const foglioRef = useRef<HTMLDivElement>(null);
-  const prezzoRef = useRef<HTMLElement>(null);
-  const [prezzoId, setPrezzoId] = useState<string | null>(null);
+  const prezzoRef = useRef<HTMLSpanElement>(null);
 
   /* ---------- forma mostrata: cambia sotto la platina (ristampa) */
 
@@ -162,7 +180,9 @@ const Prova = forwardRef<ComandiProva, ProvaProps>(function Prova(
     selettore: `[data-riga="${i}"]`,
     profondita: r.esempio ? 0.45 : 1,
   }));
-  const provaId = useRelief(foglioRef, {
+  const provaId = useRelief(
+    foglioRef,
+    {
     kind: 'piece',
     // Il testo nella spec fa salire la versione della maschera a ogni lettera.
     text: righe.map((r) => r.testo).join('\n'),
@@ -173,7 +193,16 @@ const Prova = forwardRef<ComandiProva, ProvaProps>(function Prova(
     tracking: 'live',
     layers,
     priorita: 10,
-  });
+    },
+    { attivo: registraGL },
+  );
+
+  const prezzoTesto = euro(totale);
+  const prezzoId = useRelief(
+    prezzoRef,
+    { kind: 'text', text: prezzoTesto, tecnica: 'lamina', profondita: 1, tracking: 'live', priorita: 9 },
+    { attivo: registraGL },
+  );
 
   const pressa = usePressione(foglioRef, { profilo: BANCO.prova, reliefId: provaId });
   const pressaPrezzo = usePressione(prezzoRef, { profilo: BANCO.prezzo, reliefId: prezzoId });
@@ -301,12 +330,12 @@ const Prova = forwardRef<ComandiProva, ProvaProps>(function Prova(
       data-tastiera={tastiera ? '' : undefined}
     >
       <div className="imp-banco__piano">
-        <div className="imp-banco__vassoio" data-imp-luce="">
-          <div className="imp-banco__posa" style={stilePosa} data-prodotto={forma.prodotto}>
+        <div className="imp-banco__vassoio" style={stilePosa} data-prodotto={forma.prodotto} data-imp-luce="">
+          <div className="imp-banco__posa">
             <div
               ref={foglioRef}
               {...ATTESA_PRESSA}
-              className={`imp-banco__prova imp-foglio imp-relief${taglio ? ' imp-taglio' : ''}`}
+              className={`imp-banco__prova imp-foglio${registraGL ? ' imp-relief' : ''}${taglio ? ' imp-taglio' : ''}`}
               data-carta={carta}
               data-prodotto={forma.prodotto}
               data-legatura={forma.prodotto === 'libro' ? legatura : undefined}
@@ -331,17 +360,14 @@ const Prova = forwardRef<ComandiProva, ProvaProps>(function Prova(
                 })}
               </div>
             </div>
-            <ReliefText
+            <span
               ref={prezzoRef}
               {...ATTESA_PRESSA}
-              tecnica="lamina"
-              tracking="live"
-              onRegistrato={setPrezzoId}
-              className="imp-banco__prezzo imp-caldo"
+              className={`imp-banco__prezzo imp-caldo${registraGL ? ' imp-relief' : ''}`}
               aria-hidden="true"
             >
-              {euro(totale)}
-            </ReliefText>
+              {prezzoTesto}
+            </span>
           </div>
           <div className="imp-banco__luce">
             <span className="imp-banco__luce-nome" aria-hidden="true">

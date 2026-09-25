@@ -76,7 +76,7 @@
    margine sull'errore della stima: il testo non supera mai il margine. */
 .imp-root .imp-hero__parola[data-cliente] {
   --_imp-em: var(--imp-hero-em-s, var(--imp-hero-em));
-  font-size: min(var(--imp-fs-secco-hero), calc(var(--imp-area-viva) / var(--_imp-em) * 0.97));
+  font-size: min(var(--imp-fs-secco-hero), calc(var(--imp-area-viva) / var(--imp-hero-em-misurato, var(--_imp-em)) * 0.97));
 }
 
 @media (min-width: 600px) {
@@ -93,8 +93,35 @@
 
 @supports (inline-size: 1cqi) {
   .imp-root .imp-hero__parola[data-cliente] {
-    font-size: min(calc(100cqi / var(--imp-hero-em)), calc(100cqi / var(--_imp-em) * 0.97));
+    font-size: min(calc(100cqi / var(--imp-hero-em)), calc(100cqi / var(--imp-hero-em-misurato, var(--_imp-em)) * 0.995));
   }
+}
+
+/* Il gemello che misura il testo del cliente: 100 px, assi d'arrivo della
+   parola, dentro una scatola 0 × 0 (nessun ingombro, nessuno scorrimento). */
+.imp-root .imp-hero__misura {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  inline-size: 0;
+  block-size: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.imp-root .imp-hero__misura-testo {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  font-family: var(--imp-font-display);
+  font-size: 100px;
+  font-weight: var(--imp-wght-hero);
+  font-variation-settings: "wdth" var(--imp-wdth-hero), "wght" var(--imp-wght-hero);
+  font-synthesis: none;
+  line-height: 1;
+  letter-spacing: var(--imp-trk-secco);
+  white-space: nowrap;
 }
 
 /* --------------------------------------------------------------------------

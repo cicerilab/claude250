@@ -294,8 +294,8 @@
    -------------------------------------------------------------------------- */
 .imp-root .imp-banco__carte {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--imp-sp-3);
+  grid-template-columns: repeat(4, minmax(0, max-content));
+  gap: var(--imp-sp-4) var(--imp-sp-3);
 }
 
 .imp-root .imp-banco .imp-banco__carta {
@@ -546,7 +546,8 @@
 }
 
 .imp-root .imp-banco .imp-banco__leva .imp-ix-leva__maniglia {
-  background-color: var(--imp-lamina-chiara);
+  background-color: var(--imp-lamina-riflesso);
+  background-image: linear-gradient(135deg, var(--imp-lamina-riflesso) 20%, var(--imp-lamina-chiara) 55%, var(--imp-lamina) 100%);
   box-shadow:
     inset 0 0 0 2px var(--imp-lamina-bordo),
     inset -3px -3px 0 color-mix(in srgb, var(--imp-lamina-profonda) 55%, transparent),
@@ -646,6 +647,8 @@
   --imp-banco-leva: 0;
   --imp-banco-banda: 38px;
   --imp-banco-margine: 12px;
+  /* Riga in cima al vassoio (mobile): totale in inchiostro a sinistra, luce a destra. */
+  --imp-banco-testa-vassoio: 32px;
   position: sticky;
   inset-block-start: var(--imp-banco-sopra, 0px);
   transition: inset-block-start var(--imp-dur-segnapagina-entra, 240ms) var(--imp-ease-sfoglia, ease-out);
@@ -661,8 +664,11 @@
   box-shadow: var(--imp-ombra-testata);
 }
 
-.imp-root[data-gl='on'] .imp-banco__lastra {
-  background-image: none;
+/* Il canvas sta dietro a tutto: sopra la prova disegnata dallo shader il vassoio resta solo un solco. */
+@media (min-width: 1024px) {
+  .imp-root[data-gl='on'] .imp-banco__vassoio {
+    background-color: transparent;
+  }
 }
 
 .imp-root .imp-banco__piano {
@@ -674,6 +680,9 @@
 
 /* Il vassoio: un'area premuta nel foglio (fondo del solco), dove si posa la prova. */
 .imp-root .imp-banco__vassoio {
+  --imp-banco-l: 85;
+  --imp-banco-a: 55;
+  --imp-banco-presenza: 1;
   position: relative;
   flex: 1 1 auto;
   min-block-size: 0;
@@ -689,27 +698,25 @@
 }
 
 .imp-root .imp-banco__posa {
-  --imp-banco-l: 85;
-  --imp-banco-a: 55;
-  --imp-banco-presenza: 1;
   /* Su mobile ogni formato usa tutta la lastra; la presenza conta da 1024 px. */
   --_imp-banco-presenza: 1;
   position: relative;
   inline-size: calc(
     min(
         100cqw - var(--imp-banco-margine) * 2,
-        (100cqh - var(--imp-banco-margine) * 2 - var(--imp-banco-banda)) * var(--imp-banco-l) / var(--imp-banco-a)
+        (100cqh - var(--imp-banco-margine) * 2 - var(--imp-banco-banda) - var(--imp-banco-testa-vassoio)) *
+          var(--imp-banco-l) / var(--imp-banco-a)
       ) *
       var(--_imp-banco-presenza)
   );
   aspect-ratio: var(--imp-banco-l) / var(--imp-banco-a);
-  margin-block-end: var(--imp-banco-banda);
+  margin-block: var(--imp-banco-testa-vassoio) var(--imp-banco-banda);
   transform: translateY(calc(var(--imp-banco-leva) * 1px)) scale(calc(1 - var(--imp-banco-leva) * 0.006));
 }
 
 .imp-root .imp-banco__prova {
   /* La prova si guarda da vicino: il solco è più marcato che sul foglio del sito. */
-  --imp-rilievo: 2.6;
+  --imp-rilievo: calc(2.6 + var(--imp-banco-leva) * 1.4);
   position: absolute;
   inset: 0;
   container-type: inline-size;
@@ -742,8 +749,8 @@
 
 .imp-root .imp-banco__luce {
   position: absolute;
-  inset-block-start: 4px;
-  inset-inline-end: 4px;
+  inset-block-start: 0;
+  inset-inline-end: 0;
   display: flex;
   align-items: center;
   gap: var(--imp-sp-1);
@@ -757,7 +764,7 @@
 
 .imp-root .imp-banco__totale-lastra {
   position: absolute;
-  inset-block-end: 10px;
+  inset-block-start: 10px;
   inset-inline-start: 12px;
   max-inline-size: 50%;
   font-size: var(--imp-fs-nota);
@@ -794,7 +801,6 @@
 
 .imp-root .imp-banco__riga--principale[data-a-capo] {
   white-space: normal;
-  overflow-wrap: anywhere;
 }
 
 .imp-root .imp-banco__riga--secondaria {
@@ -803,7 +809,6 @@
   font-weight: 500;
   line-height: 1.25;
   letter-spacing: 0.01em;
-  overflow-wrap: anywhere;
 }
 
 /* Il campo vuoto mostra l'esempio, premuto più leggero. */
@@ -816,18 +821,19 @@
 }
 
 /* La lettera appena scritta cade nel compositoio. */
+/* In linea (niente inline-block): la parola non si spezza prima dell'ultima lettera. */
 .imp-root .imp-banco__cade {
-  display: inline-block;
+  position: relative;
   animation: imp-banco-cade 190ms var(--imp-ease-pressa-bezier, cubic-bezier(0.2, 0.86, 0.3, 1)) both;
 }
 
 @keyframes imp-banco-cade {
   from {
-    transform: translateY(-0.42em);
+    inset-block-start: -0.42em;
   }
 
   to {
-    transform: none;
+    inset-block-start: 0;
   }
 }
 
@@ -842,7 +848,7 @@
 }
 
 .imp-root .imp-banco__prova[data-prodotto='biglietto'] .imp-banco__riga--principale {
-  font-size: max(20px, 8.2cqi);
+  font-size: max(20px, 9cqi);
 }
 
 .imp-root .imp-banco__prova[data-prodotto='biglietto'] .imp-banco__riga--secondaria {
@@ -862,7 +868,7 @@
 }
 
 .imp-root .imp-banco__prova[data-prodotto='partecipazione'] .imp-banco__riga--principale {
-  font-size: max(20px, 9.4cqi);
+  font-size: max(20px, 11cqi);
 }
 
 .imp-root .imp-banco__prova[data-prodotto='partecipazione'] .imp-banco__riga--secondaria {
@@ -886,7 +892,7 @@
 }
 
 .imp-root .imp-banco__prova[data-prodotto='intestata'] .imp-banco__riga--secondaria:first-child {
-  font-size: max(13px, 5.2cqi);
+  font-size: max(14px, 6.4cqi);
   font-weight: 600;
   line-height: 1.1;
 }
@@ -908,6 +914,40 @@
 .imp-root .imp-banco__prova[data-prodotto='libro'] .imp-banco__riga--secondaria {
   font-size: max(12px, 4.4cqi);
   font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   Con lo shader acceso il pezzo (carta, righe, prezzo) lo disegna il GL:
+   relief-fallback.css spegne il fantasma registrato, qui si spengono anche
+   le righe, che sono figlie del pezzo (layer con `selettore`). Se il GL non
+   sta disegnando il pezzo in quel frame (`data-imp-gl="fuori"`, oltre gli 8
+   blocchi o maschera non ancora cotta) torna tutto il rilievo CSS.
+   -------------------------------------------------------------------------- */
+.imp-root[data-gl='on'] .imp-banco__prova.imp-relief:not([data-imp-gl='fuori']) .imp-banco__riga {
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+  filter: none;
+  background-image: none;
+}
+
+.imp-root[data-gl='on'] .imp-banco__prova.imp-relief[data-imp-gl='fuori'] {
+  background-color: var(--imp-carta);
+  background-image: var(--imp-fibra);
+  box-shadow:
+    var(--imp-foglio-bordo, 0 0 0 0 transparent),
+    0 var(--imp-spessore-pezzo) 0 0 var(--imp-costa-colore, var(--imp-carta-costa)),
+    0 calc(var(--imp-spessore-pezzo) + 1px) 0 0 color-mix(in srgb, var(--imp-sito-ombra) 55%, transparent),
+    0 calc(var(--imp-spessore-pezzo) + 3px) calc(var(--imp-spessore-pezzo) * 2 + 8px) calc(var(--imp-spessore-pezzo) * -1 - 2px)
+      color-mix(in srgb, var(--imp-sito-ombra) 50%, transparent);
+}
+
+.imp-root[data-gl='on'] .imp-banco__prezzo.imp-relief[data-imp-gl='fuori'] {
+  background-image: var(--imp-lamina-sfumatura-testo);
+  -webkit-text-fill-color: transparent;
+  filter:
+    drop-shadow(calc(var(--_imp-dx) * 1.1) calc(var(--_imp-dy) * 1.1) 0 var(--imp-carta-ombra))
+    drop-shadow(calc(var(--_imp-dx) * -0.9) calc(var(--_imp-dy) * -0.9) 0 var(--imp-carta-luce));
 }
 
 /* --------------------------------------------------------------------------
@@ -978,7 +1018,15 @@
    schermo visibile, fissa in cima, con la sola riga che si sta scrivendo.
    Il contenitore resta nel flusso (niente salti): cambia solo il piano.
    -------------------------------------------------------------------------- */
+.imp-root .imp-banco__lastra[data-tastiera] {
+  /* Il posto resta (niente salti), ma il foglio fermo lascia vedere i campi. */
+  visibility: hidden;
+  background: none;
+  box-shadow: none;
+}
+
 .imp-root .imp-banco__lastra[data-tastiera] .imp-banco__piano {
+  visibility: visible;
   position: fixed;
   inset-block-start: calc(var(--imp-banco-vv-cima, 0px) + var(--imp-banco-sopra, 0px));
   inset-inline: 0;
@@ -1043,11 +1091,40 @@
 
   /* I controlli raggiunti col fuoco non finiscono sotto la lastra ferma. */
   .imp-root .imp-banco :is(.imp-banco__campo, .imp-banco__scelta, .imp-banco__carta, .imp-banco__taglio, .imp-banco__leva-blocco, .imp-banco__esito, .imp-banco__cose) {
-    scroll-margin-block-start: calc(42svh + var(--imp-banco-sopra, 0px) + var(--imp-sp-4));
+    scroll-margin-block-start: calc(42svh + var(--imp-testata-h-fissa) + var(--imp-sp-4));
   }
 
   .imp-root .imp-banco__leva-testo {
     font-size: var(--imp-fs-bottone);
+  }
+}
+
+/*
+ * Telefoni, formati verticali (libro, carta intestata): la prova a sinistra,
+ * alta quanto il vassoio; totale in inchiostro e prezzo in lamina nella
+ * colonna libera a destra. Centrata con la banda sotto sarebbe larga 115 px.
+ */
+@media (max-width: 599.98px) {
+  .imp-root .imp-banco__vassoio:is([data-prodotto='libro'], [data-prodotto='intestata']) {
+    --imp-banco-w: min(100cqw - 174px, (100cqh - 24px) * var(--imp-banco-l) / var(--imp-banco-a));
+    justify-items: start;
+  }
+
+  .imp-root .imp-banco__vassoio:is([data-prodotto='libro'], [data-prodotto='intestata']) .imp-banco__posa {
+    inline-size: var(--imp-banco-w);
+    margin: 12px 0 12px 12px;
+  }
+
+  .imp-root .imp-banco__vassoio:is([data-prodotto='libro'], [data-prodotto='intestata']) .imp-banco__prezzo {
+    inset-block: auto 0;
+    inset-inline: calc(100% + 14px) auto;
+    font-size: 1.375rem;
+  }
+
+  .imp-root .imp-banco__vassoio:is([data-prodotto='libro'], [data-prodotto='intestata']) .imp-banco__totale-lastra {
+    inset-block: auto 46px;
+    inset-inline-start: calc(12px + var(--imp-banco-w) + 14px);
+    max-inline-size: calc(100% - var(--imp-banco-w) - 40px);
   }
 }
 
@@ -1080,6 +1157,38 @@
 
   .imp-root .imp-banco__luce-nome {
     display: inline;
+    padding-inline-start: var(--imp-sp-2);
+  }
+
+
+  .imp-root .imp-banco__carte {
+    column-gap: var(--imp-sp-6);
+  }
+}
+
+/*
+ * Da 640 px il bottone "Torna in Ciceri Lab" del sito sta in alto a
+ * sinistra: la lastra ferma parte da 0 (il foglio copre tutto quello che
+ * scorre) ma la prova comincia sotto il bottone e sotto la testata.
+ */
+@media (min-width: 640px) and (max-width: 1023.98px) {
+  .imp-root .imp-banco,
+  .imp-root:has(.imp-testata[data-attaccata]:not([data-via])) .imp-banco {
+    --imp-banco-sopra: 0px;
+  }
+
+  .imp-root .imp-banco__lastra {
+    block-size: calc(42svh + 64px);
+    padding-block-start: 68px;
+  }
+
+  .imp-root .imp-banco :is(.imp-banco__campo, .imp-banco__scelta, .imp-banco__carta, .imp-banco__taglio, .imp-banco__leva-blocco, .imp-banco__esito, .imp-banco__cose) {
+    scroll-margin-block-start: calc(42svh + 64px + var(--imp-sp-4));
+  }
+
+  .imp-root .imp-banco__lastra[data-tastiera] .imp-banco__piano {
+    padding-block-start: 68px;
+    block-size: calc(var(--imp-banco-striscia, 28vh) + 56px);
   }
 }
 
@@ -1138,6 +1247,10 @@
     block-size: min(56vh, calc(100vh - var(--imp-banco-sticky) - 230px));
     block-size: min(56svh, calc(100svh - var(--imp-banco-sticky) - 230px));
     min-block-size: 360px;
+  }
+
+  .imp-root .imp-banco__lastra {
+    --imp-banco-testa-vassoio: 0px;
   }
 
   .imp-root .imp-banco__luce {

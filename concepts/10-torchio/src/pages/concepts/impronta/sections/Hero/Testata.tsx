@@ -62,6 +62,7 @@ import {
   ORDINE_SEZIONI,
   SEGNAPAGINA,
   SEZIONI,
+  TECNICHE,
   TESTATA,
   type SezioneId,
 } from '../../content/testi';
@@ -212,6 +213,7 @@ function useStatoTestata(ref: RefObject<HTMLElement>, bloccata: boolean): void {
     let scrittoAttaccata: boolean | null = null;
     let scrittoVia: boolean | null = null;
     let fuocoDentro = false;
+    let dopoViaggio = false;
 
     const leggi = (): void => {
       const y = runtime.scrollY;
@@ -219,16 +221,23 @@ function useStatoTestata(ref: RefObject<HTMLElement>, bloccata: boolean): void {
       ultimoY = y;
       attaccata = y > SOGLIA_ATTACCATA;
 
-      if (eLargo() || bloccataRef.current || fuocoDentro) {
+      if (eLargo()) {
         via = false;
         su = 0;
+        dopoViaggio = false;
         return;
       }
       const altezza = el.offsetHeight;
-      if (viaggioAncora.attivo()) {
+      // Durante e subito dopo un viaggio verso un'ancora la riga resta fuori:
+      // il titolo d'arrivo (24 px sotto il bordo) deve restare libero, anche
+      // se nel frattempo il fuoco è tornato sul bottone "indice".
+      if (viaggioAncora.attivo() || dopoViaggio) {
         via = y > altezza;
         su = 0;
-      } else if (y <= altezza) {
+        dopoViaggio = false;
+        return;
+      }
+      if (bloccataRef.current || fuocoDentro || y <= altezza) {
         via = false;
         su = 0;
       } else if (dy > 0.5) {
@@ -265,6 +274,7 @@ function useStatoTestata(ref: RefObject<HTMLElement>, bloccata: boolean): void {
     const togliLeggi = ticker.add(leggi, 'read');
     const togliScrivi = ticker.add(scrivi, 'write');
     const togliViaggio = viaggioAncora.ascolta(() => {
+      dopoViaggio = true;
       ticker.wake();
     });
 
@@ -611,7 +621,7 @@ function Indice({ aperto, sezione, onChiuso, annuncia }: PropsIndice) {
                       <span className="imp-indice__nome">{SEZIONI[id].indice}</span>
                       {corrente ? (
                         <span className="imp-indice__qui">
-                          <span aria-hidden="true">◂ </span>
+                          <span aria-hidden="true">{TECNICHE.segnoCorrente}</span>
                           {TESTI_INDICE.seiQui}
                         </span>
                       ) : null}
