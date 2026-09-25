@@ -970,3 +970,118 @@ con `useImpronta` e cambiano comportamento anche se cambia a pagina aperta.
 | onda | no | funzione pura del tempo nel ticker |
 
 Nessun caso regge meglio con GSAP. Resta fuori dal bundle.
+
+---
+
+## Giro 2
+
+Richieste: giuria (`awwwards-jury.md` §5, "la pressa che scende non si
+percepisce") e interaction-designer (long task durante lo scroll a CPU 4×).
+File toccati: `motion/easing.ts`, `motion/choreography.ts`,
+`motion/usePressione.ts`, `motion/useScrollProgress.ts`. Nessuna firma usata
+dagli altri è cambiata (controllato con grep): solo aggiunte.
+
+### G2.1 La pressa ora si vede
+
+Il problema: la vecchia curva faceva l'85% della corsa nel primo 30% del
+tempo. Quando la parola diventava visibile era già a 0,79: nei fotogrammi
+la discesa non c'era.
+
+| | Prima | Giro 2 |
+|---|---|---|
+| discesa | `1 - (1-u)^2,6` (parte al massimo, frena subito) | `smootherstep` (parte lenta per il peso della platina, accelera, frena contro la carta a velocità nulla) |
+| contatto | 58% del tempo | **70%** |
+| ritorno della carta | 1,6% | **2%**, stesso smorzamento (secondo rimbalzo circa 0,35%) |
+| hero | ritardo 160, 1100 ms | ritardo **120**, 1100 ms |
+| prova del banco | 900 ms, ritardo 0 | **1100 ms**, ritardo 120 (riposo 0,78 invariato: la leva ha ancora corsa) |
+| prezzo del banco | ritardo 220 | ritardo **700** (cade dopo il contatto della prova, come il colpo successivo) |
+| CSS | `cubic-bezier(0.2, 0.86, 0.3, 1)` | `cubic-bezier(0.6, 0, 0.3, 1)` + `linear()` rigenerata |
+
+Valori della pressione dell'hero dall'innesco: 0 ms → 0; 300 → 0,09;
+600 → 0,72; 900 → 1,00 (contatto); 1200 → 1,00 (carta assestata, il minimo
+0,979 cade a circa 1000 ms).
+
+**Compressione della carta intorno alle lettere**: nuova variabile
+transitoria `--imp-press-urto` (0..1, `VAR.pressUrto`), scritta dallo stesso
+hook sulla stessa foglia. Nasce all'ultimo 22% della discesa (la carta
+comincia a opporsi), picco 1 al contatto, poi scarica esponenziale e vale 0
+esatto a riposo. Un solo picco per pressa, nessuna ripetizione: niente
+lampeggi. C'è anche sulla discesa della ristampa (Tecniche, banco) e
+sull'urto della leva. Funzione pura: `urtoPressa(t)` in `easing.ts`.
+Serve a un consumatore (vedi richieste G2.4): da solo il motion non disegna
+l'alone.
+
+Reduced motion: invariato. Verificato con Playwright
+(`reducedMotion: 'reduce'`): la riga dell'hero è `--imp-press: 1`,
+`--imp-press-urto: 0`, `data-imp-pressa="premuta"` senza curva.
+
+**Fotogrammi guardati** (vite 8112, `?gl=0`, Chromium headless senza
+swiftshader; screencast CDP in tempo reale allineato all'istante dell'innesco
+registrato con MutationObserver, scarto dei fotogrammi ≤ 30 ms a 375, ≤ 130 ms
+al primo fotogramma a 1440). A 1440 e a 375: 0 ms foglio piatto (la parola non
+c'è); 300 ms solo il contorno accennato; 600 ms solco basso ma leggibile; 900
+ms profondità piena; 1200 ms uguale, assestato. Cinque stati diversi: prima
+della modifica i fotogrammi da 300 a 1200 ms erano identici. (Nota: in questo
+ambiente i Google Fonts non si caricano, la parola è nel font di ripiego.)
+
+### G2.2 Long task durante lo scroll
+
+Interventi:
+1. **Soglie di scrittura** (`SOGLIE_SCRITTURA` in `choreography.ts`):
+   `--imp-press` e `--imp-filo-aggancio` si riscrivono solo se cambiano di
+   almeno 0,004, `--imp-press-urto` di 0,02, i progressi di scroll di 0,002.
+   Il valore a riposo (e 0/1 agli estremi dello scroll) si scrive sempre
+   esatto, una volta. Una variabile uguale all'ultima scritta non si riscrive
+   mai (prima `--imp-tecniche-giro` si scriveva a ogni frame anche a 0).
+2. **Foglie invece del contenitore**: `useScrollProgress` scrive ogni
+   variabile solo sugli elementi `[data-imp-var~="--nome"]` dentro il
+   bersaglio, se ce ne sono (attributo in `ATTR.variabile`), altrimenti sul
+   bersaglio come prima. Le foglie si ricercano a ogni misura e se una esce
+   dal documento. `usePressione` scriveva già solo sulla foglia premuta.
+3. **Mai a riposo**: pressa e filo si staccano dal ticker quando sono fermi
+   (già così); le code delle molle non scrivono più variazioni invisibili.
+
+Misura (Playwright, 390×844, `?gl=0`, CPU 4× via CDP, 6 s di rotella da
+120 px ogni 50 ms, `PerformanceObserver('longtask')`; conteggio delle
+chiamate `setProperty('--imp-*')`):
+
+| | Long task | Max | Somma | `--imp-press` | `--imp-tecniche-p` | `--imp-tecniche-giro` |
+|---|---|---|---|---|---|---|
+| prima (2 giri) | 10 / 10 | 217 / 175 ms | 1206 / 1190 ms | 361 / 333 | 100 / 143 | 100 / 143 |
+| dopo (2 giri) | 10 / 12 | 124 / 195 ms | 749 / 986 ms | 264 / 256 | 95 / 107 | 18 / 15 |
+| tetto: scritture del motion **bloccate** | 8 / 9 | 113 / 167 ms | 675 / 779 ms | (0 effettive) | (0) | (0) |
+
+Lettura onesta: le misure sono rumorose perché durante i giri altri agent
+modificavano file e vite ricaricava via HMR (un giro "dopo" ripetuto ha dato
+29 long task, in coincidenza con una ricarica: scartato). Il confronto con le
+scritture del motion bloccate dice che, dopo gli interventi, il motion
+aggiunge al massimo 1-3 long task e circa 100-200 ms su 6 s; i restanti 8-9
+long task non vengono dalle variabili del motion (luce, magnete, paint del
+rilievo CSS, sticky: da vedere con performance-auditor).
+
+### G2.3 Cosa non è cambiato
+
+Firme di `usePressione`, `useScrollProgress`, `useFilo`, `arrivaAllAncora`,
+`viaggioAncora`, `ComandiPressione`, tutti i nomi esportati di
+`choreography.ts`, `easing.ts`, `spring.ts`. Aggiunte: `VAR.pressUrto`,
+`ATTR.variabile`, `SOGLIE_SCRITTURA`, `urtoPressa`. Typecheck e lint del
+progetto: verdi sui file del motion (in questo momento `tsc` segnala un
+errore in `sections/Legatoria/Legatoria.tsx` e ESLint uno in
+`sections/Hero/Hero.tsx`, file di altri agent in corso di modifica).
+
+### G2.4 Richieste giro 2
+
+- **section-builder-tecniche**: mettere `data-imp-var="--imp-tecniche-p"`
+  sugli elementi che la leggono (le barre `scaleX`/`scaleY`) e
+  `data-imp-var="--imp-tecniche-giro"` sull'elemento che ruota. Da quel
+  momento il pin intero non riceve più variabili a ogni frame (oggi 95-107
+  scritture in 6 s su `.imp-tecniche__pin`).
+- **section-builder-legatoria**: stesso attributo `--imp-filo-p` sul tracciato
+  del filo invece che su `.imp-legatoria__corpo`.
+- **art-director** (`relief-fallback.css`) e **webgl-artist**: usare
+  `--imp-press-urto` per la compressione della carta intorno alle lettere,
+  per esempio una seconda ombra larga e morbida nel colore
+  `--imp-carta-ombra`, con offset e sfocatura scalati da `--imp-press-urto`
+  (0 a riposo), e nello shader un alone di profondità attorno alla maschera
+  proporzionale allo stesso valore (serve un campo per blocco:
+  shader-engineer). Nessuna transizione CSS su queste variabili.
