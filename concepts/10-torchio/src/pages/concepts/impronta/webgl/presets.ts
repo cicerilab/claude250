@@ -213,7 +213,7 @@ export interface PresetCarta {
  */
 export const PRESET_CARTA: Readonly<Record<CartaGL, PresetCarta>> = {
   citrino: { grammatura: 300, fibra: 1, luceForza: 0.85, ombraForza: 0.8, assorbimento: 0.5, spessorePx: 1 },
-  cotone: { grammatura: 600, fibra: 1.4, luceForza: 0.95, ombraForza: 0.85, assorbimento: 0.7, spessorePx: 1.8 },
+  cotone: { grammatura: 600, fibra: 1.25, luceForza: 0.95, ombraForza: 0.85, assorbimento: 0.7, spessorePx: 1.8 },
   cipria: { grammatura: 350, fibra: 1.05, luceForza: 0.85, ombraForza: 0.8, assorbimento: 0.55, spessorePx: 1.1 },
   grafite: { grammatura: 400, fibra: 0.7, luceForza: 0.8, ombraForza: 1, assorbimento: 0.4, spessorePx: 1.3 },
 };
@@ -332,7 +332,7 @@ export function puntoLuce(
  * di contatto dei pezzi appoggiati, w = scurimento del fondo del solco.
  */
 export const CARTA_GLOBALE = {
-  pendenzaFibra: 0.03,
+  pendenzaFibra: 0.018,
   sensibilitaLuce: 2.2,
   ombraContatto: 0.45,
   fondoSolco: 0.1,

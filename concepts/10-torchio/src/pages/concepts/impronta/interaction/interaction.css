@@ -128,9 +128,7 @@
 
 .imp-root .imp-ix-premibile:active:not([aria-disabled='true']):not(:disabled) {
   transform: translateY(1px);
-  box-shadow:
-    inset 2px 2px 0 var(--imp-ix-solco),
-    inset -1px -1px 0 var(--imp-ix-labbro);
+  box-shadow: var(--imp-ombra-premuto);
   transition-duration: 60ms;
 }
 
@@ -146,9 +144,7 @@
  */
 @media (hover: hover) and (pointer: fine) {
   .imp-root .imp-lamina.imp-ix-premibile:hover:not([aria-disabled='true']):not(:disabled) {
-    box-shadow:
-      inset 0 0 0 1px var(--imp-lamina-bordo, var(--imp-inchiostro)),
-      inset 1px 1px 0 var(--imp-ix-solco);
+    background-image: var(--imp-lamina-sfumatura-premuta);
   }
 }
 
@@ -156,7 +152,7 @@
   background-image: var(--imp-lamina-sfumatura-premuta);
   box-shadow:
     inset 0 0 0 1px var(--imp-lamina-bordo, var(--imp-inchiostro)),
-    var(--imp-ombra-premuto, inset 2px 2px 0 var(--imp-ix-solco));
+    var(--imp-ombra-premuto);
 }
 
 .imp-root .imp-ix-premibile[aria-disabled='true'],
@@ -207,7 +203,7 @@
 }
 
 .imp-root .imp-ix-scelta:has(.imp-ix-scelta__input:checked) {
-  box-shadow: inset 0 0 0 3px var(--imp-inchiostro);
+  box-shadow: inset 0 0 0 var(--imp-bordo-scelto, 3px) var(--imp-inchiostro);
 }
 
 .imp-root .imp-ix-scelta:has(.imp-ix-scelta__input:focus-visible) {

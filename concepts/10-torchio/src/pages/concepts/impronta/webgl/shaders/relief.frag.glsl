@@ -141,6 +141,7 @@ void main() {
   // --- Stato della superficie nel pixel ------------------------------------
   vec2 grad = vec2(0.0);      // pendenza del solco nello spazio pagina
   vec2 venatura = vec2(1.0, 0.0);
+  vec2 locale = vec2(0.0);    // px CSS nel riferimento del blocco (per la spazzolatura della lamina)
   float ombraPortata = 0.0;
   float fondoSolco = 0.0;
   float inkMorbido = 0.0;
@@ -225,6 +226,7 @@ void main() {
     vec2 g = vec2((hR - hL) / (2.0 * pxTex.x), (hD - hU) / (2.0 * pxTex.y)) * scalaH * prof;
     grad = vec2(cr * g.x - sr * g.y, sr * g.x + cr * g.y);
     venatura = vec2(cr, sr);
+    locale = q / dpr;
 
     // Ombra portata: si cammina verso la luce; se il bordo del solco sta
     // sopra il raggio radente, il punto è in ombra. Quattro passi bastano:
@@ -249,8 +251,9 @@ void main() {
   }
 
   // --- Luce diffusa tinta della carta --------------------------------------
-  // La lamina riempie la fibra: sotto il metallo la fibra si vede appena.
-  vec2 pendFibra = fibN * uPaper.x * carta.fondo.a * (1.0 - 0.75 * foil);
+  // La lamina riempie la fibra (sotto il metallo si vede appena) e il fondo
+  // del solco è carta schiacciata, più liscia del foglio.
+  vec2 pendFibra = fibN * uPaper.x * carta.fondo.a * (1.0 - 0.9 * foil) * (1.0 - 0.5 * fondoSolco);
   vec3 n = normalize(vec3(grad + pendFibra, 1.0));
   // 0 sul foglio piatto: la carta piatta resta il suo colore esatto.
   float t = (dot(n, L) - L.z) * uPaper.y * uLight.w;
@@ -274,7 +277,8 @@ void main() {
   // --- Inchiostro opaco, bevuto dalla fibra --------------------------------
   if (inkQuota > 0.0) {
     // La fibra sposta la soglia: il bordo diventa irregolare come sulla carta vera.
-    float soglia = 0.5 - assorb * carta.ink.a * 1.2;
+    // Limitata a 0,3..0,7: il bordo trema di qualche decimo di px, non cola.
+    float soglia = clamp(0.5 - assorb * carta.ink.a * 0.6, 0.3, 0.7);
     float cop = smoothstep(soglia - 0.12, soglia + 0.12, inkMorbido) * inkQuota;
     // Film sottile: segue metà della luce del solco e lascia trasparire la formazione.
     vec3 inkCol = carta.ink.rgb + (col - base) * 0.45 + vec3(formazione * 0.025);
@@ -285,6 +289,9 @@ void main() {
   // --- Lamina argento anisotropa -------------------------------------------
   if (foil > 0.002) {
     vec3 nf = normalize(vec3(grad + pendFibra, 1.0));
+    // Spazzolatura: la fibra stirata lungo la venatura dà righe sottili e
+    // lunghe, il segno del rullo della lamina. Un solo campione in più, solo qui.
+    float spazz = texture2D(tFiber, vec2(locale.x / (FIBRA_LATO * 12.0), locale.y / FIBRA_LATO * 2.0)).a - 0.5;
     vec3 V = vec3(0.0, 0.0, 1.0);
     vec3 Lp = normalize(vec3(uLightPos.xy - p, max(uLightPos.z, 1.0)));
     vec3 H = normalize(Lp + V);
@@ -301,11 +308,13 @@ void main() {
     float lt = ht * 0.25;
     float lb = hb * 0.25;
     float largo = exp(-(lt * lt + lb * lb) / (hn * hn));
-    float riflesso = min(stretto, 1.0) * uLaminaParam.z + largo * uLaminaParam.w * 0.35;
+    float riflesso = min(stretto, 1.0) * uLaminaParam.z + largo * uLaminaParam.w * 0.35 * (1.0 + spazz * 1.1);
     riflesso *= mix(0.6, 1.0, uLightPos.w) * uLight.w;
 
     float diff = clamp(dot(nf, L) * 0.5 + 0.5, 0.0, 1.0);
-    vec3 metallo = uLamina.rgb * (0.5 + 0.32 * diff);
+    // Metallo: poca diffusione, il resto è riflesso (così "legge" come argento
+    // e non come grigio stampato).
+    vec3 metallo = uLamina.rgb * (0.44 + 0.3 * diff) * (1.0 + spazz * 0.1);
     metallo += vec3(riflesso) * (0.55 + 0.45 * uLamina.rgb);
     // Il metallo riflette un poco la carta attorno (ambiente), niente di più.
     metallo = mix(metallo, metallo * carta.fondo.rgb * 1.15, 0.1);

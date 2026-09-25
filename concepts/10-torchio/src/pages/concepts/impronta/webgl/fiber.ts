@@ -143,13 +143,13 @@ export function generaFibra(seme: number = FIBRA_SEME, lato: number = FIBRA_LATO
     const sigma = 0.5 + rnd() * 0.55;
     // Poche fibre scavano (le fibre sottili che si piegano nel feltro).
     const amp = (rnd() < 0.15 ? -0.6 : 1) * (0.45 + rnd() * 0.55);
-    const curva = (rnd() - 0.5) * 0.12;
+    const curva = (rnd() - 0.5) * 0.05;
     for (let s = 0; s < lunghezza; s += 0.5) {
       // Rastrematura alle estremità.
       const t = s / lunghezza;
       const rastrema = Math.sin(Math.PI * t);
       deposita(fibre, lato, x, y, sigma, amp * (0.35 + 0.65 * rastrema));
-      ang += curva + (rnd() - 0.5) * 0.08;
+      ang += curva + (rnd() - 0.5) * 0.04;
       x += Math.cos(ang) * 0.5;
       y += Math.sin(ang) * 0.5;
     }

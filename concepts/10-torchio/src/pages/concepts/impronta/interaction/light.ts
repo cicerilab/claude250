@@ -34,13 +34,13 @@
 
 import { useCallback, useEffect, useRef, useSyncExternalStore } from 'react';
 import type { ChangeEvent, RefObject } from 'react';
-import { track } from '@/lib/analytics';
 import { LUCE } from '../content/testi';
 import { ticker } from '../core/ticker';
 import { seguiAngoloDt, seguiDt } from '../motion/spring';
 import { runtime } from '../state/runtime';
 import type { LuceFonte } from '../state/runtime';
 import { store } from '../state/store';
+import { vettoreLuce } from '../styles/tokens';
 import { gyroAttivo, inizializzaGyro, segnalaToccoCarta, subscribeGyro } from './gyroPermission';
 
 /* ------------------------------------------------------------------ costanti */
@@ -153,7 +153,6 @@ interface StatoLuce {
   dialValore: number;
   toccoAttivo: number | null;
   gyroBase: { beta: number; gamma: number } | null;
-  primaInterazioneSegnalata: boolean;
 }
 
 const stato: StatoLuce = {
@@ -170,7 +169,6 @@ const stato: StatoLuce = {
   dialValore: LUCE_RIPOSO_AZIMUT,
   toccoAttivo: null,
   gyroBase: null,
-  primaInterazioneSegnalata: false,
 };
 
 const ascoltatoriDial = new Set<() => void>();
@@ -185,12 +183,6 @@ function aggiornaDial(): void {
   ascoltatoriDial.forEach((fn) => fn());
 }
 
-function segnalaPrimaInterazione(fonte: LuceFonte): void {
-  if (stato.primaInterazioneSegnalata) return;
-  stato.primaInterazioneSegnalata = true;
-  track('c10_luce_mossa', { concept: 10, fonte });
-}
-
 function impostaObiettivo(azimuth: number, elevation: number, fonte: LuceFonte): void {
   const L = runtime.light;
   L.targetAzimuth = normalizzaAngolo(azimuth);
@@ -199,7 +191,6 @@ function impostaObiettivo(azimuth: number, elevation: number, fonte: LuceFonte):
   if (fonte !== 'idle') {
     stato.ultimoInput = performance.now();
     stato.arcoAttivo = false;
-    segnalaPrimaInterazione(fonte);
   }
   aggiornaDial();
   ticker.wake();
@@ -430,10 +421,10 @@ function scriviVariabili(): void {
   elementiDial.forEach((el) => el.style.setProperty('--imp-ix-dial-az', az));
   const root = stato.root;
   if (!root || store.get().gl === 'on') return;
-  const rad = (L.azimuth * Math.PI) / 180;
-  // Direzione DA CUI arriva la luce, in coordinate CSS (y verso il basso).
-  root.style.setProperty('--imp-luce-x', Math.cos(rad).toFixed(3));
-  root.style.setProperty('--imp-luce-y', (-Math.sin(rad)).toFixed(3));
+  // Vettore verso la luce in coordinate CSS (y in basso), funzione dell'art-director.
+  const v = vettoreLuce(L.azimuth);
+  root.style.setProperty('--imp-luce-x', v.x.toFixed(3));
+  root.style.setProperty('--imp-luce-y', v.y.toFixed(3));
 }
 
 /** Fase "write": variabili CSS al massimo a 30 Hz. */
