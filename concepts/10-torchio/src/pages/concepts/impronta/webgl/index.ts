@@ -1,14 +1,9 @@
 /**
- * STUB dello scaffold-engineer: il componente del canvas WebGL non rende
- * niente, così `data-gl` resta "pending" e si vede il rilievo CSS. La
- * proprietà passa allo shader-engineer (tech-architect §4), che lo sostituisce
- * con `export { default } from './ImprontaCanvas'`.
+ * IMPRONTA · ingresso del chunk WebGL (shader-engineer).
  *
  * Contratto (core/glLoader.ts): default export = componente React senza prop
- * obbligatorie. Lo carica Impronta.tsx con `import('../webgl')` dopo i font e
- * in un momento di quiete; quando il primo frame completo è pronto chiama
- * `impostaGL('on')` (state/store.ts); se si spegne, `impostaGL('off', motivo)`.
+ * obbligatorie. Impronta.tsx lo carica con `import('../webgl')` dopo i font e
+ * in un momento di quiete, e lo monta come figlio di `.imp-root` prima di
+ * `.imp-contenuto`. Tutto three e tutto `webgl/` stanno in questo chunk lazy.
  */
-export default function ImprontaCanvas(): null {
-  return null;
-}
+export { default } from './ImprontaCanvas';

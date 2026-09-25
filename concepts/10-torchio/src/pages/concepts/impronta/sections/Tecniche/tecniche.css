@@ -1,1 +1,606 @@
-/* STUB dello scaffold: vuoto. Lo scrive il section-builder della sezione (tech-architect §4). Tutti i selettori iniziano con .imp-root. */
+/* ==========================================================================
+   IMPRONTA · sezione 3, "La stessa parola, quattro volte" (#tecniche)
+   section-builder-tecniche. Tutti i selettori partono da .imp-root.
+   --------------------------------------------------------------------------
+   Variabili lette:
+     --imp-tecniche-p     0..1 progresso del pin (useScrollProgress, sul pin)
+     --imp-tecniche-giro  0..1 giro di tre quarti del taglio colorato
+     --imp-press          0..1 pressione della parola (usePressione)
+   Variabili locali:
+     --imp-tecniche-n     caratteri della parola (inline, dal componente)
+     --_imp-t-wdth        larghezza di Anybody della parola (100 / 112,5)
+     --_imp-t-em          larghezza media di un carattere in em a quell'asse
+     --_imp-t-gradi       rotazione massima del taglio (-32° / -18°)
+     --_imp-t-costa       spessore del bordo visto di taglio
+   Struttura (pin):
+     section.imp-tecniche
+       .imp-tecniche__pin            400svh (350svh sotto 768)
+         [.imp-tecniche__testa-fuori] titolo fuori dal palco, sotto 1024
+         .imp-tecniche__palco        sticky, 100svh
+           .imp-tecniche__gabbia     griglia della pagina
+             .imp-tecniche__testa    h2 + intro (solo da 1024)
+             .imp-tecniche__indice   i quattro nomi + corsa
+             .imp-tecniche__zona     il foglio con la parola (aria-hidden)
+             .imp-tecniche__voci     le quattro spiegazioni impilate
+   ========================================================================== */
+
+.imp-root .imp-tecniche {
+  --_imp-t-wdth: 100;
+  --_imp-t-em: 0.7;
+  --_imp-t-gradi: -18deg;
+  --_imp-t-costa: 7px;
+  display: flow-root;
+  position: relative;
+  padding-block-end: var(--imp-piede);
+}
+
+@media (min-width: 600px) {
+  .imp-root .imp-tecniche {
+    --_imp-t-wdth: 112.5;
+    --_imp-t-em: 0.78;
+  }
+}
+
+@media (min-width: 768px) {
+  .imp-root .imp-tecniche {
+    --_imp-t-gradi: -32deg;
+    --_imp-t-costa: 11px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Titolo e intro
+   -------------------------------------------------------------------------- */
+.imp-root .imp-tecniche__testa {
+  display: grid;
+  gap: var(--imp-sp-3);
+  align-content: start;
+}
+
+.imp-root .imp-tecniche__titolo {
+  max-inline-size: 16ch;
+}
+
+.imp-root .imp-tecniche__intro {
+  font-size: var(--imp-fs-lead);
+  line-height: var(--imp-lh-lead);
+  max-inline-size: 34ch;
+}
+
+/* Sotto 1024 il titolo sta prima del palco e scorre via: il palco fissato
+   tiene solo i nomi, il foglio e la spiegazione (altezza utile su 375). */
+.imp-root .imp-tecniche__testa-fuori {
+  padding-block: var(--imp-testa) var(--imp-sp-2);
+}
+
+/* --------------------------------------------------------------------------
+   Il pin
+   -------------------------------------------------------------------------- */
+.imp-root .imp-tecniche__pin {
+  position: relative;
+  block-size: 350vh;
+  block-size: 350svh;
+}
+
+@media (min-width: 768px) {
+  .imp-root .imp-tecniche__pin {
+    block-size: 400vh;
+    block-size: 400svh;
+  }
+}
+
+/* Da 1024 l'arrivo alle ancore lascia 80 px per la testata
+   (ANCORE.margineLargo): il pin parte 80 px sopra la sezione, così chi
+   arriva con "#tecniche" trova il palco già fissato e il titolo al suo posto.
+   Quello spazio è il piede vuoto della sezione precedente. */
+@media (min-width: 1024px) {
+  .imp-root .imp-tecniche__pin {
+    margin-block-start: -80px;
+  }
+}
+
+/* svh: l'altezza con le barre di Safari aperte. La barra che si ritira non
+   ridimensiona il palco, quindi niente salti a metà del pin. */
+.imp-root .imp-tecniche__palco {
+  position: sticky;
+  inset-block-start: 0;
+  block-size: 100vh;
+  block-size: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+.imp-root .imp-tecniche__gabbia {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  row-gap: var(--imp-sp-4);
+  padding-block: var(--imp-sp-4) calc(var(--imp-segnapagina-h) + var(--imp-sp-4));
+}
+
+.imp-root .imp-tecniche__indice {
+  grid-row: 1;
+  position: relative;
+  min-inline-size: 0;
+}
+
+.imp-root .imp-tecniche__zona {
+  grid-row: 2;
+}
+
+.imp-root .imp-tecniche__voci {
+  grid-row: 3;
+}
+
+@media (min-width: 600px) {
+  .imp-root .imp-tecniche__gabbia {
+    row-gap: var(--imp-sp-5);
+  }
+}
+
+/* Desktop: titolo in alto nel palco, foglio a sinistra (c1-c8), nomi a
+   destra (c10-c12), spiegazione sotto il foglio. */
+@media (min-width: 1024px) {
+  .imp-root .imp-tecniche__gabbia {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--imp-canalino);
+    row-gap: var(--imp-sp-6);
+    padding-block: calc(var(--imp-testata-h-fissa) + var(--imp-sp-6)) var(--imp-sp-7);
+  }
+
+  .imp-root .imp-tecniche__testa {
+    grid-row: 1;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+    align-items: end;
+  }
+
+  .imp-root .imp-tecniche__titolo {
+    grid-column: 1 / 9;
+    max-inline-size: none;
+  }
+
+  .imp-root .imp-tecniche__intro {
+    grid-column: 10 / 13;
+    padding-block-end: 0.3em;
+  }
+
+  .imp-root .imp-tecniche__indice {
+    grid-row: 2;
+    grid-column: 10 / 13;
+    align-self: start;
+    padding-inline-start: var(--imp-sp-5);
+  }
+
+  .imp-root .imp-tecniche__zona {
+    grid-row: 2;
+    grid-column: 1 / 9;
+  }
+
+  .imp-root .imp-tecniche__voci {
+    grid-row: 3;
+    grid-column: 1 / 9;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   I quattro nomi (indice di salto)
+   -------------------------------------------------------------------------- */
+.imp-root .imp-tecniche__elenco {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--imp-sp-1) var(--imp-sp-4);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  margin-inline: calc(var(--imp-sp-2) * -1);
+  padding-inline: var(--imp-sp-2);
+}
+
+.imp-root .imp-tecniche__elenco::-webkit-scrollbar {
+  display: none;
+}
+
+.imp-root .imp-tecniche__voce-indice {
+  flex: 0 0 auto;
+}
+
+.imp-root .imp-tecniche__salto {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--imp-sp-2);
+  min-block-size: var(--imp-tocco-min);
+  padding-inline: 0;
+  font-family: var(--imp-font-testo);
+  font-size: var(--imp-fs-piccolo);
+  line-height: var(--imp-lh-interfaccia);
+  font-weight: var(--imp-wght-interfaccia);
+  color: var(--imp-inchiostro-velato);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.imp-root .imp-tecniche__salto[aria-current="true"] {
+  color: var(--imp-inchiostro);
+  font-weight: var(--imp-wght-corpo-forte);
+  box-shadow: inset 0 calc(var(--imp-bordo-scelto) * -1) 0 var(--imp-inchiostro);
+}
+
+/* Il nome lungo resta ai lettori di schermo; alla vista quello breve. */
+.imp-root .imp-tecniche__salto-nome--lungo {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.imp-root .imp-tecniche__segno {
+  display: none;
+}
+
+/* La corsa: quanto del pin è passato. Riga d'inchiostro premuta su una
+   traccia color ombra della carta. */
+.imp-root .imp-tecniche__corsa {
+  position: relative;
+  block-size: 2px;
+  margin-block-start: var(--imp-sp-1);
+  background: color-mix(in srgb, var(--imp-carta-ombra) 45%, transparent);
+}
+
+.imp-root .imp-tecniche__corsa-fatta {
+  position: absolute;
+  inset: 0;
+  background: var(--imp-inchiostro);
+  transform-origin: 0 50%;
+  transform: scaleX(var(--imp-tecniche-p, 0));
+}
+
+@media (min-width: 1024px) {
+  .imp-root .imp-tecniche__elenco {
+    flex-direction: column;
+    gap: 0;
+    overflow: visible;
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+
+  .imp-root .imp-tecniche__salto {
+    font-size: var(--imp-fs-corpo);
+    min-block-size: 48px;
+  }
+
+  .imp-root .imp-tecniche__salto[aria-current="true"] {
+    box-shadow: none;
+  }
+
+  .imp-root .imp-tecniche__salto-nome--lungo {
+    position: static;
+    inline-size: auto;
+    block-size: auto;
+    margin: 0;
+    overflow: visible;
+    clip-path: none;
+  }
+
+  .imp-root .imp-tecniche__salto-nome--breve {
+    display: none;
+  }
+
+  .imp-root .imp-tecniche__segno {
+    display: inline;
+    font-weight: var(--imp-wght-corpo-forte);
+  }
+
+  .imp-root .imp-tecniche__corsa {
+    position: absolute;
+    inset-block: 12px;
+    inset-inline-start: 0;
+    inline-size: 2px;
+    block-size: auto;
+    margin: 0;
+  }
+
+  .imp-root .imp-tecniche__corsa-fatta {
+    transform-origin: 50% 0;
+    transform: scaleY(var(--imp-tecniche-p, 0));
+  }
+}
+
+.imp-root .imp-tecniche__ritorno {
+  margin-block-start: var(--imp-sp-4);
+  font-size: var(--imp-fs-piccolo);
+}
+
+.imp-root .imp-tecniche__ritorno-link {
+  display: inline-flex;
+  align-items: center;
+  font-weight: var(--imp-wght-corpo-forte);
+}
+
+@media (min-width: 1024px) {
+  .imp-root .imp-tecniche__ritorno {
+    margin-block-start: var(--imp-sp-6);
+    font-size: var(--imp-fs-corpo);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Il foglio con la parola
+   La zona prende l'altezza che resta nel palco; il foglio è un biglietto
+   85 × 55 che sta tutto dentro la zona, ancorato a sinistra.
+   -------------------------------------------------------------------------- */
+.imp-root .imp-tecniche__zona {
+  min-block-size: 7.5rem;
+  container-type: size;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.imp-root .imp-tecniche__foglio {
+  --_imp-t-giro: 0;
+  inline-size: min(100cqi, calc(100cqb * 85 / 55));
+  aspect-ratio: 85 / 55;
+  container-type: inline-size;
+  display: flex;
+  align-items: center;
+  padding-inline: 8cqi;
+  padding-block-start: 3cqi;
+  transform-style: preserve-3d;
+  transform-origin: 50% 50%;
+  transform: perspective(1400px) rotateY(calc(var(--_imp-t-giro) * var(--_imp-t-gradi)));
+}
+
+/* Il giro vale solo per il taglio colorato: durante la ristampa verso
+   un'altra tecnica il foglio resta dritto. */
+.imp-root [data-tecnica="taglio"] .imp-tecniche__foglio {
+  --_imp-t-giro: var(--imp-tecniche-giro, 0);
+}
+
+.imp-root .imp-tecniche__parola {
+  display: block;
+  font-family: var(--imp-font-display);
+  font-weight: 900;
+  font-variation-settings: "wdth" var(--_imp-t-wdth), "wght" 900;
+  font-synthesis: none;
+  font-size: min(calc(84cqi / (var(--imp-tecniche-n, 9) * var(--_imp-t-em))), 24cqi);
+  line-height: var(--imp-lh-secco);
+  letter-spacing: var(--imp-trk-secco);
+  white-space: nowrap;
+}
+
+/* Il bordo del biglietto visto di taglio: una faccia girata di 90° sul lato
+   destro, dietro al fronte. Esiste solo nel taglio colorato: tinta con
+   --imp-taglio (un'altra carta del sistema), con le passate del pennello. */
+.imp-root .imp-tecniche__costa {
+  display: none;
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  inline-size: var(--_imp-t-costa);
+  transform-origin: 100% 50%;
+  transform: rotateY(-90deg);
+  background-color: var(--imp-taglio);
+  background-image:
+    repeating-linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--imp-taglio) 88%, var(--imp-carta-luce)) 0 3px,
+      var(--imp-taglio) 3px 7px,
+      color-mix(in srgb, var(--imp-taglio) 90%, var(--imp-carta-ombra)) 7px 9px
+    ),
+    linear-gradient(90deg, color-mix(in srgb, var(--imp-taglio) 70%, var(--imp-carta-luce)), var(--imp-taglio) 40%, color-mix(in srgb, var(--imp-taglio) 80%, var(--imp-carta-ombra)));
+  background-blend-mode: multiply, normal;
+}
+
+.imp-root [data-tecnica="taglio"] .imp-tecniche__costa {
+  display: block;
+}
+
+/* Con lo shader acceso il fronte del foglio è trasparente: la parola la
+   preme lo shader sulla stessa carta del sito, il foglio si vede dalla costa
+   e dall'ombra di appoggio. Nel taglio colorato la parola è del DOM (ruota
+   col foglio) e il fronte torna pieno. */
+.imp-root[data-gl="on"] .imp-tecniche [data-tecnica]:not([data-tecnica="taglio"]) .imp-tecniche__foglio {
+  background-color: transparent;
+  background-image: none;
+}
+
+/* --------------------------------------------------------------------------
+   Le spiegazioni: tutte nel DOM, impilate nella stessa cella (altezza della
+   più lunga, nessun salto). Quella in vista è opaca; le altre sono nascoste
+   solo alla vista. Cambio secco, senza dissolvenza.
+   -------------------------------------------------------------------------- */
+.imp-root .imp-tecniche__voci {
+  display: grid;
+  min-inline-size: 0;
+}
+
+.imp-root .imp-tecniche__voce {
+  grid-area: 1 / 1;
+  display: grid;
+  gap: var(--imp-sp-2);
+  align-content: start;
+}
+
+.imp-root .imp-tecniche__voce[data-corrente="false"] {
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+.imp-root .imp-tecniche__nome {
+  font-size: var(--imp-fs-titolo-3);
+}
+
+.imp-root .imp-tecniche__righe {
+  display: grid;
+  gap: var(--imp-sp-1);
+  max-inline-size: var(--imp-giustezza);
+}
+
+.imp-root .imp-tecniche__riga {
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.imp-root .imp-tecniche__costo {
+  font-weight: var(--imp-wght-corpo-forte);
+}
+
+@media (min-width: 600px) {
+  .imp-root .imp-tecniche__riga {
+    font-size: var(--imp-fs-corpo);
+    line-height: var(--imp-lh-corpo);
+  }
+
+  .imp-root .imp-tecniche__righe {
+    gap: var(--imp-sp-2);
+  }
+}
+
+@media (min-width: 1024px) {
+  .imp-root .imp-tecniche__voce {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    column-gap: var(--imp-canalino);
+  }
+
+  .imp-root .imp-tecniche__nome {
+    grid-column: 1 / 4;
+  }
+
+  .imp-root .imp-tecniche__righe {
+    grid-column: 4 / 9;
+    padding-block-start: 0.2em;
+  }
+}
+
+/* Schermi bassi (portatili a 720 px, telefoni in orizzontale): meno aria. */
+@media (min-width: 1024px) and (max-height: 780px) {
+  .imp-root .imp-tecniche__gabbia {
+    row-gap: var(--imp-sp-5);
+    padding-block: calc(var(--imp-testata-h-fissa) + var(--imp-sp-5)) var(--imp-sp-5);
+  }
+
+  .imp-root .imp-tecniche__titolo {
+    font-size: clamp(1.875rem, 5.5svh, 3.75rem);
+  }
+}
+
+@media (max-width: 1023px) and (max-height: 480px) {
+  .imp-root .imp-tecniche__gabbia {
+    padding-block-end: var(--imp-sp-4);
+  }
+
+  .imp-root .imp-tecniche__voce {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    column-gap: var(--imp-sp-5);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Resa statica (reduced motion): niente pin, quattro fogli già premuti.
+   -------------------------------------------------------------------------- */
+.imp-root .imp-tecniche--ridotta {
+  padding-block-start: var(--imp-testa);
+}
+
+.imp-root .imp-tecniche__testa--statica {
+  margin-block-end: var(--imp-sp-7);
+}
+
+.imp-root .imp-tecniche__blocchi {
+  display: grid;
+  gap: var(--imp-sp-8);
+}
+
+.imp-root .imp-tecniche__blocco {
+  display: grid;
+  gap: var(--imp-sp-5);
+  align-items: center;
+}
+
+.imp-root .imp-tecniche__zona--statica {
+  min-block-size: 0;
+  container-type: inline-size;
+  --imp-tecniche-giro: 0;
+}
+
+.imp-root .imp-tecniche__zona--statica[data-tecnica="taglio"] {
+  --imp-tecniche-giro: 1;
+  padding-inline-end: var(--imp-sp-5);
+}
+
+.imp-root .imp-tecniche__zona--statica .imp-tecniche__foglio {
+  inline-size: 100cqi;
+}
+
+.imp-root .imp-tecniche__testo-statico {
+  display: grid;
+  gap: var(--imp-sp-2);
+  align-content: start;
+}
+
+.imp-root .imp-tecniche__statica .imp-tecniche__ritorno {
+  margin-block-start: var(--imp-sp-7);
+}
+
+@media (min-width: 1024px) {
+  .imp-root .imp-tecniche__testa--statica {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--imp-canalino);
+    align-items: end;
+  }
+
+  .imp-root .imp-tecniche__testa--statica .imp-tecniche__titolo {
+    grid-column: 1 / 9;
+    max-inline-size: none;
+  }
+
+  .imp-root .imp-tecniche__testa--statica .imp-tecniche__intro {
+    grid-column: 10 / 13;
+  }
+
+  .imp-root .imp-tecniche__blocco {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--imp-canalino);
+    min-block-size: 60vh;
+    min-block-size: 60svh;
+  }
+
+  .imp-root .imp-tecniche__blocco .imp-tecniche__zona--statica {
+    grid-column: 1 / 8;
+  }
+
+  .imp-root .imp-tecniche__testo-statico {
+    grid-column: 9 / 13;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Contrasto forzato: il foglio perde fondo e ombre, il bordo del taglio
+   diventa un filo di sistema. Tutto il testo resta.
+   -------------------------------------------------------------------------- */
+@media (forced-colors: active) {
+  .imp-root .imp-tecniche__foglio {
+    box-shadow: none;
+    border: 1px solid CanvasText;
+  }
+
+  .imp-root .imp-tecniche__costa {
+    background: CanvasText;
+    forced-color-adjust: none;
+  }
+
+  .imp-root .imp-tecniche__corsa-fatta {
+    background: CanvasText;
+  }
+
+  .imp-root .imp-tecniche__salto[aria-current="true"] {
+    text-decoration: underline 3px;
+  }
+}

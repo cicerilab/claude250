@@ -1,1 +1,490 @@
-/* STUB dello scaffold: vuoto. Lo scrive il section-builder della sezione (tech-architect §4). Tutti i selettori iniziano con .imp-root. */
+/* ==========================================================================
+   IMPRONTA · Legatoria, "il filo" (section-builder-legatoria)
+   --------------------------------------------------------------------------
+   Un filo d'inchiostro, largo quanto il filo degli schemi (2,4 unità del
+   viewBox in scala), scende lungo il margine interno e passa nei fori veri
+   di quattro legature. Ogni pezzo del filo (tratto dritto, schema, nodo) ha
+   il suo intervallo --filo-da / --filo-a (scritti da Legatoria.tsx dopo la
+   misura) e si disegna quando --imp-filo-p (motion, useFilo) lo attraversa.
+   Il testo accanto è fermo: l'aggancio (--imp-filo-aggancio, molla "tiro")
+   tocca solo i segni della cucitura.
+
+   Tutti i selettori sotto .imp-root. Solo variabili --imp-*.
+   ========================================================================== */
+
+.imp-root .imp-legatoria {
+  /* Scala degli schemi (viewBox 240 × 300). Unitless: serve a moltiplicare px. */
+  --filo-s: 0.9;
+  --filo-w: calc(240px * var(--filo-s));
+  --filo-h: calc(300px * var(--filo-s));
+  --filo-spessore: calc(2.4px * var(--filo-s));
+  /* x del filo dal bordo sinistro della fermata. Su 375: 8 px dentro l'area
+     viva, cioè 28 px dal bordo dello schermo (ux-architect 5.5). */
+  --filo-x: 8px;
+  /* Colonna del filo e rientro del testo. */
+  --filo-colonna: 36px;
+  --filo-canalino: 0px;
+  /* Nodo finale: lato 14 unità dello schema. */
+  --filo-nodo: calc(14px * var(--filo-s));
+  position: relative;
+  color: var(--imp-inchiostro);
+}
+
+/* --------------------------------------------------------------------------
+   Testa della sezione: h2, intro, spiegazione di "segnatura".
+   Ancorata al margine interno, mai centrata.
+   -------------------------------------------------------------------------- */
+.imp-root .imp-legatoria__testa {
+  max-inline-size: 36rem;
+}
+
+.imp-root .imp-legatoria__titolo {
+  margin: 0;
+}
+
+.imp-root .imp-legatoria__intro {
+  margin: var(--imp-sp-5) 0 0;
+  font-size: var(--imp-fs-lead);
+  line-height: var(--imp-lh-lead);
+  max-inline-size: var(--imp-giustezza-stretta);
+}
+
+.imp-root .imp-legatoria__segnatura {
+  margin: var(--imp-sp-4) 0 0;
+  font-size: var(--imp-fs-piccolo);
+  line-height: var(--imp-lh-piccolo);
+  letter-spacing: var(--imp-trk-piccolo);
+  max-inline-size: var(--imp-giustezza-stretta);
+}
+
+/* --------------------------------------------------------------------------
+   Il corpo cucito
+   -------------------------------------------------------------------------- */
+.imp-root .imp-legatoria__corpo {
+  position: relative;
+  margin-block-start: var(--imp-sp-7);
+}
+
+/* Prima che la misura e il motion scrivano le loro variabili, con il
+   movimento pieno il filo non c'è ancora (nessun lampo di filo intero). Con
+   reduced motion vale il default: tutto cucito. */
+.imp-root[data-motion="full"] .imp-legatoria__corpo {
+  --imp-filo-p: 0;
+}
+
+.imp-root[data-motion="full"] .imp-legatoria__fermata {
+  --imp-filo-aggancio: 0;
+}
+
+/* Frazione cucita di un pezzo: 0 prima che il filo ci arrivi, 1 dopo. */
+.imp-root .imp-legatoria__pezzo {
+  --filo-l: clamp(
+    0,
+    (var(--imp-filo-p, 1) - var(--filo-da, 0)) / (var(--filo-a, 1) - var(--filo-da, 0)),
+    1
+  );
+}
+
+/* Tratti dritti: una riga d'inchiostro che si srotola dall'alto. */
+.imp-root .imp-legatoria__tratto {
+  display: block;
+  inline-size: var(--filo-spessore);
+  margin-inline-start: calc(var(--filo-x) - var(--filo-spessore) / 2);
+  background-color: currentColor;
+  transform-origin: 50% 0;
+  transform: scaleY(var(--filo-l));
+}
+
+.imp-root .imp-legatoria__tratto--ingresso {
+  block-size: var(--imp-sp-8);
+}
+
+/* La coda di ogni fermata: dal piede dello schema al piede della fermata,
+   accanto al testo, fino al primo foro della legatura successiva. */
+.imp-root .imp-legatoria__tratto--coda {
+  position: absolute;
+  inset-block: var(--filo-h) 0;
+  inset-inline-start: 0;
+}
+
+.imp-root .imp-legatoria__tratto--uscita {
+  flex: 1 1 auto;
+  min-block-size: var(--imp-sp-6);
+}
+
+/* --------------------------------------------------------------------------
+   Le quattro fermate
+   -------------------------------------------------------------------------- */
+.imp-root .imp-legatoria__fermate {
+  margin: 0;
+}
+
+.imp-root .imp-legatoria__fermata {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--filo-colonna) minmax(0, 1fr);
+  column-gap: var(--filo-canalino);
+  padding-block-end: var(--imp-sp-8);
+}
+
+/* Lo schema: su 375 sta sopra il testo, allineato al filo del margine. */
+.imp-root .imp-legatoria__schema {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  display: block;
+  inline-size: var(--filo-w);
+  block-size: var(--filo-h);
+  margin-inline-start: calc(var(--filo-x) - 16px * var(--filo-s));
+}
+
+.imp-root .imp-legatoria__svg {
+  inline-size: 100%;
+  block-size: 100%;
+  overflow: visible;
+}
+
+.imp-root .imp-legatoria__testo {
+  grid-column: 2;
+  grid-row: 2;
+  max-inline-size: var(--imp-giustezza);
+  padding-block-start: var(--imp-sp-4);
+}
+
+/* --- segni della cucitura -------------------------------------------------- */
+
+/* Il percorso a matita: dove passerà l'ago. Sparisce quando il filo aggancia. */
+.imp-root .imp-legatoria__guida {
+  stroke-width: 1;
+  stroke-dasharray: 1.5 3.5;
+  opacity: calc(0.5 * (1 - var(--imp-filo-aggancio, 1)));
+}
+
+/* Il filo cucito dello schema: pathLength 1, si disegna col suo intervallo.
+   Sull'aggancio si tende (spessore con la molla "tiro", 1,5% di elongazione). */
+.imp-root .imp-legatoria__cucito {
+  stroke-dasharray: 1 2;
+  stroke-dashoffset: calc(1 - var(--filo-l));
+  stroke-width: calc(2.1px + 0.3px * var(--imp-filo-aggancio, 1));
+  opacity: calc(var(--filo-l) * 400);
+}
+
+/* Le graffe del punto metallico battono insieme sull'aggancio. */
+.imp-root .imp-legatoria__graffa {
+  stroke-dasharray: 1 2;
+  stroke-dashoffset: calc(1 - var(--imp-filo-aggancio, 1));
+  opacity: calc(var(--imp-filo-aggancio, 1) * 400);
+}
+
+/* I fori: vuoti a matita, poi pieni quando il filo li ha passati. */
+.imp-root .imp-legatoria__svg [id$="-fori"] circle {
+  fill: currentColor;
+  fill-opacity: var(--imp-filo-aggancio, 1);
+  stroke-opacity: calc(0.45 + 0.55 * var(--imp-filo-aggancio, 1));
+}
+
+.imp-root .imp-legatoria__svg [id$="-numeri"] {
+  opacity: calc(0.5 + 0.5 * var(--imp-filo-aggancio, 1));
+}
+
+.imp-root .imp-legatoria__svg [id$="-carta"],
+.imp-root .imp-legatoria__svg [id$="-fettucce"] {
+  opacity: 0.55;
+}
+
+/* --- testo della fermata: fermo, in inchiostro ----------------------------- */
+
+.imp-root .imp-legatoria__nome {
+  margin: 0;
+}
+
+.imp-root .imp-legatoria__cosa {
+  margin: var(--imp-sp-3) 0 0;
+  font-size: var(--imp-fs-corpo);
+  line-height: var(--imp-lh-corpo);
+}
+
+.imp-root .imp-legatoria__quando {
+  margin: var(--imp-sp-3) 0 0;
+  font-size: var(--imp-fs-corpo);
+  line-height: var(--imp-lh-corpo);
+  font-weight: var(--imp-wght-corpo-forte);
+}
+
+.imp-root .imp-legatoria__prezzo {
+  margin: var(--imp-sp-5) 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--imp-sp-4);
+  row-gap: var(--imp-sp-1);
+}
+
+.imp-root .imp-legatoria__cifra {
+  font-family: var(--imp-font-display);
+  font-synthesis: none;
+  font-size: var(--imp-fs-prezzo);
+  font-weight: var(--imp-wght-prezzo);
+  font-variation-settings: "wdth" var(--imp-wdth-prezzo), "wght" var(--imp-wght-prezzo);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  font-variant-numeric: lining-nums tabular-nums;
+  white-space: nowrap;
+}
+
+.imp-root .imp-legatoria__prezzo-testo {
+  font-size: var(--imp-fs-piccolo);
+  line-height: var(--imp-lh-piccolo);
+  letter-spacing: var(--imp-trk-piccolo);
+}
+
+/* --------------------------------------------------------------------------
+   Fine del filo: le ultime righe, il nodo, "Prova la tua"
+   -------------------------------------------------------------------------- */
+.imp-root .imp-legatoria__fine {
+  display: grid;
+  grid-template-columns: var(--filo-colonna) minmax(0, 1fr);
+  column-gap: var(--filo-canalino);
+}
+
+.imp-root .imp-legatoria__fine-filo {
+  grid-column: 1;
+  display: flex;
+  flex-direction: column;
+  /* Il nodo si chiude all'altezza del centro del bottone. */
+  padding-block-end: calc(var(--imp-bottone-h) / 2 - var(--filo-nodo) / 2);
+}
+
+.imp-root .imp-legatoria__nodo {
+  flex: none;
+  inline-size: var(--filo-nodo);
+  block-size: var(--filo-nodo);
+  margin-inline-start: calc(var(--filo-x) - var(--filo-nodo) / 2);
+  overflow: visible;
+}
+
+.imp-root .imp-legatoria__nodo-cerchio {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-dasharray: 1 2;
+  stroke-dashoffset: calc(1 - var(--filo-l));
+  opacity: calc(var(--filo-l) * 400);
+}
+
+.imp-root .imp-legatoria__fine-testo {
+  grid-column: 2;
+  padding-block-start: var(--imp-sp-4);
+}
+
+.imp-root .imp-legatoria__note {
+  margin: 0;
+  display: grid;
+  row-gap: var(--imp-sp-3);
+  max-inline-size: var(--imp-giustezza);
+  font-size: var(--imp-fs-piccolo);
+  line-height: var(--imp-lh-piccolo);
+  letter-spacing: var(--imp-trk-piccolo);
+}
+
+.imp-root .imp-legatoria__note > li:first-child {
+  font-size: var(--imp-fs-corpo);
+  line-height: var(--imp-lh-corpo);
+  font-weight: var(--imp-wght-corpo-forte);
+  letter-spacing: 0;
+}
+
+.imp-root .imp-legatoria__legature {
+  margin: var(--imp-sp-7) 0 0;
+}
+
+.imp-root .imp-legatoria__legenda {
+  margin-block-end: var(--imp-sp-3);
+  font-size: var(--imp-fs-piccolo);
+  line-height: var(--imp-lh-piccolo);
+  font-weight: var(--imp-wght-corpo-forte);
+}
+
+/* Le quattro legature come quattro rettangoli di carta: due per riga su
+   375, in fila da 600. Scelta = bordo interno d'inchiostro più la parola. */
+.imp-root .imp-legatoria__opzioni {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--imp-sp-2);
+}
+
+.imp-root .imp-legatoria__opzione {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  min-block-size: 56px;
+  padding: var(--imp-sp-2) var(--imp-sp-3);
+  font-size: var(--imp-fs-piccolo);
+  line-height: 1.2;
+  background-color: color-mix(in srgb, var(--imp-carta-luce) 45%, transparent);
+}
+
+.imp-root .imp-legatoria__opzione-nome {
+  font-weight: var(--imp-wght-corpo-forte);
+}
+
+.imp-root .imp-legatoria__opzione-segno {
+  font-size: var(--imp-fs-nota);
+  font-weight: 500;
+}
+
+.imp-root .imp-legatoria__nota-punto {
+  margin: var(--imp-sp-3) 0 0;
+  font-size: var(--imp-fs-nota);
+  line-height: var(--imp-lh-piccolo);
+  font-weight: 500;
+}
+
+.imp-root .imp-legatoria__azione {
+  margin-block-start: var(--imp-sp-5);
+  display: flex;
+}
+
+.imp-root .imp-legatoria__prova {
+  flex: 1 1 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: var(--imp-bottone-h);
+  padding-inline: 28px;
+  font-size: var(--imp-fs-bottone);
+  font-weight: var(--imp-wght-bottone);
+  line-height: var(--imp-lh-interfaccia);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   Da 600 px: lo schema a sinistra del testo, il filo al bordo dello schema
+   -------------------------------------------------------------------------- */
+@media (min-width: 600px) {
+  .imp-root .imp-legatoria {
+    --filo-s: 0.95;
+    --filo-x: calc(16px * var(--filo-s));
+    --filo-colonna: calc(var(--imp-colonna) * 3 + var(--imp-canalino) * 2);
+    --filo-canalino: var(--imp-canalino);
+  }
+
+  .imp-root .imp-legatoria__corpo {
+    margin-block-start: var(--imp-sp-8);
+  }
+
+  .imp-root .imp-legatoria__tratto--ingresso {
+    block-size: var(--imp-sp-9);
+  }
+
+  .imp-root .imp-legatoria__fermata {
+    grid-template-rows: auto;
+    padding-block-end: var(--imp-sp-9);
+  }
+
+  .imp-root .imp-legatoria__schema {
+    grid-column: 1;
+    grid-row: 1;
+    margin-inline-start: 0;
+  }
+
+  .imp-root .imp-legatoria__testo {
+    grid-column: 2;
+    grid-row: 1;
+    /* Il nome sta all'altezza del primo foro dello schema. */
+    padding-block-start: calc(46px * var(--filo-s));
+  }
+
+  .imp-root .imp-legatoria__opzioni {
+    grid-template-columns: repeat(4, max-content);
+  }
+
+  .imp-root .imp-legatoria__opzione {
+    min-inline-size: 8.5rem;
+  }
+
+  .imp-root .imp-legatoria__prova {
+    flex: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Da 1024 px: colonna del filo c1-c4, testo da c5; fermate sfalsate di una
+   colonna (c5-c10, c6-c11) come nel wireframe dell'ux-architect.
+   -------------------------------------------------------------------------- */
+@media (min-width: 1024px) {
+  .imp-root .imp-legatoria {
+    --filo-s: 1.1;
+    --filo-colonna: calc(var(--imp-colonna) * 4 + var(--imp-canalino) * 3);
+  }
+
+  .imp-root .imp-legatoria__testa {
+    max-inline-size: calc(var(--imp-colonna) * 6 + var(--imp-canalino) * 5);
+  }
+
+  .imp-root .imp-legatoria__testo,
+  .imp-root .imp-legatoria__fine-testo {
+    max-inline-size: calc(var(--imp-colonna) * 6 + var(--imp-canalino) * 5);
+  }
+
+  .imp-root .imp-legatoria__fermata[data-verso="rovescio"] .imp-legatoria__testo {
+    margin-inline-start: calc(var(--imp-colonna) + var(--imp-canalino));
+  }
+}
+
+@media (min-width: 1200px) {
+  .imp-root .imp-legatoria {
+    --filo-s: 1.3;
+  }
+}
+
+@media (min-width: 1400px) {
+  .imp-root .imp-legatoria {
+    --filo-s: 1.5;
+  }
+}
+
+@media (min-width: 1640px) {
+  .imp-root .imp-legatoria {
+    --filo-s: 1.6;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Accessibilità
+   -------------------------------------------------------------------------- */
+
+/* Reduced motion: tutto cucito e agganciato (lo scrive anche useFilo). */
+@media (prefers-reduced-motion: reduce) {
+  .imp-root .imp-legatoria__pezzo {
+    --filo-l: 1;
+  }
+
+  .imp-root .imp-legatoria__fermata {
+    --imp-filo-aggancio: 1;
+  }
+}
+
+.imp-root[data-motion="reduced"] .imp-legatoria__pezzo {
+  --filo-l: 1;
+}
+
+@media (forced-colors: active) {
+  .imp-root .imp-legatoria__tratto {
+    background-color: CanvasText;
+    forced-color-adjust: none;
+  }
+}
+
+/* Stampa: il filo intero, niente animazioni. */
+@media print {
+  .imp-root .imp-legatoria__pezzo {
+    --filo-l: 1;
+  }
+
+  .imp-root .imp-legatoria__fermata {
+    --imp-filo-aggancio: 1;
+  }
+}

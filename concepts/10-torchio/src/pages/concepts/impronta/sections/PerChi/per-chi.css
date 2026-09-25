@@ -1,1 +1,526 @@
-/* STUB dello scaffold: vuoto. Lo scrive il section-builder della sezione (tech-architect §4). Tutti i selettori iniziano con .imp-root. */
+/* ==========================================================================
+   IMPRONTA · Per chi, "Tre lavori sul bancone" (section-builder-per-chi)
+   --------------------------------------------------------------------------
+   Tre oggetti veri appoggiati storti sul foglio del sito, non tre schede.
+   Ogni pezzo è un .imp-foglio sulla SUA carta (data-carta): fondo, fibra,
+   costa e inchiostro della sua carta; l'ombra di appoggio cade sulla carta
+   del sito (art-director). Nessun bordino, nessuna ombra generica, nessun
+   hover che solleva: il feedback è la pressione che si approfondisce.
+
+   Misure
+   - ≥ 1024 px: scala vera fra i pezzi. --imp-perchi-mm = px per millimetro,
+     tarato perché la copertina (150 mm) riempia 4 colonne. Partecipazione
+     148×105 (c1-c4, con la busta 162×114 sotto), biglietto 85×55 (c6-c8,
+     più in basso), copertina 150×210 (c9-c12, appena più in basso).
+   - < 1024 px: mazzo di interaction.css (scroll-snap), pezzi di larghezza
+     fissa dentro una "tavola" di altezza comune; la didascalia cambia con il
+     pezzo. Il pezzo successivo sporge da destra.
+   - Dentro i pezzi i corpi sono in cqi (il pezzo è un contenitore): il
+     biglietto resta un biglietto a ogni larghezza. Mai sotto 14 px.
+
+   Tutti i selettori iniziano con .imp-root. Solo variabili di tokens.css.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Sezione e testa
+   -------------------------------------------------------------------------- */
+.imp-root .imp-perchi {
+  position: relative;
+}
+
+.imp-root .imp-perchi__testa {
+  display: grid;
+  row-gap: var(--imp-sp-4);
+  margin-block-end: var(--imp-sp-7);
+}
+
+.imp-root .imp-perchi__titolo {
+  max-inline-size: 13ch;
+}
+
+.imp-root .imp-perchi__intro {
+  max-inline-size: 34ch;
+  font-size: var(--imp-fs-lead);
+  line-height: var(--imp-lh-lead);
+}
+
+/* --------------------------------------------------------------------------
+   Il pezzo: dimensioni e rotazione
+   --_l / --_a: formato in millimetri (larghezza / altezza).
+   -------------------------------------------------------------------------- */
+.imp-root .imp-perchi__lavoro--partecipazione {
+  --_l: 148;
+  --_a: 105;
+}
+
+.imp-root .imp-perchi__lavoro--biglietto {
+  --_l: 85;
+  --_a: 55;
+}
+
+.imp-root .imp-perchi__lavoro--libro {
+  --_l: 150;
+  --_a: 210;
+}
+
+.imp-root .imp-perchi__lavoro {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.imp-root .imp-perchi__tavolo {
+  position: relative;
+}
+
+.imp-root .imp-perchi__piano {
+  position: relative;
+  aspect-ratio: var(--_l) / var(--_a);
+}
+
+/* Il wrapper ruotato. La rotazione è statica (motion §6.2), mai animata. */
+.imp-root .imp-perchi__foglio,
+.imp-root .imp-perchi__busta-foglio {
+  position: absolute;
+  rotate: var(--imp-perchi-rot, 0deg);
+}
+
+.imp-root .imp-perchi__foglio {
+  inset: 0;
+}
+
+/* L'elemento registrato: NON ruotato, riempie il wrapper. */
+.imp-root .imp-perchi__pezzo {
+  position: relative;
+  inline-size: 100%;
+  block-size: 100%;
+  container-type: inline-size;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--imp-font-testo);
+  color: var(--imp-inchiostro);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Le righe composte sul pezzo: riga singola dove serve, niente sillabazione. */
+.imp-root .imp-perchi__riga {
+  display: block;
+  hyphens: manual;
+  overflow-wrap: normal;
+}
+
+/* --------------------------------------------------------------------------
+   Partecipazione · Cipria 148×105, nomi a secco, il resto in inchiostro
+   Impaginazione centrata, come si compone un annuncio di nozze.
+   -------------------------------------------------------------------------- */
+.imp-root .imp-perchi__pezzo--partecipazione {
+  align-items: center;
+  justify-content: center;
+  padding: 8cqi 7cqi;
+  text-align: center;
+}
+
+.imp-root .imp-perchi__riga--nomi {
+  font-family: var(--imp-font-display);
+  font-size: max(1.375rem, 10.4cqi);
+  font-weight: 800;
+  font-variation-settings: "wdth" 112.5, "wght" 800;
+  font-synthesis: none;
+  line-height: 0.96;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  margin-block-end: 5cqi;
+}
+
+.imp-root .imp-perchi__riga--annuncio {
+  font-size: max(0.875rem, 4.2cqi);
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+}
+
+.imp-root .imp-perchi__riga--data {
+  font-size: max(0.875rem, 4.8cqi);
+  font-weight: 600;
+  line-height: 1.3;
+  margin-block: 1.4cqi;
+}
+
+.imp-root .imp-perchi__riga--luogo {
+  font-size: max(0.875rem, 3.9cqi);
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+/* La busta sotto: 162×114 mm, spostata in alto a destra e ruotata di +3°.
+   Ne resta fuori la patta, con la piega in cordonatura. */
+.imp-root .imp-perchi__busta-foglio {
+  inset-block-start: -14%;
+  inset-inline-start: 10%;
+  inline-size: calc(100% * 162 / 148);
+  aspect-ratio: 162 / 114;
+}
+
+.imp-root .imp-perchi__busta {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.imp-root .imp-perchi__patta {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 0;
+  inline-size: 100%;
+  block-size: calc(100% * 64 / 114);
+  overflow: visible;
+  fill: none;
+  stroke-linejoin: miter;
+  opacity: calc(0.35 + 0.65 * var(--imp-press));
+}
+
+.imp-root .imp-perchi__patta path {
+  vector-effect: non-scaling-stroke;
+  stroke-width: 1px;
+}
+
+/* La piega premuta: un filo d'ombra e, dal lato lontano dalla luce, un filo di luce. */
+.imp-root .imp-perchi__patta-ombra {
+  stroke: var(--imp-carta-ombra);
+}
+
+.imp-root .imp-perchi__patta-luce {
+  stroke: var(--imp-carta-luce);
+  stroke-width: 1.5px;
+  translate: 0 1.2px;
+}
+
+/* --------------------------------------------------------------------------
+   Biglietto · Cotone 85×55, nome in lamina argento
+   Nome e mestiere in basso a sinistra, il resto è carta.
+   -------------------------------------------------------------------------- */
+.imp-root .imp-perchi__pezzo--biglietto {
+  justify-content: flex-end;
+  padding: 9cqi 9cqi 10cqi;
+}
+
+.imp-root .imp-perchi__riga--nome {
+  font-family: var(--imp-font-display);
+  font-size: max(1.25rem, 11.5cqi);
+  font-weight: 700;
+  font-variation-settings: "wdth" 100, "wght" 700;
+  font-synthesis: none;
+  line-height: 1;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  padding-block: 0.06em;
+}
+
+.imp-root .imp-perchi__riga--mestiere {
+  font-size: max(0.875rem, 5.6cqi);
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+  margin-block-start: 2.4cqi;
+}
+
+/* --------------------------------------------------------------------------
+   Copertina · Grafite 150×210, titolo in inchiostro bianco, brossura cucita
+   Titolo in testa, autore al piede, cerniera della brossura a sinistra.
+   -------------------------------------------------------------------------- */
+.imp-root .imp-perchi__pezzo--libro {
+  padding: 11cqi 9cqi 10cqi 15cqi;
+}
+
+.imp-root .imp-perchi__riga--titolo {
+  font-family: var(--imp-font-display);
+  font-size: max(1.5rem, 15cqi);
+  font-weight: 800;
+  font-variation-settings: "wdth" 125, "wght" 800;
+  font-synthesis: none;
+  line-height: 0.9;
+  letter-spacing: -0.012em;
+  text-wrap: balance;
+}
+
+.imp-root .imp-perchi__riga--autore {
+  margin-block-start: auto;
+  font-size: max(0.875rem, 5.4cqi);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.imp-root .imp-perchi__riga--genere {
+  font-size: max(0.875rem, 4.4cqi);
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+}
+
+/* La cerniera: la copertina piegata lungo il dorso, premuta come un solco. */
+.imp-root .imp-perchi__cerniera {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 6.6%;
+  inline-size: 3px;
+  background-image: linear-gradient(
+    90deg,
+    var(--imp-carta-ombra) 0 1px,
+    var(--imp-secco-fondo) 1px 2px,
+    var(--imp-carta-luce) 2px 3px
+  );
+  opacity: calc(0.3 + 0.7 * var(--imp-press));
+}
+
+/* Il taglio delle 48 pagine: spunta a destra e in basso, FUORI dal
+   rettangolo della copertina (con il WebGL acceso la copertina è disegnata
+   dallo shader sotto il DOM: qui niente la deve coprire). Carta degli
+   interni: Cotone (data-carta sul taglio). */
+.imp-root .imp-perchi__pagine {
+  position: absolute;
+  pointer-events: none;
+}
+
+.imp-root .imp-perchi__pagine--taglio {
+  inset-block: 4px -5px;
+  inset-inline-start: 100%;
+  inline-size: 5px;
+  background-color: var(--imp-carta);
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--imp-carta-luce) 0 0.6px,
+    var(--imp-carta-costa) 0.6px 1.2px
+  );
+  box-shadow: 1px 1px 0 0 color-mix(in srgb, var(--imp-sito-ombra) 45%, transparent);
+}
+
+.imp-root .imp-perchi__pagine--piede {
+  inset-inline: 4px 0;
+  inset-block-start: 100%;
+  block-size: 5px;
+  background-color: var(--imp-carta);
+  background-image: repeating-linear-gradient(
+    180deg,
+    var(--imp-carta-luce) 0 0.6px,
+    var(--imp-carta-costa) 0.6px 1.2px
+  );
+  box-shadow: 1px 1px 0 0 color-mix(in srgb, var(--imp-sito-ombra) 45%, transparent);
+}
+
+/* --------------------------------------------------------------------------
+   Con il WebGL acceso: i figli del pezzo registrato diventano fantasmi
+   (restano per misura e metrica dei layer), la cordonatura la disegna lo
+   shader. Il fondo del pezzo lo spegne già relief-fallback.css.
+   -------------------------------------------------------------------------- */
+.imp-root[data-gl="on"] .imp-perchi__pezzo.imp-relief :is(.imp-secco, .imp-inchiostro, .imp-caldo) {
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+  filter: none;
+  background-image: none;
+}
+
+.imp-root[data-gl="on"] :is(.imp-perchi__pezzo, .imp-perchi__busta).imp-relief :is(.imp-perchi__cerniera, .imp-perchi__patta) {
+  visibility: hidden;
+}
+
+/* --------------------------------------------------------------------------
+   Didascalia: inchiostro sulla carta del sito, allineata al bordo sinistro
+   del proprio oggetto.
+   -------------------------------------------------------------------------- */
+.imp-root .imp-perchi__didascalia {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-inline-size: 30ch;
+  margin-block-start: var(--imp-sp-6);
+}
+
+.imp-root .imp-perchi__nome {
+  font-size: var(--imp-fs-titolo-3);
+}
+
+.imp-root .imp-perchi__per-chi {
+  margin-block-start: var(--imp-sp-2);
+  font-size: var(--imp-fs-lead);
+  line-height: var(--imp-lh-lead);
+}
+
+.imp-root .imp-perchi__righe {
+  margin-block-start: var(--imp-sp-3);
+  font-size: var(--imp-fs-piccolo);
+  line-height: var(--imp-lh-piccolo);
+  color: var(--imp-inchiostro-velato);
+}
+
+.imp-root .imp-perchi__prezzo {
+  margin-block-start: var(--imp-sp-3);
+  font-weight: var(--imp-wght-corpo-forte);
+  font-variant-numeric: lining-nums;
+}
+
+.imp-root .imp-perchi__prova {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: var(--imp-bottone-h);
+  margin-block-start: var(--imp-sp-5);
+  padding-inline: var(--imp-sp-6);
+  font-size: var(--imp-fs-bottone);
+  font-weight: var(--imp-wght-bottone);
+  line-height: var(--imp-lh-interfaccia);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   Desktop (≥ 1024 px): i tre pezzi sparsi sul bancone
+   ========================================================================== */
+@media (min-width: 1024px) {
+  .imp-root .imp-perchi__testa {
+    margin-block-end: clamp(var(--imp-sp-8), calc(var(--imp-u) * 1.1), var(--imp-sp-10));
+  }
+
+  .imp-root .imp-perchi__fila {
+    --imp-perchi-mm: calc((var(--imp-colonna) * 4 + var(--imp-canalino) * 3) / 150);
+    display: grid;
+    grid-template-columns: repeat(var(--imp-colonne), minmax(0, 1fr));
+    column-gap: var(--imp-canalino);
+    align-items: start;
+    margin: 0;
+    padding: 0;
+  }
+
+  .imp-root .imp-perchi__posto--partecipazione {
+    grid-column: 1 / span 4;
+    /* spazio per la patta della busta che spunta sopra */
+    padding-block-start: calc(var(--imp-perchi-mm) * 18);
+  }
+
+  .imp-root .imp-perchi__posto--biglietto {
+    grid-column: 6 / span 3;
+    margin-block-start: clamp(var(--imp-sp-9), calc(var(--imp-u) * 2), 13rem);
+  }
+
+  .imp-root .imp-perchi__posto--libro {
+    grid-column: 9 / span 4;
+    margin-block-start: clamp(var(--imp-sp-5), calc(var(--imp-u) * 0.5), var(--imp-sp-8));
+  }
+
+  .imp-root .imp-perchi__piano {
+    inline-size: calc(var(--imp-perchi-mm) * var(--_l));
+    max-inline-size: 100%;
+  }
+
+  /* Il biglietto è piccolo davvero: la didascalia prende tutte e tre le colonne. */
+  .imp-root .imp-perchi__lavoro--biglietto .imp-perchi__didascalia {
+    max-inline-size: 26ch;
+  }
+
+  .imp-root .imp-perchi__lavoro--libro .imp-perchi__didascalia {
+    margin-block-start: calc(var(--imp-sp-6) + 5px);
+  }
+}
+
+/* ==========================================================================
+   Mazzo (< 1024 px): si sfoglia con lo swipe
+   ========================================================================== */
+@media (max-width: 1023.98px) {
+  .imp-root .imp-perchi__fila {
+    /* pezzo 300 px a 375: margine 20 + 300 + passo 12 = 332, il successivo sporge di 43 px */
+    --imp-ix-mazzo-pezzo: clamp(17.5rem, calc(100vw - var(--imp-margine-interno) - 12px - 44px), 26.25rem);
+    --imp-ix-mazzo-passo: 12px;
+    --imp-ix-mazzo-margine: var(--imp-margine-interno);
+    --imp-perchi-tavola: calc(var(--imp-ix-mazzo-pezzo) * 0.84);
+    margin-block: 0;
+    margin-inline: calc(var(--imp-margine-interno) * -1) calc(var(--imp-margine-esterno) * -1);
+    padding-block: var(--imp-sp-5) var(--imp-sp-3);
+  }
+
+  .imp-root .imp-perchi__posto {
+    position: relative;
+    padding-inline-end: var(--imp-sp-2);
+  }
+
+  /* Una tavola di altezza comune: i pezzi ci stanno appoggiati, le didascalie
+     partono tutte alla stessa quota. */
+  .imp-root .imp-perchi__tavolo {
+    display: flex;
+    align-items: center;
+    block-size: var(--imp-perchi-tavola);
+  }
+
+  .imp-root .imp-perchi__lavoro--partecipazione .imp-perchi__piano {
+    inline-size: 86%;
+    margin-block-start: 6%;
+    margin-inline-start: 1%;
+  }
+
+  .imp-root .imp-perchi__lavoro--biglietto .imp-perchi__piano {
+    inline-size: 74%;
+    margin-inline-start: 3%;
+  }
+
+  .imp-root .imp-perchi__lavoro--libro .imp-perchi__piano {
+    block-size: 94%;
+    margin-inline-start: 2%;
+  }
+
+  .imp-root .imp-perchi__didascalia {
+    margin-block-start: var(--imp-sp-5);
+    padding-inline-end: var(--imp-sp-2);
+  }
+
+  .imp-root .imp-perchi__prova {
+    align-self: stretch;
+  }
+
+  .imp-root .imp-perchi__sfoglia {
+    justify-content: space-between;
+    margin-block-start: var(--imp-sp-4);
+    margin-inline: calc(var(--imp-sp-3) * -1);
+  }
+
+  .imp-root .imp-perchi__nomi {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    column-gap: 0;
+  }
+
+  .imp-root .imp-perchi__nome-bottone {
+    padding-inline: 6px;
+    font-size: var(--imp-fs-piccolo);
+  }
+
+  .imp-root .imp-perchi__freccia {
+    flex: none;
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+}
+
+/* Tablet: la didascalia ha più aria, il pezzo resta leggibile a braccio. */
+@media (min-width: 600px) and (max-width: 1023.98px) {
+  .imp-root .imp-perchi__fila {
+    --imp-ix-mazzo-pezzo: clamp(20rem, 52vw, 27.5rem);
+  }
+
+  .imp-root .imp-perchi__prova {
+    align-self: flex-start;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Contrasto forzato: i pezzi diventano rettangoli con bordo di sistema, i
+   testi composti restano leggibili (relief-fallback.css li porta a CanvasText).
+   -------------------------------------------------------------------------- */
+@media (forced-colors: active) {
+  .imp-root .imp-perchi__pezzo,
+  .imp-root .imp-perchi__busta {
+    border: 1px solid CanvasText;
+  }
+
+  .imp-root .imp-perchi__patta path {
+    stroke: CanvasText;
+  }
+}

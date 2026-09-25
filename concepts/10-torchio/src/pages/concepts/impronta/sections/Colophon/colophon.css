@@ -1,1 +1,467 @@
-/* STUB dello scaffold: vuoto. Lo scrive il section-builder della sezione (tech-architect §4). Tutti i selettori iniziano con .imp-root. */
+/* ==========================================================================
+   IMPRONTA · 8 · Colophon (section-builder-colophon)
+   --------------------------------------------------------------------------
+   L'ultima pagina del libro. Tutto in Hanken tranne il titolo e il marchio;
+   blocchi ancorati al margine interno, mai centrati; il marchio IMPRONTA a
+   secco occupa l'area viva come il sigillo dell'editore. Solo variabili
+   --imp-*, raggio 0, nessuna animazione propria: l'unico movimento è la
+   pressione del marchio (usePressione scrive --imp-press sull'elemento).
+
+   Spazio in fondo:
+   - sotto 640 px il bottone fisso "Torna in Ciceri Lab" sta in basso a
+     sinistra (14 px dal fondo, 44 px di altezza) e sotto 1024 c'è il
+     segnapagina (56 px): il piede li somma, più l'area sicura, così nessuno
+     dei due copre l'ultimo link;
+   - da 1024 il segnapagina non c'è e il bottone è in alto: piede da libro.
+   ========================================================================== */
+
+.imp-root .imp-colophon {
+  --_imp-colophon-fondo: calc(var(--imp-segnapagina-h) + 14px + var(--imp-tocco-min) + var(--imp-sp-6) + env(safe-area-inset-bottom, 0px));
+  position: relative;
+  display: block;
+  padding-block: var(--imp-testa) var(--_imp-colophon-fondo);
+  scroll-margin-block-start: var(--imp-sp-5);
+}
+
+@media (min-width: 640px) {
+  .imp-root .imp-colophon {
+    --_imp-colophon-fondo: calc(var(--imp-segnapagina-h) + var(--imp-sp-7) + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (min-width: 1024px) {
+  .imp-root .imp-colophon {
+    --_imp-colophon-fondo: clamp(var(--imp-sp-8), 12vh, var(--imp-sp-10));
+    scroll-margin-block-start: calc(var(--imp-testata-h-fissa) + var(--imp-sp-5));
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Griglia: 4 colonne impilate; da 600 testo a sinistra e indice a destra;
+   da 1024 il blocco di stampa occupa sei colonne, l'indice quattro, e il
+   margine esterno resta vuoto (lì gioca la luce).
+   -------------------------------------------------------------------------- */
+.imp-root .imp-colophon__griglia {
+  row-gap: var(--imp-sp-7);
+}
+
+.imp-root .imp-colophon__griglia > * {
+  grid-column: 1 / -1;
+  min-inline-size: 0;
+}
+
+@media (min-width: 600px) {
+  .imp-root .imp-colophon__stampa {
+    grid-column: 1 / span 5;
+    grid-row: 2;
+  }
+
+  .imp-root .imp-colophon__indice {
+    grid-column: 6 / span 3;
+    grid-row: 2;
+  }
+
+  .imp-root .imp-colophon__recapiti {
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
+}
+
+@media (min-width: 1024px) {
+  .imp-root .imp-colophon__griglia {
+    row-gap: var(--imp-sp-8);
+  }
+
+  .imp-root .imp-colophon__stampa {
+    grid-column: 1 / span 6;
+  }
+
+  .imp-root .imp-colophon__indice {
+    grid-column: 8 / span 4;
+    padding-block-start: var(--imp-sp-1);
+  }
+
+  .imp-root .imp-colophon__recapiti {
+    grid-column: 1 / span 11;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Titolo: h2 di sezione (assi fissi di base.css), in minuscolo come tutto
+   ciò che è premuto.
+   -------------------------------------------------------------------------- */
+.imp-root .imp-colophon__titolo {
+  color: var(--imp-inchiostro);
+}
+
+/* --------------------------------------------------------------------------
+   Il testo del colophon: registro leggibile, giustezza corta (44ch).
+   -------------------------------------------------------------------------- */
+.imp-root .imp-colophon__testo {
+  max-inline-size: var(--imp-giustezza-stretta);
+  font-size: var(--imp-fs-lead);
+  line-height: var(--imp-lh-lead);
+  text-wrap: pretty;
+  hanging-punctuation: first;
+}
+
+.imp-root .imp-colophon__carta {
+  font-weight: var(--imp-wght-corpo-forte);
+  white-space: nowrap;
+}
+
+.imp-root .imp-colophon__seconda {
+  max-inline-size: var(--imp-giustezza-stretta);
+  margin-block-start: var(--imp-sp-4);
+  font-size: var(--imp-fs-piccolo);
+  line-height: var(--imp-lh-piccolo);
+  letter-spacing: var(--imp-trk-piccolo);
+  text-wrap: pretty;
+}
+
+/* --------------------------------------------------------------------------
+   Comandi: "Prova la tua" in lamina (uno dei tre usi ammessi) e
+   "Ricomincia da capo" di carta, con conferma in linea.
+   -------------------------------------------------------------------------- */
+.imp-root .imp-colophon__comandi {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--imp-sp-4);
+  margin-block-start: var(--imp-sp-7);
+}
+
+@media (min-width: 600px) {
+  .imp-root .imp-colophon__comandi {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+}
+
+.imp-root .imp-colophon__prova,
+.imp-root .imp-colophon__bottone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: var(--imp-bottone-h);
+  padding-inline: 28px;
+  font-family: var(--imp-font-testo);
+  font-size: var(--imp-fs-bottone);
+  font-weight: var(--imp-wght-bottone);
+  line-height: var(--imp-lh-interfaccia);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.imp-root .imp-colophon__bottone {
+  padding-inline: 24px;
+  color: var(--imp-inchiostro);
+  border: 1px solid var(--imp-inchiostro);
+  background-color: transparent;
+}
+
+.imp-root .imp-colophon__bottone--pieno {
+  color: var(--imp-carta);
+  background-color: var(--imp-inchiostro);
+}
+
+.imp-root .imp-colophon__ricomincia {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--imp-sp-3);
+  min-inline-size: 0;
+}
+
+@media (min-width: 600px) {
+  .imp-root .imp-colophon__ricomincia {
+    align-items: flex-start;
+  }
+}
+
+.imp-root .imp-colophon__domanda {
+  display: flex;
+  flex-direction: column;
+  gap: var(--imp-sp-3);
+}
+
+.imp-root .imp-colophon__domanda-testo {
+  max-inline-size: 30ch;
+  font-size: var(--imp-fs-piccolo);
+  font-weight: var(--imp-wght-corpo-forte);
+  line-height: var(--imp-lh-piccolo);
+  letter-spacing: var(--imp-trk-piccolo);
+}
+
+.imp-root .imp-colophon__domanda-scelte {
+  display: flex;
+  flex-direction: column;
+  gap: var(--imp-sp-3);
+}
+
+@media (min-width: 600px) {
+  .imp-root .imp-colophon__domanda-scelte {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+
+.imp-root .imp-colophon__esito {
+  max-inline-size: 34ch;
+  font-size: var(--imp-fs-piccolo);
+  line-height: var(--imp-lh-piccolo);
+  letter-spacing: var(--imp-trk-piccolo);
+}
+
+.imp-root .imp-colophon__esito:empty {
+  min-block-size: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Indice: come l'indice in fondo a un libretto, senza numeri di pagina.
+   -------------------------------------------------------------------------- */
+.imp-root .imp-colophon__etichetta {
+  font-family: var(--imp-font-testo);
+  font-size: var(--imp-fs-piccolo);
+  font-weight: var(--imp-wght-corpo-forte);
+  font-variation-settings: normal;
+  line-height: var(--imp-lh-piccolo);
+  letter-spacing: var(--imp-trk-piccolo);
+  text-wrap: nowrap;
+  margin-block-end: var(--imp-sp-2);
+}
+
+.imp-root .imp-colophon__voci {
+  margin: 0;
+}
+
+.imp-root .imp-colophon__voce {
+  display: flex;
+  align-items: center;
+  min-block-size: 48px;
+  font-size: var(--imp-fs-corpo);
+  line-height: var(--imp-lh-interfaccia);
+}
+
+@media (min-width: 1024px) {
+  .imp-root .imp-colophon__voce {
+    display: inline-flex;
+    min-block-size: var(--imp-tocco-min);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Recapiti: indirizzo (Maps), telefono, email. Tre righe su mobile, una
+   riga da 600.
+   -------------------------------------------------------------------------- */
+.imp-root .imp-colophon__recapiti {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-style: normal;
+  font-size: var(--imp-fs-piccolo);
+  line-height: var(--imp-lh-piccolo);
+  letter-spacing: var(--imp-trk-piccolo);
+}
+
+@media (min-width: 600px) {
+  .imp-root .imp-colophon__recapiti {
+    flex-direction: row;
+    flex-wrap: wrap;
+    column-gap: var(--imp-sp-6);
+  }
+}
+
+.imp-root .imp-colophon__recapito,
+.imp-root .imp-colophon__firma-link {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--imp-tocco-min);
+}
+
+.imp-root .imp-colophon__freccia {
+  display: inline-block;
+  flex: none;
+  inline-size: 0.8em;
+  block-size: 0.8em;
+  margin-inline-start: 0.3em;
+}
+
+.imp-root .imp-colophon__freccia > svg {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   Il sigillo: il marchio IMPRONTA premuto a secco su tutta l'area viva.
+   Fallback CSS (data-gl pending/off): il segno SVG usato come maschera su
+   un fondo del colore del solco; le due ombre sul contenitore (la maschera
+   taglierebbe un filtro sullo stesso elemento) fanno parete scura verso la
+   luce e labbro chiaro dall'altra parte, come .imp-secco. Il passo cresce
+   con il corpo e segue --imp-press e la luce.
+   -------------------------------------------------------------------------- */
+.imp-root .imp-colophon__sigillo {
+  margin-block: var(--imp-sp-9) var(--imp-sp-5);
+}
+
+@media (min-width: 1024px) {
+  .imp-root .imp-colophon__sigillo {
+    margin-block: var(--imp-sp-10) var(--imp-sp-6);
+  }
+}
+
+.imp-root .imp-colophon__marchio {
+  --_imp-d: calc(clamp(1px, 0.17vw, 2.6px) * var(--imp-press) * var(--imp-rilievo));
+  --_imp-dx: calc(var(--_imp-d) * var(--imp-luce-x));
+  --_imp-dy: calc(var(--_imp-d) * var(--imp-luce-y));
+  --imp-rilievo: 0.9;
+  display: block;
+  inline-size: 100%;
+  aspect-ratio: 941 / 100;
+  filter:
+    drop-shadow(calc(var(--_imp-dx) * 1) calc(var(--_imp-dy) * 1) 0 color-mix(in srgb, var(--imp-carta-ombra) 80%, transparent))
+    drop-shadow(calc(var(--_imp-dx) * -1) calc(var(--_imp-dy) * -1) 0 var(--imp-carta-luce));
+}
+
+.imp-root .imp-colophon__marchio-solco {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  background-color: var(--imp-secco-fondo);
+  -webkit-mask: var(--imp-segno) center / contain no-repeat;
+  mask: var(--imp-segno) center / contain no-repeat;
+}
+
+/* Il fondo del solco segue la pressione: piatto a 0, pieno a 1. */
+@supports (color: color-mix(in srgb, red calc(10% * 1), blue)) {
+  .imp-root .imp-colophon__marchio-solco {
+    background-color: color-mix(in srgb, var(--imp-carta), var(--imp-secco-fondo) calc(100% * var(--imp-press)));
+  }
+}
+
+/* Con lo shader acceso il fantasma resta solo per misura: il solco lo disegna il GL. */
+.imp-root[data-gl="on"] .imp-colophon__marchio.imp-relief {
+  filter: none;
+}
+
+.imp-root[data-gl="on"] .imp-colophon__marchio.imp-relief > .imp-colophon__marchio-solco {
+  visibility: hidden;
+}
+
+/* --------------------------------------------------------------------------
+   Riga di piede sotto il sigillo: bottega e città, la finzione dichiarata,
+   la firma del concept.
+   -------------------------------------------------------------------------- */
+.imp-root .imp-colophon__piede {
+  row-gap: var(--imp-sp-5);
+  font-size: var(--imp-fs-piccolo);
+  line-height: var(--imp-lh-piccolo);
+  letter-spacing: var(--imp-trk-piccolo);
+}
+
+.imp-root .imp-colophon__piede > * {
+  grid-column: 1 / -1;
+  min-inline-size: 0;
+}
+
+@media (min-width: 600px) {
+  .imp-root .imp-colophon__bottega {
+    grid-column: 1 / span 3;
+  }
+
+  .imp-root .imp-colophon__finzione {
+    grid-column: 4 / span 5;
+  }
+
+  .imp-root .imp-colophon__firma {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 1024px) {
+  .imp-root .imp-colophon__bottega {
+    grid-column: 1 / span 3;
+  }
+
+  .imp-root .imp-colophon__finzione {
+    grid-column: 4 / span 4;
+  }
+
+  .imp-root .imp-colophon__firma {
+    grid-column: 8 / span 4;
+  }
+}
+
+.imp-root .imp-colophon__bottega {
+  display: flex;
+  flex-direction: column;
+  padding-block-start: var(--imp-sp-3);
+}
+
+.imp-root .imp-colophon__bottega-nome {
+  font-weight: var(--imp-wght-corpo-forte);
+}
+
+.imp-root .imp-colophon__finzione {
+  max-inline-size: 40ch;
+  padding-block-start: var(--imp-sp-3);
+  font-size: var(--imp-fs-nota);
+  font-weight: var(--imp-wght-interfaccia);
+  line-height: 1.4;
+  text-wrap: pretty;
+}
+
+.imp-root .imp-colophon__firma {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+@media (min-width: 600px) and (max-width: 1023.98px) {
+  .imp-root .imp-colophon__firma {
+    flex-direction: row;
+    flex-wrap: wrap;
+    column-gap: var(--imp-sp-6);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Accessibilità dei materiali
+   -------------------------------------------------------------------------- */
+@media (prefers-contrast: more) {
+  .imp-root .imp-colophon__marchio {
+    filter: none;
+  }
+
+  .imp-root .imp-colophon__marchio-solco {
+    background-color: var(--imp-inchiostro);
+  }
+}
+
+@media (forced-colors: active) {
+  .imp-root .imp-colophon__marchio {
+    filter: none;
+  }
+
+  .imp-root .imp-colophon__marchio-solco {
+    background-color: CanvasText;
+  }
+
+  .imp-root .imp-colophon__bottone {
+    border-color: ButtonText;
+  }
+
+  .imp-root .imp-colophon__bottone--pieno {
+    color: ButtonText;
+    background-color: ButtonFace;
+  }
+}
+
+/* Movimento ridotto: nessuna transizione propria del colophon, il marchio
+   è già premuto (usePressione lo porta subito a riposo). */
+@media (prefers-reduced-motion: reduce) {
+  .imp-root .imp-colophon :is(.imp-colophon__prova, .imp-colophon__bottone, .imp-colophon__voce, .imp-colophon__recapito, .imp-colophon__firma-link) {
+    transition: none;
+  }
+}
