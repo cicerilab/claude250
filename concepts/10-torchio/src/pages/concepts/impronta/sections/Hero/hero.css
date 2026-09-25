@@ -263,11 +263,10 @@
 
 /* --------------------------------------------------------------------------
    Da 1024 px: il blocco sta nel vuoto a sinistra di "ta" (colonne 1-7),
-   appeso alla linea della x di "ta". Il titolo scala con l'area viva perché
-   stia su due righe in quelle sette colonne.
-   Linea della x di "ta" dal bordo del suo box: 0,1145 em della parola
-   (Anybody: ascent 0,795, x-height 0,593, interlinea 0,86); occhio del
-   titolo dal bordo del suo box: 0,1225 em del titolo (interlinea 1,04).
+   con il titolo sulla stessa linea di base di "ta". Il titolo scala con
+   l'area viva perché stia su due righe in quelle sette colonne.
+   Metriche di Anybody: ascent 0,795, descent 0,24, cap 0,675; interlinea
+   della parola 0,86, del titolo 1,04.
    -------------------------------------------------------------------------- */
 @media (min-width: 1024px) {
   .imp-root .imp-hero__piano:not([data-cliente])[data-righe="2"] .imp-hero__testo {
@@ -276,8 +275,16 @@
     margin-block-start: 0;
   }
 
+  /* L'ultima riga del titolo sta sulla linea di base di "ta"
+     (base di "ta": 0,7075 em della parola dal bordo della riga; base della
+     seconda riga del titolo: 1,8375 em del titolo dal suo bordo), e in ogni
+     caso l'occhio del titolo resta 16 px sotto la discendente della "p"
+     (0,0875 em della parola dentro la seconda riga). */
   .imp-root .imp-hero__piano:not([data-cliente])[data-righe="2"] .imp-hero__titolo {
-    margin-block-start: calc(0.1145 * var(--_imp-fs) - 0.1225em);
+    margin-block-start: max(
+      calc(0.0875 * var(--_imp-fs) + 16px - 0.1225em),
+      calc(0.7075 * var(--_imp-fs) - 1.8375em)
+    );
   }
 
   .imp-root .imp-hero__titolo {
