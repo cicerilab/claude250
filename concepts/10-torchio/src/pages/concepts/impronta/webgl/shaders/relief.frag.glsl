@@ -271,8 +271,8 @@ void main() {
   vec3 n = normalize(vec3(grad + pendFibra, 1.0));
   // 0 sul foglio piatto: la carta piatta resta il suo colore esatto.
   float t = (dot(n, L) - L.z) * uPaper.y * uLight.w;
-  float verso = 1.0 - exp(-max(t, 0.0) * 1.25);
-  float contro = 1.0 - exp(-max(-t, 0.0) * 1.25);
+  float verso = 1.0 - exp(-max(t, 0.0) * 1.6);
+  float contro = 1.0 - exp(-max(-t, 0.0) * 1.8);
 
   vec3 base = carta.fondo.rgb * (1.0 + formazione * MACCHIE * carta.fondo.a);
   vec3 col = base;
@@ -281,7 +281,9 @@ void main() {
   // Fondo del solco: la carta schiacciata è un poco più scura.
   col = mix(col, carta.ombra.rgb, fondoSolco * uPaper.w * carta.ombra.a);
   // Ombra portata, corta e tinta.
-  col = mix(col, carta.ombra.rgb, ombraPortata * 0.55 * carta.ombra.a * uLight.w);
+  // Giro 2: ombra piena (la parete del solco sul lato in ombra arriva al
+  // colore "ombra" della carta, non a metà strada).
+  col = mix(col, carta.ombra.rgb, ombraPortata * 0.9 * carta.ombra.a * uLight.w);
 
   // Costa del pezzo e ombra di contatto sul foglio.
   col = mix(col, carta.luce.rgb, max(costa, 0.0) * 0.9 * carta.luce.a);
@@ -290,10 +292,11 @@ void main() {
 
   // --- Inchiostro opaco, bevuto dalla fibra --------------------------------
   if (cop > 0.0) {
-    // Film sottile: segue un terzo della luce del solco e lascia trasparire la formazione.
-    vec3 inkCol = carta.ink.rgb + (col - base) * 0.35 + vec3(formazione * 0.02);
-    float densita = 0.93 + 0.07 * clamp(0.5 + assorb * 2.0, 0.0, 1.0);
-    col = mix(col, inkCol, cop * densita);
+    // Film pieno e uniforme: segue un quinto della luce del solco (le pareti
+    // restano leggibili) e niente altro. Giro 2: tolte la densità variabile e
+    // la formazione dentro il pieno, che in WebKit davano una grana chiara.
+    vec3 inkCol = carta.ink.rgb + (col - base) * 0.2;
+    col = mix(col, inkCol, cop);
   }
 
   // --- Lamina argento anisotropa -------------------------------------------
@@ -301,12 +304,13 @@ void main() {
     vec3 nf = normalize(vec3(grad + pendFibra, 1.0));
     // Spazzolatura: la fibra stirata lungo la venatura dà righe sottili e
     // lunghe, il segno del rullo della lamina. Un solo campione in più, solo qui.
-    float spazz = texture2D(tFiber, vec2(locale.x / (FIBRA_LATO * 12.0), locale.y / FIBRA_LATO * 3.0)).a - 0.5;
+    float spazz = texture2D(tFiber, vec2(locale.x / FIBRA_LATO * 3.0, locale.y / (FIBRA_LATO * 12.0))).a - 0.5;
     vec3 V = vec3(0.0, 0.0, 1.0);
     vec3 Lp = normalize(vec3(uLightPos.xy - p, max(uLightPos.z, 1.0)));
     vec3 H = normalize(Lp + V);
-    // Venatura del rullo lungo l'asse x del blocco, appena mossa dalla fibra.
-    vec3 T = vec3(venatura + fibN.yx * 0.12, 0.0);
+    // Venatura lungo l'asse y del blocco (giro 2), appena mossa dalla fibra:
+    // il riflesso stretto diventa una banda orizzontale sotto la lampada.
+    vec3 T = vec3(vec2(-venatura.y, venatura.x) + fibN * 0.08, 0.0);
     T = normalize(T - nf * dot(nf, T));
     vec3 Bt = cross(nf, T);
     float hn = max(dot(H, nf), 0.05);
@@ -324,12 +328,14 @@ void main() {
     float diff = clamp(dot(nf, L) * 0.5 + 0.5, 0.0, 1.0);
     // Metallo: poca diffusione, il resto è riflesso (così "legge" come argento
     // e non come grigio stampato).
-    vec3 metallo = uLamina.rgb * (0.44 + 0.3 * diff) * (1.0 + spazz * 0.1);
+    vec3 metallo = uLamina.rgb * (0.36 + 0.26 * diff) * (1.0 + spazz * 0.1);
     metallo += vec3(riflesso) * (0.55 + 0.45 * uLamina.rgb);
     // Il metallo riflette un poco la carta attorno (ambiente), niente di più.
     metallo = mix(metallo, metallo * carta.fondo.rgb * 1.15, 0.1);
-    // Spigoli del solco in ombra anche sulla lamina.
-    metallo = mix(metallo, metallo * 0.72, ombraPortata * 0.5);
+    // Filo scuro: le pareti della lamina lontane dalla luce e l'ombra portata
+    // scuriscono il metallo. Tiene il contorno leggibile anche su Citrino,
+    // dove argento e carta hanno la stessa luminanza.
+    metallo = mix(metallo, uLamina.rgb * 0.3, max(contro, ombraPortata * 0.8) * 0.85);
     col = mix(col, min(metallo, vec3(0.97)), foil);
   }
 

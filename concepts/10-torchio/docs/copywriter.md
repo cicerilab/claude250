@@ -13,7 +13,7 @@ Controlli fatti sui due file: `tsc --strict --noImplicitReturns
 --noUnusedLocals` verde; nessun trattino lungo o medio, nessun puntino di sospensione né punto esclamativo nei testi
 (l'unico `!` è il segno d'errore del campo contatto chiesto dall'ux-architect);
 nessuna parola della lista "da evitare" del brand-strategist; nessun "01 ·";
-un solo "·" in tutto il sito (sottotitolo della vetrina di CiceriLab).
+due soli "·" (sottotitolo della vetrina e `META.title`, uno per riga).
 
 ---
 
@@ -96,13 +96,13 @@ Chi cambia un testo resta sotto questi limiti o avvisa art-director e builder.
 | `PER_CHI.pezzi[].righe` | 59-72 | 76 | 2 righe sotto il pezzo (280 px di larghezza) |
 | `PER_CHI.pezzi[].prezzo` | 23-31 | 34 | una riga |
 | `CARTE.*.nome` + grammatura | 12-13 | 16 | una riga nella fascia mobile |
-| `BANCO.contatto.placeholder` | 30 | 32 | campo 335 px, testo 17 px |
+| `BANCO.contatto.placeholder` | 15 | 32 | campo 335 px, testo 17 px |
 | `BANCO.leva.istruzione` | 26 | 32 | una riga sopra la leva |
 | `BANCO.quando.opzioni` | 11-15 | 20 | bottoni in colonna |
 | `BOTTEGA.indirizzo.riga1` | 17 | 18 | Anybody largo adattato alla larghezza |
-| `BOTTEGA.telefono.bottone` | 18 | 22 | bottone pieno 52 px |
-| `META.title` | 56 | 60 | risultati di ricerca |
-| `META.description` | 134 | 155 | risultati di ricerca |
+| `BOTTEGA.telefono.bottone` | 17 | 22 | bottone pieno 52 px |
+| `META.title` | 58 | 60 | risultati di ricerca |
+| `META.description` | 149 | 155 | risultati di ricerca |
 
 Campi del banco (`CAMPI_TESTO`): limiti dell'ux-architect, esempi dentro il
 limite.
@@ -305,3 +305,87 @@ Tesi 55 € la prima copia, 38 € le altre. Restauro da 90 €.
   di `DIREZIONI_LUCE`.
 - **Per chi porta il concept nel sito**: `VETRINA` è una proposta per la voce
   di `CONCEPTS` in `src/content/site.ts`; decide Luca.
+
+---
+
+## Giro 2 (dopo la giuria: Contenuto 7)
+
+Fonti: `docs/awwwards-jury.md` §1 Contenuto, §2 per sezione, §5 riga
+copywriter; `docs/seo-engineer.md` P3, P10, P11. Nessuna chiave tolta o
+rinominata: sono cambiati dei valori e ci sono chiavi nuove. `npm run
+typecheck` verde.
+
+### Cosa è cambiato nei valori
+
+- **Recapiti senza segnaposto a vista.** Il numero e l'email non compaiono più
+  come testo. Il telefono è un link con scritto "Chiama la bottega" (href
+  `tel:` di esempio), l'email un link "Scrivi alla bottega". Gli `aria-label`
+  dicono "(numero di esempio)" e "(indirizzo di esempio)". Non ho messo un
+  numero "verosimile" come proponeva la giuria: il repo è pubblico e un numero
+  vero di Pordenone può essere di qualcuno.
+  - `RECAPITI.telefono` ora vale "Chiama la bottega" (il colophon lo mostra
+    già così dentro il link `tel:`).
+  - `RECAPITI.email` resta l'indirizzo perché `core/links.ts` ci costruisce il
+    `mailto:`. **Il colophon deve mostrare `COLOPHON.email` (o
+    `RECAPITI.emailEtichetta`) al posto di `RECAPITI.email`**: finché non lo fa,
+    l'indirizzo `.example` resta visibile lì.
+  - `BOTTEGA.telefono.{testo, bottone}` = "Chiama la bottega",
+    `BOTTEGA.email.testo` = "Scrivi alla bottega". Il testo grande a 60 px
+    del telefono va tolto dal builder della bottega (giuria: Hanken 20 px).
+  - `BANCO.fallito`: "...tieni premuto di nuovo, oppure" + link "chiama la
+    bottega" + ".". `ANNUNCI.fallito` senza numero.
+  - `COLOPHON.recapiti`: indirizzo più la riga che dice che telefono ed email
+    sono di esempio. `COLOPHON.finzione` riscritta.
+  - `BANCO.contatto.placeholder`: solo "nome@esempio.it" (via il numero).
+- **Title e description (SEO P3, P11)**: `META.title` = "Concept 10 ·
+  IMPRONTA, tipografia e legatoria | Ciceri Lab" (58 caratteri),
+  `META.description` dice "Concept di Ciceri Lab" e "inventata" (149
+  caratteri). `ogTitle` e `ogDescription` con "Ciceri Lab"; commento che li
+  copia il prerender (P10). `COLOPHON.conceptDi` = "Un concept di Ciceri Lab".
+- **Micro-frasi sotto i titoli tolte**: `BANCO.intro` e `TECNICHE.intro` ora
+  sono stringhe vuote. I builder non rendono il `<p>` se la stringa è vuota.
+- **Ripetizioni tolte**:
+  - `LEGATORIA.intro` non ripete più "nella stanza accanto" (è già
+    nell'hero).
+  - `BANCO.prezzo.dipende` più corto (una frase).
+  - `CARTA.campioni` non ripete più la promessa della prova a casa (sta già
+    sopra la leva).
+  - `BOTTEGA.tempi` in una frase.
+  - `COLOPHON.secondaRiga` non ripete più la via.
+  - Legatoria: la cifra grande e il testo accanto dicevano due volte "6 €".
+    Nuova chiave `voci[].prezzoDopoCifra` ("a copia, solo la legatura") da
+    usare accanto alla cifra, che a quel punto **non** deve essere
+    `aria-hidden`. Più una riga comune `LEGATORIA.riferimento` ("Prezzi su 100
+    copie. Si parte da 30.") al posto delle quattro code "su 100 copie".
+- **Ricomincia da capo**: `COLOPHON.ricomincia.fatto` resta una stringa
+  (compatibilità), ora vera con qualsiasi carta di partenza. Nuova
+  `COLOPHON.ricomincia.fattoCarta(carta)`, cioè il `fatto(carta)` chiesto dal
+  colophon: "Fatto. Il sito è tornato su Grafite e il banco è vuoto."
+
+### Chiavi nuove
+
+| Chiave | Valore / uso |
+|---|---|
+| `RECAPITI.telefonoEtichetta` | "Chiama la bottega" |
+| `RECAPITI.telefonoNumero` | "0434 000 000", solo dato, mai a vista |
+| `RECAPITI.emailEtichetta` | "Scrivi alla bottega" |
+| `RECAPITI.nota` | "Telefono ed email sono di esempio: la bottega non esiste." |
+| `BOTTEGA.recapitiNota` | = `RECAPITI.nota`, piccola sotto i link |
+| `BOTTEGA.stato.{aperto, chiuso}` | "Adesso siamo aperti." / "Adesso siamo chiusi.": lo stato orario come riga di testo, non come titolo a 60 px (il builder oggi usa testi locali) |
+| `COLOPHON.telefono`, `COLOPHON.email` | etichette dei due link del colophon |
+| `COLOPHON.ricomincia.fattoCarta(carta)` | esito di "Ricomincia da capo" con la carta vera |
+| `LEGATORIA.voci[].prezzoDopoCifra` | testo accanto alla cifra grande |
+| `LEGATORIA.riferimento` | riga comune sotto le quattro legature |
+
+### Per i section-builder (cosa passare dal vecchio al nuovo)
+
+- **colophon**: `RECAPITI.email` → `COLOPHON.email`; `ricomincia.fatto` →
+  `ricomincia.fattoCarta(carta)`.
+- **bottega**: `BOTTEGA.stato.*` al posto dei testi locali "aperto adesso /
+  chiuso adesso"; `BOTTEGA.recapitiNota` sotto i link; togliere lo span del
+  telefono a 60 px.
+- **legatoria**: `prezzoDopoCifra` + `riferimento`, cifra leggibile dai
+  lettori di schermo.
+- **banco, tecniche**: non rendere `<p>` con `intro` vuota. Nel banco
+  `dipende` e `ristampa` sono resi due volte (in `Prova.tsx` e in
+  `Compositoio.tsx`): una basta.

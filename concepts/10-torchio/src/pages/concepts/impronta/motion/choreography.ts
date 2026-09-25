@@ -36,6 +36,12 @@ import { MOLLE, type ParametriMolla } from './spring';
 export const VAR = {
   /** 0..1 su ogni blocco premuto. Il fallback CSS scala le ombre con questo. */
   press: '--imp-press',
+  /**
+   * 0..1 transitorio, solo mentre la pressa scende e si riassesta: la carta
+   * intorno alle lettere schiacciata dall'urto (picco al contatto, 0 a riposo).
+   * Per un alone d'ombra largo e morbido attorno alla parola che si stringe.
+   */
+  pressUrto: '--imp-press-urto',
   /** Progresso generico di una sezione, se non se ne indica un altro. */
   scrollP: '--imp-scroll-p',
   /** 0..1 lungo il pin delle Tecniche (sul contenitore alto della sezione). */
@@ -121,7 +127,7 @@ export const PROFILI = {
   /** Hero: la parola *impronta*. Una volta sola, all'apertura. */
   heroParola: {
     nome: 'hero-parola',
-    ritardo: 160,
+    ritardo: 120,
     durata: 1100,
     sfasamento: 0,
     riposo: 1,
@@ -165,8 +171,8 @@ export const PROFILI = {
   /** Banco: la prova sulla lastra. Riposo 0,78 perché la leva possa ancora premere. */
   bancoProva: {
     nome: 'banco-prova',
-    ritardo: 0,
-    durata: 900,
+    ritardo: 120,
+    durata: 1100,
     sfasamento: 0,
     riposo: 0.78,
     margine: '0px 0px -25% 0px',
@@ -176,7 +182,7 @@ export const PROFILI = {
   /** Banco: il prezzo in lamina sul margine della prova, dopo la prova. */
   bancoPrezzo: {
     nome: 'banco-prezzo',
-    ritardo: 220,
+    ritardo: 700,
     durata: 700,
     sfasamento: 0,
     riposo: 1,

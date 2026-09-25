@@ -1,23 +1,23 @@
 /**
  * IMPRONTA · sezione 7, "La bottega · portaci la bozza" (section-builder-bottega).
  *
- * Composta come il frontespizio di un libro, tutta ancorata al margine
- * interno (ux-architect §5.7):
+ * Giro 2: composta come un frontespizio (docs/awwwards-jury.md, Bottega).
  * 1. H2 e intro;
- * 2. l'indirizzo, premuto a secco su due righe larghe quanto l'area viva
- *    (`.imp-pressa`, profilo `BOTTEGA` del motion-designer), con il suo
- *    gemello leggibile in inchiostro nell'`<address>` sopra;
- * 3. gli orari, con lo stato "aperto adesso / chiuso adesso" calcolato
- *    sull'ora vera di Pordenone (Europe/Rome), e i recapiti: telefono,
- *    email, Google Maps (nuova scheda). Su mobile telefono e Maps sono due
- *    bottoni pieni da 52 px, uno sotto l'altro;
- * 4. chi c'è: Marta, Franco, Elia, per nome e con cosa fanno;
- * 5. le macchine, con la frase sulla storia;
- * 6. tempi, spedizione e il "no" detto con calma.
+ * 2. l'indirizzo premuto a secco UNA volta, grande, largo quanto l'area viva
+ *    (`.imp-pressa`, profilo `BOTTEGA` del motion-designer), e sotto il suo
+ *    gemello leggibile in inchiostro (`<address>`) con i recapiti in corpo
+ *    piccolo, come la riga dell'editore in fondo a un frontespizio:
+ *    telefono, email, Google Maps (nuova scheda);
+ * 3. una riga di testo con lo stato "aperto adesso / chiuso adesso",
+ *    calcolato sull'ora vera di Pordenone (Europe/Rome);
+ * 4. a sinistra gli orari, a destra "chi c'è" come frase, la storia e tre
+ *    macchine, una riga ciascuna;
+ * 5. piede: tempi, spedizione, il "no" detto con calma.
  *
- * Testi: tutto da `content/testi.ts` (BOTTEGA, RECAPITI, RILIEVI), tranne i
- * pochi elencati in `TESTI_SEZIONE` qui sotto, che testi.ts non ha ancora
- * (vedi docs/section-builder-bottega.md §4).
+ * Testi: tutto da `content/testi.ts` (BOTTEGA) e `core/links.ts`, tranne i
+ * pochi di `TESTI_SEZIONE` qui sotto, che testi.ts non ha ancora
+ * (docs/section-builder-bottega.md §4). I recapiti si leggono dalle chiavi,
+ * mai dai valori: il copywriter può cambiarli.
  *
  * Nessun accesso a window/document a livello di modulo: l'ora di Roma si
  * legge solo dentro un effetto, quindi il prerender esce senza stato e la
@@ -40,22 +40,15 @@ import { ReliefText } from '../../relief/ReliefText';
 
 const TESTI_SEZIONE = {
   chiTitolo: 'Chi c\'è',
-  macchineTitolo: 'Le macchine',
   recapitiAria: 'Telefono, email e mappa',
   oggi: 'oggi',
-  statoAria: 'La bottega adesso',
-  aperto: 'aperto adesso',
-  chiuso: 'chiuso adesso',
-  /** Macchine e usi dal brand-strategist §1.5 (nomi veri, prova di credibilità). */
+  aperto: 'Aperto adesso',
+  chiuso: 'Chiuso adesso',
+  /** Tre macchine dal brand-strategist §1.5, una riga ciascuna. */
   macchine: [
-    { nome: 'Platina Heidelberg a stella', uso: 'Biglietti, partecipazioni, cartoline. A secco e a un colore, formato utile 26×38 cm.' },
-    { nome: 'Platina per lamina a caldo', uso: 'Lamina argento con la piastra riscaldata, e il secco profondo.' },
-    { nome: 'Torchio tirabozze a cilindro', uso: 'Prove, manifesti piccoli, tirature d\'artista numerate.' },
-    { nome: 'Cassettiere di caratteri', uso: 'Piombo e legno, per comporre a mano testi brevi e titoli.' },
-    { nome: 'Taglierina a ghigliottina', uso: 'Rifila biglietti, blocchi e libri dopo la cucitura.' },
-    { nome: 'Cordonatrice manuale', uso: 'Pieghe pulite anche sui cartoncini da 600 g.' },
-    { nome: 'Cucitrice a filo refe', uso: 'Cuce le segnature di brossure e cartonati.' },
-    { nome: 'Pressa da legatoria a vite', uso: 'Tiene in forma i libri mentre la colla asciuga.' },
+    { nome: 'La platina Heidelberg a stella', uso: 'stampa biglietti e partecipazioni, a secco e a un colore.' },
+    { nome: 'La platina a caldo', uso: 'posa la lamina argento con la piastra riscaldata.' },
+    { nome: 'La cucitrice a filo refe', uso: 'cuce le segnature di brossure e cartonati.' },
   ],
 } as const;
 
@@ -124,7 +117,7 @@ function orario(minuti: number): string {
 
 interface StatoBottega {
   aperta: boolean;
-  /** La frase sotto la parola: fino a quando, o quando riapre. */
+  /** Il seguito della frase: fino a quando, o quando riapre (minuscolo). */
   dettaglio: string;
   /** "A Pordenone sono le 17.42." */
   ora: string;
@@ -142,15 +135,15 @@ function calcolaStato({ giorno, minuti }: OraRoma): StatoBottega {
     const mancano = inCorso[1] - minuti;
     const dettaglio =
       mancano <= 30
-        ? `Chiude alle ${orario(inCorso[1])}, tra ${mancano} ${mancano === 1 ? 'minuto' : 'minuti'}.`
-        : `Fino alle ${orario(inCorso[1])}.`;
+        ? `chiude alle ${orario(inCorso[1])}, tra ${mancano} ${mancano === 1 ? 'minuto' : 'minuti'}.`
+        : `fino alle ${orario(inCorso[1])}.`;
     return { aperta: true, dettaglio, ora, rigaOggi };
   }
 
   const piuTardi = oggi.find(([apre]) => apre > minuti);
   if (piuTardi !== undefined) {
     const giaAperta = oggi.some(([, chiude]) => chiude <= minuti);
-    const verbo = giaAperta ? 'Riapre' : 'Apre';
+    const verbo = giaAperta ? 'riapre' : 'apre';
     return { aperta: false, dettaglio: `${verbo} oggi alle ${orario(piuTardi[0])}.`, ora, rigaOggi };
   }
 
@@ -159,7 +152,7 @@ function calcolaStato({ giorno, minuti }: OraRoma): StatoBottega {
     const prima = SETTIMANA[g]?.[0];
     if (prima === undefined) continue;
     const quando = passo === 1 ? 'domani' : NOMI_GIORNO[g];
-    return { aperta: false, dettaglio: `Riapre ${quando} alle ${orario(prima[0])}.`, ora, rigaOggi };
+    return { aperta: false, dettaglio: `riapre ${quando} alle ${orario(prima[0])}.`, ora, rigaOggi };
   }
 
   return { aperta: false, dettaglio: '', ora, rigaOggi };
@@ -256,41 +249,60 @@ export default function Bottega() {
           <p className="imp-bottega__intro">{t.intro}</p>
         </header>
 
-        {/* L'indirizzo: stampato (si legge) e premuto (si tocca). Il rilievo è
+        {/* Il frontespizio: l'indirizzo premuto una volta, il gemello leggibile
+            sotto con i recapiti, poi lo stato di adesso. Il rilievo è
             decorativo (RILIEVI.bottegaIndirizzo): ripete l'<address>. */}
-        <div className="imp-bottega__indirizzo">
-          <address className="imp-bottega__stampato">
-            {t.indirizzo.riga1}, {t.indirizzo.riga2}
-          </address>
-          <div
-            ref={indirizzoRef}
-            className="imp-bottega__rilievo"
-            aria-hidden="true"
-          >
-            <RigaPremuta testo={t.indirizzo.riga1} indice={0} osserva={indirizzoRef} />
+        <div className="imp-bottega__frontespizio">
+          <div ref={indirizzoRef} className="imp-bottega__rilievo" aria-hidden="true">
+            <RigaPremuta testo={t.indirizzo.riga1} indice={0} osserva={indirizzoRef} />{' '}
             <RigaPremuta testo={t.indirizzo.riga2} indice={1} osserva={indirizzoRef} />
           </div>
-        </div>
 
-        {/* Orari e stato di adesso. */}
-        <div className="imp-bottega__orari">
-          <h3 className="imp-bottega__h3">{t.orariTitolo}</h3>
+          <div className="imp-bottega__editore">
+            <address className="imp-bottega__stampato">
+              {t.indirizzo.riga1}, {t.indirizzo.riga2}
+            </address>
+            <ul className="imp-bottega__recapiti imp-lista" aria-label={TESTI_SEZIONE.recapitiAria}>
+              <li>
+                <a className="imp-bottega__recapito imp-ix-link" href={t.telefono.href} aria-label={t.telefono.aria}>
+                  {t.telefono.testo}
+                </a>
+              </li>
+              <li>
+                <a className="imp-bottega__recapito imp-ix-link" href={EMAIL_URL} aria-label={t.email.aria}>
+                  {t.email.testo}
+                </a>
+              </li>
+              <li>
+                <a
+                  className="imp-bottega__recapito imp-ix-link"
+                  href={MAPS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={t.maps.aria}
+                >
+                  {MAPS_TESTO}
+                  <span className="imp-bottega__freccia" aria-hidden="true" dangerouslySetInnerHTML={{ __html: freccia }} />
+                </a>
+              </li>
+            </ul>
+          </div>
 
           <p className="imp-bottega__stato" data-stato={stato === null ? 'attesa' : stato.aperta ? 'aperta' : 'chiusa'}>
             {stato !== null && (
               <>
-                <span className="imp-sr">{TESTI_SEZIONE.statoAria}: </span>
-                <span className="imp-bottega__stato-parola">
+                <strong className="imp-bottega__stato-parola">
                   {stato.aperta ? TESTI_SEZIONE.aperto : TESTI_SEZIONE.chiuso}
-                </span>
-                <span className="imp-sr">. </span>
-                <span className="imp-bottega__stato-dettaglio">
-                  {stato.dettaglio} {stato.ora}
-                </span>
+                </strong>
+                , {stato.dettaglio} {stato.ora}
               </>
             )}
           </p>
+        </div>
 
+        {/* Orari, scritti come un tipografo. */}
+        <div className="imp-bottega__orari">
+          <h3 className="imp-bottega__h3">{t.orariTitolo}</h3>
           <dl className="imp-bottega__settimana">
             {t.orari.map((riga, i) => {
               const oggi = stato !== null && stato.rigaOggi === i;
@@ -305,64 +317,34 @@ export default function Bottega() {
               );
             })}
           </dl>
-
-          <p className="imp-bottega__nota">{t.senzaAppuntamento}</p>
-          <p className="imp-bottega__nota">{t.appuntamento}</p>
+          <p className="imp-bottega__nota imp-piccolo">{t.senzaAppuntamento}</p>
+          <p className="imp-bottega__nota imp-piccolo">{t.appuntamento}</p>
+          <p className="imp-bottega__nota imp-piccolo">{t.parcheggio}</p>
         </div>
 
-        {/* Recapiti: le due conversioni del telefono, più l'email. */}
-        <nav className="imp-bottega__recapiti" aria-label={TESTI_SEZIONE.recapitiAria}>
-          <a className="imp-bottega__telefono imp-ix-premibile" href={t.telefono.href} aria-label={t.telefono.aria}>
-            <span className="imp-bottega__telefono-largo" aria-hidden="true">{t.telefono.testo}</span>
-            <span className="imp-bottega__telefono-bottone" aria-hidden="true">{t.telefono.bottone}</span>
-          </a>
-          <a className="imp-bottega__email imp-ix-link" href={EMAIL_URL} aria-label={t.email.aria}>
-            {t.email.testo}
-          </a>
-          <a
-            className="imp-bottega__maps imp-ix-premibile"
-            href={MAPS_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={t.maps.aria}
-          >
-            <span className="imp-bottega__maps-testo">{MAPS_TESTO}</span>
-            <span className="imp-bottega__freccia" aria-hidden="true" dangerouslySetInnerHTML={{ __html: freccia }} />
-          </a>
-          <p className="imp-bottega__nota imp-bottega__parcheggio">{t.parcheggio}</p>
-        </nav>
-
-        {/* Chi c'è: nome grande, cosa fa accanto. */}
+        {/* Chi c'è: una frase, con i nomi in evidenza; poi la storia e tre macchine. */}
         <div className="imp-bottega__chi">
           <h3 className="imp-bottega__h3">{TESTI_SEZIONE.chiTitolo}</h3>
-          <ul className="imp-bottega__persone imp-lista">
-            {PERSONE.map((p) => (
-              <li key={p.nome} className="imp-bottega__persona">
-                <span className="imp-bottega__nome">{p.nome}</span>{' '}
-                <span className="imp-bottega__mestiere">{p.cosaFa}</span>
+          <p className="imp-bottega__persone">
+            {PERSONE.map((p, i) => (
+              <span key={p.nome} className="imp-bottega__persona">
+                <strong className="imp-bottega__nome">{p.nome}</strong> {p.cosaFa}
+                {i < PERSONE.length - 1 ? ' ' : ''}
+              </span>
+            ))}
+          </p>
+          <p className="imp-bottega__storia">{t.storia}</p>
+          <ul className="imp-bottega__macchine imp-lista">
+            {TESTI_SEZIONE.macchine.map((m) => (
+              <li key={m.nome} className="imp-bottega__macchina">
+                <span className="imp-bottega__macchina-nome">{m.nome}</span> {m.uso}
               </li>
             ))}
           </ul>
         </div>
 
-        {/* Le macchine, con la storia in una frase. */}
-        <div className="imp-bottega__macchine">
-          <div className="imp-bottega__macchine-testa">
-            <h3 className="imp-bottega__h3">{TESTI_SEZIONE.macchineTitolo}</h3>
-            <p className="imp-bottega__storia">{t.storia}</p>
-          </div>
-          <dl className="imp-bottega__parco">
-            {TESTI_SEZIONE.macchine.map((m) => (
-              <div key={m.nome} className="imp-bottega__macchina">
-                <dt>{m.nome}</dt>
-                <dd>{m.uso}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-
         {/* Tempi, spedizione, il no detto con calma. */}
-        <div className="imp-bottega__piede">
+        <div className="imp-bottega__piede imp-piccolo">
           <p>{t.tempi}</p>
           <p>{t.spedizione}</p>
           <p>{t.noGrandi}</p>

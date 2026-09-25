@@ -1,29 +1,31 @@
 /**
- * IMPRONTA · 8 · Colophon (section-builder-colophon).
+ * IMPRONTA · 8 · Colophon (section-builder-colophon), giro 2.
  *
- * L'ultima pagina di un libro ben fatto: di cosa è fatto il sito (caratteri,
- * carta attiva, tecnica, città), l'indice, i due comandi finali ("Prova la
- * tua" e "Ricomincia da capo"), i recapiti essenziali e la firma del concept.
- * Chiude il foglio il marchio IMPRONTA premuto a secco a tutta area viva, come
- * il sigillo a secco dell'editore sull'ultima pagina.
+ * Composto come l'ultima pagina di un libro, tutto sull'asse della gabbia
+ * (il centro dell'area viva, non dello schermo): il titolo piccolo e largo,
+ * la frase del colophon in Hanken 21 px con la carta attiva, l'indice in una
+ * riga sola, un solo bottone ("Prova la tua") con accanto "Ricomincia da capo"
+ * in forma di link, poi il marchio IMPRONTA premuto a secco a tutta area viva
+ * (è il fotogramma finale del sito) e sotto, piccola, la riga dello
+ * stampatore: bottega e città, recapiti, finzione dichiarata, firma del
+ * concept.
  *
- * Regole rispettate (docs/ux-architect.md §5.8, motion-designer §6.8,
- * scaffold-engineer §2 e §4.8, art-director §3.4):
- * - `<footer id="colophon" class="imp-colophon">`, nessuna prop;
- * - testi SOLO da content/testi.ts; la carta nel testo è quella attiva e
- *   cambia secca con `data-carta` (nessuna animazione del testo);
- * - l'unico movimento è la pressa leggera del marchio (`PROFILI.colophonFirma`);
- *   con reduced motion è già premuto;
- * - "Ricomincia da capo" chiede conferma in linea (niente popup), poi onda
- *   verso la carta di partenza e `ricominciaDaCapo()`; esito in `aria-live`;
- * - i link `#` li gestisce il click delegato di Impronta.tsx;
- * - nessun accesso a window/document a livello di modulo.
+ * Il sigillo senza WebGL è un SVG in linea (il path del vector-artist) con un
+ * filtro di ombra e luce INTERNE: parete scura verso la luce, labbro chiaro
+ * dall'altra parte, fondo del solco più scuro della carta. Niente maschere con
+ * `url()` (il bug del giro 1: data URI con apici singoli dentro `url()` senza
+ * virgolette) e niente secondo import del marchio (`?url`).
+ *
+ * Regole: testi solo da content/testi.ts; unico movimento la pressa leggera
+ * del sigillo (PROFILI.colophonFirma), già premuto con reduced motion;
+ * conferma di "Ricomincia da capo" in linea; i link `#` li gestisce il click
+ * delegato di Impronta.tsx; nessun accesso a window/document a livello di
+ * modulo.
  */
-import { useEffect, useId, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import './colophon.css';
 
 import { freccia, marchioImpronta } from '../../assets/svg';
-import marchioUrl from '../../assets/svg/marchio-impronta.svg?url';
 import { CARTE, COLOPHON as TESTI, COMUNI, RECAPITI, TESTATA } from '../../content/testi';
 import { CICERILAB_URL, EMAIL_URL, LAB_URL, MAPS_URL, TELEFONO_URL } from '../../core/links';
 import { cambiaCarta } from '../../interaction/paperWave';
@@ -34,9 +36,14 @@ import { cartaPredefinita, ricominciaDaCapo, store, useImpronta, type Carta } fr
 
 type FaseRicomincia = 'fermo' | 'domanda' | 'lavoro' | 'fatto';
 
-/** Freccia dei link esterni (vector-artist), sempre decorativa. */
+/** Il path del marchio (un solo `path` pieno, viewBox 0 0 941 100): solo lavoro su stringhe. */
+const MARCHIO_D = /\sd="([^"]+)"/.exec(marchioImpronta)?.[1] ?? '';
+
+/** La freccia dei link esterni senza il suo `id` (inserita più volte nella pagina). */
+const FRECCIA_SVG = freccia.replace(/\sid="[^"]*"/g, '');
+
 function Freccia() {
-  return <span className="imp-colophon__freccia" aria-hidden="true" dangerouslySetInnerHTML={{ __html: freccia }} />;
+  return <span className="imp-colophon__freccia" aria-hidden="true" dangerouslySetInnerHTML={{ __html: FRECCIA_SVG }} />;
 }
 
 /**
@@ -57,29 +64,50 @@ function FraseCarta({ carta }: { carta: Carta }) {
   );
 }
 
-/** Il marchio premuto a secco: registrato come rilievo SVG, con il suo fallback CSS a maschera. */
+/**
+ * Il marchio premuto a secco. Registrato come rilievo SVG (lo disegna lo
+ * shader quando c'è); il fallback è l'SVG in linea con il solco nel filtro.
+ */
 function Sigillo() {
-  const ref = useRef<HTMLSpanElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
+  const idFiltro = `imp-colophon-solco-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   const reliefId = useRelief(ref, {
     kind: 'svg',
     svg: marchioImpronta,
     tecnica: 'secco',
-    profondita: 0.9,
+    profondita: 1,
     tracking: 'doc',
     priorita: 1,
   });
   usePressione(ref, { profilo: MOTO.profilo, reliefId });
 
   return (
-    <span
-      ref={ref}
-      {...ATTESA_PRESSA}
-      className="imp-colophon__marchio imp-relief"
-      style={{ '--imp-segno': `url(${marchioUrl})` } as CSSProperties}
-      aria-hidden="true"
-    >
-      <span className="imp-colophon__marchio-solco" />
-    </span>
+    <div ref={ref} {...ATTESA_PRESSA} className="imp-colophon__marchio imp-relief" aria-hidden="true">
+      <svg className="imp-colophon__marchio-svg" viewBox="0 0 941 100" focusable="false">
+        <defs>
+          <filter id={idFiltro} x="-2%" y="-10%" width="104%" height="120%" colorInterpolationFilters="sRGB">
+            {/* parete in ombra: la carta attorno, spostata via dalla luce, ritagliata dentro la lettera */}
+            <feFlood className="imp-colophon__f-ombra" result="ombraPiena" />
+            <feComposite in="ombraPiena" in2="SourceAlpha" operator="out" result="fuoriOmbra" />
+            <feOffset in="fuoriOmbra" dx="2.2" dy="2.6" result="fuoriOmbraSpostata" />
+            <feGaussianBlur in="fuoriOmbraSpostata" stdDeviation="0.9" result="ombraMorbida" />
+            <feComposite in="ombraMorbida" in2="SourceAlpha" operator="in" result="ombraDentro" />
+            {/* labbro in luce: lo stesso dall'altra parte, più corto e netto */}
+            <feFlood className="imp-colophon__f-luce" result="lucePiena" />
+            <feComposite in="lucePiena" in2="SourceAlpha" operator="out" result="fuoriLuce" />
+            <feOffset in="fuoriLuce" dx="-1.1" dy="-1.3" result="fuoriLuceSpostata" />
+            <feGaussianBlur in="fuoriLuceSpostata" stdDeviation="0.35" result="luceMorbida" />
+            <feComposite in="luceMorbida" in2="SourceAlpha" operator="in" result="luceDentro" />
+            <feMerge>
+              <feMergeNode in="SourceGraphic" />
+              <feMergeNode in="ombraDentro" />
+              <feMergeNode in="luceDentro" />
+            </feMerge>
+          </filter>
+        </defs>
+        <path className="imp-colophon__marchio-solco" d={MARCHIO_D} filter={`url(#${idFiltro})`} />
+      </svg>
+    </div>
   );
 }
 
@@ -135,53 +163,51 @@ function Ricomincia() {
   const aperta = fase === 'domanda' || fase === 'lavoro';
 
   return (
-    <>
-      <div className="imp-colophon__ricomincia">
-        {aperta ? (
-          <div
-            className="imp-colophon__domanda"
-            role="group"
-            aria-labelledby={idDomanda}
-            onKeyDown={(e) => {
-              if (e.key === 'Escape' && fase === 'domanda') {
-                e.stopPropagation();
-                annulla();
-              }
-            }}
-          >
-            <p id={idDomanda} className="imp-colophon__domanda-testo">
-              {TESTI.ricomincia.domanda}
-            </p>
-            <div className="imp-colophon__domanda-scelte">
-              <button
-                ref={siRef}
-                type="button"
-                className="imp-colophon__bottone imp-colophon__bottone--pieno imp-ix-premibile"
-                onClick={conferma}
-                disabled={fase === 'lavoro'}
-              >
-                {TESTI.ricomincia.si}
-              </button>
-              <button
-                type="button"
-                className="imp-colophon__bottone imp-ix-premibile"
-                onClick={annulla}
-                disabled={fase === 'lavoro'}
-              >
-                {TESTI.ricomincia.no}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button ref={bottoneRef} type="button" className="imp-colophon__bottone imp-ix-premibile" onClick={chiedi}>
-            {TESTI.ricomincia.bottone}
-          </button>
-        )}
-      </div>
+    <div className="imp-colophon__ricomincia">
+      {aperta ? (
+        <div
+          className="imp-colophon__domanda"
+          role="group"
+          aria-labelledby={idDomanda}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape' && fase === 'domanda') {
+              e.stopPropagation();
+              annulla();
+            }
+          }}
+        >
+          <p id={idDomanda} className="imp-colophon__domanda-testo">
+            {TESTI.ricomincia.domanda}
+          </p>
+          <span className="imp-colophon__domanda-scelte">
+            <button
+              ref={siRef}
+              type="button"
+              className="imp-colophon__testo-bottone imp-colophon__testo-bottone--forte imp-ix-link"
+              onClick={conferma}
+              disabled={fase === 'lavoro'}
+            >
+              {TESTI.ricomincia.si}
+            </button>{' '}
+            <button
+              type="button"
+              className="imp-colophon__testo-bottone imp-ix-link"
+              onClick={annulla}
+              disabled={fase === 'lavoro'}
+            >
+              {TESTI.ricomincia.no}
+            </button>
+          </span>
+        </div>
+      ) : (
+        <button ref={bottoneRef} type="button" className="imp-colophon__testo-bottone imp-ix-link" onClick={chiedi}>
+          {TESTI.ricomincia.bottone}
+        </button>
+      )}
       <p className="imp-colophon__esito imp-ix-annuncio" aria-live="polite" role="status">
         {fase === 'fatto' ? TESTI.ricomincia.fatto : ''}
       </p>
-    </>
+    </div>
   );
 }
 
@@ -192,73 +218,64 @@ export default function Colophon() {
   return (
     <footer id="colophon" className="imp-colophon" aria-labelledby={idTitolo}>
       <div className="imp-page imp-colophon__pagina">
-        <div className="imp-griglia imp-colophon__griglia">
-          <h2 id={idTitolo} className="imp-colophon__titolo" tabIndex={-1}>
-            {TESTI.titolo}
-          </h2>
+        <h2 id={idTitolo} className="imp-colophon__titolo" tabIndex={-1}>
+          {TESTI.titolo}
+        </h2>
 
-          <div className="imp-colophon__stampa">
-            <p className="imp-colophon__testo">
-              <FraseCarta carta={carta} />
-            </p>
-            <p className="imp-colophon__seconda">{TESTI.secondaRiga}</p>
+        <p className="imp-colophon__testo">
+          <FraseCarta carta={carta} />
+        </p>
+        <p className="imp-colophon__seconda imp-piccolo">{TESTI.secondaRiga}</p>
 
-            <div className="imp-colophon__comandi">
-              <a
-                href="#banco"
-                className="imp-colophon__prova imp-lamina imp-ix-premibile"
-                aria-label={TESTATA.provaAria}
-              >
-                {COMUNI.provaLaTua}
-              </a>
-              <Ricomincia />
-            </div>
-          </div>
+        <nav className="imp-colophon__indice" aria-label={TESTI.indiceAria}>
+          <h3 className="imp-sr">{TESTI.indiceTitolo}</h3>
+          <ul className="imp-lista imp-colophon__voci" role="list">
+            {TESTI.indice.map((voce) => (
+              <li key={voce.id} className="imp-colophon__voce-riga">
+                <a href={voce.href} className="imp-colophon__voce imp-ix-link">
+                  {voce.etichetta}
+                </a>{' '}
+              </li>
+            ))}
+          </ul>
+        </nav>
 
-          <nav className="imp-colophon__indice" aria-label={TESTI.indiceAria}>
-            <h3 className="imp-colophon__etichetta">{TESTI.indiceTitolo}</h3>
-            <ul className="imp-lista imp-colophon__voci" role="list">
-              {TESTI.indice.map((voce) => (
-                <li key={voce.id}>
-                  <a href={voce.href} className="imp-colophon__voce imp-ix-link">
-                    {voce.etichetta}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          <address className="imp-colophon__recapiti">
-            <a href={MAPS_URL} target="_blank" rel="noopener noreferrer" className="imp-colophon__recapito imp-ix-link">
-              {RECAPITI.indirizzoRiga}
-              <span className="imp-sr">, {COMUNI.nuovaScheda}</span>
-              <Freccia />
-            </a>
-            <a href={TELEFONO_URL} className="imp-colophon__recapito imp-ix-link">
-              {RECAPITI.telefono}
-            </a>
-            <a href={EMAIL_URL} className="imp-colophon__recapito imp-ix-link">
-              {RECAPITI.email}
-            </a>
-          </address>
+        <div className="imp-colophon__comandi">
+          <a href="#banco" className="imp-colophon__prova imp-lamina imp-ix-premibile" aria-label={TESTATA.provaAria}>
+            {COMUNI.provaLaTua}
+          </a>
+          <Ricomincia />
         </div>
 
         <div className="imp-colophon__sigillo">
           <Sigillo />
-        </div>
-
-        <div className="imp-griglia imp-colophon__piede">
-          <p className="imp-colophon__bottega">
-            <span className="imp-colophon__bottega-nome">{COMUNI.marchioSotto}</span>
+          <p className="imp-colophon__bottega imp-piccolo">
+            <span className="imp-colophon__bottega-nome">{COMUNI.marchioSotto}</span>{' '}
             <span className="imp-colophon__bottega-citta">{COMUNI.citta}</span>
           </p>
-          <p className="imp-colophon__finzione">{TESTI.finzione}</p>
-          <p className="imp-colophon__firma">
+        </div>
+
+        <div className="imp-colophon__stampatore">
+          <address className="imp-colophon__recapiti imp-piccolo">
+            <a href={MAPS_URL} target="_blank" rel="noopener noreferrer" className="imp-colophon__recapito imp-ix-link">
+              {RECAPITI.indirizzoRiga}
+              <span className="imp-sr">, {COMUNI.nuovaScheda}</span>
+              <Freccia />
+            </a>{' '}
+            <a href={TELEFONO_URL} className="imp-colophon__recapito imp-ix-link">
+              {RECAPITI.telefono}
+            </a>{' '}
+            <a href={EMAIL_URL} className="imp-colophon__recapito imp-ix-link">
+              {RECAPITI.email}
+            </a>
+          </address>
+          <p className="imp-colophon__finzione imp-nota">{TESTI.finzione}</p>
+          <p className="imp-colophon__firma imp-piccolo">
             <a href={CICERILAB_URL} target="_blank" rel="noopener" className="imp-colophon__firma-link imp-ix-link">
               {TESTI.conceptDi}
               <span className="imp-sr">, {COMUNI.nuovaScheda}</span>
               <Freccia />
-            </a>
+            </a>{' '}
             <a href={LAB_URL} className="imp-colophon__firma-link imp-ix-link" aria-label={COMUNI.tornaLabAria}>
               {COMUNI.tornaLab}
             </a>

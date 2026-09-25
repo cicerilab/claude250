@@ -2,8 +2,8 @@
  * IMPRONTA · curve di movimento.
  *
  * Ogni curva risponde alla domanda "chi lo spinge?" (trend-researcher P11):
- * - pressa        la platina scende veloce, frena sul foglio, la carta
- *                 restituisce un ritorno elastico dell'1,6% che si smorza;
+ * - pressa        la platina scende con peso, frena sul foglio, la carta
+ *                 restituisce un ritorno elastico del 2% che si smorza;
  * - rilascio      la platina si stacca: un attimo di adesione, poi sale;
  * - leva          la pressa segue la mano che tiene premuto, frena in fondo;
  * - assorbe       la carta nuova si propaga come inchiostro che bagna le fibre;
@@ -114,16 +114,26 @@ export function cubicBezier(x1: number, y1: number, x2: number, y2: number): Eas
 /* La pressa                                                           */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Giro 2 (giuria: "la pressa che scende non si percepisce"). La corsa ora ha
+ * peso: la platina parte lenta (inerzia), accelera, frena contro la carta e
+ * tocca al 70% del tempo. Con 1100 ms i fotogrammi a 0/300/600/900/1200 ms
+ * mostrano cinque stati diversi (piatto, appena accennato, quasi pieno,
+ * contatto, carta che si riassesta) invece di un salto nei primi 300 ms.
+ */
+
 /** Frazione della durata in cui la platina tocca il foglio. */
-export const PRESSA_CONTATTO = 0.58;
-/** Profondità del primo ritorno elastico della carta (1,6% del rilievo). */
-export const PRESSA_RITORNO = 0.016;
-/** Esponente della discesa: più alto = parte più veloce, frena più tardi. */
-const PRESSA_POTENZA = 2.6;
+export const PRESSA_CONTATTO = 0.7;
+/** Profondità del primo ritorno elastico della carta (2% del rilievo). */
+export const PRESSA_RITORNO = 0.02;
 /** Smorzamento del ritorno: il secondo rimbalzo vale circa il 18% del primo. */
 const PRESSA_SMORZAMENTO = 3.4;
 /** Normalizza il ritorno perché il primo picco valga esattamente 1. */
 const RITORNO_NORMA = Math.exp(PRESSA_SMORZAMENTO * 0.25);
+/** Inizio (frazione della discesa) in cui la carta comincia a opporsi: nasce l'urto. */
+const URTO_INIZIO = 0.78;
+/** Decadimento dell'urto dopo il contatto. */
+const URTO_DECADIMENTO = 4.5;
 
 /**
  * Ritorno elastico della carta dopo il contatto, per u in 0..1.
@@ -137,27 +147,44 @@ export function ritornoElastico(u: number): number {
   return Math.exp(-PRESSA_SMORZAMENTO * x) * s * s * RITORNO_NORMA;
 }
 
+/** La discesa della platina, 0..1 sul suo tratto: parte lenta, accelera, frena. */
+function discesa(u: number): number {
+  return smootherstep01(u);
+}
+
 /**
  * La curva firma: 0 = foglio piatto, 1 = impressione piena.
- * Discesa rapida che frena a velocità nulla sul contatto (58% del tempo),
- * poi la carta restituisce l'1,6% e si assesta. Continua e con derivata
- * continua in tutto il dominio. Resta sempre in 0..1.
+ * Discesa con peso (smootherstep) fino al contatto al 70% del tempo, a
+ * velocità nulla; poi la carta restituisce il 2% e si assesta. Continua
+ * con derivata continua. Resta sempre in 0..1.
  */
 export function pressa(t: number): number {
   const x = clamp01(t);
   if (x >= 1) return 1;
-  if (x < PRESSA_CONTATTO) {
-    const u = x / PRESSA_CONTATTO;
-    return 1 - Math.pow(1 - u, PRESSA_POTENZA);
-  }
+  if (x < PRESSA_CONTATTO) return discesa(x / PRESSA_CONTATTO);
   const u = (x - PRESSA_CONTATTO) / (1 - PRESSA_CONTATTO);
   return 1 - PRESSA_RITORNO * ritornoElastico(u);
 }
 
-/** Come `pressa` ma senza ritorno elastico: per reduced motion sulla leva. */
+/**
+ * L'urto: quanto la carta INTORNO alle lettere è schiacciata in questo
+ * istante della curva `pressa`, 0..1. Nasce quando la platina comincia a
+ * incontrare resistenza (78% della discesa), è massimo al contatto, poi si
+ * scarica in modo esponenziale e vale esattamente 0 alla fine. È un
+ * transitorio: a riposo è sempre 0 (la carta intorno torna piana).
+ * Monotono in salita e in discesa: un solo picco, nessun lampeggio.
+ */
+export function urtoPressa(t: number): number {
+  const x = clamp01(t);
+  if (x >= 1) return 0;
+  if (x < PRESSA_CONTATTO) return smoothstep01((x / PRESSA_CONTATTO - URTO_INIZIO) / (1 - URTO_INIZIO));
+  const u = (x - PRESSA_CONTATTO) / (1 - PRESSA_CONTATTO);
+  return Math.exp(-URTO_DECADIMENTO * u) * (1 - u);
+}
+
+/** Come `pressa` ma senza ritorno elastico né urto: per reduced motion sulla leva. */
 export function pressaSenzaRitorno(t: number): number {
-  const u = clamp01(t);
-  return 1 - Math.pow(1 - u, PRESSA_POTENZA);
+  return discesa(clamp01(t));
 }
 
 /**
@@ -214,7 +241,7 @@ export function cssLinear(fn: Easing, campioni = 48, decimali = 4): string {
 
 /** Le stesse curve come cubic-bezier CSS (la pressa ha un'approssimazione senza ritorno). */
 export const BEZIER_CSS = {
-  pressa: 'cubic-bezier(0.2, 0.86, 0.3, 1)',
+  pressa: 'cubic-bezier(0.6, 0, 0.3, 1)',
   rilascio: 'cubic-bezier(0.5, 0, 0.18, 1)',
   leva: 'cubic-bezier(0.3, 0.12, 0.34, 1)',
   assorbe: 'cubic-bezier(0.16, 0.64, 0.32, 1)',

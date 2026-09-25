@@ -9,11 +9,11 @@
  *   sfalsate; la didascalia in inchiostro sotto ciascuno, sul suo bordo sinistro.
  * - Sotto i 1024 px: mazzo con scroll-snap nativo (`useSwipeDeck`), il pezzo
  *   successivo sporge da destra; sotto, nomi-bottone e frecce ‹ ›.
- * - "Prova la tua" (tre partenze, un solo richiamo): imposta "Cosa stampi",
- *   tecnica e tiratura del pezzo, cambia la carta del sito con l'onda
- *   (`cambiaCarta`, mai `scegliCarta` diretto) e lascia che il clic delegato
- *   di Impronta.tsx porti al banco. L'annuncio `bancoImpostato` e quello del
- *   pezzo in vista vanno nella regione `aria-live` locale.
+ * - Link testuale al banco sotto ogni pezzo ("Prova la tua partecipazione",
+ *   giro 2: niente tre bottoni "Prova la tua"): cambia la carta del sito con
+ *   l'onda (`cambiaCarta`, mai `scegliCarta` diretto), poi imposta "Cosa
+ *   stampi", tecnica e tiratura del pezzo; il clic delegato di Impronta.tsx
+ *   porta al banco. Un solo annuncio (vedi suProva).
  *
  * Nessun accesso a window/document a livello di modulo.
  */
@@ -24,7 +24,7 @@ import { ANNUNCI, PER_CHI } from '../../content/testi';
 import type { Legatura, Prodotto } from '../../content/prezzi';
 import { cambiaCarta } from '../../interaction/paperWave';
 import { useSwipeDeck } from '../../interaction/useSwipeDeck';
-import { aggiornaProva } from '../../state/store';
+import { aggiornaProva, store } from '../../state/store';
 import Pezzo, { type TestiPezzo } from './Pezzo';
 
 /**
@@ -64,15 +64,22 @@ export default function PerChi() {
   const suProva = useCallback(
     (pezzo: TestiPezzo, origine: HTMLElement) => {
       const { prodotto, carta, tecnica } = pezzo.preset;
-      aggiornaProva({
-        prodotto,
-        tecnica,
-        taglioColorato: false,
-        tiratura: TIRATURA_DEL_PEZZO[prodotto],
-        ...(prodotto === 'libro' ? { legatura: LEGATURA_DEL_LIBRO } : {}),
-      });
-      void cambiaCarta(carta, origine);
-      annuncia(ANNUNCI.bancoImpostato(prodotto, carta));
+      // Prima la carta (onda dal link), poi il banco: così un solo annuncio,
+      // con la carta giusta (accessibility-auditor M1). Se cambia il prodotto
+      // annuncia il banco (Banco.tsx, carta ormai scambiata); se il prodotto è
+      // lo stesso il banco tace e l'annuncio lo dà questa sezione.
+      const stessoProdotto = store.get().prova.prodotto === prodotto;
+      const imposta = (): void => {
+        aggiornaProva({
+          prodotto,
+          tecnica,
+          taglioColorato: false,
+          tiratura: TIRATURA_DEL_PEZZO[prodotto],
+          ...(prodotto === 'libro' ? { legatura: LEGATURA_DEL_LIBRO } : {}),
+        });
+        if (stessoProdotto) annuncia(ANNUNCI.bancoImpostato(prodotto, carta));
+      };
+      cambiaCarta(carta, origine).then(imposta, imposta);
     },
     [annuncia],
   );
@@ -86,18 +93,6 @@ export default function PerChi() {
           </h2>
           <p className="imp-perchi__intro">{PER_CHI.intro}</p>
         </header>
-
-        <ul className="imp-perchi__fila imp-ix-mazzo imp-lista" role="list" {...mazzo.filaProps}>
-          {PER_CHI.pezzi.map((pezzo, i) => (
-            <li
-              key={pezzo.id}
-              className={`imp-perchi__posto imp-perchi__posto--${pezzo.id} imp-ix-mazzo__pezzo`}
-              {...mazzo.pezzoProps(i)}
-            >
-              <Pezzo pezzo={pezzo} indice={i} sezioneRef={sezioneRef} largo={!mazzo.attivo} onProva={suProva} />
-            </li>
-          ))}
-        </ul>
 
         {mazzo.attivo ? (
           <nav className="imp-perchi__sfoglia imp-ix-mazzo-nav" aria-label={PER_CHI.fila.aria}>
@@ -124,6 +119,19 @@ export default function PerChi() {
             </button>
           </nav>
         ) : null}
+
+        <ul className="imp-perchi__fila imp-ix-mazzo imp-lista" role="list" {...mazzo.filaProps}>
+          {PER_CHI.pezzi.map((pezzo, i) => (
+            <li
+              key={pezzo.id}
+              className={`imp-perchi__posto imp-perchi__posto--${pezzo.id} imp-ix-mazzo__pezzo`}
+              {...mazzo.pezzoProps(i)}
+            >
+              <Pezzo pezzo={pezzo} indice={i} sezioneRef={sezioneRef} largo={!mazzo.attivo} onProva={suProva} />
+            </li>
+          ))}
+        </ul>
+
 
         <p className="imp-sr" aria-live="polite" aria-atomic="true">
           {annuncio}

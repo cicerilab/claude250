@@ -7,7 +7,8 @@
  *   ritorno elastico della carta;
  * - la integra nel ticker (fase `update`) e la passa al registro dei
  *   rilievi con `registry.setPressione(id, v)`, che la porta allo shader;
- * - scrive nella fase `write` SOLO `--imp-press` e `data-imp-pressa`
+ * - scrive nella fase `write` SOLO `--imp-press`, il transitorio
+ *   `--imp-press-urto` (carta schiacciata intorno, 0 a riposo) e `data-imp-pressa`
  *   sull'elemento (gli assi di Anybody li deriva il CSS `.imp-pressa`), così il
  *   fallback CSS e i titoli DOM si muovono con lo stesso valore del GL;
  * - espone i gesti successivi: hover, battuta di una lettera, ristampa con
@@ -29,6 +30,7 @@ import {
   pressaSenzaRitorno,
   rilascio,
   ritornoElastico,
+  urtoPressa,
   type Easing,
 } from './easing';
 import { Molla, MOLLE, type ParametriMolla } from './spring';
@@ -55,6 +57,8 @@ type Fase =
       readonly tipo: 'curva';
       /** Valore in funzione del progresso 0..1 della curva. */
       readonly valoreA: Easing;
+      /** Urto (carta schiacciata intorno) in funzione del progresso, o null. */
+      readonly urtoA: Easing | null;
       readonly ritardo: number;
       readonly durata: number;
       trascorso: number;
@@ -66,6 +70,8 @@ const FERMA: Fase = { tipo: 'ferma' };
 
 class Animatore {
   valore: number;
+  /** Urto transitorio 0..1 (0 a riposo e in molla). */
+  urto = 0;
   private fase: Fase = FERMA;
   private readonly molla: Molla;
 
@@ -80,15 +86,23 @@ class Animatore {
 
   salta(valore: number): void {
     this.valore = valore;
+    this.urto = 0;
     this.molla.salta(valore);
     this.fase = FERMA;
   }
 
   /** Curva a tempo: `valoreA(u)` per u da 0 a 1 in `durata` ms, dopo `ritardo` ms. */
-  curva(valoreA: Easing, durata: number, ritardo = 0, poi: (() => void) | null = null): void {
+  curva(
+    valoreA: Easing,
+    durata: number,
+    ritardo = 0,
+    poi: (() => void) | null = null,
+    urtoA: Easing | null = null,
+  ): void {
     this.fase = {
       tipo: 'curva',
       valoreA,
+      urtoA,
       durata: Math.max(1, durata),
       ritardo: Math.max(0, ritardo),
       trascorso: 0,
@@ -126,6 +140,7 @@ class Animatore {
     if (f.tipo === 'molla') {
       const inMoto = this.molla.passo(dt);
       this.valore = this.molla.valore;
+      this.urto = 0;
       if (!inMoto) this.fase = FERMA;
       return inMoto;
     }
@@ -133,7 +148,9 @@ class Animatore {
     if (f.trascorso < f.ritardo) return true;
     const u = clamp01((f.trascorso - f.ritardo) / f.durata);
     this.valore = f.valoreA(u);
+    this.urto = f.urtoA === null ? 0 : clamp01(f.urtoA(u));
     if (u < 1) return true;
+    this.urto = 0;
     this.fase = FERMA;
     if (f.poi !== null) f.poi();
     return this.inMoto;
@@ -169,6 +186,7 @@ class MotorePressione {
   private reliefId: string | null = null;
   private stop: Array<() => void> | null = null;
   private scritto = Number.NaN;
+  private urtoScritto = Number.NaN;
   private stato: StatoPressa | null = null;
   private hoverAttivo = false;
   private ultimaBattuta = Number.NEGATIVE_INFINITY;
@@ -196,6 +214,7 @@ class MotorePressione {
       this.el = el;
       this.stato = null;
       this.scritto = Number.NaN;
+      this.urtoScritto = Number.NaN;
     }
   }
 
@@ -246,9 +265,15 @@ class MotorePressione {
     const el = this.el;
     if (el === null) return;
     const v = clamp01(this.anim.valore);
-    if (!forza && Math.abs(v - this.scritto) < 1e-4) return;
-    this.scritto = v;
-    el.style.setProperty(VAR.press, v.toFixed(4));
+    if (forza || Math.abs(v - this.scritto) >= 1e-4) {
+      this.scritto = v;
+      el.style.setProperty(VAR.press, v.toFixed(4));
+    }
+    const urto = this.anim.urto;
+    if (forza || Math.abs(urto - this.urtoScritto) >= 1e-3 || (urto === 0 && this.urtoScritto !== 0)) {
+      this.urtoScritto = urto;
+      el.style.setProperty(VAR.pressUrto, urto.toFixed(3));
+    }
   }
 
   private scriviStato(stato: StatoPressa): void {
@@ -338,6 +363,8 @@ class MotorePressione {
       (u) => lerp(da, a, pressa(u)),
       this.profilo.durata,
       ritardoConSfasamento(this.profilo, this.indice),
+      null,
+      urtoPressa,
     );
     this.scriviStato('in-corso');
     this.avvia();
@@ -356,7 +383,8 @@ class MotorePressione {
     const scelta = opzioni.curva ?? pressa;
     const curva = this.ridotto && scelta === pressa ? pressaSenzaRitorno : scelta;
     const da = this.anim.valore;
-    this.anim.curva((u) => lerp(da, a, curva(u)), opzioni.durata ?? this.profilo.durata, 0, poi);
+    const urto = curva === pressa && a > da ? urtoPressa : null;
+    this.anim.curva((u) => lerp(da, a, curva(u)), opzioni.durata ?? this.profilo.durata, 0, poi, urto);
     this.scriviStato('in-corso');
     this.avvia();
   }
@@ -391,7 +419,13 @@ class MotorePressione {
     this.chiudiRistampa();
     if (this.ridotto) return;
     const base = this.anim.valore;
-    this.anim.curva((u) => clamp01(base - ampiezza * ritornoElastico(u)), durata);
+    this.anim.curva(
+      (u) => clamp01(base - ampiezza * ritornoElastico(u)),
+      durata,
+      0,
+      null,
+      (u) => Math.exp(-4.5 * u) * (1 - u),
+    );
     this.scriviStato('in-corso');
     this.avvia();
   }
@@ -468,6 +502,7 @@ class MotorePressione {
           () => {
             this.ristampaFase = 'no';
           },
+          urtoPressa,
         );
       },
     );

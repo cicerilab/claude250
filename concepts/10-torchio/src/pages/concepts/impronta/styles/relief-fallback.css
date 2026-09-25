@@ -17,8 +17,8 @@
      .imp-taglio      modificatore di .imp-foglio: bordo tinto (taglio colorato)
      .imp-costa       spessore della carta visto di taglio (strisce "La carta")
      .imp-fibra       fibra della carta su qualsiasi superficie
+     .imp-superficie  superficie sollevata tinta (tasti, campi, pannelli)
      .imp-pressa      parola a riga singola che si allarga sotto la pressa
-     .imp-assi        elemento i cui assi wdth/wght arrivano da --imp-wdth/--imp-wght
 
    Variabili lette (tutte con default in tokens.css):
      --imp-press      0..1 pressione del blocco (0 piatto, 1 premuto)
@@ -39,25 +39,29 @@
 }
 
 /* --------------------------------------------------------------------------
-   Unità del rilievo.
-   --_imp-d: passo del bisello, proporzionale al corpo (0,016 em), mai sotto
-   0,6 px, scalato da pressione e profondità.
+   Unità del rilievo (giro 2: più profondo e più netto).
+   --_imp-d: passo del bisello, 0,02 em del corpo, mai sotto 1 px, scalato
+   da pressione e profondità. Sfocature mai oltre 1 px: il solco del piombo
+   ha lo spigolo netto, è la luce radente a farlo leggere.
    --_imp-dx / --_imp-dy: lo stesso passo proiettato sulla direzione della luce.
    Il lato verso la luce riceve l'ombra (la parete del solco è in ombra),
    il lato opposto riceve la luce (il labbro della carta che la prende):
    è la lettura di una lettera PREMUTA dentro il foglio, non in rilievo.
    -------------------------------------------------------------------------- */
 .imp-root :is(.imp-secco, .imp-inchiostro, .imp-caldo) {
-  --_imp-d: calc(max(0.6px, 0.016em) * var(--imp-press) * var(--imp-rilievo));
+  --_imp-d: calc(max(1px, 0.02em) * var(--imp-press) * var(--imp-rilievo));
   --_imp-dx: calc(var(--_imp-d) * var(--imp-luce-x));
   --_imp-dy: calc(var(--_imp-d) * var(--imp-luce-y));
+  --_imp-sfuma: min(1px, var(--_imp-d));
   font-kerning: normal;
   text-rendering: geometricPrecision;
 }
 
 /* --------------------------------------------------------------------------
    .imp-secco · a secco
-   Il fondo del solco è appena più scuro della carta (la fibra compressa).
+   Parete in ombra al 100% dalla parte della luce, labbro di luce netto
+   dall'altra, un secondo gradino più largo per lo smusso del piombo. Il fondo
+   del solco è la fibra compressa (carta + 24% d'ombra a pressione piena).
    A pressione 0 la lettera ha il colore della carta e nessuna ombra: sparisce.
    Uso: solo per ripetere un testo già leggibile altrove (aria-hidden) o per
    parole decorative. Mai testo di lettura a secco.
@@ -65,16 +69,16 @@
 .imp-root .imp-secco {
   color: var(--imp-secco-fondo);
   text-shadow:
-    calc(var(--_imp-dx) * -1) calc(var(--_imp-dy) * -1) 0 var(--imp-carta-luce),
-    calc(var(--_imp-dx) * -2.2) calc(var(--_imp-dy) * -2.2) calc(var(--_imp-d) * 1.6) color-mix(in srgb, var(--imp-carta-luce) 55%, transparent),
-    calc(var(--_imp-dx) * 0.9) calc(var(--_imp-dy) * 0.9) 0 color-mix(in srgb, var(--imp-carta-ombra) 78%, transparent),
-    calc(var(--_imp-dx) * 1.8) calc(var(--_imp-dy) * 1.8) calc(var(--_imp-d) * 1.4) color-mix(in srgb, var(--imp-carta-ombra) 34%, transparent);
+    calc(var(--_imp-dx) * -0.75) calc(var(--_imp-dy) * -0.75) 0 var(--imp-carta-luce),
+    calc(var(--_imp-dx) * -1.5) calc(var(--_imp-dy) * -1.5) var(--_imp-sfuma) color-mix(in srgb, var(--imp-carta-luce) 55%, transparent),
+    calc(var(--_imp-dx) * 1) calc(var(--_imp-dy) * 1) 0 var(--imp-carta-ombra),
+    calc(var(--_imp-dx) * 1.7) calc(var(--_imp-dy) * 1.7) var(--_imp-sfuma) color-mix(in srgb, var(--imp-carta-ombra) 50%, transparent);
 }
 
 /* Il fondo del solco segue la pressione: piatto a 0, pieno a 1. */
 @supports (color: color-mix(in srgb, red calc(10% * 1), blue)) {
   .imp-root .imp-secco {
-    color: color-mix(in srgb, var(--imp-carta), var(--imp-secco-fondo) calc(100% * var(--imp-press)));
+    color: color-mix(in srgb, var(--imp-carta), var(--imp-carta-ombra) calc(24% * var(--imp-press)));
   }
 }
 
@@ -87,23 +91,23 @@
 .imp-root .imp-inchiostro {
   color: var(--imp-inchiostro);
   text-shadow:
-    calc(var(--_imp-dx) * -0.9) calc(var(--_imp-dy) * -0.9) 0 var(--imp-carta-luce),
-    calc(var(--_imp-dx) * -1.8) calc(var(--_imp-dy) * -1.8) calc(var(--_imp-d) * 1.2) color-mix(in srgb, var(--imp-carta-luce) 45%, transparent),
-    calc(var(--_imp-dx) * 0.7) calc(var(--_imp-dy) * 0.7) calc(var(--_imp-d) * 0.8) color-mix(in srgb, var(--imp-carta-ombra) 45%, transparent);
+    calc(var(--_imp-dx) * -0.7) calc(var(--_imp-dy) * -0.7) 0 var(--imp-carta-luce),
+    calc(var(--_imp-dx) * -1.3) calc(var(--_imp-dy) * -1.3) var(--_imp-sfuma) color-mix(in srgb, var(--imp-carta-luce) 45%, transparent),
+    calc(var(--_imp-dx) * 0.7) calc(var(--_imp-dy) * 0.7) 0 color-mix(in srgb, var(--imp-carta-ombra) 70%, transparent);
 }
 
 /* --------------------------------------------------------------------------
    .imp-caldo · lamina a caldo
-   Argento satinato: sfumatura ferma a due toni (chiaro in alto a sinistra,
-   scuro in basso a destra), nessun riflesso che si muove, nessun bagliore.
-   Le ombre del solco sono drop-shadow (le text-shadow coprirebbero la
-   sfumatura ritagliata sul testo).
+   Argento: riflesso in testa, banda chiara stretta a metà occhio, piede
+   profondo (--imp-lamina-sfumatura-testo), fermo. Il bordo è un filo scuro
+   verso la luce e un filo chiaro dall'altra parte, SEMPRE tra 0,6 e 1,2 px:
+   oltre, a pressione piena, le due ombre si leggevano come una seconda copia
+   del testo sfalsata (lo "sdoppio" del giro 1). Ombre con drop-shadow: le
+   text-shadow coprirebbero la sfumatura ritagliata sul testo.
    Solo tre usi nel sito: marchio, prezzo, leva.
    -------------------------------------------------------------------------- */
 .imp-root .imp-caldo {
-  /* Sulla lamina il bisello non scende mai sotto 1 px: a 20 px (marchio)
-     è il filo scuro e chiaro a rendere leggibile l'argento su Citrino. */
-  --_imp-d: calc(max(1px, 0.016em) * var(--imp-press) * var(--imp-rilievo));
+  --_imp-d: calc(clamp(0.6px, 0.01em, 1.2px) * var(--imp-press) * var(--imp-rilievo));
   color: var(--imp-lamina);
   background-image: var(--imp-lamina-sfumatura-testo);
   background-size: 100% 1lh;   /* la sfumatura riparte a ogni riga */
@@ -112,8 +116,8 @@
   background-clip: text;
   -webkit-text-fill-color: transparent;
   filter:
-    drop-shadow(calc(var(--_imp-dx) * 1.1) calc(var(--_imp-dy) * 1.1) 0 var(--imp-carta-ombra))
-    drop-shadow(calc(var(--_imp-dx) * -0.9) calc(var(--_imp-dy) * -0.9) 0 var(--imp-carta-luce));
+    drop-shadow(var(--_imp-dx) var(--_imp-dy) 0 color-mix(in srgb, var(--imp-carta-ombra) 85%, transparent))
+    drop-shadow(calc(var(--_imp-dx) * -0.8) calc(var(--_imp-dy) * -0.8) 0 var(--imp-carta-luce));
 }
 
 /* Se il ritaglio sul testo non è supportato: argento pieno, ben leggibile
@@ -140,8 +144,8 @@
   --_imp-d: calc(1px * var(--imp-press) * var(--imp-rilievo));
   display: inline-block;
   filter:
-    drop-shadow(calc(var(--_imp-d) * var(--imp-luce-x) * 1.1) calc(var(--_imp-d) * var(--imp-luce-y) * 1.1) 0 var(--imp-carta-ombra))
-    drop-shadow(calc(var(--_imp-d) * var(--imp-luce-x) * -0.9) calc(var(--_imp-d) * var(--imp-luce-y) * -0.9) 0 var(--imp-carta-luce));
+    drop-shadow(calc(var(--_imp-d) * var(--imp-luce-x)) calc(var(--_imp-d) * var(--imp-luce-y)) 0 color-mix(in srgb, var(--imp-carta-ombra) 85%, transparent))
+    drop-shadow(calc(var(--_imp-d) * var(--imp-luce-x) * -0.8) calc(var(--_imp-d) * var(--imp-luce-y) * -0.8) 0 var(--imp-carta-luce));
 }
 
 .imp-root .imp-segno-caldo__lamina {
@@ -157,20 +161,40 @@
 /* --------------------------------------------------------------------------
    .imp-lamina · superficie in lamina
    Per il bottone "Prova la tua", la leva, la targhetta del prezzo.
-   Testo sempre in --imp-su-lamina (verde notte scuro, 7,2:1 anche sul tono
-   più scuro della sfumatura). Filo di bordo 1 px in inchiostro (o argento
-   scuro su Grafite) perché su Citrino e Cipria l'argento ha la stessa
-   luminanza della carta: il bordo rende il bottone riconoscibile (3:1).
-   Gli stati :hover / :active / :focus-visible li scrive l'interaction-designer
-   usando --imp-lamina-sfumatura-premuta e --imp-ombra-premuto.
+   Metallo, non bottone grigio: grana spazzolata orizzontale sopra una
+   sfumatura a quattro toni con una banda di riflesso stretta; bordo con luce
+   in alto e ombra in basso dentro un filo d'acciaio (--imp-lamina-bordo:
+   #5E656C sulle carte chiare, ≥ 3,38:1; argento scuro su Grafite).
+   Testo sempre in --imp-su-lamina (7,2:1 anche sul tono più scuro).
+   La banda di riflesso si sposta un poco con la luce (--imp-luce-x), ferma
+   se la luce è ferma. Gli stati li scrive l'interaction-designer con
+   --imp-lamina-sfumatura-premuta e --imp-ombra-premuto.
    -------------------------------------------------------------------------- */
 .imp-root .imp-lamina {
   background-color: var(--imp-lamina);
-  background-image: var(--imp-lamina-sfumatura);
+  background-image: var(--imp-lamina-grana), var(--imp-lamina-sfumatura);
+  background-size: 100% 100%, 160% 100%;
+  background-position: 0 0, calc(50% + var(--imp-luce-x) * 18%) 0;
   color: var(--imp-su-lamina);
   -webkit-text-fill-color: var(--imp-su-lamina);
   border-radius: var(--imp-raggio);
-  box-shadow: inset 0 0 0 1px var(--imp-lamina-bordo);
+  box-shadow: var(--imp-lamina-bordi);
+}
+
+/* --------------------------------------------------------------------------
+   .imp-superficie · superficie sollevata (tasti di scelta, campi, pannelli)
+   Tinta della carta (--imp-superficie: Citrino #EBD958, Cotone #E2E3DF,
+   Cipria #EFC7C1, Grafite #36383C), mai bianco puro. Nessun bordino
+   tutt'intorno: labbro di luce in alto, costa sotto, ombra corta tinta.
+   Per lo stato scelto il builder aggiunge il bordo interno inchiostro
+   (--imp-bordo-scelto) sopra --imp-ombra-superficie.
+   -------------------------------------------------------------------------- */
+.imp-root .imp-superficie {
+  background-color: var(--imp-superficie);
+  background-image: var(--imp-fibra);
+  color: var(--imp-inchiostro);
+  border-radius: var(--imp-raggio);
+  box-shadow: var(--imp-ombra-superficie);
 }
 
 /* --------------------------------------------------------------------------
@@ -233,19 +257,6 @@
 }
 
 /* --------------------------------------------------------------------------
-   .imp-assi · titoli e parole i cui assi li scrive il motion-designer
-   (usePressione scrive --imp-wdth / --imp-wght sull'elemento). Senza quei
-   valori valgono i default del titolo. Non per testo su più righe che deve
-   restare fermo: lì gli assi sono fissi (vedi DESIGN.md §3).
-   -------------------------------------------------------------------------- */
-.imp-root .imp-assi {
-  font-family: var(--imp-font-display);
-  font-weight: var(--imp-wght, 700);
-  font-variation-settings: "wdth" var(--imp-wdth, 100), "wght" var(--imp-wght, 700);
-  font-synthesis: none;
-}
-
-/* --------------------------------------------------------------------------
    Stato della pressa scritto dal motion-designer (docs/motion-designer.md §8.3)
    - data-imp-pressa="attesa": è nel markup prerenderizzato, prima che la
      pressa parta. Il blocco nasce piatto (--imp-press: 0) invece di nascere
@@ -283,8 +294,12 @@
    Con lo shader acceso, i fantasmi registrati (.imp-relief, classe dello
    scaffold) diventano trasparenti: restano per layout, selezione e misura.
    Gli assi si fermano allo stato di arrivo: la discesa la fa lo shader.
+   Eccezione: data-imp-gl="fuori" (lo scrive lo shader-engineer sui fantasmi
+   sullo schermo che il GL in quel frame NON disegna: oltre gli 8 blocchi,
+   maschera non ancora cotta, disegno fallito). Quelli restano col rilievo
+   CSS completo, pressione e assi compresi: nessun buco nella pagina.
    -------------------------------------------------------------------------- */
-.imp-root[data-gl="on"] .imp-relief:is(.imp-secco, .imp-inchiostro, .imp-caldo) {
+.imp-root[data-gl="on"] .imp-relief:is(.imp-secco, .imp-inchiostro, .imp-caldo):not([data-imp-gl="fuori"]) {
   color: transparent;
   -webkit-text-fill-color: transparent;
   text-shadow: none;
@@ -292,24 +307,27 @@
   background-image: none;
 }
 
-.imp-root[data-gl="on"] .imp-relief.imp-pressa {
+.imp-root[data-gl="on"] .imp-relief.imp-pressa:not([data-imp-gl="fuori"]) {
   --_imp-wdth: var(--imp-wdth-arrivo, 150);
   --_imp-wght: var(--imp-wght-arrivo, 900);
 }
 
-.imp-root[data-gl="on"] .imp-relief.imp-segno-caldo {
+.imp-root[data-gl="on"] .imp-relief.imp-segno-caldo:not([data-imp-gl="fuori"]) {
   filter: none;
 }
 
-.imp-root[data-gl="on"] .imp-relief.imp-segno-caldo > .imp-segno-caldo__lamina {
+.imp-root[data-gl="on"] .imp-relief.imp-segno-caldo:not([data-imp-gl="fuori"]) > .imp-segno-caldo__lamina {
   visibility: hidden;
 }
 
-.imp-root[data-gl="on"] .imp-relief:is(.imp-foglio, .imp-costa) {
+.imp-root[data-gl="on"] .imp-relief:is(.imp-foglio, .imp-costa):not([data-imp-gl="fuori"]) {
   background-color: transparent;
   background-image: none;
   box-shadow: none;
 }
+
+/* Un blocco "fuori" dentro un pezzo che il GL disegna ancora (o viceversa)
+   non eredita niente: ogni fantasma decide per sé con il proprio attributo. */
 
 /* --------------------------------------------------------------------------
    Contrasto alto richiesto dal sistema: il rilievo diventa inchiostro pieno

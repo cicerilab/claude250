@@ -294,6 +294,14 @@ export function useHoldToConfirm(opzioni: HoldOpzioni): HoldRisultato {
       s.ultimoGesto = ora;
       if (s.stato === 'completo') return;
 
+      // Giro 2 (cross-browser B2): con frame lenti il ticker può non aver
+      // ancora visto il 100%. Se il tempo tenuto basta, è una stampa, qualunque
+      // sia il motivo del rilascio (tranne scroll/scheda nascosta).
+      if (motivo !== 'interrotto' && (ora - g.t0) / durataDi(opz.current) >= 1) {
+        completa('tenuta');
+        return;
+      }
+
       const breve = ora - g.inizio < sogliaBreveDi(opz.current);
       s.molla.salta(s.progress);
       s.molla.verso(0);

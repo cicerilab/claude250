@@ -520,15 +520,16 @@
   }
 }
 
-/* ================================================================== 10. onda della carta (fallback CSS) */
+/* ================================================================== 10. onda della carta */
 
 /*
- * Velo creato da paperWave.ts quando il WebGL non disegna la carta (e per la
- * dissolvenza ridotta). Sta al livello del canvas, sotto il contenuto: cambia
- * il foglio, non copre l'inchiostro. `data-carta` sul velo fa risolvere
- * --imp-carta alla carta giusta (tokens.css vale anche per [data-carta] interni).
- * Variabili scritte da paperWave.ts (nomi in motion/choreography.ts, VAR):
- * --imp-onda-x, --imp-onda-y, --imp-onda-r, --imp-onda-bordo, --imp-onda-o.
+ * Velo creato da paperWave.ts, al livello del canvas (sotto il contenuto):
+ * cambia il foglio, non copre l'inchiostro. Variabili (nomi in
+ * motion/choreography.ts, VAR): --imp-onda-x, -y, -r, -bordo, -o.
+ *   .imp-ix-onda__foglio  la carta (solo senza WebGL, o carta vecchia nella dissolvenza)
+ *   .imp-ix-onda__costa   il bordo del foglio nuovo: costa tinta della carta
+ *                         nuova + ombra corta sul foglio vecchio (giro 2)
+ * `data-carta` sui figli fa risolvere i token alla carta giusta.
  */
 .imp-root .imp-ix-onda {
   --imp-onda-x: 50vw;
@@ -539,39 +540,67 @@
   position: fixed;
   inset: 0;
   z-index: var(--imp-z-canvas, 0);
-  background-color: var(--imp-carta);
   opacity: var(--imp-onda-o);
   pointer-events: none;
   contain: strict;
-  /* Prima dello scambio: carta nuova DENTRO il cerchio, bordo bagnato sfumato. */
+}
+
+.imp-root .imp-ix-onda__foglio,
+.imp-root .imp-ix-onda__costa {
+  position: absolute;
+  inset: 0;
+}
+
+/* Prima dello scambio: carta nuova DENTRO il cerchio. Bordo netto: lo fa la costa. */
+.imp-root .imp-ix-onda__foglio {
+  background-color: var(--imp-carta);
   -webkit-mask-image: radial-gradient(
     circle at var(--imp-onda-x) var(--imp-onda-y),
-    black calc(var(--imp-onda-r) - var(--imp-onda-bordo)),
+    black calc(var(--imp-onda-r) - 1px),
     transparent var(--imp-onda-r)
   );
   mask-image: radial-gradient(
     circle at var(--imp-onda-x) var(--imp-onda-y),
-    black calc(var(--imp-onda-r) - var(--imp-onda-bordo)),
+    black calc(var(--imp-onda-r) - 1px),
     transparent var(--imp-onda-r)
   );
 }
 
-/* Dopo lo scambio: la radice è già sulla carta nuova, il velo tiene la vecchia FUORI dal cerchio. */
-.imp-root .imp-ix-onda--invertita {
+/* Dopo lo scambio: la radice è già sulla carta nuova, il foglio tiene la vecchia FUORI dal cerchio. */
+.imp-root .imp-ix-onda--invertita .imp-ix-onda__foglio {
   -webkit-mask-image: radial-gradient(
     circle at var(--imp-onda-x) var(--imp-onda-y),
-    transparent calc(var(--imp-onda-r) - var(--imp-onda-bordo)),
+    transparent calc(var(--imp-onda-r) - 1px),
     black var(--imp-onda-r)
   );
   mask-image: radial-gradient(
     circle at var(--imp-onda-x) var(--imp-onda-y),
-    transparent calc(var(--imp-onda-r) - var(--imp-onda-bordo)),
+    transparent calc(var(--imp-onda-r) - 1px),
     black var(--imp-onda-r)
   );
 }
 
-/* Reduced motion: nessun cerchio, solo la carta vecchia che svanisce in 200 ms. */
-.imp-root .imp-ix-onda--dissolvenza {
+/*
+ * La costa: il foglio nuovo è un cartoncino con uno spessore, e il suo bordo
+ * avanza sopra il vecchio. Banda nel colore di taglio della carta nuova
+ * (--imp-carta-costa, larga il doppio della sua --imp-spessore: Cotone 600 g
+ * ha la costa più alta), poi un'ombra corta e tinta sul foglio vecchio.
+ */
+.imp-root .imp-ix-onda__costa {
+  --_imp-costa: calc(var(--imp-spessore, 4px) * 2);
+  background-image: radial-gradient(
+    circle at var(--imp-onda-x) var(--imp-onda-y),
+    transparent calc(var(--imp-onda-r) - var(--_imp-costa)),
+    var(--imp-carta-luce) calc(var(--imp-onda-r) - var(--_imp-costa)),
+    var(--imp-carta-costa) calc(var(--imp-onda-r) - var(--_imp-costa) + 1px),
+    var(--imp-carta-costa) var(--imp-onda-r),
+    color-mix(in srgb, var(--imp-carta-ombra) 55%, transparent) var(--imp-onda-r),
+    transparent calc(var(--imp-onda-r) + 14px)
+  );
+}
+
+/* Reduced motion: nessun cerchio e nessuna costa, solo la carta vecchia che svanisce in 200 ms. */
+.imp-root .imp-ix-onda--dissolvenza .imp-ix-onda__foglio {
   -webkit-mask-image: none;
   mask-image: none;
 }

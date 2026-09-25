@@ -199,7 +199,8 @@
 
 /* --------------------------------------------------------------------------
    Biglietto · Cotone 85×55, nome in lamina argento
-   Nome e mestiere in basso a sinistra, il resto è carta.
+   Nome e mestiere in basso a sinistra, il resto è carta. Il nome sta in
+   ~72cqi: resta dentro il biglietto a ogni larghezza (shader-engineer, giro 1).
    -------------------------------------------------------------------------- */
 .imp-root .imp-perchi__pezzo--biglietto {
   justify-content: flex-end;
@@ -208,7 +209,7 @@
 
 .imp-root .imp-perchi__riga--nome {
   font-family: var(--imp-font-display);
-  font-size: max(1.25rem, 11.5cqi);
+  font-size: max(1.25rem, 9.6cqi);
   font-weight: 700;
   font-variation-settings: "wdth" 100, "wght" 700;
   font-synthesis: none;
@@ -219,7 +220,7 @@
 }
 
 .imp-root .imp-perchi__riga--mestiere {
-  font-size: max(0.875rem, 5.6cqi);
+  font-size: max(0.875rem, 5.2cqi);
   font-weight: 500;
   line-height: 1.25;
   letter-spacing: 0.02em;
@@ -228,34 +229,42 @@
 
 /* --------------------------------------------------------------------------
    Copertina · Grafite 150×210, titolo in inchiostro bianco, brossura cucita
-   Titolo in testa, autore al piede, cerniera della brossura a sinistra.
+   "poesie" in testa come collana, titolo sotto, autrice al piede, cerniera
+   della brossura a sinistra. Il titolo va a capo parola per parola ed è
+   tarato su "Noncello" (la parola più lunga): ~10,5cqi a wdth 112,5 stanno
+   nei 76cqi della giustezza interna, senza tagli.
    -------------------------------------------------------------------------- */
 .imp-root .imp-perchi__pezzo--libro {
-  padding: 11cqi 9cqi 10cqi 15cqi;
+  padding: 10cqi 9cqi 11cqi 15cqi;
+}
+
+.imp-root .imp-perchi__riga--genere {
+  font-size: max(0.875rem, 4.6cqi);
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: 0.04em;
+  padding-block-end: 3cqi;
+  margin-block-end: 5cqi;
+  border-block-end: 1px solid currentColor;
+  align-self: flex-start;
 }
 
 .imp-root .imp-perchi__riga--titolo {
   font-family: var(--imp-font-display);
-  font-size: max(1.5rem, 15cqi);
+  font-size: max(1.25rem, 10.5cqi);
   font-weight: 800;
-  font-variation-settings: "wdth" 125, "wght" 800;
+  font-variation-settings: "wdth" 112.5, "wght" 800;
   font-synthesis: none;
-  line-height: 0.9;
+  line-height: 0.92;
   letter-spacing: -0.012em;
-  text-wrap: balance;
+  max-inline-size: 100%;
 }
 
 .imp-root .imp-perchi__riga--autore {
   margin-block-start: auto;
-  font-size: max(0.875rem, 5.4cqi);
+  font-size: max(0.875rem, 5.6cqi);
   font-weight: 600;
   line-height: 1.25;
-}
-
-.imp-root .imp-perchi__riga--genere {
-  font-size: max(0.875rem, 4.4cqi);
-  line-height: 1.3;
-  letter-spacing: 0.02em;
 }
 
 /* La cerniera: la copertina piegata lungo il dorso, premuta come un solco. */
@@ -312,8 +321,10 @@
    Con il WebGL acceso: i figli del pezzo registrato diventano fantasmi
    (restano per misura e metrica dei layer), la cordonatura la disegna lo
    shader. Il fondo del pezzo lo spegne già relief-fallback.css.
+   Se il GL non disegna il pezzo (data-imp-gl="fuori", oltre gli 8 blocchi)
+   il DOM resta visibile: mai una copertina vuota.
    -------------------------------------------------------------------------- */
-.imp-root[data-gl="on"] .imp-perchi__pezzo.imp-relief :is(.imp-secco, .imp-inchiostro, .imp-caldo) {
+.imp-root[data-gl="on"] .imp-perchi__pezzo.imp-relief:not([data-imp-gl="fuori"]) :is(.imp-secco, .imp-inchiostro, .imp-caldo) {
   color: transparent;
   -webkit-text-fill-color: transparent;
   text-shadow: none;
@@ -321,112 +332,169 @@
   background-image: none;
 }
 
-.imp-root[data-gl="on"] :is(.imp-perchi__pezzo, .imp-perchi__busta).imp-relief :is(.imp-perchi__cerniera, .imp-perchi__patta) {
+.imp-root[data-gl="on"] :is(.imp-perchi__pezzo, .imp-perchi__busta).imp-relief:not([data-imp-gl="fuori"]) :is(.imp-perchi__cerniera, .imp-perchi__patta) {
   visibility: hidden;
 }
 
+/* L'oggetto porta al banco come il suo link (comodità del puntatore). */
+.imp-root .imp-perchi__tavolo {
+  cursor: pointer;
+}
+
 /* --------------------------------------------------------------------------
-   Didascalia: inchiostro sulla carta del sito, allineata al bordo sinistro
-   del proprio oggetto.
+   Didascalia da catalogo: nome, una nota di due righe, il prezzo, il link.
+   Nessun bottone, nessun blocco uguale all'altro: posizione e allineamento
+   cambiano da pezzo a pezzo (sotto, a destra, a bandiera destra).
    -------------------------------------------------------------------------- */
 .imp-root .imp-perchi__didascalia {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  max-inline-size: 30ch;
-  margin-block-start: var(--imp-sp-6);
+  max-inline-size: 32ch;
+  margin-block-start: var(--imp-sp-5);
 }
 
 .imp-root .imp-perchi__nome {
-  font-size: var(--imp-fs-titolo-3);
+  --imp-wdth: 100;
+  --imp-wght: 700;
+  font-size: var(--imp-fs-nome);
+  line-height: var(--imp-lh-titolo-3);
+  letter-spacing: var(--imp-trk-titolo-3);
+}
+
+.imp-root .imp-perchi__nota {
+  margin-block-start: var(--imp-sp-2);
+  font-size: var(--imp-fs-piccolo);
+  line-height: var(--imp-lh-piccolo);
 }
 
 .imp-root .imp-perchi__per-chi {
-  margin-block-start: var(--imp-sp-2);
-  font-size: var(--imp-fs-lead);
-  line-height: var(--imp-lh-lead);
+  font-weight: var(--imp-wght-corpo-forte);
+}
+
+.imp-root .imp-perchi__per-chi::after {
+  content: ". ";
 }
 
 .imp-root .imp-perchi__righe {
-  margin-block-start: var(--imp-sp-3);
-  font-size: var(--imp-fs-piccolo);
-  line-height: var(--imp-lh-piccolo);
   color: var(--imp-inchiostro-velato);
 }
 
 .imp-root .imp-perchi__prezzo {
-  margin-block-start: var(--imp-sp-3);
+  margin-block-start: var(--imp-sp-2);
+  font-size: var(--imp-fs-piccolo);
   font-weight: var(--imp-wght-corpo-forte);
   font-variant-numeric: lining-nums;
 }
 
+/* Il link al banco: riga d'inchiostro sottolineata (imp-ix-link), area di
+   tocco 44 px, una freccina disegnata col bordo (niente glifi nuovi). */
 .imp-root .imp-perchi__prova {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  min-block-size: var(--imp-bottone-h);
-  margin-block-start: var(--imp-sp-5);
-  padding-inline: var(--imp-sp-6);
-  font-size: var(--imp-fs-bottone);
-  font-weight: var(--imp-wght-bottone);
+  gap: 0.45em;
+  min-block-size: var(--imp-tocco-min);
+  font-size: var(--imp-fs-corpo);
+  font-weight: var(--imp-wght-corpo-forte);
   line-height: var(--imp-lh-interfaccia);
-  text-decoration: none;
-  white-space: nowrap;
+}
+
+.imp-root .imp-perchi__freccina {
+  inline-size: 0.5em;
+  block-size: 0.5em;
+  border-block-start: 2px solid currentColor;
+  border-inline-end: 2px solid currentColor;
+  rotate: 45deg;
+  flex: none;
 }
 
 /* ==========================================================================
-   Desktop (≥ 1024 px): i tre pezzi sparsi sul bancone
+   Desktop (≥ 1024 px): i tre pezzi sul bancone, che si toccano
+   Tutto in una cella della griglia (stessa riga, sovrapposti), posizionato
+   in frazioni di --_p = larghezza della partecipazione (4 colonne):
+   - partecipazione a sinistra, con la busta sopra-destra;
+   - biglietto 0,82·p (≈ 310 px a 1440) appoggiato sull'angolo in basso a
+     destra della partecipazione, sovrapposto di ~40 px, didascalia sotto;
+   - copertina 0,7·p (≈ 265 px a 1440) a destra, didascalia a bandiera destra.
    ========================================================================== */
 @media (min-width: 1024px) {
   .imp-root .imp-perchi__testa {
-    margin-block-end: clamp(var(--imp-sp-8), calc(var(--imp-u) * 1.1), var(--imp-sp-10));
+    margin-block-end: clamp(var(--imp-sp-7), calc(var(--imp-u) * 0.9), var(--imp-sp-9));
   }
 
   .imp-root .imp-perchi__fila {
-    --imp-perchi-mm: calc((var(--imp-colonna) * 4 + var(--imp-canalino) * 3) / 150);
+    --_p: calc(var(--imp-colonna) * 4 + var(--imp-canalino) * 3);
     display: grid;
-    grid-template-columns: repeat(var(--imp-colonne), minmax(0, 1fr));
-    column-gap: var(--imp-canalino);
+    grid-template-columns: minmax(0, 1fr);
     align-items: start;
     margin: 0;
     padding: 0;
   }
 
+  .imp-root .imp-perchi__posto {
+    grid-area: 1 / 1;
+    justify-self: start;
+    position: relative;
+  }
+
   .imp-root .imp-perchi__posto--partecipazione {
-    grid-column: 1 / span 4;
+    inline-size: var(--_p);
     /* spazio per la patta della busta che spunta sopra */
-    padding-block-start: calc(var(--imp-perchi-mm) * 18);
+    padding-block-start: calc(var(--_p) * 0.13);
+    z-index: 1;
   }
 
   .imp-root .imp-perchi__posto--biglietto {
-    grid-column: 6 / span 3;
-    margin-block-start: clamp(10rem, calc(var(--imp-u) * 3.4), 20rem);
+    inline-size: calc(var(--_p) * 0.82);
+    margin-inline-start: calc(var(--_p) * 0.894);
+    margin-block-start: calc(var(--_p) * 0.56);
+    z-index: 2;
   }
 
   .imp-root .imp-perchi__posto--libro {
-    grid-column: 9 / span 4;
-    margin-block-start: clamp(var(--imp-sp-5), calc(var(--imp-u) * 0.5), var(--imp-sp-8));
+    justify-self: end;
+    inline-size: calc(var(--_p) * 0.7);
+    margin-block-start: calc(var(--_p) * 0.05);
+    z-index: 1;
   }
 
   .imp-root .imp-perchi__piano {
-    inline-size: calc(var(--imp-perchi-mm) * var(--_l));
-    max-inline-size: 100%;
+    inline-size: 100%;
   }
 
-  /* Il biglietto è piccolo davvero: la didascalia prende tutte e tre le colonne. */
+  /* La didascalia della partecipazione non passa sotto al biglietto. */
+  .imp-root .imp-perchi__lavoro--partecipazione .imp-perchi__didascalia {
+    max-inline-size: min(32ch, calc(var(--_p) * 0.894 - var(--imp-sp-6)));
+    margin-block-start: var(--imp-sp-6);
+  }
+
   .imp-root .imp-perchi__lavoro--biglietto .imp-perchi__didascalia {
-    max-inline-size: 26ch;
+    margin-inline-start: 12%;
   }
 
   .imp-root .imp-perchi__lavoro--libro .imp-perchi__didascalia {
-    margin-block-start: calc(var(--imp-sp-6) + 5px);
+    align-self: flex-end;
+    align-items: flex-end;
+    text-align: end;
+    margin-block-start: calc(var(--imp-sp-5) + 5px);
   }
 }
 
 /* ==========================================================================
    Mazzo (< 1024 px): si sfoglia con lo swipe
+   Nomi e frecce stanno SOPRA la fila: con la sezione in vista non finiscono
+   sotto il bottone del sito (in basso a sinistra a 375) né sotto il
+   "Prova la tua" fisso (in basso a destra) (responsive-tester, giro 1).
    ========================================================================== */
 @media (max-width: 1023.98px) {
+  .imp-root .imp-perchi {
+    padding-block-end: calc(var(--imp-piede) + var(--imp-segnapagina-h));
+  }
+
+  .imp-root .imp-perchi__testa {
+    margin-block-end: var(--imp-sp-5);
+  }
+
   .imp-root .imp-perchi__fila {
     /* pezzo 300 px a 375: margine 20 + 300 + passo 12 = 332, il successivo sporge di 43 px */
     --imp-ix-mazzo-pezzo: clamp(17.5rem, calc(100vw - var(--imp-margine-interno) - 12px - 44px), 26.25rem);
@@ -458,7 +526,7 @@
   }
 
   .imp-root .imp-perchi__lavoro--biglietto .imp-perchi__piano {
-    inline-size: 74%;
+    inline-size: 84%;
     margin-inline-start: 3%;
   }
 
@@ -468,17 +536,12 @@
   }
 
   .imp-root .imp-perchi__didascalia {
-    margin-block-start: var(--imp-sp-5);
+    margin-block-start: var(--imp-sp-4);
     padding-inline-end: var(--imp-sp-2);
-  }
-
-  .imp-root .imp-perchi__prova {
-    align-self: stretch;
   }
 
   .imp-root .imp-perchi__sfoglia {
     justify-content: space-between;
-    margin-block-start: var(--imp-sp-4);
     margin-inline: calc(var(--imp-sp-3) * -1);
   }
 
@@ -501,14 +564,15 @@
   }
 }
 
-/* Tablet: la didascalia ha più aria, il pezzo resta leggibile a braccio. */
+/* Tablet: pezzi più grandi, due quasi interi in vista. */
 @media (min-width: 600px) and (max-width: 1023.98px) {
   .imp-root .imp-perchi__fila {
     --imp-ix-mazzo-pezzo: clamp(20rem, 52vw, 27.5rem);
   }
 
-  .imp-root .imp-perchi__prova {
-    align-self: flex-start;
+  .imp-root .imp-perchi__sfoglia {
+    justify-content: flex-start;
+    gap: var(--imp-sp-4);
   }
 }
 

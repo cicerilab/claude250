@@ -151,6 +151,11 @@ export const ORDINE_SEZIONI = [
 /**
  * Dati di contatto DI ESEMPIO. Il repo è pubblico: il numero e l'email non
  * esistono. Nessuna P.IVA, nessuna ragione sociale.
+ *
+ * Giro 2: il numero e l'indirizzo email non si mostrano mai come testo.
+ * A vista ci sono solo le etichette dei link ("Chiama la bottega", "Scrivi
+ * alla bottega"); `telefono` ora È l'etichetta. `email` resta l'indirizzo
+ * perché core/links.ts ci costruisce il mailto: a vista va `emailEtichetta`.
  */
 export const RECAPITI = {
   via: 'Via Cavallotti 18',
@@ -158,9 +163,17 @@ export const RECAPITI = {
   citta: 'Pordenone',
   provincia: 'PN',
   indirizzoRiga: 'Via Cavallotti 18, 33170 Pordenone',
-  telefono: '0434 000 000',
+  /** Testo visibile del link telefono (niente numero a vista). */
+  telefono: 'Chiama la bottega',
+  telefonoEtichetta: 'Chiama la bottega',
+  /** Il numero di esempio, solo come dato: non va mostrato. */
+  telefonoNumero: '0434 000 000',
   telefonoHref: 'tel:+390434000000',
+  /** Indirizzo per il mailto (core/links.ts). Non va mostrato: a vista usare emailEtichetta. */
   email: 'bottega@impronta.example',
+  emailEtichetta: 'Scrivi alla bottega',
+  /** Una riga che dice che i recapiti sono di esempio. */
+  nota: 'Telefono ed email sono di esempio: la bottega non esiste.',
   /** Testo da cercare in Maps: la via, non un'attività. */
   mapsQuery: 'Via Cavallotti, 33170 Pordenone PN',
 } as const;
@@ -168,13 +181,18 @@ export const RECAPITI = {
 /* ================================================================== meta */
 
 export const META = {
-  /** <title>: 58 caratteri. */
-  title: 'IMPRONTA, tipografia e legatoria a Pordenone | CiceriLab',
-  /** meta description: 150 caratteri circa. */
+  /**
+   * <title>: 58 caratteri. Dice "concept" già nello snippet (SEO P3) e scrive
+   * il marchio "Ciceri Lab" come i titoli del prerender (SEO P11).
+   * Copiato in scripts/prerender-meta.mjs del sito: tenerli uguali.
+   */
+  title: 'Concept 10 · IMPRONTA, tipografia e legatoria | Ciceri Lab',
+  /** meta description: 149 caratteri. Dice subito che la bottega è inventata. */
   description:
-    'Stampa a rilievo e legatoria a mano a Pordenone. Scrivi il tuo testo, scegli la carta e guarda la prova premuta, con il prezzo subito.',
-  ogTitle: 'IMPRONTA, tipografia e legatoria',
-  ogDescription: 'Scrivi il tuo nome e guardalo premuto nella carta. Un concept di CiceriLab.',
+    'Concept di Ciceri Lab: il sito di una tipografia e legatoria di Pordenone, inventata. Scrivi il tuo testo, scegli la carta e guarda la prova premuta.',
+  /** og:title, og:description, og:image:alt: non li usa il codice, li copia il prerender del sito (SEO P10). */
+  ogTitle: 'IMPRONTA, tipografia e legatoria. Un concept di Ciceri Lab',
+  ogDescription: 'Scrivi il tuo nome e guardalo premuto nella carta. Un concept di Ciceri Lab.',
   /** Testo alternativo dell'immagine di anteprima (public/concepts/concept-10.jpg). */
   ogImageAlt: 'La parola impronta premuta a secco in un foglio giallo citrino, con la luce radente.',
 } as const;
@@ -375,7 +393,8 @@ export const PER_CHI = {
 
 export const TECNICHE = {
   titolo: 'La stessa parola, quattro volte',
-  intro: 'Stessa parola, stessa carta. Cambia solo come la stampiamo.',
+  /** Giro 2: vuota (micro-frase sotto il titolo, giuria). Se è vuota non si rende il <p>. */
+  intro: '',
   /** Parola campione se l'utente non ha ancora scritto nulla. */
   parolaCampione: 'Pordenone',
   elencoAria: 'Le quattro tecniche',
@@ -444,8 +463,7 @@ export const CARTA = {
   titolo: 'Tocca prima di scegliere',
   intro: 'La carta che scegli diventa la carta di tutto il sito.',
   /** Riga sotto le strisce. */
-  campioni:
-    'Vengono da cartiere italiane. I campioni veri li trovi al bancone, oppure arrivano a casa con la tua prova.',
+  campioni: 'Vengono da cartiere italiane. I campioni veri li tocchi al bancone.',
   gruppoAria: 'La carta del sito',
   scelta: '✓ la carta del sito',
   /** Testo per lettori di schermo della costa (spessore). */
@@ -456,7 +474,7 @@ export const CARTA = {
 
 export const LEGATORIA = {
   titolo: 'Il filo',
-  intro: 'Facciamo anche i libri. Franco li cuce a mano, segnatura per segnatura, nella stanza accanto alle macchine.',
+  intro: 'Facciamo anche i libri. Li cuce a mano Franco, segnatura per segnatura.',
   /** Spiegazione di "segnatura" alla prima occorrenza. */
   segnatura: 'Una segnatura è un foglio stampato e piegato in 8 o 16 pagine: il mattone di ogni libro.',
   voci: [
@@ -466,6 +484,8 @@ export const LEGATORIA = {
       testo: 'Le segnature si cuciono tra loro a filo refe, poi la copertina morbida si incolla sul dorso. Si apre bene e non perde pagine.',
       perCosa: 'Per poesie, cataloghi, fanzine che devono durare.',
       prezzo: 'da 6 € a copia, su 100 copie',
+      /** Giro 2: testo accanto alla cifra grande, senza ripeterla. La cifra allora non va aria-hidden. */
+      prezzoDopoCifra: 'a copia, solo la legatura',
       filoAlt: 'Il filo entra ed esce dalla piega di ogni segnatura e le lega una all\'altra lungo il dorso.',
     },
     {
@@ -474,6 +494,8 @@ export const LEGATORIA = {
       testo: 'Copertina rigida in cartone rivestito, carta di guardia all\'interno e capitello in testa e in piede.',
       perCosa: 'Per tesi, libri di famiglia, cataloghi da tenere in vista.',
       prezzo: 'da 10 € a copia, su 100 copie',
+      /** Giro 2: testo accanto alla cifra grande, senza ripeterla. La cifra allora non va aria-hidden. */
+      prezzoDopoCifra: 'a copia, solo la legatura',
       filoAlt: 'Il filo cuce le segnature come nella brossura; sopra il dorso si chiude una copertina rigida con il capitello.',
     },
     {
@@ -482,6 +504,8 @@ export const LEGATORIA = {
       testo: 'Il filo passa attraverso il margine e resta a vista sul dorso. Fogli singoli, nessuna piega.',
       perCosa: 'Per quaderni d\'artista, portfolio, raccolte di stampe.',
       prezzo: 'da 8,50 € a copia, su 100 copie',
+      /** Giro 2: testo accanto alla cifra grande, senza ripeterla. La cifra allora non va aria-hidden. */
+      prezzoDopoCifra: 'a copia, solo la legatura',
       filoAlt: 'Il filo passa per quattro fori lungo il margine e gira attorno al dorso, visibile da fuori.',
     },
     {
@@ -490,9 +514,13 @@ export const LEGATORIA = {
       testo: 'Due punti di metallo sul dorso piegato. Veloce e pulito, fino a 48 pagine.',
       perCosa: 'Per programmi di sala, libretti di una mostra, menu.',
       prezzo: 'da 4,50 € a copia, su 100 copie',
+      /** Giro 2: testo accanto alla cifra grande, senza ripeterla. La cifra allora non va aria-hidden. */
+      prezzoDopoCifra: 'a copia, solo la legatura',
       filoAlt: 'Due punti metallici attraversano la piega centrale del libretto.',
     },
   ],
+  /** Una riga sola sotto le quattro cifre: vale per tutte. */
+  riferimento: 'Prezzi su 100 copie. Si parte da 30.',
   /** Righe dopo le quattro legature. */
   tiraturaMinima: 'Si parte da 30 copie. Sotto, ne parliamo al bancone.',
   tesi: 'Tesi di laurea cartonata, titolo in lamina: 55 € la prima copia, 38 € le altre. Fino a 200 pagine.',
@@ -533,7 +561,8 @@ export const CAMPI_TESTO = {
 
 export const BANCO = {
   titolo: 'Il banco di prova',
-  intro: 'Scrivi, scegli la carta, guarda la prova. Il prezzo è qui, subito.',
+  /** Giro 2: vuota (micro-frase sotto il titolo, giuria). Se è vuota non si rende il <p>. */
+  intro: '',
 
   /* ---------- bozza ritrovata (sopra il compositoio) */
   bozza: {
@@ -612,8 +641,7 @@ export const BANCO = {
     totale: 'Totale indicativo',
     iva: 'IVA inclusa',
     /** Da cosa dipende, sempre visibile sotto il riepilogo. */
-    dipende:
-      'Il prezzo è fatto di tre cose: l\'impianto, cioè lastra e messa a punto, che si paga una volta; la carta; i pezzi. Più pezzi, meno costa ciascuno.',
+    dipende: 'L\'impianto si paga una volta, poi contano carta e pezzi: più pezzi, meno costa ciascuno.',
     ristampa: 'Teniamo la lastra due anni: la ristampa non paga l\'impianto.',
     /** Voci del riepilogo in parole, solo quelle diverse dalla base. */
     voci: {
@@ -665,7 +693,7 @@ export const BANCO = {
   contatto: {
     etichetta: 'Dove ti scriviamo',
     aiuto: 'Email o telefono. Ti scriviamo solo per questo lavoro.',
-    placeholder: 'nome@esempio.it o 0434 000 000',
+    placeholder: 'nome@esempio.it',
     erroreSegno: '!',
     erroreSr: 'Errore:',
     nonValido: 'Scrivi un\'email (nome@esempio.it) o un numero di telefono.',
@@ -713,8 +741,8 @@ export const BANCO = {
     altraAria: 'Prova un\'altra cosa: il banco si svuota, la carta resta',
   },
   fallito: {
-    frase: 'Non siamo riusciti a spedire la richiesta. Controlla la connessione e tieni premuto di nuovo, oppure chiamaci allo',
-    telefono: RECAPITI.telefono,
+    frase: 'Non siamo riusciti a spedire la richiesta. Controlla la connessione e tieni premuto di nuovo, oppure',
+    telefono: 'chiama la bottega',
     telefonoHref: RECAPITI.telefonoHref,
     chiusura: '.',
     rassicura: 'Il testo e le scelte sono ancora qui.',
@@ -751,16 +779,24 @@ export const BOTTEGA = {
   ],
   senzaAppuntamento: 'Per guardare e toccare le carte entra pure, senza appuntamento.',
   appuntamento: 'Per nozze e libri meglio fissare, anche il sabato pomeriggio: così abbiamo tempo.',
+  /** Giro 2: nessun numero e nessun indirizzo email a vista, solo l'azione. */
   telefono: {
-    testo: RECAPITI.telefono,
+    testo: RECAPITI.telefonoEtichetta,
     /** Bottone pieno su 375 px. */
-    bottone: `Chiama ${RECAPITI.telefono}`,
-    aria: `Telefona in bottega, ${RECAPITI.telefono}`,
+    bottone: RECAPITI.telefonoEtichetta,
+    aria: 'Chiama la bottega (numero di esempio)',
     href: RECAPITI.telefonoHref,
   },
   email: {
-    testo: RECAPITI.email,
-    aria: `Scrivi in bottega, ${RECAPITI.email}`,
+    testo: RECAPITI.emailEtichetta,
+    aria: 'Scrivi alla bottega (indirizzo di esempio)',
+  },
+  /** Sotto i due link, piccola. */
+  recapitiNota: RECAPITI.nota,
+  /** Stato dell'orario come riga di testo, non come titolo (giuria). */
+  stato: {
+    aperto: 'Adesso siamo aperti.',
+    chiuso: 'Adesso siamo chiusi.',
   },
   maps: {
     testo: 'Apri in Maps ↗',
@@ -770,7 +806,7 @@ export const BOTTEGA = {
   parcheggio: 'Parcheggi in zona piazza XX Settembre, poi due minuti a piedi.',
   chi: 'Marta compone e stampa. Franco rilega, tre giorni a settimana. Elia taglia, piega e consegna in città.',
   storia: 'La legatoria c\'è dagli anni Settanta. La platina Heidelberg è arrivata a metà dei Novanta, da una tipografia di Sacile che chiudeva.',
-  tempi: 'Biglietti e partecipazioni: 8-12 giorni lavorativi dalla prova approvata. Libri: 15-20.',
+  tempi: 'Pronti in 8-12 giorni lavorativi dalla prova approvata, i libri in 15-20.',
   spedizione: 'Spediamo in tutta Italia. A Pordenone consegna a mano.',
   noGrandi: 'Grandi tirature e stampa fotografica a quattro colori no: per quelle c\'è l\'offset, e ti diciamo a chi chiedere.',
 } as const;
@@ -782,7 +818,7 @@ export const COLOPHON = {
   /** La carta nel testo è quella attiva, aggiornata dal vivo. */
   testo: (carta: Carta) =>
     `Questo sito è composto in Anybody e Hanken Grotesk e stampato a secco su carta ${CARTE[carta].nome} ${CARTE[carta].grammatura}, nella tipografia IMPRONTA di Pordenone.`,
-  secondaRiga: 'Le lettere qui le preme il tuo schermo. Quelle vere le premiamo in Via Cavallotti.',
+  secondaRiga: 'Le lettere qui le preme il tuo schermo. Quelle vere si premono al torchio.',
   indiceTitolo: 'indice',
   indiceAria: 'Indice del sito',
   indice: [
@@ -794,16 +830,23 @@ export const COLOPHON = {
     { id: 'banco', etichetta: 'il banco di prova', href: '#banco' },
     { id: 'bottega', etichetta: 'la bottega', href: '#bottega' },
   ],
-  recapiti: `${RECAPITI.indirizzoRiga}. ${RECAPITI.telefono}. ${RECAPITI.email}`,
+  /** Giro 2: niente numero né email a vista. */
+  recapiti: `${RECAPITI.indirizzoRiga}. ${RECAPITI.nota}`,
+  /** Etichette dei link del colophon (al posto di RECAPITI.telefono / RECAPITI.email). */
+  telefono: RECAPITI.telefonoEtichetta,
+  email: RECAPITI.emailEtichetta,
   ricomincia: {
     bottone: 'Ricomincia da capo',
     domanda: 'Svuotiamo la carta e la prova salvate in questo browser?',
     si: 'Sì, ricomincia',
     no: 'No, lascia così',
-    fatto: 'Fatto. Il sito è tornato su Citrino e il banco è vuoto.',
+    /** Stringa fissa, vera con qualsiasi carta di partenza (compatibilità). */
+    fatto: 'Fatto. Il banco è vuoto e la carta è tornata quella di partenza.',
+    /** Con la carta a cui si è tornati (Citrino, o Grafite col modo scuro). */
+    fattoCarta: (carta: Carta) => `Fatto. Il sito è tornato su ${CARTE[carta].nome} e il banco è vuoto.`,
   },
-  finzione: 'IMPRONTA è una bottega di esempio: indirizzo, telefono, nomi e prezzi sono inventati.',
-  conceptDi: 'Un concept di CiceriLab',
+  finzione: 'IMPRONTA è una bottega inventata. Il civico, il telefono, l\'email, i nomi e i prezzi sono di esempio.',
+  conceptDi: 'Un concept di Ciceri Lab',
 } as const;
 
 /* ================================================================== rilievi: testi alternativi */
@@ -880,7 +923,7 @@ export const ANNUNCI = {
   inCorso: 'Stiamo spedendo la richiesta.',
   /** Successo e fallito: il focus va alla frase, l'annuncio la ripete. */
   successo: (carta: Carta, giorno: string) => BANCO.successo.frase(carta, giorno),
-  fallito: `Non siamo riusciti a spedire la richiesta. Il testo e le scelte sono ancora qui. Puoi riprovare o chiamare lo ${RECAPITI.telefono}.`,
+  fallito: 'Non siamo riusciti a spedire la richiesta. Il testo e le scelte sono ancora qui. Puoi riprovare o chiamare la bottega.',
   indiceAperto: 'Indice aperto.',
   indiceChiuso: 'Indice chiuso.',
   tecnica: (nome: string) => `Tecnica in vista: ${nome}.`,

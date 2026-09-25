@@ -1,26 +1,34 @@
 /* ==========================================================================
-   IMPRONTA · 8 · Colophon (section-builder-colophon)
+   IMPRONTA · 8 · Colophon (section-builder-colophon), giro 2
    --------------------------------------------------------------------------
-   L'ultima pagina del libro. Tutto in Hanken tranne il titolo e il marchio;
-   blocchi ancorati al margine interno, mai centrati; il marchio IMPRONTA a
-   secco occupa l'area viva come il sigillo dell'editore. Solo variabili
-   --imp-*, raggio 0, nessuna animazione propria: l'unico movimento è la
-   pressione del marchio (usePressione scrive --imp-press sull'elemento).
+   L'ultima pagina di un libro: tutto composto sull'ASSE DELLA GABBIA (il
+   centro dell'area viva di .imp-page, che è fuori centro rispetto allo
+   schermo perché il margine esterno è doppio dell'interno). È l'unica
+   pagina centrata del sito, come la pagina del colophon di un volume.
 
-   Spazio in fondo:
-   - sotto 640 px il bottone fisso "Torna in Ciceri Lab" sta in basso a
-     sinistra (14 px dal fondo, 44 px di altezza) e sotto 1024 c'è il
-     segnapagina (56 px): il piede li somma, più l'area sicura, così nessuno
-     dei due copre l'ultimo link;
-   - da 1024 il segnapagina non c'è e il bottone è in alto: piede da libro.
+   Ordine: titolo piccolo e largo → frase in Hanken 21 → seconda riga →
+   indice in una riga → un bottone ("Prova la tua") + "Ricomincia da capo"
+   come link → sigillo IMPRONTA a secco a tutta area viva → riga della
+   bottega → riga dello stampatore (recapiti, finzione, firma).
+
+   Solo variabili --imp-*, raggio 0, nessuna animazione propria: l'unico
+   movimento è la pressione del sigillo (--imp-press scritta da usePressione).
+
+   Spazio in fondo: sotto 640 px il bottone fisso "Torna in Ciceri Lab" sta
+   in basso a sinistra (14 + 44 px) e sotto 1024 c'è il segnapagina (56 px):
+   il piede li somma più l'area sicura, così nessuno copre l'ultimo link.
    ========================================================================== */
 
 .imp-root .imp-colophon {
   --_imp-colophon-fondo: calc(var(--imp-segnapagina-h) + 14px + var(--imp-tocco-min) + var(--imp-sp-6) + env(safe-area-inset-bottom, 0px));
+  /* Il fuoco da tastiera non finisce sotto la testata o il segnapagina. */
+  --_imp-colophon-riparo-su: calc(var(--imp-testata-h-fissa) + var(--imp-sp-4));
+  --_imp-colophon-riparo-giu: calc(var(--imp-segnapagina-h) + var(--imp-tocco-min) + var(--imp-sp-6) + env(safe-area-inset-bottom, 0px));
   position: relative;
   display: block;
   padding-block: var(--imp-testa) var(--_imp-colophon-fondo);
   scroll-margin-block-start: var(--imp-sp-5);
+  text-align: center;
 }
 
 @media (min-width: 640px) {
@@ -31,78 +39,44 @@
 
 @media (min-width: 1024px) {
   .imp-root .imp-colophon {
-    --_imp-colophon-fondo: clamp(var(--imp-sp-8), 12vh, var(--imp-sp-10));
+    --_imp-colophon-fondo: clamp(var(--imp-sp-8), 10vh, var(--imp-sp-9));
+    --_imp-colophon-riparo-giu: var(--imp-sp-6);
     scroll-margin-block-start: calc(var(--imp-testata-h-fissa) + var(--imp-sp-5));
   }
 }
 
-/* --------------------------------------------------------------------------
-   Griglia: 4 colonne impilate; da 600 testo a sinistra e indice a destra;
-   da 1024 il blocco di stampa occupa sei colonne, l'indice quattro, e il
-   margine esterno resta vuoto (lì gioca la luce).
-   -------------------------------------------------------------------------- */
-.imp-root .imp-colophon__griglia {
-  row-gap: var(--imp-sp-7);
+.imp-root .imp-colophon :is(a, button) {
+  scroll-margin-block: var(--_imp-colophon-riparo-su) var(--_imp-colophon-riparo-giu);
 }
 
-.imp-root .imp-colophon__griglia > * {
-  grid-column: 1 / -1;
-  min-inline-size: 0;
-}
-
-@media (min-width: 600px) {
-  .imp-root .imp-colophon__stampa {
-    grid-column: 1 / span 5;
-    grid-row: 2;
-  }
-
-  .imp-root .imp-colophon__indice {
-    grid-column: 6 / span 3;
-    grid-row: 2;
-  }
-
-  .imp-root .imp-colophon__recapiti {
-    grid-column: 1 / -1;
-    grid-row: 3;
-  }
-}
-
-@media (min-width: 1024px) {
-  .imp-root .imp-colophon__griglia {
-    row-gap: var(--imp-sp-8);
-  }
-
-  .imp-root .imp-colophon__stampa {
-    grid-column: 1 / span 6;
-  }
-
-  .imp-root .imp-colophon__indice {
-    grid-column: 8 / span 4;
-    padding-block-start: var(--imp-sp-1);
-  }
-
-  .imp-root .imp-colophon__recapiti {
-    grid-column: 1 / span 11;
-  }
+.imp-root .imp-colophon__pagina {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* --------------------------------------------------------------------------
-   Titolo: h2 di sezione (assi fissi di base.css), in minuscolo come tutto
-   ciò che è premuto.
+   Titolo: h2 della sezione composto come la parola "colophon" in testa alla
+   pagina di un libro: piccolo, largo, pesante. Anybody a 22-30 px, mai sotto
+   i 20 (DESIGN §3).
    -------------------------------------------------------------------------- */
 .imp-root .imp-colophon__titolo {
-  color: var(--imp-inchiostro);
+  --imp-wdth: 150;
+  --imp-wght: 800;
+  font-size: var(--imp-fs-titolo-3);
+  line-height: var(--imp-lh-nome);
+  letter-spacing: 0.01em;
 }
 
 /* --------------------------------------------------------------------------
-   Il testo del colophon: registro leggibile, giustezza corta (44ch).
+   La frase: Hanken 18 → 21, giustezza da colophon (36ch), a epigrafe.
    -------------------------------------------------------------------------- */
 .imp-root .imp-colophon__testo {
-  max-inline-size: var(--imp-giustezza-stretta);
+  max-inline-size: 36ch;
+  margin-block-start: var(--imp-sp-6);
   font-size: var(--imp-fs-lead);
   line-height: var(--imp-lh-lead);
-  text-wrap: pretty;
-  hanging-punctuation: first;
+  text-wrap: balance;
 }
 
 .imp-root .imp-colophon__carta {
@@ -111,36 +85,57 @@
 }
 
 .imp-root .imp-colophon__seconda {
-  max-inline-size: var(--imp-giustezza-stretta);
+  max-inline-size: 40ch;
   margin-block-start: var(--imp-sp-4);
-  font-size: var(--imp-fs-piccolo);
-  line-height: var(--imp-lh-piccolo);
-  letter-spacing: var(--imp-trk-piccolo);
-  text-wrap: pretty;
+  text-wrap: balance;
 }
 
 /* --------------------------------------------------------------------------
-   Comandi: "Prova la tua" in lamina (uno dei tre usi ammessi) e
-   "Ricomincia da capo" di carta, con conferma in linea.
+   Indice in una riga: le voci separate da spazio, come l'indice sommario a
+   piè di pagina. Su mobile va a capo sull'asse; ogni voce resta 44 px.
+   -------------------------------------------------------------------------- */
+.imp-root .imp-colophon__indice {
+  margin-block-start: var(--imp-sp-8);
+  max-inline-size: 100%;
+}
+
+.imp-root .imp-colophon__voci {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  column-gap: var(--imp-sp-5);
+  row-gap: 0;
+  margin: 0;
+}
+
+.imp-root .imp-colophon__voce {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--imp-tocco-min);
+  font-size: var(--imp-fs-corpo);
+  line-height: var(--imp-lh-interfaccia);
+  white-space: nowrap;
+}
+
+@media (min-width: 1024px) {
+  .imp-root .imp-colophon__voci {
+    column-gap: var(--imp-sp-6);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Comandi: un solo bottone (la lamina di "Prova la tua"); "Ricomincia da
+   capo" è un comando secondario, scritto come un link.
    -------------------------------------------------------------------------- */
 .imp-root .imp-colophon__comandi {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  gap: var(--imp-sp-4);
-  margin-block-start: var(--imp-sp-7);
+  align-items: center;
+  gap: var(--imp-sp-3);
+  margin-block-start: var(--imp-sp-6);
 }
 
-@media (min-width: 600px) {
-  .imp-root .imp-colophon__comandi {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: flex-start;
-  }
-}
-
-.imp-root .imp-colophon__prova,
-.imp-root .imp-colophon__bottone {
+.imp-root .imp-colophon__prova {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -154,65 +149,53 @@
   white-space: nowrap;
 }
 
-.imp-root .imp-colophon__bottone {
-  padding-inline: 24px;
-  color: var(--imp-inchiostro);
-  border: 1px solid var(--imp-inchiostro);
-  background-color: transparent;
-}
-
-.imp-root .imp-colophon__bottone--pieno {
-  color: var(--imp-carta);
-  background-color: var(--imp-inchiostro);
-}
-
 .imp-root .imp-colophon__ricomincia {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  gap: var(--imp-sp-3);
-  min-inline-size: 0;
+  align-items: center;
 }
 
-@media (min-width: 600px) {
-  .imp-root .imp-colophon__ricomincia {
-    align-items: flex-start;
-  }
+.imp-root .imp-colophon__testo-bottone {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--imp-tocco-min);
+  padding-inline: var(--imp-sp-1);
+  font-size: var(--imp-fs-piccolo);
+  line-height: var(--imp-lh-interfaccia);
+  letter-spacing: var(--imp-trk-piccolo);
+  color: var(--imp-inchiostro);
+}
+
+.imp-root .imp-colophon__testo-bottone--forte {
+  font-weight: var(--imp-wght-corpo-forte);
 }
 
 .imp-root .imp-colophon__domanda {
   display: flex;
   flex-direction: column;
-  gap: var(--imp-sp-3);
+  align-items: center;
 }
 
 .imp-root .imp-colophon__domanda-testo {
-  max-inline-size: 30ch;
+  max-inline-size: 32ch;
+  padding-block-start: var(--imp-sp-2);
   font-size: var(--imp-fs-piccolo);
-  font-weight: var(--imp-wght-corpo-forte);
   line-height: var(--imp-lh-piccolo);
-  letter-spacing: var(--imp-trk-piccolo);
+  text-wrap: balance;
 }
 
 .imp-root .imp-colophon__domanda-scelte {
   display: flex;
-  flex-direction: column;
-  gap: var(--imp-sp-3);
-}
-
-@media (min-width: 600px) {
-  .imp-root .imp-colophon__domanda-scelte {
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
+  flex-wrap: wrap;
+  justify-content: center;
+  column-gap: var(--imp-sp-5);
 }
 
 .imp-root .imp-colophon__esito {
-  flex-basis: 100%;
   max-inline-size: 34ch;
   font-size: var(--imp-fs-piccolo);
   line-height: var(--imp-lh-piccolo);
-  letter-spacing: var(--imp-trk-piccolo);
+  text-wrap: balance;
 }
 
 .imp-root .imp-colophon__esito:empty {
@@ -220,57 +203,115 @@
 }
 
 /* --------------------------------------------------------------------------
-   Indice: come l'indice in fondo a un libretto, senza numeri di pagina.
+   Il sigillo: il marchio IMPRONTA premuto a secco su tutta l'area viva
+   (1181 × 125 a 1440, 1377 × 146 da 1680, 335 × 36 a 375).
+   Senza WebGL: SVG in linea, fondo del solco appena più scuro della carta,
+   parete in ombra verso la luce e labbro in luce dall'altra parte (filtro
+   interno, vedi Colophon.tsx), più un filo di luce esterno sul lato lontano
+   dalla lampada che segue --imp-luce-x/y. Tutto scala con --imp-press.
    -------------------------------------------------------------------------- */
-.imp-root .imp-colophon__etichetta {
-  font-family: var(--imp-font-testo);
-  font-size: var(--imp-fs-piccolo);
-  font-weight: var(--imp-wght-corpo-forte);
-  font-variation-settings: normal;
-  line-height: var(--imp-lh-piccolo);
-  letter-spacing: var(--imp-trk-piccolo);
-  text-wrap: nowrap;
-  margin-block-end: var(--imp-sp-2);
-}
-
-.imp-root .imp-colophon__voci {
-  margin: 0;
-}
-
-.imp-root .imp-colophon__voce {
-  display: flex;
-  align-items: center;
-  min-block-size: 48px;
-  font-size: var(--imp-fs-corpo);
-  line-height: var(--imp-lh-interfaccia);
+.imp-root .imp-colophon__sigillo {
+  inline-size: 100%;
+  margin-block-start: var(--imp-sp-9);
 }
 
 @media (min-width: 1024px) {
-  .imp-root .imp-colophon__voce {
-    display: inline-flex;
-    min-block-size: var(--imp-tocco-min);
+  .imp-root .imp-colophon__sigillo {
+    margin-block-start: var(--imp-sp-10);
   }
 }
 
+.imp-root .imp-colophon__marchio {
+  --_imp-d: calc(clamp(0.6px, 0.09vw, 1.4px) * var(--imp-press));
+  display: block;
+  inline-size: 100%;
+  aspect-ratio: 941 / 100;
+  filter: drop-shadow(calc(var(--_imp-d) * var(--imp-luce-x) * -1) calc(var(--_imp-d) * var(--imp-luce-y) * -1) 0 color-mix(in srgb, var(--imp-carta-luce) 80%, transparent));
+}
+
+.imp-root .imp-colophon__marchio-svg {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  overflow: visible;
+}
+
+.imp-root .imp-colophon__marchio-solco {
+  fill: color-mix(in srgb, var(--imp-secco-fondo), var(--imp-carta-ombra) 14%);
+}
+
+@supports (color: color-mix(in srgb, red calc(10% * 1), blue)) {
+  .imp-root .imp-colophon__marchio-solco {
+    fill: color-mix(in srgb, var(--imp-carta), color-mix(in srgb, var(--imp-secco-fondo), var(--imp-carta-ombra) 14%) calc(100% * var(--imp-press)));
+  }
+}
+
+.imp-root .imp-colophon__f-ombra {
+  flood-color: var(--imp-carta-ombra);
+  flood-opacity: calc(0.92 * var(--imp-press));
+}
+
+.imp-root .imp-colophon__f-luce {
+  flood-color: var(--imp-carta-luce);
+  flood-opacity: var(--imp-press);
+}
+
+/* Su Grafite la parete deve scendere verso il nero, il labbro resta chiaro. */
+.imp-root[data-carta="grafite"] .imp-colophon__f-ombra {
+  flood-opacity: var(--imp-press);
+}
+
+/* Con lo shader acceso il fantasma resta solo per misura: il solco lo disegna il GL. */
+.imp-root[data-gl="on"] .imp-colophon__marchio.imp-relief {
+  filter: none;
+}
+
+.imp-root[data-gl="on"] .imp-colophon__marchio.imp-relief > .imp-colophon__marchio-svg {
+  visibility: hidden;
+}
+
+/* La riga della bottega sotto il sigillo, come il nome dello stampatore. */
+.imp-root .imp-colophon__bottega {
+  margin-block-start: var(--imp-sp-5);
+}
+
+.imp-root .imp-colophon__bottega-nome {
+  font-weight: var(--imp-wght-corpo-forte);
+}
+
+.imp-root .imp-colophon__bottega-citta::before {
+  content: "·";
+  margin-inline-end: 0.5em;
+}
+
 /* --------------------------------------------------------------------------
-   Recapiti: indirizzo (Maps), telefono, email. Tre righe su mobile, una
-   riga da 600.
+   Riga dello stampatore: recapiti, finzione dichiarata, firma del concept.
+   Piccola e raccolta: dopo il sigillo non c'è un secondo punto focale.
    -------------------------------------------------------------------------- */
-.imp-root .imp-colophon__recapiti {
+.imp-root .imp-colophon__stampatore {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  margin-block-start: var(--imp-sp-8);
+}
+
+.imp-root .imp-colophon__recapiti,
+.imp-root .imp-colophon__firma {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  column-gap: var(--imp-sp-5);
   font-style: normal;
-  font-size: var(--imp-fs-piccolo);
-  line-height: var(--imp-lh-piccolo);
-  letter-spacing: var(--imp-trk-piccolo);
+}
+
+.imp-root .imp-colophon__recapiti {
+  flex-direction: column;
+  align-items: center;
 }
 
 @media (min-width: 600px) {
   .imp-root .imp-colophon__recapiti {
     flex-direction: row;
-    flex-wrap: wrap;
-    column-gap: var(--imp-sp-6);
   }
 }
 
@@ -279,6 +320,13 @@
   display: inline-flex;
   align-items: center;
   min-block-size: var(--imp-tocco-min);
+}
+
+.imp-root .imp-colophon__finzione {
+  max-inline-size: 44ch;
+  margin-block: var(--imp-sp-3);
+  font-weight: var(--imp-wght-interfaccia);
+  text-wrap: balance;
 }
 
 .imp-root .imp-colophon__freccia {
@@ -295,139 +343,6 @@
 }
 
 /* --------------------------------------------------------------------------
-   Il sigillo: il marchio IMPRONTA premuto a secco su tutta l'area viva.
-   Fallback CSS (data-gl pending/off): il segno SVG usato come maschera su
-   un fondo del colore del solco; le due ombre sul contenitore (la maschera
-   taglierebbe un filtro sullo stesso elemento) fanno parete scura verso la
-   luce e labbro chiaro dall'altra parte, come .imp-secco. Il passo cresce
-   con il corpo e segue --imp-press e la luce.
-   -------------------------------------------------------------------------- */
-.imp-root .imp-colophon__sigillo {
-  margin-block: var(--imp-sp-9) var(--imp-sp-5);
-}
-
-@media (min-width: 1024px) {
-  .imp-root .imp-colophon__sigillo {
-    margin-block: var(--imp-sp-10) var(--imp-sp-6);
-  }
-}
-
-.imp-root .imp-colophon__marchio {
-  --_imp-d: calc(clamp(1px, 0.17vw, 2.6px) * var(--imp-press) * var(--imp-rilievo));
-  --_imp-dx: calc(var(--_imp-d) * var(--imp-luce-x));
-  --_imp-dy: calc(var(--_imp-d) * var(--imp-luce-y));
-  --imp-rilievo: 0.9;
-  display: block;
-  inline-size: 100%;
-  aspect-ratio: 941 / 100;
-  filter:
-    drop-shadow(calc(var(--_imp-dx) * 1) calc(var(--_imp-dy) * 1) 0 color-mix(in srgb, var(--imp-carta-ombra) 80%, transparent))
-    drop-shadow(calc(var(--_imp-dx) * -1) calc(var(--_imp-dy) * -1) 0 var(--imp-carta-luce));
-}
-
-.imp-root .imp-colophon__marchio-solco {
-  display: block;
-  inline-size: 100%;
-  block-size: 100%;
-  background-color: var(--imp-secco-fondo);
-  -webkit-mask: var(--imp-segno) center / contain no-repeat;
-  mask: var(--imp-segno) center / contain no-repeat;
-}
-
-/* Il fondo del solco segue la pressione: piatto a 0, pieno a 1. */
-@supports (color: color-mix(in srgb, red calc(10% * 1), blue)) {
-  .imp-root .imp-colophon__marchio-solco {
-    background-color: color-mix(in srgb, var(--imp-carta), var(--imp-secco-fondo) calc(100% * var(--imp-press)));
-  }
-}
-
-/* Con lo shader acceso il fantasma resta solo per misura: il solco lo disegna il GL. */
-.imp-root[data-gl="on"] .imp-colophon__marchio.imp-relief {
-  filter: none;
-}
-
-.imp-root[data-gl="on"] .imp-colophon__marchio.imp-relief > .imp-colophon__marchio-solco {
-  visibility: hidden;
-}
-
-/* --------------------------------------------------------------------------
-   Riga di piede sotto il sigillo: bottega e città, la finzione dichiarata,
-   la firma del concept.
-   -------------------------------------------------------------------------- */
-.imp-root .imp-colophon__piede {
-  row-gap: var(--imp-sp-5);
-  font-size: var(--imp-fs-piccolo);
-  line-height: var(--imp-lh-piccolo);
-  letter-spacing: var(--imp-trk-piccolo);
-}
-
-.imp-root .imp-colophon__piede > * {
-  grid-column: 1 / -1;
-  min-inline-size: 0;
-}
-
-@media (min-width: 600px) {
-  .imp-root .imp-colophon__bottega {
-    grid-column: 1 / span 3;
-  }
-
-  .imp-root .imp-colophon__finzione {
-    grid-column: 4 / span 5;
-  }
-
-  .imp-root .imp-colophon__firma {
-    grid-column: 1 / -1;
-  }
-}
-
-@media (min-width: 1024px) {
-  .imp-root .imp-colophon__bottega {
-    grid-column: 1 / span 3;
-  }
-
-  .imp-root .imp-colophon__finzione {
-    grid-column: 4 / span 4;
-  }
-
-  .imp-root .imp-colophon__firma {
-    grid-column: 8 / span 4;
-  }
-}
-
-.imp-root .imp-colophon__bottega {
-  display: flex;
-  flex-direction: column;
-  padding-block-start: var(--imp-sp-3);
-}
-
-.imp-root .imp-colophon__bottega-nome {
-  font-weight: var(--imp-wght-corpo-forte);
-}
-
-.imp-root .imp-colophon__finzione {
-  max-inline-size: 40ch;
-  padding-block-start: var(--imp-sp-3);
-  font-size: var(--imp-fs-nota);
-  font-weight: var(--imp-wght-interfaccia);
-  line-height: 1.4;
-  text-wrap: pretty;
-}
-
-.imp-root .imp-colophon__firma {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-@media (min-width: 600px) and (max-width: 1023.98px) {
-  .imp-root .imp-colophon__firma {
-    flex-direction: row;
-    flex-wrap: wrap;
-    column-gap: var(--imp-sp-6);
-  }
-}
-
-/* --------------------------------------------------------------------------
    Accessibilità dei materiali
    -------------------------------------------------------------------------- */
 @media (prefers-contrast: more) {
@@ -436,7 +351,8 @@
   }
 
   .imp-root .imp-colophon__marchio-solco {
-    background-color: var(--imp-inchiostro);
+    fill: var(--imp-inchiostro);
+    filter: none;
   }
 }
 
@@ -446,23 +362,15 @@
   }
 
   .imp-root .imp-colophon__marchio-solco {
-    background-color: CanvasText;
-  }
-
-  .imp-root .imp-colophon__bottone {
-    border-color: ButtonText;
-  }
-
-  .imp-root .imp-colophon__bottone--pieno {
-    color: ButtonText;
-    background-color: ButtonFace;
+    fill: CanvasText;
+    filter: none;
   }
 }
 
-/* Movimento ridotto: nessuna transizione propria del colophon, il marchio
-   è già premuto (usePressione lo porta subito a riposo). */
+/* Movimento ridotto: nessuna transizione nel colophon; il sigillo è già
+   premuto (usePressione lo porta subito a riposo). */
 @media (prefers-reduced-motion: reduce) {
-  .imp-root .imp-colophon :is(.imp-colophon__prova, .imp-colophon__bottone, .imp-colophon__voce, .imp-colophon__recapito, .imp-colophon__firma-link) {
+  .imp-root .imp-colophon :is(a, button) {
     transition: none;
   }
 }

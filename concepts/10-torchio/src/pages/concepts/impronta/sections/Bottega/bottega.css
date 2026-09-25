@@ -1,26 +1,27 @@
 /* ==========================================================================
-   IMPRONTA · sezione 7, la bottega (section-builder-bottega)
+   IMPRONTA · sezione 7, la bottega (section-builder-bottega) · giro 2
    --------------------------------------------------------------------------
-   Frontespizio a sinistra, carta vuota a destra. Solo variabili --imp-*,
-   tutti i selettori sotto .imp-root, raggio zero, nessun bordino, nessuna
-   scheda. L'indirizzo premuto è l'unico elemento che occupa tutta l'area
-   viva; il resto sta nelle colonne interne.
+   Un frontespizio: il titolo della pagina è l'indirizzo, premuto a secco una
+   volta sola e largo quanto l'area viva; sotto, piccolo, il gemello in
+   inchiostro con i recapiti, come la riga dell'editore. Poi due colonne di
+   testo leggibile. Un solo elemento grande: l'indirizzo. Solo variabili
+   --imp-*, selettori sotto .imp-root, raggio zero, niente schede o filetti.
 
    Griglia (layout.css): 4 colonne sotto 600, 8 fino a 1023, 12 da 1024.
    ========================================================================== */
 
 .imp-root .imp-bottega {
-  /* Larghezza in em delle due righe premute a peso 800, tracking incluso,
-     misurate nel browser su Anybody (docs/section-builder-bottega.md §2):
-     il corpo si calcola come per la parola dell'hero, area / em. */
-  --_imp-bottega-em: var(--_imp-bottega-em-1125);
-  --_imp-bottega-em-1125: 10.75;
-  --_imp-bottega-em-150: 14.45;
+  /* Larghezza in em della riga premuta più lunga ("33170 Pordenone") a
+     peso 800, tracking incluso, misurata nel browser su Anybody (doc §2):
+     il corpo è area viva / em, come per la parola dell'hero. */
+  --_imp-bottega-em: 10.75;
+  /* Corpo dei recapiti: circa 20 px, non da manifesto (giuria, giro 2). */
+  --_imp-bottega-fs-editore: clamp(1.0625rem, calc(1.018rem + 0.188vw), 1.25rem);
 }
 
 @media (min-width: 1024px) {
   .imp-root .imp-bottega {
-    --_imp-bottega-em: var(--_imp-bottega-em-150);
+    --_imp-bottega-em: 14.45;
   }
 }
 
@@ -48,70 +49,99 @@
   line-height: var(--imp-lh-lead);
 }
 
-/* ------------------------------------------------------------- indirizzo */
+/* ------------------------------------------------------------ frontespizio */
 
-.imp-root .imp-bottega__indirizzo {
+.imp-root .imp-bottega__frontespizio {
   grid-column: 1 / -1;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   min-inline-size: 0;
-  gap: var(--imp-sp-4);
-  /* L'indirizzo è il frontespizio: più aria sopra che sotto. */
-  margin-block-start: var(--imp-sp-4);
-}
-
-.imp-root .imp-bottega__stampato {
-  font-style: normal;
-  font-size: var(--imp-fs-piccolo);
-  line-height: var(--imp-lh-piccolo);
-  letter-spacing: var(--imp-trk-piccolo);
-  font-weight: var(--imp-wght-corpo-forte);
+  margin-block-start: var(--imp-sp-5);
 }
 
 .imp-root .imp-bottega__rilievo {
   /* Blocco largo quanto l'area viva: .imp-pressa cambia gli assi dentro un
      box fisso (niente CLS). Nessun overflow nascosto: le discendenti
-     scendono sotto l'interlinea 0,86. */
+     scendono sotto l'interlinea 0,86. Rilievo un po' più profondo del
+     default nel fallback, perché su Cotone il secco chiaro non sparisca. */
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  inline-size: 100%;
   min-inline-size: 0;
   --imp-wdth-arrivo: var(--imp-wdth-secco-grande);
   --imp-wght-arrivo: var(--imp-wght-secco-grande);
+  --imp-rilievo: 1.6;
 }
 
 .imp-root .imp-bottega__premuto {
+  min-inline-size: 0;
   font-size: calc(var(--imp-area-viva) / var(--_imp-bottega-em));
   line-height: var(--imp-lh-secco);
   letter-spacing: var(--imp-trk-secco);
-  min-inline-size: 0;
   padding-block-end: 0.06em;
 }
 
-/* La seconda riga (cap e città) è più corta: resta allo stesso corpo,
-   a bandiera, come un frontespizio composto a sinistra. */
-.imp-root .imp-bottega__premuto--citta {
-  margin-block-start: -0.02em;
+/* Il gemello in inchiostro e i recapiti: una riga d'editore sotto il titolo. */
+.imp-root .imp-bottega__editore {
+  display: grid;
+  gap: var(--imp-sp-2);
+  margin-block-start: var(--imp-sp-5);
+  font-size: var(--_imp-bottega-fs-editore);
+  line-height: var(--imp-lh-lead);
 }
 
-/* ------------------------------------------------------------ sottotitoli */
+.imp-root .imp-bottega__stampato {
+  font-style: normal;
+  font-weight: var(--imp-wght-corpo-forte);
+}
+
+.imp-root .imp-bottega__recapiti {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--imp-sp-6);
+  row-gap: 0;
+}
+
+.imp-root .imp-bottega__recapito {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  min-block-size: var(--imp-tocco-min);
+  overflow-wrap: anywhere;
+}
+
+.imp-root .imp-bottega__freccia {
+  display: inline-block;
+  inline-size: 0.85em;
+  block-size: 0.85em;
+  flex: none;
+}
+
+.imp-root .imp-bottega__freccia svg {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+/* Lo stato di adesso: una riga di testo. Spazio riservato prima del primo
+   effetto (prerender), così niente salta. */
+.imp-root .imp-bottega__stato {
+  margin: var(--imp-sp-4) 0 0;
+  min-block-size: calc(2 * var(--imp-lh-corpo) * 1em);
+  max-inline-size: var(--imp-giustezza);
+  font-size: var(--imp-fs-corpo);
+  line-height: var(--imp-lh-corpo);
+}
+
+.imp-root .imp-bottega__stato-parola {
+  font-weight: var(--imp-wght-corpo-forte);
+}
+
+/* --------------------------------------------------------------- sottotitoli */
 
 .imp-root .imp-bottega__h3 {
   margin: 0 0 var(--imp-sp-5);
   font-size: var(--imp-fs-titolo-3);
   line-height: var(--imp-lh-titolo-3);
-}
-
-.imp-root .imp-bottega__nota {
-  margin: 0;
-  font-size: var(--imp-fs-piccolo);
-  line-height: var(--imp-lh-piccolo);
-  letter-spacing: var(--imp-trk-piccolo);
-  max-inline-size: 44ch;
-}
-
-.imp-root .imp-bottega__nota + .imp-bottega__nota {
-  margin-block-start: var(--imp-sp-3);
 }
 
 /* ----------------------------------------------------------------- orari */
@@ -120,62 +150,29 @@
   grid-column: 1 / -1;
 }
 
-/* Lo stato di adesso: la parola in Anybody largo, il dettaglio in Hanken.
-   Lo spazio è riservato anche prima del primo effetto (prerender). */
-.imp-root .imp-bottega__stato {
-  margin: 0 0 var(--imp-sp-6);
-  min-block-size: calc(var(--imp-fs-titolo-2) * var(--imp-lh-titolo-2) + var(--imp-fs-piccolo) * var(--imp-lh-piccolo) + var(--imp-sp-2));
-  display: grid;
-  align-content: start;
-  gap: var(--imp-sp-2);
-}
-
-.imp-root .imp-bottega__stato-parola {
-  font-family: var(--imp-font-display);
-  font-size: var(--imp-fs-titolo-2);
-  line-height: var(--imp-lh-titolo-2);
-  letter-spacing: var(--imp-trk-titolo);
-  font-weight: var(--imp-wght-nome);
-  font-variation-settings: "wdth" 125, "wght" var(--imp-wght-nome);
-  font-synthesis: none;
-}
-
-.imp-root .imp-bottega__stato[data-stato="chiusa"] .imp-bottega__stato-parola {
-  color: var(--imp-inchiostro-velato);
-}
-
-.imp-root .imp-bottega__stato-dettaglio {
-  font-size: var(--imp-fs-piccolo);
-  line-height: var(--imp-lh-piccolo);
-  letter-spacing: var(--imp-trk-piccolo);
-}
-
 .imp-root .imp-bottega__settimana {
   margin: 0 0 var(--imp-sp-6);
   display: grid;
   gap: var(--imp-sp-3);
+  font-size: var(--imp-fs-corpo);
+  line-height: var(--imp-lh-corpo);
 }
 
 .imp-root .imp-bottega__giorno {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 0;
 }
 
 .imp-root .imp-bottega__giorno dt {
   font-weight: var(--imp-wght-corpo-forte);
-  font-size: var(--imp-fs-corpo);
-  line-height: var(--imp-lh-corpo);
 }
 
 .imp-root .imp-bottega__giorno dd {
   margin: 0;
-  font-size: var(--imp-fs-corpo);
-  line-height: var(--imp-lh-corpo);
   font-variant-numeric: tabular-nums;
 }
 
-/* Oggi: la riga "segnata a matita", sottolineata 2 px e scritta. */
+/* Oggi: la riga segnata come a matita, sottolineata 2 px e scritta. */
 .imp-root .imp-bottega__giorno[data-oggi="si"] dt {
   text-decoration-line: underline;
   text-decoration-thickness: 2px;
@@ -186,151 +183,55 @@
   font-weight: var(--imp-wght-corpo);
 }
 
-/* ------------------------------------------------------------- recapiti */
-
-.imp-root .imp-bottega__recapiti {
-  grid-column: 1 / -1;
-  display: grid;
-  align-content: start;
-  justify-items: stretch;
-  gap: var(--imp-sp-3);
+.imp-root .imp-bottega__nota {
+  margin: 0;
+  max-inline-size: 44ch;
 }
 
-/* Mobile: telefono e Maps sono due bottoni pieni da 52 px, uno sotto
-   l'altro (ux-architect §5.7). Il telefono è il pieno d'inchiostro, Maps
-   il foglio sollevato con la sua costa. */
-.imp-root .imp-bottega__telefono,
-.imp-root .imp-bottega__maps {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--imp-sp-2);
-  min-block-size: var(--imp-bottone-h);
-  padding-inline: var(--imp-sp-5);
-  font-size: var(--imp-fs-bottone);
-  font-weight: var(--imp-wght-bottone);
-  line-height: var(--imp-lh-interfaccia);
-  text-decoration: none;
-  white-space: nowrap;
+.imp-root .imp-bottega__nota + .imp-bottega__nota {
+  margin-block-start: var(--imp-sp-3);
 }
 
-.imp-root .imp-bottega__telefono {
-  background-color: var(--imp-inchiostro);
-  color: var(--imp-carta);
-}
-
-.imp-root .imp-bottega__maps {
-  background-color: var(--imp-carta-luce);
-  color: var(--imp-inchiostro);
-  box-shadow: var(--imp-ombra-costa);
-}
-
-.imp-root .imp-bottega__telefono-largo {
-  display: none;
-}
-
-.imp-root .imp-bottega__email {
-  justify-self: start;
-  order: 3;
-  display: inline-flex;
-  align-items: center;
-  min-block-size: var(--imp-tocco-min);
-  margin-block-start: var(--imp-sp-2);
-  font-size: var(--imp-fs-corpo);
-  line-height: var(--imp-lh-corpo);
-  overflow-wrap: anywhere;
-}
-
-.imp-root .imp-bottega__maps {
-  order: 2;
-}
-
-.imp-root .imp-bottega__parcheggio {
-  order: 4;
-}
-
-.imp-root .imp-bottega__freccia {
-  display: inline-block;
-  inline-size: 1em;
-  block-size: 1em;
-  flex: none;
-}
-
-.imp-root .imp-bottega__freccia svg {
-  inline-size: 100%;
-  block-size: 100%;
-}
-
-/* ----------------------------------------------------------------- persone */
+/* ----------------------------------------------------------------- chi c'è */
 
 .imp-root .imp-bottega__chi {
   grid-column: 1 / -1;
 }
 
+/* Una frase in corpo lead: i nomi in grassetto, non una lista di nomi. */
 .imp-root .imp-bottega__persone {
   margin: 0;
-  display: grid;
-  gap: var(--imp-sp-5);
-}
-
-.imp-root .imp-bottega__persona {
-  display: grid;
-  gap: var(--imp-sp-1);
-  align-items: baseline;
+  max-inline-size: 34ch;
+  font-size: var(--imp-fs-lead);
+  line-height: var(--imp-lh-lead);
 }
 
 .imp-root .imp-bottega__nome {
-  font-family: var(--imp-font-display);
-  font-size: var(--imp-fs-titolo-2);
-  line-height: var(--imp-lh-titolo-2);
-  letter-spacing: var(--imp-trk-titolo);
-  font-weight: var(--imp-wght-nome);
-  font-variation-settings: "wdth" var(--imp-wdth-nome), "wght" var(--imp-wght-nome);
-  font-synthesis: none;
-}
-
-.imp-root .imp-bottega__mestiere {
-  font-size: var(--imp-fs-corpo);
-  line-height: var(--imp-lh-corpo);
-  max-inline-size: 34ch;
-}
-
-/* ---------------------------------------------------------------- macchine */
-
-.imp-root .imp-bottega__macchine {
-  grid-column: 1 / -1;
-  display: grid;
-  gap: var(--imp-sp-6);
+  font-weight: var(--imp-wght-corpo-forte);
 }
 
 .imp-root .imp-bottega__storia {
-  margin: 0;
+  margin: var(--imp-sp-6) 0 var(--imp-sp-5);
+  max-inline-size: 44ch;
   font-size: var(--imp-fs-corpo);
   line-height: var(--imp-lh-corpo);
-  max-inline-size: 44ch;
 }
 
-.imp-root .imp-bottega__parco {
+/* Tre macchine, una riga ciascuna: il nome in Anybody largo apre la riga. */
+.imp-root .imp-bottega__macchine {
   margin: 0;
   display: grid;
-  gap: var(--imp-sp-5);
+  gap: var(--imp-sp-3);
+  max-inline-size: 48ch;
+  font-size: var(--imp-fs-corpo);
+  line-height: var(--imp-lh-corpo);
 }
 
-.imp-root .imp-bottega__macchina dt {
+.imp-root .imp-bottega__macchina-nome {
   font-family: var(--imp-font-display);
-  font-size: var(--imp-fs-nome);
-  line-height: var(--imp-lh-titolo-3);
   font-weight: var(--imp-wght-titolo-3);
   font-variation-settings: "wdth" 112.5, "wght" var(--imp-wght-titolo-3);
   font-synthesis: none;
-}
-
-.imp-root .imp-bottega__macchina dd {
-  margin: var(--imp-sp-1) 0 0;
-  font-size: var(--imp-fs-piccolo);
-  line-height: var(--imp-lh-piccolo);
-  letter-spacing: var(--imp-trk-piccolo);
-  max-inline-size: 40ch;
 }
 
 /* ------------------------------------------------------------------- piede */
@@ -344,9 +245,6 @@
 
 .imp-root .imp-bottega__piede p {
   margin: 0;
-  font-size: var(--imp-fs-piccolo);
-  line-height: var(--imp-lh-piccolo);
-  letter-spacing: var(--imp-trk-piccolo);
 }
 
 /* =============================================================== ≥ 600 px */
@@ -357,25 +255,6 @@
     gap: var(--imp-sp-4);
   }
 
-  .imp-root .imp-bottega__orari {
-    grid-column: 1 / span 5;
-  }
-
-  .imp-root .imp-bottega__recapiti {
-    grid-column: 1 / span 5;
-  }
-
-  .imp-root .imp-bottega__persona {
-    grid-template-columns: minmax(0, 3fr) minmax(0, 5fr);
-    column-gap: var(--imp-canalino);
-  }
-
-  .imp-root .imp-bottega__parco {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: var(--imp-canalino);
-    row-gap: var(--imp-sp-6);
-  }
-
   .imp-root .imp-bottega__piede {
     grid-column: 1 / span 6;
   }
@@ -383,8 +262,6 @@
 
 /* ============================================================== ≥ 1024 px */
 
-/* Da qui telefono e Maps smettono di essere bottoni: il numero diventa una
-   riga di stampa grande, Maps un link con la freccia. */
 @media (min-width: 1024px) {
   .imp-root .imp-bottega__gabbia {
     row-gap: var(--imp-sp-9);
@@ -394,119 +271,28 @@
     grid-column: 1 / span 7;
   }
 
+  /* La riga dell'editore: indirizzo e recapiti sulla stessa linea. */
+  .imp-root .imp-bottega__editore {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: var(--imp-sp-6);
+  }
+
   .imp-root .imp-bottega__orari {
     grid-column: 1 / span 5;
   }
 
-  .imp-root .imp-bottega__recapiti {
-    grid-column: 7 / span 5;
-    gap: var(--imp-sp-4);
-    /* Allineato alla parola dello stato, non al titoletto: il numero sta
-       sulla stessa riga di "aperto adesso". */
-    padding-block-start: calc(var(--imp-fs-titolo-3) * var(--imp-lh-titolo-3) + var(--imp-sp-5));
-  }
-
-  .imp-root .imp-bottega__telefono,
-  .imp-root .imp-bottega__maps {
-    justify-self: start;
-    min-block-size: var(--imp-tocco-min);
-    padding: 0;
-    background: none;
-    box-shadow: none;
-    color: inherit;
-  }
-
-  .imp-root .imp-bottega__telefono {
-    font-family: var(--imp-font-display);
-    font-size: var(--imp-fs-titolo-2);
-    line-height: var(--imp-lh-titolo-2);
-    letter-spacing: var(--imp-trk-titolo);
-    font-weight: var(--imp-wght-nome);
-    font-variation-settings: "wdth" 125, "wght" var(--imp-wght-nome);
-    font-synthesis: none;
-    font-variant-numeric: tabular-nums;
-    text-decoration-line: underline;
-    text-decoration-thickness: 0.05em;
-    text-underline-offset: 0.14em;
-  }
-
-  .imp-root .imp-bottega__telefono-largo {
-    display: inline;
-  }
-
-  .imp-root .imp-bottega__telefono-bottone {
-    display: none;
-  }
-
-  .imp-root .imp-bottega__maps {
-    order: 3;
-    font-size: var(--imp-fs-corpo);
-    font-weight: var(--imp-wght-corpo-forte);
-    text-decoration-line: underline;
-    text-decoration-thickness: var(--imp-sottolineatura);
-    text-underline-offset: var(--imp-sottolineatura-distanza);
-  }
-
-  .imp-root .imp-bottega__email {
-    order: 2;
-    margin-block-start: 0;
-  }
-
-  .imp-root .imp-bottega__parcheggio {
-    margin-block-start: var(--imp-sp-2);
-  }
-
   .imp-root .imp-bottega__chi {
-    grid-column: 1 / -1;
-  }
-
-  .imp-root .imp-bottega__persona {
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    column-gap: var(--imp-canalino);
-  }
-
-  .imp-root .imp-bottega__nome {
-    grid-column: 1 / span 4;
-  }
-
-  .imp-root .imp-bottega__mestiere {
-    grid-column: 5 / span 5;
-  }
-
-  .imp-root .imp-bottega__macchine {
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    column-gap: var(--imp-canalino);
-  }
-
-  .imp-root .imp-bottega__macchine-testa {
-    grid-column: 1 / span 4;
-  }
-
-  .imp-root .imp-bottega__parco {
-    grid-column: 5 / span 8;
+    grid-column: 7 / span 5;
   }
 
   .imp-root .imp-bottega__piede {
-    grid-column: 5 / span 5;
-  }
-}
-
-/* Hover dei link-bottone su desktop: la riga si ispessisce, come gli altri link. */
-@media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
-  .imp-root .imp-bottega__telefono:hover {
-    text-decoration-thickness: 0.1em;
-    box-shadow: none;
-  }
-
-  .imp-root .imp-bottega__maps:hover {
-    text-decoration-thickness: var(--imp-sottolineatura-hover);
-    box-shadow: none;
+    grid-column: 7 / span 5;
   }
 }
 
 @media (forced-colors: active) {
-  .imp-root .imp-bottega__telefono,
-  .imp-root .imp-bottega__maps {
-    border: 1px solid LinkText;
+  .imp-root .imp-bottega__premuto {
+    color: CanvasText;
   }
 }

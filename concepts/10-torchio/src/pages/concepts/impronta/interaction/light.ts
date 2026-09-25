@@ -6,7 +6,8 @@
  * 4.3, trend-researcher divieto 12). Questo modulo scrive SOLO gli obiettivi
  * della luce in `runtime.light` e ne fa l'inseguimento dentro il ticker unico
  * (fase "update"); il WebGL legge `runtime.light`, il fallback CSS legge
- * `--imp-luce-x` / `--imp-luce-y` su `.imp-root` (scritte al massimo a 30 Hz).
+ * `--imp-luce-x` / `--imp-luce-y` scritte SOLO sulle foglie che le usano e che
+ * sono in vista (mai su `.imp-root`), al massimo a 30 Hz e solo se cambiano.
  *
  * Fonti, in ordine di arrivo (vince l'ultima):
  * - puntatore fine: posizione rispetto alla finestra, con inerzia 0,08/frame;
@@ -14,7 +15,8 @@
  *   lo scroll verticale (`touch-action: pan-y` in interaction.css);
  * - giroscopio: solo se attivato esplicitamente (gyroPermission.ts);
  * - dial "Direzione della luce" (tastiera, lettori di schermo);
- * - nessun input: arco lentissimo solo nell'hero, poi riposo a 135°.
+ * - nessun input: un solo arco lento (40 s) nell'hero, poi riposo a 135°;
+ *   il primo input (anche un tasto o il fuoco) lo ferma per sempre.
  *
  * Convenzione angoli (condivisa con content/testi.ts LUCE.valore e con lo
  * shader): azimut = direzione DA CUI arriva la luce, in gradi, sullo schermo
@@ -58,13 +60,16 @@ export const DIAL_MIN = 0;
 export const DIAL_MAX = 345;
 export const DIAL_PASSO = 15;
 
-/** Arco automatico dell'hero: ±45° attorno al riposo, un periodo ogni 40 s. */
+/**
+ * Arco automatico dell'hero: ±45° attorno al riposo, UN SOLO periodo di 40 s
+ * per visita (creative-director: "poi si ferma a 135°"). Si ferma per sempre
+ * al primo input (puntatore, dito, tasto, fuoco su un controllo), e non parte
+ * nel fallback CSS con puntatore grossolano (giro 2: M3, P1).
+ */
 const ARCO_AMPIEZZA = 45;
 const ARCO_PERIODO_MS = 40_000;
 /** L'arco aggiorna l'obiettivo a 30 Hz (tech-architect §8). */
 const ARCO_PASSO_MS = 1000 / 30;
-/** Dopo quanti ms senza input l'arco riparte (solo con l'hero in vista). */
-const ARCO_DOPO_MS = 8_000;
 /** Variabili CSS del fallback: al massimo 30 scritture al secondo. */
 const CSS_PASSO_MS = 1000 / 30;
 /** Dopo un cambio dal dial il puntatore non lo sovrascrive per questo tempo. */
@@ -73,8 +78,12 @@ const DIAL_PRECEDENZA_MS = 1_500;
 const GYRO_GRADI_PIENI = 25;
 /** Ricentraggio lento della posizione neutra del telefono (per evento). */
 const GYRO_DERIVA = 0.002;
-/** Sotto questa distanza (gradi) la luce è considerata arrivata. */
-const QUIETE_GRADI = 0.02;
+/** Sotto questa distanza (gradi) la luce è considerata arrivata (invisibile, giro 2: P8). */
+const QUIETE_GRADI = 0.15;
+/** Selettore di chi legge --imp-luce-x/y nel fallback (relief-fallback.css, colophon.css). */
+const CONSUMATORI_LUCE = '.imp-secco, .imp-inchiostro, .imp-caldo, .imp-segno-caldo, .imp-colophon__marchio';
+/** Attesa prima di rileggere l'elenco dei consumatori dopo un cambio del DOM. */
+const CONSUMATORI_ATTESA_MS = 250;
 /** Inseguimento del magnete: più rapido della luce, come un foglio sfiorato. */
 const MAGNETE_INERZIA = 0.18;
 
@@ -153,6 +162,14 @@ interface StatoLuce {
   dialValore: number;
   toccoAttivo: number | null;
   gyroBase: { beta: number; gamma: number } | null;
+  /** L'arco ha già fatto il suo giro o c'è stato un input: non riparte più. */
+  arcoFinito: boolean;
+  /** Consumatori di --imp-luce-x/y in vista (IntersectionObserver). */
+  consumatoriVisibili: Set<HTMLElement>;
+  /** Ultimo valore scritto, per non riscrivere lo stesso. */
+  cssScritto: string;
+  /** Puntatore grossolano (telefono, tablet), letto all'avvio. */
+  grossolano: boolean;
 }
 
 const stato: StatoLuce = {
@@ -169,6 +186,10 @@ const stato: StatoLuce = {
   dialValore: LUCE_RIPOSO_AZIMUT,
   toccoAttivo: null,
   gyroBase: null,
+  arcoFinito: false,
+  consumatoriVisibili: new Set<HTMLElement>(),
+  cssScritto: '',
+  grossolano: false,
 };
 
 const ascoltatoriDial = new Set<() => void>();
@@ -183,6 +204,20 @@ function aggiornaDial(): void {
   ascoltatoriDial.forEach((fn) => fn());
 }
 
+/**
+ * Nel fallback CSS su telefono l'arco costerebbe ricalcoli di stile continui
+ * per un effetto che quasi non si vede: lì la luce resta a riposo.
+ */
+function arcoVietatoQui(): boolean {
+  return stato.grossolano && store.get().gl !== 'on';
+}
+
+/** Primo input della visita: l'arco non riparte più (WCAG 2.2.2). */
+function fermaArcoPerSempre(): void {
+  stato.arcoFinito = true;
+  stato.arcoAttivo = false;
+}
+
 function impostaObiettivo(azimuth: number, elevation: number, fonte: LuceFonte): void {
   const L = runtime.light;
   L.targetAzimuth = normalizzaAngolo(azimuth);
@@ -190,7 +225,7 @@ function impostaObiettivo(azimuth: number, elevation: number, fonte: LuceFonte):
   L.fonte = fonte;
   if (fonte !== 'idle') {
     stato.ultimoInput = performance.now();
-    stato.arcoAttivo = false;
+    fermaArcoPerSempre();
   }
   aggiornaDial();
   ticker.wake();
@@ -370,17 +405,23 @@ function aggiornaLuce(dt: number, now: number): boolean {
     return false;
   }
 
-  const inattiva = now - stato.ultimoInput > ARCO_DOPO_MS;
-  if (L.fonte !== 'dial' && inattiva) {
+  const arcoAmmesso = !stato.arcoFinito && L.fonte === 'idle' && !arcoVietatoQui();
+  if (arcoAmmesso) {
     if (stato.heroVisibile) {
       if (!stato.arcoAttivo) {
         stato.arcoAttivo = true;
         stato.arcoInizio = now;
         stato.arcoUltimoPasso = Number.NEGATIVE_INFINITY;
       }
-      if (now - stato.arcoUltimoPasso >= ARCO_PASSO_MS) {
+      if (now - stato.arcoInizio >= ARCO_PERIODO_MS) {
+        // Un giro solo: poi riposo a 135° per sempre.
+        fermaArcoPerSempre();
+        L.targetAzimuth = LUCE_RIPOSO_AZIMUT;
+        L.targetElevation = LUCE_RIPOSO_ELEVAZIONE;
+        aggiornaDial();
+      } else if (now - stato.arcoUltimoPasso >= ARCO_PASSO_MS) {
         stato.arcoUltimoPasso = now;
-        const fase = ((now - stato.arcoInizio) % ARCO_PERIODO_MS) / ARCO_PERIODO_MS;
+        const fase = (now - stato.arcoInizio) / ARCO_PERIODO_MS;
         L.targetAzimuth = normalizzaAngolo(LUCE_RIPOSO_AZIMUT + ARCO_AMPIEZZA * Math.sin(fase * Math.PI * 2));
         L.targetElevation = LUCE_RIPOSO_ELEVAZIONE;
         L.fonte = 'idle';
@@ -415,16 +456,33 @@ function aggiornaLuce(dt: number, now: number): boolean {
   return true;
 }
 
+/** Valori correnti di --imp-luce-x/y (vettoreLuce dell'art-director, y in basso). */
+function valoriLuce(): { x: string; y: string } {
+  const v = vettoreLuce(runtime.light.azimuth);
+  return { x: v.x.toFixed(3), y: v.y.toFixed(3) };
+}
+
+function scriviSuConsumatore(el: HTMLElement, x: string, y: string): void {
+  el.style.setProperty('--imp-luce-x', x);
+  el.style.setProperty('--imp-luce-y', y);
+}
+
+/**
+ * Giro 2 (performance P1): mai su .imp-root. Una proprietà custom scritta
+ * sulla radice ricalcola lo stile di tutta la pagina (63 ms a 1×). Si scrive
+ * solo sui consumatori in vista (le foglie che leggono la variabile), e solo
+ * se il valore arrotondato è cambiato. Il default resta in tokens.css.
+ */
 function scriviVariabili(): void {
   const L = runtime.light;
   const az = L.azimuth.toFixed(1);
   elementiDial.forEach((el) => el.style.setProperty('--imp-ix-dial-az', az));
-  const root = stato.root;
-  if (!root || store.get().gl === 'on') return;
-  // Vettore verso la luce in coordinate CSS (y in basso), funzione dell'art-director.
-  const v = vettoreLuce(L.azimuth);
-  root.style.setProperty('--imp-luce-x', v.x.toFixed(3));
-  root.style.setProperty('--imp-luce-y', v.y.toFixed(3));
+  if (!stato.root || store.get().gl === 'on') return;
+  const { x, y } = valoriLuce();
+  const chiave = `${x} ${y}`;
+  if (chiave === stato.cssScritto) return;
+  stato.cssScritto = chiave;
+  stato.consumatoriVisibili.forEach((el) => scriviSuConsumatore(el, x, y));
 }
 
 /** Fase "write": variabili CSS al massimo a 30 Hz. */
@@ -460,6 +518,9 @@ export function startLight({ root, heroSelector = '#inizio' }: OpzioniLuce): () 
   stato.toccoAttivo = null;
   stato.gyroBase = null;
   stato.dialPrecedenzaFino = 0;
+  stato.consumatoriVisibili.clear();
+  stato.cssScritto = '';
+  stato.grossolano = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
 
   const L = runtime.light;
   L.azimuth = LUCE_RIPOSO_AZIMUT;
@@ -485,6 +546,74 @@ export function startLight({ root, heroSelector = '#inizio' }: OpzioniLuce): () 
     );
     osservatore.observe(hero);
   }
+
+  /* ---------- consumatori di --imp-luce-x/y (solo quelli in vista) */
+  let osservaConsumatori: IntersectionObserver | null = null;
+  const osservati = new Set<HTMLElement>();
+  if (typeof IntersectionObserver !== 'undefined') {
+    osservaConsumatori = new IntersectionObserver(
+      (voci) => {
+        for (const v of voci) {
+          const el = v.target as HTMLElement;
+          if (v.isIntersecting) {
+            stato.consumatoriVisibili.add(el);
+            if (store.get().gl !== 'on') {
+              const { x, y } = valoriLuce();
+              scriviSuConsumatore(el, x, y);
+            }
+          } else {
+            stato.consumatoriVisibili.delete(el);
+          }
+        }
+      },
+      { rootMargin: '25% 0px' },
+    );
+  }
+  const aggiornaConsumatori = (): void => {
+    if (!osservaConsumatori) return;
+    const attuali = new Set(root.querySelectorAll<HTMLElement>(CONSUMATORI_LUCE));
+    osservati.forEach((el) => {
+      if (!attuali.has(el)) {
+        osservaConsumatori?.unobserve(el);
+        osservati.delete(el);
+        stato.consumatoriVisibili.delete(el);
+      }
+    });
+    attuali.forEach((el) => {
+      if (!osservati.has(el)) {
+        osservaConsumatori?.observe(el);
+        osservati.add(el);
+      }
+    });
+  };
+  aggiornaConsumatori();
+  let timerConsumatori: number | null = null;
+  const mutazioni =
+    typeof MutationObserver !== 'undefined'
+      ? new MutationObserver(() => {
+          if (timerConsumatori !== null) return;
+          timerConsumatori = window.setTimeout(() => {
+            timerConsumatori = null;
+            aggiornaConsumatori();
+          }, CONSUMATORI_ATTESA_MS);
+        })
+      : null;
+  mutazioni?.observe(root, { childList: true, subtree: true });
+
+  /* ---------- fuoco e tasti contano come input: l'arco si ferma (M3) */
+  const suInputTastiera = (): void => {
+    if (stato.arcoFinito) return;
+    fermaArcoPerSempre();
+    const Lr = runtime.light;
+    if (Lr.fonte === 'idle') {
+      Lr.targetAzimuth = LUCE_RIPOSO_AZIMUT;
+      Lr.targetElevation = LUCE_RIPOSO_ELEVAZIONE;
+      aggiornaDial();
+    }
+    ticker.wake();
+  };
+  root.addEventListener('focusin', suInputTastiera);
+  window.addEventListener('keydown', suInputTastiera, { passive: true });
 
   const togliAggiorna = ticker.add(aggiornaLuce, 'update');
   const togliScrivi = ticker.add(scriviLuce, 'write');
@@ -520,6 +649,13 @@ export function startLight({ root, heroSelector = '#inizio' }: OpzioniLuce): () 
     togliAggiorna();
     togliScrivi();
     osservatore?.disconnect();
+    osservaConsumatori?.disconnect();
+    mutazioni?.disconnect();
+    if (timerConsumatori !== null) window.clearTimeout(timerConsumatori);
+    osservati.clear();
+    stato.consumatoriVisibili.clear();
+    root.removeEventListener('focusin', suInputTastiera);
+    window.removeEventListener('keydown', suInputTastiera);
     if (staccaPuntatore) staccaPuntatore();
     if (staccaGyro) staccaGyro();
     stato.toccoAttivo = null;

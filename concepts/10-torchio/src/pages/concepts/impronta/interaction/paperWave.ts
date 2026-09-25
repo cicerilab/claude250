@@ -22,6 +22,9 @@
  * Reduced motion: il cambio è immediato (`scegliCarta` subito). Il velo con la
  * carta vecchia svanisce in 200 ms di dissolvenza lineare, senza movimento.
  *
+ * Giro 2: al massimo un cambio ogni 450 ms (coda con l'ultima richiesta), e
+ * il bordo del foglio nuovo avanza con la sua costa visibile.
+ *
  * Nessun lampo: un solo cambio di colore per punto dello schermo, mai
  * ripetuto. Nessun accesso a window/document a livello di modulo.
  */
@@ -79,7 +82,7 @@ interface OndaAttiva {
   risolvi: () => void;
 }
 
-let onda: OndaAttiva | null = null;
+let onda: OndaAttivaDom | null = null;
 
 /* ------------------------------------------------------------------ geometria */
 
@@ -139,35 +142,121 @@ export function getPaperWave(now: number): PaperWaveFrame | null {
 
 /* ------------------------------------------------------------------ velo DOM */
 
-function creaVelo(root: HTMLElement, carta: Carta, x: number, y: number, ridotta: boolean): HTMLElement {
-  const velo = document.createElement('div');
-  velo.className = ridotta ? 'imp-ix-onda imp-ix-onda--dissolvenza' : 'imp-ix-onda';
-  velo.setAttribute('aria-hidden', 'true');
-  velo.dataset.carta = carta;
-  velo.style.setProperty('--imp-onda-x', `${x.toFixed(1)}px`);
-  velo.style.setProperty('--imp-onda-y', `${y.toFixed(1)}px`);
-  velo.style.setProperty('--imp-onda-r', '0px');
-  velo.style.setProperty('--imp-onda-bordo', `${CARTA.onda.bordoDa}px`);
-  velo.style.setProperty('--imp-onda-o', '1');
-  root.appendChild(velo);
-  return velo;
+/*
+ * Struttura del velo (al livello del canvas, sotto l'inchiostro):
+ *   div.imp-ix-onda                       variabili --imp-onda-*
+ *     div.imp-ix-onda__foglio[data-carta] la carta (solo se il GL non la disegna)
+ *     div.imp-ix-onda__costa[data-carta]  il bordo del foglio nuovo che avanza:
+ *                                         costa tinta + ombra corta sul vecchio
+ * La costa c'è anche col WebGL acceso (giro 2, giuria §5): è il fotogramma
+ * che si ricorda, un foglio vero che scorre sopra l'altro.
+ */
+interface Velo {
+  el: HTMLElement;
+  foglio: HTMLElement | null;
+  costa: HTMLElement | null;
 }
 
-function chiudi(o: OndaAttiva): void {
+function creaVelo(
+  root: HTMLElement,
+  x: number,
+  y: number,
+  opz: { foglio: Carta | null; costa: Carta | null; ridotta: boolean },
+): Velo {
+  const el = document.createElement('div');
+  el.className = opz.ridotta ? 'imp-ix-onda imp-ix-onda--dissolvenza' : 'imp-ix-onda';
+  el.setAttribute('aria-hidden', 'true');
+  el.style.setProperty('--imp-onda-x', `${x.toFixed(1)}px`);
+  el.style.setProperty('--imp-onda-y', `${y.toFixed(1)}px`);
+  el.style.setProperty('--imp-onda-r', '0px');
+  el.style.setProperty('--imp-onda-bordo', `${CARTA.onda.bordoDa}px`);
+  el.style.setProperty('--imp-onda-o', '1');
+  let foglio: HTMLElement | null = null;
+  let costa: HTMLElement | null = null;
+  if (opz.foglio) {
+    foglio = document.createElement('div');
+    foglio.className = 'imp-ix-onda__foglio';
+    foglio.dataset.carta = opz.foglio;
+    el.appendChild(foglio);
+  }
+  if (opz.costa) {
+    costa = document.createElement('div');
+    costa.className = 'imp-ix-onda__costa';
+    costa.dataset.carta = opz.costa;
+    el.appendChild(costa);
+  }
+  root.appendChild(el);
+  return { el, foglio, costa };
+}
+
+interface OndaAttivaDom extends OndaAttiva {
+  veloDom: Velo | null;
+}
+
+function chiudi(o: OndaAttivaDom): void {
   o.togliTick();
-  o.velo?.remove();
+  o.veloDom?.el.remove();
+  o.veloDom = null;
   o.velo = null;
   if (onda === o) onda = null;
+}
+
+/* ------------------------------------------------------------------ limite di frequenza */
+
+/**
+ * Giro 2 (accessibilità A4, WCAG 2.3.1): una freccia tenuta sui radio delle
+ * carte chiede un cambio a ogni ripetizione del tasto (fino a ~30 al secondo).
+ * Si applica al massimo un cambio ogni INTERVALLO_MINIMO_MS; le richieste nel
+ * frattempo si accodano e resta solo l'ultima. Vale anche con reduced motion.
+ * 450 ms → al massimo 2,2 cambi di colore al secondo.
+ */
+export const INTERVALLO_MINIMO_MS = 450;
+
+interface Richiesta {
+  x: number;
+  y: number;
+  carta: Carta;
+  opzioni: OpzioniOnda;
+}
+
+let ultimoAvvio = Number.NEGATIVE_INFINITY;
+let inCoda: Richiesta | null = null;
+let timerCoda: number | null = null;
+let attesiCoda: Array<() => void> = [];
+
+function svuotaCoda(): void {
+  timerCoda = null;
+  const r = inCoda;
+  inCoda = null;
+  const attesi = attesiCoda;
+  attesiCoda = [];
+  if (!r) {
+    attesi.forEach((fn) => fn());
+    return;
+  }
+  void avviaOnda(r.x, r.y, r.carta, r.opzioni).then(() => attesi.forEach((fn) => fn()));
 }
 
 /* ------------------------------------------------------------------ API */
 
 /**
  * Chiude subito l'onda in corso (se c'è): la carta di destinazione diventa
- * quella del sito. La chiama Impronta.tsx allo smontaggio, e startPaperWave
- * quando arriva un nuovo cambio prima della fine del precedente.
+ * quella del sito. La chiama Impronta.tsx allo smontaggio, e l'avvio di una
+ * nuova onda quando la precedente non è finita. Svuota anche la coda.
  */
 export function concludiPaperWave(): void {
+  if (timerCoda !== null) {
+    window.clearTimeout(timerCoda);
+    timerCoda = null;
+  }
+  inCoda = null;
+  const attesi = attesiCoda;
+  attesiCoda = [];
+  chiudiOndaCorrente();
+  attesi.forEach((fn) => fn());
+}
+
+function chiudiOndaCorrente(): void {
   const o = onda;
   if (!o) return;
   if (!o.scambiata) {
@@ -188,18 +277,34 @@ export interface OpzioniOnda {
 /**
  * Cambia la carta del sito con l'onda che parte da (x, y), in px CSS del
  * viewport (clientX/clientY). La Promise si risolve quando l'onda è finita
- * (la carta nello store è cambiata già allo scambio, o subito con reduced motion).
+ * (la carta nello store è cambiata già allo scambio, o subito con reduced
+ * motion). Se arriva prima di INTERVALLO_MINIMO_MS dall'ultimo avvio, la
+ * richiesta va in coda (resta solo l'ultima) e la Promise si risolve quando
+ * parte e finisce quella.
  */
 export function startPaperWave(x: number, y: number, carta: Carta, opzioni: OpzioniOnda = {}): Promise<void> {
   if (typeof window === 'undefined') {
     scegliCarta(carta);
     return Promise.resolve();
   }
+  const ora = performance.now();
+  const attesa = INTERVALLO_MINIMO_MS - (ora - ultimoAvvio);
+  if (attesa > 0 || timerCoda !== null) {
+    inCoda = { x, y, carta, opzioni };
+    if (timerCoda === null) timerCoda = window.setTimeout(svuotaCoda, Math.max(0, attesa));
+    return new Promise<void>((risolvi) => {
+      attesiCoda.push(risolvi);
+    });
+  }
+  return avviaOnda(x, y, carta, opzioni);
+}
 
-  concludiPaperWave();
+function avviaOnda(x: number, y: number, carta: Carta, opzioni: OpzioniOnda): Promise<void> {
+  chiudiOndaCorrente();
 
   const s = store.get();
   if (s.carta === carta) return Promise.resolve();
+  ultimoAvvio = performance.now();
 
   const ridotta = s.reducedMotion;
   const root = opzioni.root ?? document.querySelector<HTMLElement>('.imp-root');
@@ -207,14 +312,14 @@ export function startPaperWave(x: number, y: number, carta: Carta, opzioni: Opzi
   const cx = limita(x, 0, w);
   const cy = limita(y, 0, h);
   const g = { x: cx, y: cy, w, h };
-  const t0 = performance.now();
+  const t0 = ultimoAvvio;
   const from = s.carta;
 
-  // Il velo DOM serve se il WebGL non disegna la carta, e sempre per la
-  // dissolvenza ridotta (che il GL non fa: lì la carta cambia di colpo sotto al velo).
-  const serveVelo = !!root && (ridotta || s.gl !== 'on');
-  // Nel caso ridotto il velo porta la carta VECCHIA; altrimenti quella nuova (fino allo scambio).
-  const velo = serveVelo && root ? creaVelo(root, ridotta ? from : carta, cx, cy, ridotta) : null;
+  // Foglio DOM: se il WebGL non disegna la carta, e sempre per la dissolvenza
+  // ridotta (carta VECCHIA che svanisce). Costa: solo con movimento pieno.
+  const foglio: Carta | null = ridotta ? from : s.gl !== 'on' ? carta : null;
+  const costa: Carta | null = ridotta ? null : carta;
+  const velo = root && (foglio || costa) ? creaVelo(root, cx, cy, { foglio, costa, ridotta }) : null;
 
   if (ridotta) {
     scegliCarta(carta);
@@ -224,11 +329,12 @@ export function startPaperWave(x: number, y: number, carta: Carta, opzioni: Opzi
   runtime.markDirty();
 
   return new Promise<void>((risolvi) => {
-    const o: OndaAttiva = {
+    const o: OndaAttivaDom = {
       from,
       to: carta,
       ridotta,
-      velo,
+      velo: velo?.el ?? null,
+      veloDom: velo,
       scambiata: ridotta,
       togliTick: () => undefined,
       risolvi,
@@ -242,16 +348,17 @@ export function startPaperWave(x: number, y: number, carta: Carta, opzioni: Opzi
       if (!o.scambiata && st.invertita) {
         o.scambiata = true;
         scegliCarta(o.to);
-        if (o.velo) {
-          o.velo.dataset.carta = o.from;
-          o.velo.classList.add('imp-ix-onda--invertita');
+        if (o.veloDom?.foglio) {
+          o.veloDom.foglio.dataset.carta = o.from;
+          o.veloDom.el.classList.add('imp-ix-onda--invertita');
         }
       }
 
-      if (o.velo) {
-        o.velo.style.setProperty('--imp-onda-r', `${st.raggio.toFixed(1)}px`);
-        o.velo.style.setProperty('--imp-onda-bordo', `${st.bordo.toFixed(1)}px`);
-        o.velo.style.setProperty('--imp-onda-o', st.opacita.toFixed(3));
+      if (o.veloDom) {
+        const el = o.veloDom.el;
+        el.style.setProperty('--imp-onda-r', `${st.raggio.toFixed(1)}px`);
+        el.style.setProperty('--imp-onda-bordo', `${st.bordo.toFixed(1)}px`);
+        el.style.setProperty('--imp-onda-o', st.opacita.toFixed(3));
       }
 
       if (st.finita) {

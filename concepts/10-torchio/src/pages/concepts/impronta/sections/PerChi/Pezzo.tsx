@@ -8,8 +8,10 @@
  *   `selettore`. Lo shader lo preme dal vivo; senza WebGL lo stesso DOM è il
  *   rilievo CSS. Tutto il piano è `aria-hidden`: il suo contenuto è ripetuto
  *   per intero dal testo alternativo `.imp-sr` (copywriter §6);
- * - la **didascalia** in inchiostro: h3, per chi è, carta e formato, prezzo
- *   "da" e "Prova la tua" (che imposta il banco, vedi PerChi.tsx).
+ * - la **didascalia** da catalogo in inchiostro: h3, una nota (per chi è,
+ *   carta e formato), il prezzo "da" e un link testuale al banco
+ *   ("Prova la tua partecipazione", `provaAria`), che imposta il banco (vedi
+ *   PerChi.tsx). Anche l'oggetto è cliccabile. Niente bottoni: giro 2.
  *
  * Dettagli d'oggetto (docs/section-builder-per-chi.md §3):
  * - la partecipazione ha sotto la sua busta, un secondo pezzo Cipria con la
@@ -36,7 +38,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   type RefObject,
 } from 'react';
-import { COMUNI, PER_CHI } from '../../content/testi';
+import { PER_CHI } from '../../content/testi';
 import { ATTESA_PRESSA, PER_CHI as MOTO_PER_CHI } from '../../motion/choreography';
 import { usePressione } from '../../motion/usePressione';
 import type { ReliefLayer, TecnicaRilievo, TrackingRilievo } from '../../relief/types';
@@ -111,9 +113,10 @@ const COMPOSIZIONI: Record<IdPezzo, Composizione> = {
     tecnica: 'colore',
     profondita: 0.75,
     strati: [
-      { riga: 0, ruolo: 'titolo', materiale: 'inchiostro', profondita: 0.35, riquadro: [15, 8, 76, 32] },
-      { riga: 1, ruolo: 'autore', materiale: 'inchiostro', profondita: 0.3, riquadro: [15, 80, 76, 6] },
-      { riga: 2, ruolo: 'genere', materiale: 'inchiostro', profondita: 0.3, riquadro: [15, 87, 76, 5] },
+      // "poesie" in testa come nome di collana, titolo sotto, autrice al piede.
+      { riga: 2, ruolo: 'genere', materiale: 'inchiostro', profondita: 0.3, riquadro: [15, 8, 76, 5] },
+      { riga: 0, ruolo: 'titolo', materiale: 'inchiostro', profondita: 0.35, riquadro: [15, 16, 76, 30] },
+      { riga: 1, ruolo: 'autore', materiale: 'inchiostro', profondita: 0.3, riquadro: [15, 84, 76, 7] },
     ],
     // La cerniera della brossura: cordonatura verticale a 7% dal dorso.
     segni: [{ kind: 'linea', x: 6.6, y: 0, w: 0.7, h: 100, tecnica: 'cordonatura', profondita: 0.7 }],
@@ -126,6 +129,13 @@ const PATTA_PATH = 'M0 0 L81 58 L162 0';
 const PATTA_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${PATTA_VIEWBOX}"><path d="${PATTA_PATH}" fill="none" stroke="#000" stroke-width="1.6" stroke-linejoin="miter"/></svg>`;
 /** Altezza della patta sulla busta 162×114 mm: 64/114 = 56,1%. */
 const PATTA_ALTEZZA = (64 / 114) * 100;
+/**
+ * Priorità per lo shader (al massimo 8 blocchi sullo schermo, webgl/blocks.ts):
+ * i tre pezzi prima della busta, così a 2560 la copertina non resta fuori
+ * dal GL (responsive-tester, giro 1). Sotto la prova del banco (9-10).
+ */
+const PRIORITA_PEZZO = 4;
+const PRIORITA_BUSTA = 2;
 /** La busta è ruotata così rispetto al bancone (la partecipazione sta a -2°). */
 const ROTAZIONE_BUSTA = 3;
 
@@ -159,6 +169,7 @@ function Busta({ indice, sezioneRef, tracking }: PropsBusta) {
     profondita: 0.6,
     rotazione: ROTAZIONE_BUSTA,
     tracking,
+    priorita: PRIORITA_BUSTA,
     layers: [{ kind: 'svg', x: 0, y: 0, w: 100, h: PATTA_ALTEZZA, svg: PATTA_SVG, tecnica: 'cordonatura' }],
   });
   usePressione(ref, { profilo: MOTO_PER_CHI.profilo, reliefId, indice, osserva: sezioneRef });
@@ -184,12 +195,13 @@ export interface PropsPezzo {
   readonly sezioneRef: RefObject<HTMLElement | null>;
   /** true sopra i 1024 px (pezzi sparsi, misura 'doc'); false nel mazzo (misura 'live'). */
   readonly largo: boolean;
-  /** "Prova la tua": imposta il banco con il preset del pezzo. Il viaggio a #banco lo fa Impronta.tsx. */
+  /** Link al banco: imposta il banco con il preset del pezzo. Il viaggio a #banco lo fa Impronta.tsx. */
   readonly onProva: (pezzo: TestiPezzo, origine: HTMLElement) => void;
 }
 
 export default function Pezzo({ pezzo, indice, sezioneRef, largo, onProva }: PropsPezzo) {
   const ref = useRef<HTMLDivElement>(null);
+  const linkRef = useRef<HTMLAnchorElement>(null);
   const idGrezzo = useId();
   const idTitolo = `imp-perchi-${pezzo.id}-${idGrezzo.replace(/[^a-zA-Z0-9_-]/g, '')}`;
 
@@ -221,6 +233,7 @@ export default function Pezzo({ pezzo, indice, sezioneRef, largo, onProva }: Pro
     profondita: composizione.profondita,
     rotazione,
     tracking,
+    priorita: PRIORITA_PEZZO,
     layers,
   });
 
@@ -258,6 +271,12 @@ export default function Pezzo({ pezzo, indice, sezioneRef, largo, onProva }: Pro
     onProva(pezzo, e.currentTarget);
   };
 
+  // L'oggetto stesso porta al banco: comodità per il puntatore. Tastiera e
+  // lettori di schermo usano il link della didascalia (l'oggetto è aria-hidden).
+  const suOggetto = (): void => {
+    linkRef.current?.click();
+  };
+
   return (
     <article
       className={`imp-perchi__lavoro imp-perchi__lavoro--${pezzo.id}`}
@@ -267,7 +286,7 @@ export default function Pezzo({ pezzo, indice, sezioneRef, largo, onProva }: Pro
       onFocus={suFuoco}
       onBlur={suSfuoco}
     >
-      <div className="imp-perchi__tavolo" aria-hidden="true">
+      <div className="imp-perchi__tavolo" aria-hidden="true" onClick={suOggetto}>
         <div className="imp-perchi__piano">
           {pezzo.id === 'partecipazione' ? <Busta indice={indice} sezioneRef={sezioneRef} tracking={tracking} /> : null}
           <div className="imp-perchi__foglio" style={stileRotazione(rotazione)}>
@@ -304,16 +323,14 @@ export default function Pezzo({ pezzo, indice, sezioneRef, largo, onProva }: Pro
           {pezzo.titolo}
         </h3>
         <p className="imp-sr">{pezzo.alt}</p>
-        <p className="imp-perchi__per-chi">{pezzo.perChi}</p>
-        <p className="imp-perchi__righe">{pezzo.righe}</p>
+        <p className="imp-perchi__nota">
+          <span className="imp-perchi__per-chi">{pezzo.perChi}</span>
+          <span className="imp-perchi__righe">{pezzo.righe}</span>
+        </p>
         <p className="imp-perchi__prezzo">{pezzo.prezzo}</p>
-        <a
-          className="imp-perchi__prova imp-lamina imp-ix-premibile"
-          href="#banco"
-          aria-label={pezzo.provaAria}
-          onClick={suProva}
-        >
-          {COMUNI.provaLaTua}
+        <a ref={linkRef} className="imp-perchi__prova imp-ix-link" href="#banco" onClick={suProva}>
+          {pezzo.provaAria}
+          <span className="imp-perchi__freccina" aria-hidden="true" />
         </a>
       </div>
     </article>

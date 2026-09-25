@@ -1,25 +1,27 @@
 /* ==========================================================================
    IMPRONTA · sezione 4, "La carta · tocca prima di scegliere" (#carta)
-   section-builder-carta. Solo variabili --imp-*, tutti i selettori sotto
-   .imp-root (tech-architect §5).
+   section-builder-carta, giro 2. Solo variabili --imp-*, tutti i selettori
+   sotto .imp-root (tech-architect §5).
 
    Struttura:
-     .imp-carta__testa      H2 + riga Hanken, nella gabbia della pagina
-     .imp-carta__gruppo     radiogroup a vivo (.imp-a-vivo): le 4 strisce
-       .imp-carta__striscia   il radio (bottone) con data-carta della sua carta
-         .imp-carta__foglio     il campione: fondo, fibra, costa, si solleva
-           .imp-carta__campo-secco  contenitore del nome a secco (aria-hidden)
-             .imp-carta__secco      il nome a secco (decorativo, premuto)
-           .imp-carta__scelta     "✓ la carta del sito" (solo se scelta)
-           .imp-carta__dati       nome, grammatura, spessore, uso, descrizione
-     .imp-carta__campioni   riga sotto le strisce
+     .imp-carta__testa        H2 + riga Hanken, nella gabbia della pagina
+     .imp-carta__gruppo       radiogroup a vivo su tutta la finestra (100vw)
+       .imp-carta__striscia     il radio (bottone) con data-carta della sua carta
+         .imp-carta__foglio       il campione: fondo, fibra, costa, si solleva
+           .imp-carta__campo-secco  fascia del nome a secco, tagliata dal bordo
+             .imp-carta__secco        il nome a secco (decorativo, premuto)
+           .imp-carta__scelta       "✓ la carta del sito" (solo se scelta)
+           .imp-carta__dati         nome, misure, uso, descrizione (display: contents)
+     .imp-carta__campioni     riga sotto le strisce
 
-   Sotto 1024 px le carte sono fasce orizzontali impilate (ux 5.4, 375);
-   da 1024 px quattro strisce verticali da 25vw, alte 72vh.
+   Il nome a secco è sempre ORIZZONTALE ed enorme, e il bordo destro della
+   striscia lo taglia: un campione tagliato dal foglio (giuria, giro 1).
+   Sotto 1024 px le carte sono fasce impilate, da 1024 px quattro strisce
+   verticali da 25vw, alte 72vh, anche a 2560.
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
-   Testa della sezione
+   Testa della sezione: titolo e riga Hanken sullo stesso margine interno.
    -------------------------------------------------------------------------- */
 .imp-root .imp-carta {
   position: relative;
@@ -29,53 +31,54 @@
   row-gap: var(--imp-sp-4);
 }
 
-.imp-root .imp-carta__titolo {
+.imp-root .imp-carta__titolo,
+.imp-root .imp-carta__intro {
   grid-column: 1 / -1;
+}
+
+.imp-root .imp-carta__titolo {
   max-inline-size: 14ch;
-  scroll-margin-block-start: var(--imp-sp-9);
 }
 
 .imp-root .imp-carta__intro {
-  grid-column: 1 / -1;
   max-inline-size: var(--imp-giustezza-stretta);
   font-size: var(--imp-fs-lead);
   line-height: var(--imp-lh-lead);
 }
 
 @media (min-width: 1024px) {
-  .imp-root .imp-carta__titolo {
-    grid-column: 1 / span 7;
-  }
-
-  /* La riga Hanken sta sotto il titolo, rientrata di una colonna: come la
-     prima riga di un capoverso sotto un titoletto di libro. */
+  .imp-root .imp-carta__titolo,
   .imp-root .imp-carta__intro {
-    grid-column: 2 / span 6;
+    grid-column: 1 / span 7;
   }
 }
 
 /* --------------------------------------------------------------------------
-   Il gruppo: a vivo, senza canalini. Le strisce si toccano come campioni
-   stesi sul banco uno accanto all'altro.
+   Il gruppo: a vivo su tutta la finestra, anche oltre la pagina massima
+   (1680). Parte dal bordo sinistro della finestra: (finestra - pagina) / 2
+   più il margine interno della pagina. Le strisce si toccano, senza canalini,
+   come campioni stesi sul banco. Quel che esce a destra (barra di
+   scorrimento) lo taglia .imp-root (overflow-x: clip).
    -------------------------------------------------------------------------- */
 .imp-root .imp-carta__gruppo {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
+  inline-size: 100vw;
   margin-block-start: var(--imp-sp-7);
+  margin-inline-start: calc((100vw - var(--imp-vw)) / -2 - var(--imp-margine-interno));
 }
 
 /* --------------------------------------------------------------------------
    La striscia (il radio). Il bottone non si trasforma: si solleva il foglio
    dentro, mentre la costa "di riserva" (::after) resta ferma sotto. Così
    sotto la mano si vede un filo di spessore in più (interaction §4).
-   L'ordine di sovrapposizione scende da Citrino a Grafite: la costa di ogni
-   fascia cade sopra quella che segue.
+   Sotto 1024 le fasce si sovrappongono da Citrino a Grafite: la costa di
+   ognuna cade sopra quella che segue.
    -------------------------------------------------------------------------- */
 .imp-root .imp-carta__striscia {
   position: relative;
   display: block;
   inline-size: 100%;
-  min-block-size: max(var(--imp-tocco-min), 120px, 22svh);
   color: var(--imp-inchiostro);
   text-align: start;
   touch-action: manipulation;
@@ -88,8 +91,6 @@
 .imp-root .imp-carta__striscia--cipria { z-index: 2; }
 .imp-root .imp-carta__striscia--grafite { z-index: 1; }
 
-/* Costa ferma: coincide con quella del foglio a riposo, resta sotto quando
-   il foglio si alza. Due pixel in più verso l'alto, coperti dal foglio. */
 .imp-root .imp-carta__striscia::after {
   content: "";
   position: absolute;
@@ -104,25 +105,22 @@
 /* --------------------------------------------------------------------------
    Il foglio: la carta vera, con la sua fibra e la costa (.imp-costa,
    art-director) che cresce con la grammatura: 3 / 6 / 4 / 5 px.
+   È un contenitore: il corpo del nome si calcola sulla sua larghezza.
    -------------------------------------------------------------------------- */
 .imp-root .imp-carta__foglio {
+  --_imp-carta-pad-s: var(--imp-margine-interno);
+  --_imp-carta-pad-e: var(--imp-margine-esterno);
   position: relative;
   z-index: 1;
   display: grid;
   block-size: 100%;
-  min-block-size: inherit;
   background-color: var(--imp-carta);
   container-type: inline-size;
-  container-name: imp-foglio;
-  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-  grid-template-areas:
-    "secco scelta"
-    "secco dati";
-  grid-template-rows: auto 1fr;
+  grid-template-columns: minmax(0, 1fr) auto;
   column-gap: var(--imp-sp-4);
-  row-gap: var(--imp-sp-2);
-  align-items: start;
-  padding: var(--imp-sp-5) var(--imp-margine-esterno) calc(var(--imp-sp-5) + 2px) var(--imp-margine-interno);
+  row-gap: var(--imp-sp-1);
+  align-items: baseline;
+  padding: var(--imp-sp-4) var(--_imp-carta-pad-e) calc(var(--imp-sp-5) + 2px) var(--_imp-carta-pad-s);
   transition: transform 90ms linear;
 }
 
@@ -133,6 +131,7 @@
   content: "";
   position: absolute;
   inset: 0;
+  z-index: 1;
   box-shadow: inset 0 0 0 var(--imp-bordo-scelto) var(--imp-inchiostro);
   opacity: 0;
   pointer-events: none;
@@ -143,45 +142,70 @@
   opacity: 1;
 }
 
+/* I dati si sistemano direttamente nella griglia del foglio; nel DOM restano
+   un solo gruppo (una lettura per i lettori di schermo). */
+.imp-root .imp-carta__dati {
+  display: contents;
+}
+
 /* --------------------------------------------------------------------------
-   Nome a secco: ripete il nome in inchiostro, solo materia. Fermo nei
-   suoi assi (secco-grande); lo muove solo --imp-press (usePressione).
-   Il campo è un contenitore: il corpo si calcola sulla sua colonna, così il
-   nome la riempie senza mai toccare il testo vero accanto.
+   Nome a secco: orizzontale, enorme, tagliato dal bordo destro della
+   striscia. Il campo arriva fino al bordo (margine negativo pari al
+   padding) e taglia SOLO in orizzontale: ascendenti e discendenti restano
+   interi (overflow-y visibile, niente overflow: hidden sulla riga a 0,86).
+   Profondità maggiorata (--imp-rilievo): a questo corpo e su Cipria e
+   Grafite il bisello standard si perde.
    -------------------------------------------------------------------------- */
 .imp-root .imp-carta__campo-secco {
-  grid-area: secco;
-  align-self: center;
+  grid-column: 1 / -1;
+  grid-row: 1;
   display: block;
   min-inline-size: 0;
-  container-type: inline-size;
+  margin-inline-end: calc(var(--_imp-carta-pad-e) * -1);
+  overflow-x: clip;
+  overflow-y: visible;
 }
 
 .imp-root .imp-carta__secco {
+  --imp-rilievo: 1.9;
   display: block;
   inline-size: max-content;
   font-family: var(--imp-font-display);
   font-synthesis: none;
   font-weight: var(--imp-wght-secco-grande);
   font-variation-settings: "wdth" var(--imp-wdth-secco-grande), "wght" var(--imp-wght-secco-grande);
-  font-size: max(2rem, 22cqi);
+  font-size: 27cqi;
   line-height: var(--imp-lh-secco);
   letter-spacing: var(--imp-trk-secco);
   white-space: nowrap;
-  padding-block: 0.08em;
+  padding-block: 0.06em 0.1em;
+  margin-inline-start: -0.04em;
+}
+
+/* Grafite: il solco è quasi del colore della carta, serve più luce e più
+   ombra per leggerlo di luce radente. */
+.imp-root .imp-carta__striscia--grafite .imp-carta__secco {
+  --imp-rilievo: 2.6;
+}
+
+.imp-root .imp-carta__striscia--cipria .imp-carta__secco {
+  --imp-rilievo: 2.2;
 }
 
 /* --------------------------------------------------------------------------
-   "✓ la carta del sito": piccola, in inchiostro, riserva sempre il suo
-   spazio (nessun salto quando la scelta passa a un'altra striscia).
+   "✓ la carta del sito": riserva sempre il suo spazio (nessun salto quando
+   la scelta passa a un'altra striscia).
    -------------------------------------------------------------------------- */
 .imp-root .imp-carta__scelta {
-  grid-area: scelta;
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: end;
   display: block;
   font-size: var(--imp-fs-nota);
   font-weight: var(--imp-wght-corpo-forte);
   line-height: var(--imp-lh-interfaccia);
   letter-spacing: var(--imp-trk-piccolo);
+  white-space: nowrap;
   visibility: hidden;
 }
 
@@ -192,16 +216,9 @@
 /* --------------------------------------------------------------------------
    Il testo vero della carta
    -------------------------------------------------------------------------- */
-.imp-root .imp-carta__dati {
-  grid-area: dati;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--imp-sp-1);
-  min-inline-size: 0;
-}
-
 .imp-root .imp-carta__nome {
+  grid-column: 1;
+  grid-row: 2;
   display: block;
   font-family: var(--imp-font-display);
   font-synthesis: none;
@@ -213,11 +230,12 @@
 }
 
 .imp-root .imp-carta__misure {
+  grid-column: 1;
+  grid-row: 3;
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   column-gap: var(--imp-sp-3);
-  row-gap: 0;
 }
 
 .imp-root .imp-carta__grammatura {
@@ -250,12 +268,18 @@
 }
 
 .imp-root .imp-carta__uso {
+  grid-column: 2;
+  grid-row: 3;
+  justify-self: end;
   display: block;
+  text-align: end;
   font-size: var(--imp-fs-piccolo);
   line-height: var(--imp-lh-piccolo);
   letter-spacing: var(--imp-trk-piccolo);
 }
 
+/* A 375 la descrizione non ci sta: resta ai lettori di schermo
+   (aria-describedby la legge anche nascosta). */
 .imp-root .imp-carta__descrizione {
   display: none;
 }
@@ -273,56 +297,36 @@
 }
 
 /* --------------------------------------------------------------------------
-   Fasce larghe (600-1023 px): c'è posto per la descrizione, accanto ai dati.
+   Fasce larghe (600-1023 px): nome a secco in testa, sotto tre colonne
+   (nome e misure, descrizione, uso e scelta).
    -------------------------------------------------------------------------- */
 @media (min-width: 600px) {
-  .imp-root .imp-carta__striscia {
-    min-block-size: max(var(--imp-tocco-min), 156px, 20svh);
-  }
-
-  /* Tre colonne: nome a secco, dati, descrizione. Righe esplicite perché
-     i dati "escono" dal loro contenitore (display: contents) e si
-     sistemano ciascuno nella sua riga. */
   .imp-root .imp-carta__foglio {
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr) minmax(0, 1.1fr);
-    grid-template-rows: auto auto auto 1fr;
-    grid-template-areas: none;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.3fr) minmax(0, 0.8fr);
     column-gap: var(--imp-sp-5);
+    padding-block: var(--imp-sp-5) calc(var(--imp-sp-5) + 2px);
   }
 
-  .imp-root .imp-carta__campo-secco {
-    grid-area: auto;
-    grid-column: 1;
-    grid-row: 1 / span 4;
+  .imp-root .imp-carta__secco {
+    font-size: 21cqi;
   }
 
   .imp-root .imp-carta__scelta {
-    grid-area: auto;
-    grid-column: 2 / span 2;
-    grid-row: 1;
+    grid-column: 3;
+    grid-row: 2;
   }
 
-  /* La descrizione è figlia di .imp-carta__dati nel DOM (una sola lettura
-     per i lettori di schermo): qui "esce" nella sua colonna. */
-  .imp-root .imp-carta__dati {
-    display: contents;
-  }
-
-  .imp-root .imp-carta__nome,
-  .imp-root .imp-carta__misure,
   .imp-root .imp-carta__uso {
-    grid-column: 2;
+    grid-column: 3;
+    grid-row: 3;
   }
-
-  .imp-root .imp-carta__nome { grid-row: 2; }
-  .imp-root .imp-carta__misure { grid-row: 3; margin-block-start: var(--imp-sp-1); }
-  .imp-root .imp-carta__uso { grid-row: 4; margin-block-start: var(--imp-sp-1); }
 
   .imp-root .imp-carta__descrizione {
-    grid-column: 3;
-    grid-row: 2 / span 3;
+    grid-column: 2;
+    grid-row: 2 / span 2;
+    align-self: start;
     display: block;
-    max-inline-size: 34ch;
+    max-inline-size: 36ch;
     font-size: var(--imp-fs-piccolo);
     line-height: var(--imp-lh-piccolo);
     letter-spacing: var(--imp-trk-piccolo);
@@ -331,8 +335,8 @@
 
 /* --------------------------------------------------------------------------
    Desktop (≥ 1024 px): quattro strisce verticali a tutta altezza, 25vw.
-   Il nome a secco corre lungo il bordo destro come sul dorso di un
-   campionario; i dati stanno in basso a sinistra, la scelta in alto.
+   In alto la scelta e il nome enorme che esce a destra; carta libera nel
+   mezzo; in basso il testo vero.
    -------------------------------------------------------------------------- */
 @media (min-width: 1024px) {
   .imp-root .imp-carta__gruppo {
@@ -341,75 +345,65 @@
   }
 
   .imp-root .imp-carta__striscia {
-    block-size: clamp(34rem, 72svh, 54rem);
-    min-block-size: 0;
-    z-index: auto;
+    block-size: clamp(34rem, 72svh, 64rem);
   }
 
-  .imp-root .imp-carta__foglio {
-    container-type: size;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-rows: auto minmax(0, 1fr) auto auto auto auto;
-    column-gap: var(--imp-sp-4);
-    row-gap: var(--imp-sp-2);
-    padding: var(--imp-sp-5) var(--imp-sp-5) calc(var(--imp-sp-6) + 2px);
-  }
-
-  /* Qui il campo non è più un contenitore: il nome verticale si misura
-     sul foglio (altezza e larghezza della striscia). */
-  .imp-root .imp-carta__campo-secco {
-    container-type: normal;
-    grid-column: 2;
-    grid-row: 1 / -1;
-    align-self: start;
-    justify-self: end;
-  }
-
-  .imp-root .imp-carta__secco {
-    writing-mode: vertical-rl;
-    inline-size: auto;
-    font-size: min(14.5cqh, 30cqi);
-    padding-block: 0;
-    padding-inline: 0.04em;
-    margin-block-start: -0.04em;
-  }
-
-  .imp-root .imp-carta__scelta {
-    grid-column: 1;
-    grid-row: 1;
-  }
-
-  .imp-root .imp-carta__nome,
-  .imp-root .imp-carta__misure,
-  .imp-root .imp-carta__uso,
-  .imp-root .imp-carta__descrizione {
-    grid-column: 1;
-  }
-
-  .imp-root .imp-carta__nome { grid-row: 3; margin-block-end: var(--imp-sp-2); }
-  .imp-root .imp-carta__misure { grid-row: 4; }
-  .imp-root .imp-carta__uso { grid-row: 5; }
-
-  .imp-root .imp-carta__descrizione {
-    grid-row: 6;
-    margin-block-start: var(--imp-sp-4);
-    padding-block-start: var(--imp-sp-3);
-    border-block-start: 1px solid color-mix(in srgb, var(--imp-inchiostro) 28%, transparent);
-    max-inline-size: 30ch;
-  }
-
-  /* Le strisce stanno affiancate: la costa di ognuna cade sul foglio del
-     sito sotto di lei, a gradini diversi (3 / 6 / 4 / 5 px). */
   .imp-root .imp-carta__striscia--citrino,
   .imp-root .imp-carta__striscia--cotone,
   .imp-root .imp-carta__striscia--cipria,
   .imp-root .imp-carta__striscia--grafite {
     z-index: auto;
   }
+
+  .imp-root .imp-carta__foglio {
+    --_imp-carta-pad-s: clamp(1.5rem, 1.9cqi + 0.5rem, 3rem);
+    --_imp-carta-pad-e: var(--_imp-carta-pad-s);
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr) auto auto auto auto;
+    row-gap: var(--imp-sp-2);
+    align-items: start;
+    padding-block: var(--imp-sp-5) calc(var(--imp-sp-6) + 2px);
+  }
+
+  .imp-root .imp-carta__scelta {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start;
+  }
+
+  .imp-root .imp-carta__campo-secco {
+    grid-row: 2;
+    margin-block-start: var(--imp-sp-2);
+  }
+
+  .imp-root .imp-carta__secco {
+    font-size: 44cqi;
+  }
+
+  .imp-root .imp-carta__nome { grid-column: 1; grid-row: 4; margin-block-end: var(--imp-sp-2); }
+  .imp-root .imp-carta__misure { grid-column: 1; grid-row: 5; }
+
+  .imp-root .imp-carta__uso {
+    grid-column: 1;
+    grid-row: 6;
+    justify-self: start;
+    text-align: start;
+  }
+
+  .imp-root .imp-carta__descrizione {
+    grid-column: 1;
+    grid-row: 7;
+    display: block;
+    margin-block-start: var(--imp-sp-3);
+    max-inline-size: 32ch;
+    font-size: var(--imp-fs-piccolo);
+    line-height: var(--imp-lh-piccolo);
+    letter-spacing: var(--imp-trk-piccolo);
+  }
 }
 
 /* Schermi larghi ma bassi: le strisce non scendono sotto una misura in cui
-   il nome verticale e i dati si pestano i piedi. */
+   nome e dati si pestano i piedi. */
 @media (min-width: 1024px) and (max-height: 640px) {
   .imp-root .imp-carta__striscia {
     block-size: 34rem;

@@ -69,17 +69,20 @@ export interface PresetTecnica {
  * Riferimento: a corpo 160 px il secco affonda circa 2,9 px.
  */
 export const PRESET_TECNICA: Readonly<Record<TecnicaGL, PresetTecnica>> = {
+  // Giro 2 (giuria): solco più profondo e spigolo netto. r1 resta sotto il
+  // px anche nei corpi grandi ("niente blur oltre 1 px nello smusso"), il
+  // peso del profilo sta quasi tutto su r1: parete ripida, fondo piatto.
   secco: {
     altezza: 1,
     inchiostro: false,
     lamina: false,
-    profonditaEm: 0.018,
-    profonditaMinPx: 0.8,
-    profonditaMaxPx: 4.5,
-    smussoEm: [0.006, 0.014, 0.03],
-    smussoMinPx: 0.6,
-    smussoMaxPx: 8,
-    profilo: [0.5, 0.3, 0.2, 0.12],
+    profonditaEm: 0.026,
+    profonditaMinPx: 1.2,
+    profonditaMaxPx: 6.5,
+    smussoEm: [0.0028, 0.006, 0.013],
+    smussoMinPx: 0.35,
+    smussoMaxPx: 3.2,
+    profilo: [0.72, 0.2, 0.08, 0.1],
     inchiostroSfumaPx: 0.4,
     stringiMin: 0.8,
   },
@@ -87,27 +90,27 @@ export const PRESET_TECNICA: Readonly<Record<TecnicaGL, PresetTecnica>> = {
     altezza: 0.85,
     inchiostro: true,
     lamina: false,
-    profonditaEm: 0.014,
-    profonditaMinPx: 0.6,
-    profonditaMaxPx: 3.6,
-    smussoEm: [0.005, 0.012, 0.026],
-    smussoMinPx: 0.5,
-    smussoMaxPx: 7,
-    profilo: [0.55, 0.3, 0.15, 0.08],
-    inchiostroSfumaPx: 0.45,
+    profonditaEm: 0.02,
+    profonditaMinPx: 1,
+    profonditaMaxPx: 5,
+    smussoEm: [0.0025, 0.0055, 0.012],
+    smussoMinPx: 0.35,
+    smussoMaxPx: 3,
+    profilo: [0.72, 0.2, 0.08, 0.08],
+    inchiostroSfumaPx: 0.4,
     stringiMin: 0.8,
   },
   lamina: {
     altezza: 0.8,
     inchiostro: false,
     lamina: true,
-    profonditaEm: 0.012,
-    profonditaMinPx: 0.6,
-    profonditaMaxPx: 3,
-    smussoEm: [0.004, 0.01, 0.022],
-    smussoMinPx: 0.45,
-    smussoMaxPx: 6,
-    profilo: [0.6, 0.3, 0.1, 0.05],
+    profonditaEm: 0.018,
+    profonditaMinPx: 1,
+    profonditaMaxPx: 4.5,
+    smussoEm: [0.0022, 0.005, 0.011],
+    smussoMinPx: 0.35,
+    smussoMaxPx: 2.8,
+    profilo: [0.75, 0.18, 0.07, 0.06],
     inchiostroSfumaPx: 0.4,
     stringiMin: 0.8,
   },
@@ -115,13 +118,13 @@ export const PRESET_TECNICA: Readonly<Record<TecnicaGL, PresetTecnica>> = {
     altezza: 1,
     inchiostro: false,
     lamina: false,
-    profonditaEm: 0.05,
-    profonditaMinPx: 1,
-    profonditaMaxPx: 3,
-    smussoEm: [0.03, 0.06, 0.1],
+    profonditaEm: 0.06,
+    profonditaMinPx: 1.4,
+    profonditaMaxPx: 3.5,
+    smussoEm: [0.025, 0.05, 0.085],
     smussoMinPx: 0.8,
-    smussoMaxPx: 6,
-    profilo: [0.15, 0.35, 0.5, 0.25],
+    smussoMaxPx: 5,
+    profilo: [0.2, 0.35, 0.45, 0.25],
     inchiostroSfumaPx: 0.4,
     stringiMin: 1,
   },
@@ -212,10 +215,10 @@ export interface PresetCarta {
  *   per staccare il solco dal fondo.
  */
 export const PRESET_CARTA: Readonly<Record<CartaGL, PresetCarta>> = {
-  citrino: { grammatura: 300, fibra: 1, luceForza: 0.85, ombraForza: 0.8, assorbimento: 0.5, spessorePx: 1 },
-  cotone: { grammatura: 600, fibra: 1.25, luceForza: 0.95, ombraForza: 0.85, assorbimento: 0.7, spessorePx: 1.8 },
-  cipria: { grammatura: 350, fibra: 1.05, luceForza: 0.85, ombraForza: 0.8, assorbimento: 0.55, spessorePx: 1.1 },
-  grafite: { grammatura: 400, fibra: 0.7, luceForza: 0.8, ombraForza: 1, assorbimento: 0.4, spessorePx: 1.3 },
+  citrino: { grammatura: 300, fibra: 1, luceForza: 1, ombraForza: 1, assorbimento: 0.5, spessorePx: 1 },
+  cotone: { grammatura: 600, fibra: 1.25, luceForza: 1, ombraForza: 1, assorbimento: 0.7, spessorePx: 1.8 },
+  cipria: { grammatura: 350, fibra: 1.05, luceForza: 1, ombraForza: 1, assorbimento: 0.55, spessorePx: 1.1 },
+  grafite: { grammatura: 400, fibra: 0.7, luceForza: 0.95, ombraForza: 1, assorbimento: 0.4, spessorePx: 1.3 },
 };
 
 /** Colore in sRGB 0..1. Lo shader lavora in sRGB perché la carta piatta deve uguagliare al byte il CSS. */
@@ -280,7 +283,22 @@ export const LUCE = {
   elevazioneMax: 25,
   /** Semiarco consentito attorno a 135°: la lampada si sposta a mano, non gira attorno al foglio. */
   semiarco: 55,
+  /**
+   * Giro 2: elevazione che lo shader usa davvero. `runtime.light` resta nella
+   * scala dell'interazione (18-25°, riposo 22°, anche per il fallback CSS);
+   * `elevazioneShader()` la porta in 12-18°, riposo 15,4°: luce più radente,
+   * senza toccare light.ts né il contratto con lo shader-engineer.
+   */
+  elevazioneShaderMin: 12,
+  elevazioneShaderMax: 18,
 } as const;
+
+/** Elevazione dell'interazione (18-25°) → elevazione radente dello shader (12-18°). */
+export function elevazioneShader(elevazioneGradi: number): number {
+  const t = (elevazioneGradi - LUCE.elevazioneMin) / (LUCE.elevazioneMax - LUCE.elevazioneMin);
+  const c = t < 0 ? 0 : t > 1 ? 1 : t;
+  return LUCE.elevazioneShaderMin + c * (LUCE.elevazioneShaderMax - LUCE.elevazioneShaderMin);
+}
 
 /** Limita azimut ed elevazione ai valori da bottega. */
 export function limitaLuce(azimutGradi: number, elevazioneGradi: number): [number, number] {
@@ -302,10 +320,12 @@ export function direzioneLuce(azimutGradi: number, elevazioneGradi: number): [nu
 }
 
 /**
- * Posizione della "lampada" usata solo per il riflesso della lamina: un punto
- * fuori schermo nella direzione della luce, alto quanto serve per restare
- * all'elevazione data sul centro della finestra. Così il riflesso stretto
- * scorre sulla lettera quando l'azimut cambia. Valori in px del buffer.
+ * Posizione della "lampada" usata solo per il riflesso della lamina (giro 2).
+ * La lampada sta DENTRO la finestra, spostata dal centro verso la luce, e
+ * alta mezzo schermo: il riflesso stretto cade sotto di lei. Quando l'azimut
+ * cambia (puntatore, dito, giroscopio, dial) la lampada si sposta e il
+ * riflesso scorre davvero sulle lettere; quando la pagina scorre le parole
+ * attraversano la banda del riflesso. Valori in px del buffer.
  */
 export function puntoLuce(
   azimutGradi: number,
@@ -315,10 +335,9 @@ export function puntoLuce(
 ): [number, number, number] {
   const [dx, dy] = direzioneLuce(azimutGradi, elevazioneGradi);
   const l = Math.hypot(dx, dy) || 1;
-  const raggio = 0.85 * Math.max(larghezzaBuffer, altezzaBuffer);
-  const cx = larghezzaBuffer * 0.5 + (dx / l) * raggio;
-  const cy = altezzaBuffer * 0.5 + (dy / l) * raggio;
-  const alto = raggio * Math.tan((elevazioneGradi * Math.PI) / 180);
+  const cx = larghezzaBuffer * 0.5 + (dx / l) * larghezzaBuffer * 0.36;
+  const cy = altezzaBuffer * 0.5 + (dy / l) * altezzaBuffer * 0.3;
+  const alto = Math.max(larghezzaBuffer, altezzaBuffer) * 0.42;
   return [cx, cy, alto];
 }
 
@@ -333,9 +352,9 @@ export function puntoLuce(
  */
 export const CARTA_GLOBALE = {
   pendenzaFibra: 0.018,
-  sensibilitaLuce: 2.2,
-  ombraContatto: 0.45,
-  fondoSolco: 0.1,
+  sensibilitaLuce: 3.2,
+  ombraContatto: 0.5,
+  fondoSolco: 0.16,
 } as const;
 
 /**
@@ -345,10 +364,13 @@ export const CARTA_GLOBALE = {
  * - satinato: quota di riflesso largo che fa "metallo" anche a luce ferma.
  */
 export const LAMINA = {
-  venaturaX: 0.22,
-  venaturaY: 0.75,
-  riflessoMax: 0.42,
-  satinato: 0.35,
+  // Giro 2: venatura verticale (asse y del blocco) e rugosità stretta lungo
+  // di essa: il riflesso è una banda orizzontale alta circa un decimo di
+  // schermo che segue la lampada. Tetto più alto ma sempre sotto il bianco.
+  venaturaX: 0.075,
+  venaturaY: 0.6,
+  riflessoMax: 0.6,
+  satinato: 0.3,
 } as const;
 
 /* ------------------------------------------------------------------------- */

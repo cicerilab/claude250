@@ -5,9 +5,11 @@
  * stampi, il tuo testo, la carta, la tecnica (più il taglio colorato), la
  * legatura se è un libro, quante, dove ti scriviamo, quando ti serve.
  *
- * - Ogni gruppo è un `fieldset` con `legend` e radio veri resi come fogli di
- *   carta (`imp-ix-scelta`): frecce native, scelta = bordo d'inchiostro 3 px
- *   più la parola "scelta", mai il solo colore.
+ * - Ogni gruppo è un `fieldset` con `legend` e radio veri (frecce native),
+ *   mai schede con bordino (giro 2, giuria): i formati sono disegnati in
+ *   scala e si tocca la sagoma; la tecnica è un campione (le prime due lettere del testo) stampato nella
+ *   sua tecnica; quantità, legatura e "quando" sono parole in riga. Scelta =
+ *   riga premuta d'inchiostro 3 px sotto la voce più la parola "scelta".
  * - I campi hanno l'etichetta sopra, l'errore o l'avviso sotto (collegati con
  *   `aria-describedby`), corpo 17 px (niente zoom su iOS), nessun limite
  *   duro: oltre il limite la riga va su due, e lo si dice con garbo.
@@ -33,7 +35,7 @@ import {
 } from '../../content/testi';
 import { cambiaCarta } from '../../interaction/paperWave';
 import { aggiornaProva, type Prova } from '../../state/store';
-import { pulisciSegni, taglioDisponibile } from './calcolaPrezzo';
+import { pulisciSegni, righeDellaProva, taglioDisponibile } from './calcolaPrezzo';
 
 export type ErroreContatto = 'nonValido' | 'vuoto' | null;
 
@@ -151,6 +153,9 @@ export default function Compositoio({
   const campi = CAMPI_TESTO[prodotto];
   const tuttiVuoti = campi.every((c) => (prova.campi[c.chiave] ?? '').trim().length === 0);
   const taglioOk = taglioDisponibile(prodotto);
+  // Il campione di ogni tecnica sono le prime due lettere della prima riga (scritta o d'esempio).
+  const primaRiga = righeDellaProva(prodotto, prova.campi)[0]?.testo ?? '';
+  const campione = Array.from(primaRiga.replace(/\s+/g, '')).slice(0, 2).join('');
   const idContatto = 'imp-banco-contatto';
   const idContattoAiuto = `${idContatto}-aiuto`;
   const idContattoErrore = `${idContatto}-errore`;
@@ -169,27 +174,30 @@ export default function Compositoio({
 
   return (
     <div className="imp-banco__compositoio">
-      {/* ---------- cosa stampi */}
+      {/* ---------- cosa stampi: i quattro formati disegnati in scala, si tocca la sagoma */}
       <fieldset className="imp-banco__gruppo imp-banco__gruppo--prodotto" disabled={fermo}>
         <legend className="imp-banco__legenda">{BANCO.cosaStampi.legenda}</legend>
-        <div className="imp-banco__scelte imp-banco__scelte--prodotti">
-          {ORDINE_PRODOTTI.map((p) => (
-            <label key={p} className="imp-banco__scelta imp-ix-scelta imp-ix-premibile">
-              <input
-                className="imp-ix-scelta__input"
-                type="radio"
-                name="imp-banco-prodotto"
-                value={p}
-                checked={prodotto === p}
-                onChange={() => scegliProdotto(p)}
-              />
-              <span className="imp-banco__scelta-testo">
-                <span className="imp-banco__scelta-nome">{PRODOTTI[p].breve}</span>
-                <span className="imp-banco__scelta-dettaglio">{PRODOTTI[p].formato}</span>
-              </span>
-              <SegnoScelta scelto={prodotto === p} />
-            </label>
-          ))}
+        <div className="imp-banco__banchetto">
+          <div className="imp-banco__formati">
+            {ORDINE_PRODOTTI.map((p) => (
+              <label key={p} className="imp-banco__formato imp-ix-scelta" data-prodotto={p}>
+                <input
+                  className="imp-ix-scelta__input"
+                  type="radio"
+                  name="imp-banco-prodotto"
+                  value={p}
+                  checked={prodotto === p}
+                  onChange={() => scegliProdotto(p)}
+                />
+                <span className="imp-banco__sagoma-posto" aria-hidden="true">
+                  <span className="imp-banco__sagoma imp-foglio" data-prodotto={p} />
+                </span>
+                <span className="imp-banco__voce-nome">{PRODOTTI[p].breve}</span>
+                <span className="imp-banco__formato-misura">{PRODOTTI[p].formato}</span>
+                <SegnoScelta scelto={prodotto === p} />
+              </label>
+            ))}
+          </div>
         </div>
       </fieldset>
 
@@ -247,15 +255,15 @@ export default function Compositoio({
         {prodotto === 'libro' ? <p className="imp-banco__nota">{BANCO.carta.notaLibro}</p> : null}
       </fieldset>
 
-      {/* ---------- la tecnica */}
+      {/* ---------- la tecnica: tre campioni stampati nella loro tecnica */}
       <fieldset className="imp-banco__gruppo imp-banco__gruppo--tecnica" disabled={fermo}>
         <legend className="imp-banco__legenda">{BANCO.tecnica.legenda}</legend>
         <a className="imp-banco__cose imp-ix-link" href="#tecniche" aria-label={BANCO.tecnica.cosEAria}>
           {BANCO.tecnica.cosE}
         </a>
-        <div className="imp-banco__scelte imp-banco__scelte--tecniche">
+        <div className="imp-banco__riga-scelte imp-banco__riga-scelte--tecniche">
           {ORDINE_TECNICHE.map((t) => (
-            <label key={t} className="imp-banco__scelta imp-ix-scelta imp-ix-premibile">
+            <label key={t} className="imp-banco__voce imp-banco__voce--tecnica imp-ix-scelta">
               <input
                 className="imp-ix-scelta__input"
                 type="radio"
@@ -267,17 +275,18 @@ export default function Compositoio({
                   onCambiato(TECNICHE_NOMI[t].nome);
                 }}
               />
-              <span className="imp-banco__scelta-testo">
-                <span className="imp-banco__scelta-nome">{TECNICHE_NOMI[t].nome}</span>
+              <span
+                className={`imp-banco__campione-tecnica ${t === 'secco' ? 'imp-secco' : t === 'colore' ? 'imp-inchiostro' : 'imp-caldo'}`}
+                aria-hidden="true"
+              >
+                {campione}
               </span>
+              <span className="imp-banco__voce-nome">{TECNICHE_NOMI[t].nome}</span>
               <SegnoScelta scelto={tecnica === t} />
             </label>
           ))}
         </div>
-        <label
-          className="imp-banco__taglio imp-ix-scelta"
-          data-non-disponibile={taglioOk ? undefined : ''}
-        >
+        <label className="imp-banco__taglio imp-ix-scelta" data-non-disponibile={taglioOk ? undefined : ''}>
           <input
             className="imp-ix-scelta__input"
             type="checkbox"
@@ -302,13 +311,13 @@ export default function Compositoio({
         {prodotto === 'libro' ? <p className="imp-banco__nota">{BANCO.tecnica.notaLibro}</p> : null}
       </fieldset>
 
-      {/* ---------- la legatura (solo libro) */}
+      {/* ---------- la legatura (solo libro): parole in riga */}
       {prodotto === 'libro' ? (
         <fieldset className="imp-banco__gruppo imp-banco__gruppo--legatura" disabled={fermo}>
           <legend className="imp-banco__legenda">{BANCO.legatura.legenda}</legend>
-          <div className="imp-banco__scelte imp-banco__scelte--legature">
+          <div className="imp-banco__riga-scelte">
             {ORDINE_LEGATURE.map((l) => (
-              <label key={l} className="imp-banco__scelta imp-ix-scelta imp-ix-premibile">
+              <label key={l} className="imp-banco__voce imp-ix-scelta">
                 <input
                   className="imp-ix-scelta__input"
                   type="radio"
@@ -320,9 +329,7 @@ export default function Compositoio({
                     onCambiato(LEGATURE_NOMI[l].nome);
                   }}
                 />
-                <span className="imp-banco__scelta-testo">
-                  <span className="imp-banco__scelta-nome">{LEGATURE_NOMI[l].nome}</span>
-                </span>
+                <span className="imp-banco__voce-nome">{LEGATURE_NOMI[l].breve}</span>
                 <SegnoScelta scelto={legatura === l} />
               </label>
             ))}
@@ -331,12 +338,12 @@ export default function Compositoio({
         </fieldset>
       ) : null}
 
-      {/* ---------- quante */}
+      {/* ---------- quante: numeri grandi in riga, la scelta sottolineata da una riga premuta */}
       <fieldset className="imp-banco__gruppo imp-banco__gruppo--quante" disabled={fermo}>
         <legend className="imp-banco__legenda">{BANCO.quante.legenda}</legend>
-        <div className="imp-banco__scelte imp-banco__scelte--tirature">
+        <div className="imp-banco__riga-scelte imp-banco__riga-scelte--numeri">
           {(TIRATURE[prodotto] as readonly number[]).map((n) => (
-            <label key={n} className="imp-banco__scelta imp-banco__scelta--numero imp-ix-scelta imp-ix-premibile">
+            <label key={n} className="imp-banco__voce imp-banco__voce--numero imp-ix-scelta">
               <input
                 className="imp-ix-scelta__input"
                 type="radio"
@@ -349,8 +356,8 @@ export default function Compositoio({
                   onCambiato(BANCO.quante.aria(n, prodotto));
                 }}
               />
-              <span className="imp-banco__scelta-testo" aria-hidden="true">
-                <span className="imp-banco__scelta-numero">{numero(n)}</span>
+              <span className="imp-banco__voce-numero" aria-hidden="true">
+                {numero(n)}
               </span>
               <SegnoScelta scelto={tiratura === n} />
             </label>
@@ -393,24 +400,29 @@ export default function Compositoio({
             onChange={(e) => onContatto(e.currentTarget.value)}
             onBlur={onEsciContatto}
           />
-          <p className="imp-banco__errore" id={idContattoErrore} hidden={!erroreContatto}>
-            <span className="imp-banco__errore-segno" aria-hidden="true">
-              {BANCO.contatto.erroreSegno}
-            </span>
-            <span className="imp-sr">{BANCO.contatto.erroreSr} </span>
-            <span>{erroreContatto === 'vuoto' ? BANCO.contatto.vuoto : BANCO.contatto.nonValido}</span>
+          {/* role=status: l'errore che compare all'uscita dal campo si sente anche col fuoco altrove. */}
+          <p className="imp-banco__errore" id={idContattoErrore} role="status">
+            {erroreContatto ? (
+              <>
+                <span className="imp-banco__errore-segno" aria-hidden="true">
+                  {BANCO.contatto.erroreSegno}
+                </span>
+                <span className="imp-sr">{BANCO.contatto.erroreSr} </span>
+                <span>{erroreContatto === 'vuoto' ? BANCO.contatto.vuoto : BANCO.contatto.nonValido}</span>
+              </>
+            ) : null}
           </p>
         </div>
       </div>
 
-      {/* ---------- quando ti serve (facoltativo, non cambia il prezzo) */}
+      {/* ---------- quando ti serve (facoltativo, non cambia il prezzo): testo in riga */}
       <fieldset className="imp-banco__gruppo imp-banco__gruppo--quando" disabled={fermo}>
         <legend className="imp-banco__legenda imp-banco__legenda--piccola">
           {BANCO.quando.legenda} <span className="imp-banco__facoltativo">{BANCO.quando.facoltativo}</span>
         </legend>
-        <div className="imp-banco__scelte imp-banco__scelte--quando">
+        <div className="imp-banco__riga-scelte">
           {ORDINE_QUANDO.map((q) => (
-            <label key={q} className="imp-banco__scelta imp-ix-scelta imp-ix-premibile">
+            <label key={q} className="imp-banco__voce imp-ix-scelta">
               <input
                 className="imp-ix-scelta__input"
                 type="radio"
@@ -419,9 +431,7 @@ export default function Compositoio({
                 checked={quando === q}
                 onChange={() => aggiornaProva({ quando: q })}
               />
-              <span className="imp-banco__scelta-testo">
-                <span className="imp-banco__scelta-nome">{BANCO.quando.opzioni[q]}</span>
-              </span>
+              <span className="imp-banco__voce-nome">{BANCO.quando.opzioni[q]}</span>
               <SegnoScelta scelto={quando === q} />
             </label>
           ))}

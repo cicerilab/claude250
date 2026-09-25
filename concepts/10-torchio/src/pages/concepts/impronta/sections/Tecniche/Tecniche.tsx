@@ -5,28 +5,30 @@
  * "Pordenone") ripassa sotto la pressa quattro volte: a secco, a un colore,
  * lamina a caldo, taglio colorato. Lo scroll cambia solo il materiale.
  *
- * Due rese, scelte da `store.reducedMotion`:
- * - **Pin** (movimento pieno): contenitore alto 400svh (350svh sotto 768 px)
- *   con un palco `position: sticky` alto 100svh. `useScrollProgress` dà il
- *   progresso con isteresi (4 passi) e scrive `--imp-tecniche-p` e
- *   `--imp-tecniche-giro` sul contenitore; a ogni cambio di passo la parola
- *   riceve una **ristampa** (platina su, cambio secco di tecnica e testi,
- *   platina giù). Il taglio colorato ruota il foglio di tre quarti in CSS,
- *   legato allo scroll (motion-designer §6.3).
- * - **Statica** (reduced motion): niente pin, quattro blocchi uno sotto
- *   l'altro, ognuno con la parola già premuta nella sua tecnica.
+ * Due rese:
+ * - **Pin** (movimento pieno, finestra alta almeno 34rem): contenitore alto
+ *   400svh (350svh sotto 768 px) con un palco `position: sticky` alto 100svh.
+ *   `useScrollProgress` dà il progresso con isteresi (4 passi) e scrive
+ *   `--imp-tecniche-p` e `--imp-tecniche-giro` sul contenitore; a ogni cambio
+ *   di passo la parola riceve una **ristampa** (platina su, cambio secco di
+ *   tecnica e testi, platina giù). Nel taglio colorato la lastra diventa una
+ *   pila di biglietti di Cotone col bordo dipinto in Citrino, che gira di tre
+ *   quarti legata allo scroll (motion-designer §6.3).
+ * - **Statica** (reduced motion, oppure finestra più bassa di 34rem, cioè
+ *   zoom forte o telefono in orizzontale: WCAG 1.4.10): niente pin, quattro
+ *   blocchi uno sotto l'altro, ognuno con la parola già premuta.
  *
  * Accessibilità: le quattro tecniche sono sempre tutte nel DOM, in ordine,
  * con titolo, descrizione del rilievo e tre righe; quelle non in vista sono
- * nascoste solo alla vista. Il foglio disegnato è `aria-hidden`. Nessuna
+ * nascoste solo alla vista. La lastra disegnata è `aria-hidden`. Nessuna
  * informazione vive solo nel rilievo, nella luce o nel colore.
  *
  * Il taglio colorato è DOM/CSS (webgl-artist §12): durante quella tecnica la
- * parola esce dal registro dei rilievi e la disegna il CSS, così ruota
- * insieme al foglio. Nessun accesso a window/document a livello di modulo.
+ * parola esce dal registro dei rilievi e la disegna il CSS, così gira
+ * insieme alla pila. Nessun accesso a window/document a livello di modulo.
  */
 
-import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type RefObject } from 'react';
 import { TECNICHE as TESTI } from '../../content/testi';
 import {
   TECNICHE as MOTO,
@@ -76,11 +78,30 @@ const PROFONDITA: Record<IdTecnica, number> = {
   taglio: 1,
 };
 
+/**
+ * La pila del taglio colorato: biglietti di Cotone 600 g (la carta su cui il
+ * copy dice che il taglio rende meglio), bordo in Citrino (`--imp-taglio`
+ * del Cotone). Sfalsamenti in px di una pila fatta a mano: mai allineata.
+ */
+const CARTA_TAGLIO: Carta = 'cotone';
+const PILA: ReadonlyArray<readonly [number, number]> = [
+  [0, 0],
+  [1.5, -1],
+  [-1, 0.5],
+  [2, 1.5],
+  [0.5, -1.5],
+  [-1.5, 1],
+  [1, 0.5],
+];
+
 /** Id del titolo della sezione (aria-labelledby). */
 const ID_TITOLO = 'imp-tecniche-titolo';
 
 /** Lunghezza massima della parola campione (ux-architect §5.3). */
 const MAX_CARATTERI = { stretto: 12, largo: 18 } as const;
+
+/** Sotto questa altezza di finestra il pin non ci sta: resa statica (A3). */
+const QUERY_BASSA = '(max-height: 34rem)';
 
 /* ------------------------------------------------------------------ utilità */
 
@@ -103,11 +124,10 @@ function stileParola(parola: string): CSSProperties {
 }
 
 /**
- * true sotto una certa larghezza. Legge `matchMedia` solo nel browser, dentro
+ * true se la media query vale. Legge `matchMedia` solo nel browser, dentro
  * le funzioni di `useSyncExternalStore`; nel prerender vale `false`.
  */
-function useSotto(larghezza: number): boolean {
-  const query = `(max-width: ${larghezza - 1}px)`;
+function useMedia(query: string): boolean {
   return useSyncExternalStore(
     (avvisa) => {
       const mq = window.matchMedia(query);
@@ -159,11 +179,12 @@ function Testa({ statica }: { statica: boolean }) {
 
 /** Titolo e tre righe di una tecnica, con la descrizione del rilievo per chi non lo vede. */
 function Spiegazione({ voce, parola, carta }: { voce: Voce; parola: string; carta: Carta }) {
+  const cartaResa = voce.id === 'taglio' ? CARTA_TAGLIO : carta;
   return (
     <>
       <h3 className="imp-tecniche__nome">{voce.titolo}</h3>
       <div className="imp-tecniche__righe">
-        <p className="imp-sr">{TESTI.rilievoAlt(parola, voce.id, carta)}</p>
+        <p className="imp-sr">{TESTI.rilievoAlt(parola, voce.id, cartaResa)}</p>
         <p className="imp-tecniche__riga">{voce.cosa}</p>
         <p className="imp-tecniche__riga">{voce.suCosa}</p>
         <p className="imp-tecniche__riga imp-tecniche__costo">{voce.costo}</p>
@@ -182,9 +203,59 @@ function TornaAlBanco() {
   );
 }
 
+/**
+ * La lastra: un biglietto della carta del sito con la parola premuta; nel
+ * taglio colorato, il biglietto in cima a una pila di Cotone col bordo
+ * dipinto. Ogni fetta della pila ha la sua faccia di destra e di sopra.
+ */
+function Lastra({
+  id,
+  parola,
+  parolaRef,
+  registrata,
+  attesa,
+}: {
+  id: IdTecnica;
+  parola: string;
+  parolaRef: RefObject<HTMLDivElement>;
+  registrata: boolean;
+  attesa: boolean;
+}) {
+  const taglio = id === 'taglio';
+  const classiParola = ['imp-tecniche__parola', MATERIALE[id], registrata ? 'imp-relief' : '']
+    .filter((c) => c.length > 0)
+    .join(' ');
+  return (
+    <div
+      className={taglio ? 'imp-tecniche__foglio imp-foglio imp-tecniche__foglio--pila' : 'imp-tecniche__foglio imp-foglio'}
+      data-carta={taglio ? CARTA_TAGLIO : undefined}
+    >
+      {taglio ? (
+        <span className="imp-tecniche__pila">
+          {PILA.map(([dx, dy], k) => (
+            <span
+              key={k}
+              className="imp-tecniche__fetta"
+              style={{ '--imp-t-k': String(k), '--imp-t-dx': `${dx}px`, '--imp-t-dy': `${dy}px` } as CSSProperties}
+            />
+          ))}
+        </span>
+      ) : null}
+      <div
+        ref={parolaRef}
+        {...(attesa ? ATTESA_PRESSA : {})}
+        className={classiParola}
+        style={stileParola(parola)}
+      >
+        {parola}
+      </div>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ resa con il pin */
 
-function TecnichePin({ parola, carta, stretto }: { parola: string; carta: Carta; stretto: boolean }) {
+function TecnichePin({ parola, carta }: { parola: string; carta: Carta }) {
   const pinRef = useRef<HTMLDivElement>(null);
   const parolaRef = useRef<HTMLDivElement>(null);
   const dalBanco = useArrivoDalBanco();
@@ -199,7 +270,7 @@ function TecnichePin({ parola, carta, stretto }: { parola: string; carta: Carta;
   const taglio = id === 'taglio';
 
   // La parola è nel registro dei rilievi per secco, colore e lamina; nel
-  // taglio esce dal registro e la disegna il CSS, che la ruota col foglio.
+  // taglio esce dal registro e la disegna il CSS, che la gira con la pila.
   const reliefId = useRelief(
     parolaRef,
     {
@@ -237,83 +308,57 @@ function TecnichePin({ parola, carta, stretto }: { parola: string; carta: Carta;
     },
   });
 
-  const classiParola = [
-    'imp-tecniche__parola',
-    MATERIALE[id],
-    taglio ? '' : 'imp-relief',
-  ]
-    .filter((c) => c.length > 0)
-    .join(' ');
-
   return (
     <div ref={pinRef} className="imp-tecniche__pin">
-      {stretto ? (
-        <div className="imp-page imp-tecniche__testa-fuori">
-          <Testa statica={false} />
-        </div>
-      ) : null}
       <div className="imp-tecniche__palco" data-tecnica={id}>
-        <div className={stretto ? 'imp-page imp-tecniche__gabbia' : 'imp-page imp-tecniche__gabbia imp-tecniche__gabbia--con-testa'}>
-          {stretto ? null : <Testa statica={false} />}
-
-          <div className="imp-tecniche__indice">
-            <ol className="imp-tecniche__elenco imp-lista" aria-label={TESTI.elencoAria}>
-              {VOCI.map((v, i) => {
-                const corrente = i === passo;
-                return (
-                  <li key={v.id} className="imp-tecniche__voce-indice">
-                    <button
-                      type="button"
-                      className="imp-tecniche__salto imp-ix-premibile"
-                      aria-current={corrente ? 'true' : undefined}
-                      onClick={() => {
-                        progresso.vaiA(progressoSaltoTecnica(i));
-                      }}
-                    >
-                      <span className="imp-tecniche__salto-nome imp-tecniche__salto-nome--lungo">{v.nome}</span>
-                      <span className="imp-tecniche__salto-nome imp-tecniche__salto-nome--breve" aria-hidden="true">
-                        {v.breve}
-                      </span>
-                      {corrente ? (
-                        <>
-                          <span className="imp-tecniche__segno" aria-hidden="true">
-                            {TESTI.segnoCorrente}
-                          </span>
-                          <span className="imp-sr">{`, ${TESTI.correnteSr}`}</span>
-                        </>
-                      ) : null}
-                    </button>
-                  </li>
-                );
-              })}
-            </ol>
-            <div className="imp-tecniche__corsa" aria-hidden="true">
-              <span className="imp-tecniche__corsa-fatta" />
-            </div>
-            {dalBanco ? <TornaAlBanco /> : null}
-          </div>
+        <div className="imp-page imp-tecniche__gabbia">
+          <Testa statica={false} />
 
           <div className="imp-tecniche__zona" aria-hidden="true">
-            <div className={taglio ? 'imp-tecniche__foglio imp-foglio imp-taglio' : 'imp-tecniche__foglio imp-foglio'}>
-              <div
-                ref={parolaRef}
-                {...ATTESA_PRESSA}
-                className={classiParola}
-                style={stileParola(parola)}
-              >
-                {parola}
-              </div>
-              <span className="imp-tecniche__costa" />
-            </div>
+            <Lastra id={id} parola={parola} parolaRef={parolaRef} registrata={!taglio} attesa />
           </div>
 
-          <ol className="imp-tecniche__voci imp-lista">
-            {VOCI.map((v, i) => (
-              <li key={v.id} className="imp-tecniche__voce" data-corrente={i === mostrata ? 'true' : 'false'}>
-                <Spiegazione voce={v} parola={parola} carta={carta} />
-              </li>
-            ))}
-          </ol>
+          <div className="imp-tecniche__lato">
+            <div className="imp-tecniche__indice">
+              <ol className="imp-tecniche__elenco imp-lista" aria-label={TESTI.elencoAria}>
+                {VOCI.map((v, i) => {
+                  const corrente = i === passo;
+                  return (
+                    <li key={v.id} className="imp-tecniche__voce-indice">
+                      <button
+                        type="button"
+                        className="imp-tecniche__salto imp-ix-premibile"
+                        aria-current={corrente ? 'true' : undefined}
+                        onClick={() => {
+                          progresso.vaiA(progressoSaltoTecnica(i));
+                        }}
+                      >
+                        <span className="imp-tecniche__salto-nome imp-tecniche__salto-nome--lungo">{v.nome}</span>
+                        <span className="imp-tecniche__salto-nome imp-tecniche__salto-nome--breve" aria-hidden="true">
+                          {v.breve}
+                        </span>
+                        {corrente ? <span className="imp-sr">{`, ${TESTI.correnteSr}`}</span> : null}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ol>
+              <div className="imp-tecniche__corsa" aria-hidden="true">
+                <span className="imp-tecniche__corsa-fatta" />
+              </div>
+            </div>
+
+            <div className="imp-tecniche__scheda">
+              <ol className="imp-tecniche__voci imp-lista">
+                {VOCI.map((v, i) => (
+                  <li key={v.id} className="imp-tecniche__voce" data-corrente={i === mostrata ? 'true' : 'false'}>
+                    <Spiegazione voce={v} parola={parola} carta={carta} />
+                  </li>
+                ))}
+              </ol>
+              {dalBanco ? <TornaAlBanco /> : null}
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -322,8 +367,8 @@ function TecnichePin({ parola, carta, stretto }: { parola: string; carta: Carta;
 
 /* ------------------------------------------------------------------ resa statica */
 
-/** Un foglio già premuto nella sua tecnica (reduced motion). */
-function FoglioStatico({ voce, parola }: { voce: Voce; parola: string }) {
+/** Una lastra già premuta nella sua tecnica (reduced motion, finestra bassa). */
+function LastraStatica({ voce, parola }: { voce: Voce; parola: string }) {
   const parolaRef = useRef<HTMLDivElement>(null);
   const taglio = voce.id === 'taglio';
   const reliefId = useRelief(
@@ -340,18 +385,9 @@ function FoglioStatico({ voce, parola }: { voce: Voce; parola: string }) {
   );
   usePressione(parolaRef, { profilo: MOTO.profilo, reliefId });
 
-  const classi = ['imp-tecniche__parola', MATERIALE[voce.id], taglio ? '' : 'imp-relief']
-    .filter((c) => c.length > 0)
-    .join(' ');
-
   return (
     <div className="imp-tecniche__zona imp-tecniche__zona--statica" aria-hidden="true" data-tecnica={voce.id}>
-      <div className={taglio ? 'imp-tecniche__foglio imp-foglio imp-taglio' : 'imp-tecniche__foglio imp-foglio'}>
-        <div ref={parolaRef} className={classi} style={stileParola(parola)}>
-          {parola}
-        </div>
-        <span className="imp-tecniche__costa" />
-      </div>
+      <Lastra id={voce.id} parola={parola} parolaRef={parolaRef} registrata={!taglio} attesa={false} />
     </div>
   );
 }
@@ -364,7 +400,7 @@ function TecnicheStatiche({ parola, carta }: { parola: string; carta: Carta }) {
       <ol className="imp-tecniche__blocchi imp-lista" aria-label={TESTI.elencoAria}>
         {VOCI.map((v) => (
           <li key={v.id} className="imp-tecniche__blocco">
-            <FoglioStatico voce={v} parola={parola} />
+            <LastraStatica voce={v} parola={parola} />
             <div className="imp-tecniche__testo-statico">
               <Spiegazione voce={v} parola={parola} carta={carta} />
             </div>
@@ -382,21 +418,18 @@ export default function Tecniche() {
   const ridotto = useImpronta((s) => s.reducedMotion);
   const carta = useImpronta((s) => s.carta);
   const campione = useImpronta(selParolaCampione);
-  // Sotto 768 il titolo scorre via prima del pin (altezza utile su 375).
-  const stretto = useSotto(LARGHEZZA_STRETTA);
+  const stretto = useMedia(`(max-width: ${LARGHEZZA_STRETTA - 1}px)`);
+  const bassa = useMedia(QUERY_BASSA);
+  const statica = ridotto || bassa;
   const parola = parolaPerLarghezza(campione, stretto);
 
   return (
     <section
       id="tecniche"
-      className={ridotto ? 'imp-tecniche imp-tecniche--ridotta' : 'imp-tecniche'}
+      className={statica ? 'imp-tecniche imp-tecniche--ridotta' : 'imp-tecniche'}
       aria-labelledby={ID_TITOLO}
     >
-      {ridotto ? (
-        <TecnicheStatiche parola={parola} carta={carta} />
-      ) : (
-        <TecnichePin parola={parola} carta={carta} stretto={stretto} />
-      )}
+      {statica ? <TecnicheStatiche parola={parola} carta={carta} /> : <TecnichePin parola={parola} carta={carta} />}
     </section>
   );
 }

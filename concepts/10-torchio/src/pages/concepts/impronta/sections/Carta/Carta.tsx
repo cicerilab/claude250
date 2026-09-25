@@ -8,10 +8,15 @@
  * con l'onda che parte dal punto toccato (interaction/paperWave.ts).
  *
  * Accessibilità (ux-architect 5.4 e 6.5):
- * - `role="radiogroup"` con 4 `role="radio"` (bottoni veri), tabulazione a
- *   fuoco mobile: nel gruppo si entra sulla carta scelta, le frecce spostano
- *   SOLO il fuoco, Spazio (o Invio, o il tocco) sceglie. Il sito non cambia
- *   carta mentre si tabula;
+ * - `role="radiogroup"` con 4 `role="radio"` (bottoni veri), schema WAI-ARIA
+ *   del radio: si entra (Tab) sulla carta scelta, le frecce spostano il fuoco
+ *   E scelgono, come in ogni gruppo di radio (giro 2, accessibility-auditor
+ *   M4). Spazio, Invio o il tocco scelgono la carta sotto il fuoco. Tab
+ *   non cambia mai carta;
+ * - niente lampeggio (WCAG 2.3.1): due onde partono ad almeno
+ *   `INTERVALLO_ONDE` ms l'una dall'altra; con le frecce la carta parte solo
+ *   quando ci si ferma per quel tempo (una raffica di frecce = un'onda sola).
+ *   `aria-checked` segue subito il fuoco, il sito segue dopo;
  * - nome accessibile completo (`CARTE[c].radioAria`), descrizione e spessore
  *   in `aria-describedby`;
  * - scelta detta a parole ("✓ la carta del sito") e con il bordo interno
@@ -33,7 +38,6 @@ import {
   useId,
   useRef,
   useState,
-  type FocusEvent as ReactFocusEvent,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
@@ -44,10 +48,17 @@ import './carta.css';
 
 import { ANNUNCI, CARTA as TESTI, CARTE, ORDINE_CARTE } from '../../content/testi';
 import { useMagnete } from '../../interaction/light';
-import { cambiaCarta, origineDaEvento } from '../../interaction/paperWave';
+import { cambiaCarta, origineDaEvento, type Punto } from '../../interaction/paperWave';
 import { ATTESA_PRESSA, CARTA as COREOGRAFIA } from '../../motion/choreography';
 import { usePressione } from '../../motion/usePressione';
 import { selCarta, store, useImpronta, type Carta as TipoCarta } from '../../state/store';
+
+/**
+ * Distanza minima tra due onde partite da questa sezione (ms). WCAG 2.3.1:
+ * al massimo tre cambi di luminosità al secondo; 400 ms tiene anche il
+ * passo Citrino → Grafite → Citrino sotto quella soglia.
+ */
+const INTERVALLO_ONDE = 400;
 
 /** Spazio indivisibile: rende "nuovo" per aria-live un annuncio ripetuto. */
 const NBSP = ' ';
@@ -64,10 +75,9 @@ interface PropsStriscia {
   gruppoRef: RefObject<HTMLDivElement>;
   registra: (indice: number, el: HTMLButtonElement | null) => void;
   onScegli: (carta: TipoCarta, e: ReactMouseEvent<HTMLButtonElement>) => void;
-  onFuoco: (indice: number) => void;
 }
 
-function Striscia({ carta, indice, scelta, tabulabile, idBase, gruppoRef, registra, onScegli, onFuoco }: PropsStriscia) {
+function Striscia({ carta, indice, scelta, tabulabile, idBase, gruppoRef, registra, onScegli }: PropsStriscia) {
   const dati = CARTE[carta];
   const bottoneRef = useRef<HTMLButtonElement | null>(null);
   const foglioRef = useRef<HTMLSpanElement>(null);
@@ -104,7 +114,6 @@ function Striscia({ carta, indice, scelta, tabulabile, idBase, gruppoRef, regist
   const suFuoco = (): void => {
     aFuoco.current = true;
     aggiornaHover();
-    onFuoco(indice);
   };
   const suSfuoco = (): void => {
     aFuoco.current = false;
@@ -185,20 +194,25 @@ export default function Carta() {
   const gruppoRef = useRef<HTMLDivElement>(null);
   const bottoni = useRef<(HTMLButtonElement | null)[]>([]);
   const vivo = useRef(true);
+  const timer = useRef<number | null>(null);
+  /** performance.now() dell'ultima onda partita da qui (-Infinity: nessuna). */
+  const ultimaOnda = useRef(Number.NEGATIVE_INFINITY);
 
-  // Fuoco mobile: null = nessun fuoco nel gruppo, si entra sulla carta scelta.
-  const [fuoco, setFuoco] = useState<number | null>(null);
+  /** Carta chiesta qui e non ancora arrivata sul sito (onda in attesa o in corso). */
+  const [inAttesa, setInAttesa] = useState<TipoCarta | null>(null);
   const [annuncio, setAnnuncio] = useState('');
 
   useEffect(() => {
     vivo.current = true;
     return () => {
       vivo.current = false;
+      if (timer.current !== null) window.clearTimeout(timer.current);
+      timer.current = null;
     };
   }, []);
 
-  const indiceScelto = Math.max(0, ORDINE_CARTE.indexOf(carta));
-  const indiceTabulabile = fuoco ?? indiceScelto;
+  const mostrata = inAttesa ?? carta;
+  const indiceScelto = Math.max(0, ORDINE_CARTE.indexOf(mostrata));
 
   const registra = useCallback((indice: number, el: HTMLButtonElement | null) => {
     bottoni.current[indice] = el;
@@ -208,58 +222,91 @@ export default function Carta() {
     setAnnuncio((prima) => (prima === testo ? `${testo}${NBSP}` : testo));
   }, []);
 
-  const scegli = useCallback(
-    (nuova: TipoCarta, e: ReactMouseEvent<HTMLButtonElement>) => {
-      if (store.get().carta === nuova) return;
-      const origine = origineDaEvento(e);
-      const root = e.currentTarget.closest<HTMLElement>('.imp-root');
+  /** Parte l'onda adesso (dal punto o dal centro dell'elemento). */
+  const avvia = useCallback(
+    (nuova: TipoCarta, origine: Punto | Element) => {
+      timer.current = null;
+      if (store.get().carta === nuova) {
+        setInAttesa((p) => (p === nuova ? null : p));
+        return;
+      }
+      ultimaOnda.current = performance.now();
+      const root = gruppoRef.current?.closest<HTMLElement>('.imp-root') ?? null;
       void cambiaCarta(nuova, origine, { root }).then(() => {
         if (!vivo.current) return;
+        setInAttesa((p) => (p === nuova ? null : p));
         // Annuncio solo se la carta del sito è ancora quella scelta qui
-        // (un altro gruppo potrebbe averla cambiata durante l'onda).
+        // (un altro gruppo, o una freccia successiva, l'ha cambiata).
         if (store.get().carta === nuova) annuncia(ANNUNCI.carta(nuova));
       });
     },
     [annuncia],
   );
 
-  const spostaFuoco = (indice: number): void => {
+  /**
+   * Chiede una carta. Col tocco parte subito, salvo un'onda partita da meno
+   * di INTERVALLO_ONDE ms (allora aspetta il resto). Con le frecce aspetta
+   * sempre INTERVALLO_ONDE ms di quiete: l'ultima freccia vince.
+   */
+  const richiedi = useCallback(
+    (nuova: TipoCarta, origine: Punto | Element, daFrecce: boolean) => {
+      if (timer.current !== null) window.clearTimeout(timer.current);
+      timer.current = null;
+      const giaSul = store.get().carta === nuova;
+      setInAttesa(giaSul ? null : nuova);
+      if (giaSul) return;
+      const attesa = daFrecce
+        ? INTERVALLO_ONDE
+        : Math.max(0, INTERVALLO_ONDE - (performance.now() - ultimaOnda.current));
+      if (attesa <= 0) {
+        avvia(nuova, origine);
+        return;
+      }
+      timer.current = window.setTimeout(() => avvia(nuova, origine), attesa);
+    },
+    [avvia],
+  );
+
+  const scegli = useCallback(
+    (nuova: TipoCarta, e: ReactMouseEvent<HTMLButtonElement>) => {
+      richiedi(nuova, origineDaEvento(e), false);
+    },
+    [richiedi],
+  );
+
+  const vaiA = (indice: number): void => {
     const n = ORDINE_CARTE.length;
     const i = ((indice % n) + n) % n;
-    setFuoco(i);
-    bottoni.current[i]?.focus();
+    const el = bottoni.current[i];
+    const nuova = ORDINE_CARTE[i];
+    if (!el || nuova === undefined) return;
+    el.focus();
+    richiedi(nuova, el, true);
   };
 
   const suTasto = (e: ReactKeyboardEvent<HTMLDivElement>): void => {
-    const attuale = fuoco ?? indiceScelto;
     switch (e.key) {
       case 'ArrowRight':
       case 'ArrowDown':
         e.preventDefault();
-        spostaFuoco(attuale + 1);
+        vaiA(indiceScelto + 1);
         break;
       case 'ArrowLeft':
       case 'ArrowUp':
         e.preventDefault();
-        spostaFuoco(attuale - 1);
+        vaiA(indiceScelto - 1);
         break;
       case 'Home':
         e.preventDefault();
-        spostaFuoco(0);
+        vaiA(0);
         break;
       case 'End':
         e.preventDefault();
-        spostaFuoco(ORDINE_CARTE.length - 1);
+        vaiA(ORDINE_CARTE.length - 1);
         break;
       default:
         break;
     }
-  };
-
-  const suEscedalGruppo = (e: ReactFocusEvent<HTMLDivElement>): void => {
-    const verso = e.relatedTarget;
-    if (verso instanceof Node && e.currentTarget.contains(verso)) return;
-    setFuoco(null);
   };
 
   return (
@@ -279,22 +326,20 @@ export default function Carta() {
           role="radiogroup"
           aria-label={TESTI.gruppoAria}
           aria-describedby={idIntro}
-          className="imp-carta__gruppo imp-a-vivo"
+          className="imp-carta__gruppo"
           onKeyDown={suTasto}
-          onBlur={suEscedalGruppo}
         >
           {ORDINE_CARTE.map((c, i) => (
             <Striscia
               key={c}
               carta={c}
               indice={i}
-              scelta={c === carta}
-              tabulabile={i === indiceTabulabile}
+              scelta={c === mostrata}
+              tabulabile={i === indiceScelto}
               idBase={idBase}
               gruppoRef={gruppoRef}
               registra={registra}
               onScegli={scegli}
-              onFuoco={setFuoco}
             />
           ))}
         </div>

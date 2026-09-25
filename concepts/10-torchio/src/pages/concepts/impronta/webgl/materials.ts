@@ -84,6 +84,7 @@ import {
   PRESET_CARTA,
   PRESET_TECNICA,
   direzioneLuce,
+  elevazioneShader,
   hexARgb,
   indiceCarta,
   puntoLuce,
@@ -176,7 +177,7 @@ export interface OpzioniRilievo {
  * riposo; i colori veri vanno impostati subito con `impostaCarte()`.
  */
 export function creaMaterialeRilievo(opzioni: OpzioniRilievo): MaterialeRilievo {
-  const [lx, ly, lz] = direzioneLuce(135, 22);
+  const [lx, ly, lz] = direzioneLuce(135, elevazioneShader(22));
   const uniforms: UniformiRilievo = {
     tAtlas: { value: opzioni.atlante },
     tFiber: { value: opzioni.fibra },
@@ -337,10 +338,13 @@ export function impostaLuce(
   elevazioneGradi: number,
   intensita = 1,
 ): void {
-  const [lx, ly, lz] = direzioneLuce(azimutGradi, elevazioneGradi);
+  // L'elevazione arriva nella scala dell'interazione (18-25°) e viene resa
+  // più radente per lo shader (12-18°), vedi presets.elevazioneShader.
+  const el = elevazioneShader(elevazioneGradi);
+  const [lx, ly, lz] = direzioneLuce(azimutGradi, el);
   m.uniforms.uLight.value.set(lx, ly, lz, intensita);
   const v = m.uniforms.uView.value;
-  const [px, py, pz] = puntoLuce(azimutGradi, elevazioneGradi, v.x, v.y);
+  const [px, py, pz] = puntoLuce(azimutGradi, el, v.x, v.y);
   m.uniforms.uLightPos.value.set(px, py, pz, m.uniforms.uLightPos.value.w);
 }
 
