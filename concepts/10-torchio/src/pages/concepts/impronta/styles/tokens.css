@@ -253,7 +253,8 @@
   --imp-inchiostro-velato: #505327;
   --imp-lamina-bordo: #17231D;
   --imp-taglio: #17231D;
-  --imp-spessore: 3px;
+  --imp-spessore: 3px;          /* costa delle strisce "La carta" (esagerata) */
+  --imp-spessore-pezzo: 1px; /* costa di un pezzo appoggiato, uguale al GL */
   /* Fibra statica: macchie scure (ombra) e chiare (luce), senso della fibra orizzontale. */
   --imp-fibra: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9 .24' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.612 0 0 0 0 0.541 0 0 0 0 0.118 0.42 0 0 0 -0.22'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.62 .18' numOctaves='3' seed='13' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.961 0 0 0 0 0.914 0 0 0 0 0.494 -0.46 0 0 0 0.2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
@@ -271,7 +272,8 @@
   --imp-inchiostro-velato: #545D58;
   --imp-lamina-bordo: #17231D;
   --imp-taglio: #E4CF3F;
-  --imp-spessore: 6px;
+  --imp-spessore: 6px;          /* costa delle strisce "La carta" (esagerata) */
+  --imp-spessore-pezzo: 1.8px; /* costa di un pezzo appoggiato, uguale al GL */
   /* Fibra statica: macchie scure (ombra) e chiare (luce), senso della fibra orizzontale. */
   --imp-fibra: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9 .24' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.725 0 0 0 0 0.729 0 0 0 0 0.702 0.46 0 0 0 -0.24'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.62 .18' numOctaves='3' seed='13' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 -0.5 0 0 0 0.22'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
@@ -289,7 +291,8 @@
   --imp-inchiostro-velato: #5A4343;
   --imp-lamina-bordo: #231518;
   --imp-taglio: #2A2C2F;
-  --imp-spessore: 4px;
+  --imp-spessore: 4px;          /* costa delle strisce "La carta" (esagerata) */
+  --imp-spessore-pezzo: 1.1px; /* costa di un pezzo appoggiato, uguale al GL */
   /* Fibra statica: macchie scure (ombra) e chiare (luce), senso della fibra orizzontale. */
   --imp-fibra: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9 .24' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.663 0 0 0 0 0.467 0 0 0 0 0.435 0.42 0 0 0 -0.22'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.62 .18' numOctaves='3' seed='13' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.969 0 0 0 0 0.847 0 0 0 0 0.827 -0.46 0 0 0 0.2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
@@ -307,7 +310,8 @@
   --imp-inchiostro-velato: #B6B6B3;
   --imp-lamina-bordo: #A7AEB5;
   --imp-taglio: #E4CF3F;
-  --imp-spessore: 5px;
+  --imp-spessore: 5px;          /* costa delle strisce "La carta" (esagerata) */
+  --imp-spessore-pezzo: 1.3px; /* costa di un pezzo appoggiato, uguale al GL */
   /* Fibra statica: macchie scure (ombra) e chiare (luce), senso della fibra orizzontale. */
   --imp-fibra: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9 .24' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.078 0 0 0 0 0.082 0 0 0 0 0.09 0.5 0 0 0 -0.27'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.62 .18' numOctaves='3' seed='13' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.267 0 0 0 0 0.278 0 0 0 0 0.294 -0.52 0 0 0 0.24'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");

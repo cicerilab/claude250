@@ -2,11 +2,11 @@
  * IMPRONTA · progresso di scroll delle sezioni, filo della legatoria,
  * arrivo alle ancore.
  *
- * Niente listener `scroll`: il progresso si calcola nella fase
- * "aggiornamento" del ticker da `runtime.scrollY` (lenis) e dalla posizione
+ * Niente listener `scroll`: il progresso si calcola nella fase `update`
+ * del ticker da `runtime.scrollY` (lenis) e dalla posizione
  * della sezione in coordinate documento, misurata solo al montaggio, su
  * ResizeObserver, su resize della finestra (150 ms) e a font pronti.
- * Le variabili CSS si scrivono nella fase "scrittura". Il calcolo è attivo
+ * Le variabili CSS si scrivono nella fase `write`. Il calcolo è attivo
  * solo mentre la sezione è entro mezza viewport dallo schermo.
  *
  * Nessun accesso a window/document a livello di modulo (prerender).
@@ -165,7 +165,7 @@ export interface OpzioniScroll {
   readonly passi?: number;
   /** Isteresi sui confini dei passi (frazione di progresso). Default 0,02. */
   readonly isteresi?: number;
-  /** Chiamata nella fase aggiornamento quando il progresso cambia. */
+  /** Chiamata nella fase `update` quando il progresso cambia. */
   readonly onProgresso?: (p: number) => void;
   /** Chiamata quando cambia il passo. `precedente` vale -1 alla prima valutazione. */
   readonly onPasso?: (indice: number, precedente: number) => void;
@@ -289,7 +289,7 @@ class MotoreScroll {
 
   attiva(): void {
     if (this.stop !== null) return;
-    this.stop = [ticker.add(this.aggiorna, 'aggiornamento'), ticker.add(this.scriviTick, 'scrittura')];
+    this.stop = [ticker.add(this.aggiorna, 'update'), ticker.add(this.scriviTick, 'write')];
   }
 
   /** Esce dal calcolo per frame, con un'ultima valutazione esatta (0 o 1 se si è saltato oltre). */
@@ -481,7 +481,7 @@ class MotoreFilo {
     else this.attiva();
   }
 
-  private readonly aggiorna = (_t: number, dt: number): boolean => {
+  private readonly aggiorna = (dt: number): boolean => {
     let inMoto = false;
     for (const molla of this.molle) {
       if (molla.passo(dt)) inMoto = true;
@@ -514,7 +514,7 @@ class MotoreFilo {
 
   attiva(): void {
     if (this.stop !== null) return;
-    this.stop = [ticker.add(this.aggiorna, 'aggiornamento'), ticker.add(this.scriviTick, 'scrittura')];
+    this.stop = [ticker.add(this.aggiorna, 'update'), ticker.add(this.scriviTick, 'write')];
   }
 
   smetti(): void {

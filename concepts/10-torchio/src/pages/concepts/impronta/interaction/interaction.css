@@ -1,0 +1,638 @@
+/*
+ * IMPRONTA · stati di interazione (interaction-designer).
+ *
+ * Classi `imp-ix-*` riusabili dalle sezioni, più l'anello di focus globale.
+ * Tutti i selettori partono da `.imp-root` (tech-architect §5). Nessun hex:
+ * solo le variabili dell'art-director (--imp-carta, --imp-carta-luce,
+ * --imp-carta-ombra, --imp-inchiostro, --imp-lamina). Raggio 0 ovunque,
+ * tranne la maniglia della leva (oggetto fisico, creative-director 4.1).
+ *
+ * Regola dei movimenti: solo transform, opacity, clip-path e spessori di
+ * sottolineatura; niente glow, niente ombre nere, niente lampeggi.
+ */
+
+/* ================================================================== 0. variabili locali */
+
+.imp-root {
+  /*
+   * L'anello usa l'inchiostro della carta DEL SITO: la custom property è
+   * calcolata qui, sulla radice, ed ereditata già risolta. Così dentro un
+   * pezzo con la sua carta (Per chi, prova del banco) l'anello resta
+   * leggibile sulla carta che gli sta attorno.
+   */
+  --imp-ix-anello: var(--imp-sito-inchiostro, var(--imp-inchiostro));
+  --imp-ix-anello-spessore: var(--imp-focus-spessore, 3px);
+  --imp-ix-anello-distanza: var(--imp-focus-distanza, 3px);
+  --imp-ix-rapido: 140ms;
+  --imp-ix-medio: 220ms;
+  /* Curve del motion-designer (motion/easing.ts, BEZIER_CSS). */
+  --imp-ix-curva-sfoglia: cubic-bezier(0.22, 0.61, 0.24, 1);
+  --imp-ix-curva-rilascio: cubic-bezier(0.5, 0, 0.18, 1);
+  /* Ombra e luce tinte della carta, per le impronte nei controlli. */
+  --imp-ix-solco: color-mix(in srgb, var(--imp-carta-ombra) 70%, transparent);
+  --imp-ix-labbro: color-mix(in srgb, var(--imp-carta-luce) 85%, transparent);
+  /*
+   * --imp-luce-x / --imp-luce-y hanno il default in tokens.css (art-director);
+   * light.ts le riscrive su .imp-root a ≤ 30 Hz quando il WebGL non è acceso.
+   */
+}
+
+/* ================================================================== 1. anello di focus */
+
+/*
+ * Una riga d'inchiostro da 3 px a 3 px di distanza, a spigolo vivo: come il
+ * filo con cui il tipografo cerchia una correzione sulla bozza. Stesso
+ * segno su tutte e quattro le carte (su Grafite l'inchiostro è chiaro).
+ */
+.imp-root :focus-visible {
+  outline: var(--imp-ix-anello-spessore) solid var(--imp-ix-anello);
+  outline-offset: var(--imp-ix-anello-distanza);
+}
+
+.imp-root :focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Elementi a vivo (strisce della carta, fasce a tutta larghezza): anello interno, nell'inchiostro di quella carta. */
+.imp-root .imp-ix-anello-interno:focus-visible,
+.imp-root .imp-ix-anello-interno:has(:focus-visible) {
+  outline: var(--imp-ix-anello-spessore) solid var(--imp-focus-colore, var(--imp-inchiostro));
+  outline-offset: calc(-2 * var(--imp-ix-anello-spessore));
+}
+
+/* Titoli raggiunti con i salti (tabindex="-1"): l'anello si stacca di più dal testo grande. */
+.imp-root [tabindex='-1']:focus-visible {
+  outline-offset: 8px;
+}
+
+@media (forced-colors: active) {
+  .imp-root :focus-visible,
+  .imp-root .imp-ix-anello-interno:focus-visible,
+  .imp-root .imp-ix-anello-interno:has(:focus-visible),
+  .imp-root .imp-ix-dial:has(.imp-ix-dial__input:focus-visible) {
+    outline-color: Highlight;
+  }
+}
+
+/* ================================================================== 2. link */
+
+/*
+ * Sottolineatura come riga di stampa: a riposo sottile; sotto il puntatore
+ * l'inchiostro "si allarga" (1 → 2 px); premuto, 3 px. Colore sempre quello del testo.
+ */
+.imp-root .imp-ix-link {
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-color: currentColor;
+  text-decoration-thickness: var(--imp-sottolineatura, 0.07em);
+  text-underline-offset: var(--imp-sottolineatura-distanza, 0.2em);
+  transition:
+    text-decoration-thickness var(--imp-ix-rapido) var(--imp-ix-curva-sfoglia),
+    text-underline-offset var(--imp-ix-rapido) var(--imp-ix-curva-sfoglia);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .imp-root .imp-ix-link:hover {
+    text-decoration-thickness: var(--imp-sottolineatura-hover, 0.14em);
+  }
+}
+
+.imp-root .imp-ix-link:active {
+  text-decoration-thickness: calc(var(--imp-sottolineatura-hover, 0.14em) * 1.4);
+}
+
+/* ================================================================== 3. bottoni premibili */
+
+/*
+ * Qualsiasi bottone di carta o di lamina (Prova la tua, scelte del
+ * compositoio, nomi del mazzo, frecce). Nessun movimento al passaggio del
+ * puntatore (niente bottoni magnetici): al passaggio compare il solco,
+ * alla pressione il bottone scende di 1 px nella carta, come sotto la platina.
+ */
+.imp-root .imp-ix-premibile {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  border-radius: 0;
+  transition:
+    transform var(--imp-ix-rapido) var(--imp-ix-curva-rilascio),
+    box-shadow var(--imp-ix-medio) var(--imp-ix-curva-sfoglia);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .imp-root .imp-ix-premibile:hover:not([aria-disabled='true']):not(:disabled) {
+    box-shadow:
+      inset 1px 1px 0 var(--imp-ix-solco),
+      inset -1px -1px 0 var(--imp-ix-labbro);
+  }
+}
+
+.imp-root .imp-ix-premibile:active:not([aria-disabled='true']):not(:disabled) {
+  transform: translateY(1px);
+  box-shadow:
+    inset 2px 2px 0 var(--imp-ix-solco),
+    inset -1px -1px 0 var(--imp-ix-labbro);
+  transition-duration: 60ms;
+}
+
+.imp-root .imp-ix-premibile[aria-disabled='true'],
+.imp-root .imp-ix-premibile:disabled {
+  cursor: default;
+}
+
+/*
+ * Superfici in lamina (.imp-lamina dell'art-director: "Prova la tua",
+ * targhetta del prezzo). La lamina non si illumina: sotto il dito la
+ * sfumatura si rovescia, come argento premuto che prende la luce dall'altra parte.
+ */
+@media (hover: hover) and (pointer: fine) {
+  .imp-root .imp-lamina.imp-ix-premibile:hover:not([aria-disabled='true']):not(:disabled) {
+    box-shadow:
+      inset 0 0 0 1px var(--imp-lamina-bordo, var(--imp-inchiostro)),
+      inset 1px 1px 0 var(--imp-ix-solco);
+  }
+}
+
+.imp-root .imp-lamina.imp-ix-premibile:active:not([aria-disabled='true']):not(:disabled) {
+  background-image: var(--imp-lamina-sfumatura-premuta);
+  box-shadow:
+    inset 0 0 0 1px var(--imp-lamina-bordo, var(--imp-inchiostro)),
+    var(--imp-ombra-premuto, inset 2px 2px 0 var(--imp-ix-solco));
+}
+
+.imp-root .imp-ix-premibile[aria-disabled='true'],
+.imp-root .imp-ix-premibile:disabled {
+  opacity: var(--imp-opacita-disabilitato, 0.5);
+}
+
+/* Area di tocco minima 44×44 (ux-architect 6.1), senza cambiare il disegno. */
+.imp-root .imp-ix-tocco {
+  position: relative;
+  min-inline-size: 44px;
+  min-block-size: 44px;
+}
+
+/* ================================================================== 4. scelte come fogli (radio e checkbox veri) */
+
+/*
+ * Markup: <label class="imp-ix-scelta imp-ix-premibile">
+ *           <input class="imp-ix-scelta__input" type="radio" …> testo
+ *         </label>
+ * L'input è vero (fieldset + legend, frecce native), nascosto alla vista ma
+ * non ai lettori di schermo. Scelta = bordo interno d'inchiostro 3 px, e il
+ * testo lo dice (la sezione aggiunge "scelta" o "✓ la carta del sito").
+ */
+.imp-root .imp-ix-scelta {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 44px;
+  cursor: pointer;
+  box-shadow: inset 0 -1px 0 var(--imp-ix-solco);
+}
+
+.imp-root .imp-ix-scelta__input {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .imp-root .imp-ix-scelta:hover {
+    box-shadow: inset 0 -2px 0 var(--imp-ix-solco);
+  }
+}
+
+.imp-root .imp-ix-scelta:has(.imp-ix-scelta__input:checked) {
+  box-shadow: inset 0 0 0 3px var(--imp-inchiostro);
+}
+
+.imp-root .imp-ix-scelta:has(.imp-ix-scelta__input:focus-visible) {
+  outline: var(--imp-ix-anello-spessore) solid var(--imp-ix-anello);
+  outline-offset: var(--imp-ix-anello-distanza);
+}
+
+.imp-root .imp-ix-scelta:has(.imp-ix-scelta__input:disabled) {
+  cursor: default;
+}
+
+/* ================================================================== 5. superfici che muovono la luce */
+
+/*
+ * Carta su cui il dito sposta la luce (hero, sezioni vuote). Lo scroll
+ * verticale resta del browser: solo i movimenti orizzontali e i tocchi fermi
+ * arrivano a light.ts.
+ */
+.imp-root [data-imp-luce] {
+  touch-action: pan-y;
+}
+
+/*
+ * Il magnete delle carte (strisce di "La carta"): il foglio si solleva di
+ * 2 px sotto la mano e la sua costa (.imp-costa, art-director) resta sotto,
+ * quindi se ne vede un filo in più. Solo transform: niente ombre nuove.
+ */
+.imp-root .imp-ix-solleva {
+  transform: translateY(calc(var(--imp-mag-t, 0) * -2px));
+}
+
+/* ================================================================== 6. dial "Direzione della luce" */
+
+/*
+ * Markup (hero desktop e lastra del banco):
+ * <div class="imp-ix-dial" {...contenitoreProps}>
+ *   <span class="imp-ix-dial__icona" aria-hidden="true"></span>
+ *   <input class="imp-ix-dial__input" {...inputProps}>
+ * </div>
+ * L'input range vero copre l'icona (opacità 0): tastiera, lettori di
+ * schermo e trascinamento funzionano come in ogni slider. L'icona è un
+ * semicerchio: la metà in ombra sta dal lato opposto alla luce.
+ */
+.imp-root .imp-ix-dial {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  inline-size: 44px;
+  block-size: 44px;
+  flex: none;
+}
+
+.imp-root .imp-ix-dial__icona {
+  display: block;
+  inline-size: 22px;
+  block-size: 22px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px var(--imp-inchiostro);
+  background: linear-gradient(90deg, var(--imp-inchiostro) 50%, transparent 50%);
+  transform: rotate(calc(var(--imp-ix-dial-az, 135) * -1deg));
+  transition: transform var(--imp-ix-rapido) linear;
+  pointer-events: none;
+}
+
+.imp-root .imp-ix-dial__input {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: ew-resize;
+  touch-action: pan-y;
+}
+
+.imp-root .imp-ix-dial:has(.imp-ix-dial__input:focus-visible) {
+  outline: var(--imp-ix-anello-spessore) solid var(--imp-ix-anello);
+  outline-offset: var(--imp-ix-anello-distanza);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .imp-root .imp-ix-dial:hover .imp-ix-dial__icona {
+    box-shadow: inset 0 0 0 3px var(--imp-inchiostro);
+  }
+}
+
+/* ================================================================== 7. invito "luce col telefono" */
+
+.imp-root .imp-ix-invito {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  color: var(--imp-inchiostro);
+}
+
+.imp-root .imp-ix-invito[hidden] {
+  display: none;
+}
+
+/* ================================================================== 8. la leva */
+
+/*
+ * Markup (sections/Banco/Leva.tsx):
+ * <button class="imp-banco__leva imp-ix-leva" {...buttonProps} aria-describedby="…">
+ *   <span class="imp-ix-leva__binario" aria-hidden="true">
+ *     <span class="imp-ix-leva__corsa">
+ *       <span class="imp-ix-leva__carrello"><span class="imp-ix-leva__maniglia"></span></span>
+ *     </span>
+ *   </span>
+ *   <span class="imp-ix-leva__testo">Tieni premuto per stampare</span>
+ * </button>
+ * --imp-hold (0..1) lo scrive useHoldToConfirm; --imp-mag-x il magnete.
+ */
+.imp-root .imp-ix-leva {
+  --imp-ix-maniglia: 56px;
+  --imp-hold: 0;
+  position: relative;
+  display: grid;
+  align-items: center;
+  inline-size: 100%;
+  min-block-size: var(--imp-leva-h, 72px);
+  padding: 0;
+  border: 0;
+  border-radius: var(--imp-raggio, 0);
+  color: var(--imp-inchiostro);
+  background: transparent;
+  font: inherit;
+  text-align: start;
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.imp-root .imp-ix-leva[data-stato='tenendo'] {
+  cursor: grabbing;
+}
+
+.imp-root .imp-ix-leva[aria-disabled='true'] {
+  cursor: default;
+}
+
+/* Il binario: un solco premuto nella carta, tinto con l'ombra della carta. */
+.imp-root .imp-ix-leva__binario {
+  position: absolute;
+  inset: 0;
+  box-shadow:
+    inset 2px 2px 0 var(--imp-ix-solco),
+    inset -1px -1px 0 var(--imp-ix-labbro);
+  pointer-events: none;
+}
+
+.imp-root .imp-ix-leva__corsa {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 8px;
+  inset-inline-end: calc(8px + var(--imp-ix-maniglia));
+}
+
+.imp-root .imp-ix-leva__carrello {
+  position: absolute;
+  inset: 0;
+  transform: translateX(calc(var(--imp-hold) * 100%));
+  will-change: transform;
+}
+
+/* L'unico tondo del sito: il manico della leva. */
+.imp-root .imp-ix-leva__maniglia {
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-start: 50%;
+  inline-size: var(--imp-ix-maniglia);
+  block-size: var(--imp-ix-maniglia);
+  border-radius: var(--imp-raggio-leva, 999px);
+  background-color: var(--imp-lamina);
+  background-image: var(--imp-lamina-sfumatura, none);
+  box-shadow:
+    inset 0 0 0 1px var(--imp-lamina-bordo, var(--imp-inchiostro)),
+    inset -2px -2px 0 var(--imp-ix-solco),
+    inset 2px 2px 0 var(--imp-ix-labbro);
+  transform: translate(calc(var(--imp-mag-x, 0px) * (1 - var(--imp-hold))), -50%);
+  transition: box-shadow var(--imp-ix-medio) var(--imp-ix-curva-sfoglia);
+}
+
+/* Tenendo premuto la maniglia affonda: la luce sul bordo si stringe. */
+.imp-root .imp-ix-leva[data-stato='tenendo'] .imp-ix-leva__maniglia,
+.imp-root .imp-ix-leva[data-stato='completo'] .imp-ix-leva__maniglia {
+  background-image: var(--imp-lamina-sfumatura-premuta, none);
+  box-shadow:
+    inset 0 0 0 1px var(--imp-lamina-bordo, var(--imp-inchiostro)),
+    inset 3px 3px 0 var(--imp-ix-solco);
+}
+
+.imp-root .imp-ix-leva__testo {
+  position: relative;
+  padding-inline: calc(var(--imp-ix-maniglia) + 24px) 16px;
+  padding-block: 12px;
+  /*
+   * Il testo resta pieno mentre la maniglia gli passa sotto (inchiostro su
+   * lamina è 7,2:1): nessuna dissolvenza, nessun calo di contrasto.
+   */
+}
+
+/* Armata: il testo cambia (lo fa la sezione) e il binario si segna una volta sola, senza ripetersi. */
+.imp-root .imp-ix-leva[data-stato='armato'] .imp-ix-leva__binario {
+  box-shadow:
+    inset 2px 2px 0 var(--imp-ix-solco),
+    inset -1px -1px 0 var(--imp-ix-labbro),
+    inset 0 0 0 3px var(--imp-inchiostro);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .imp-root .imp-ix-leva:hover:not([aria-disabled='true']) .imp-ix-leva__maniglia {
+    box-shadow:
+      inset 0 0 0 2px var(--imp-lamina-bordo, var(--imp-inchiostro)),
+      inset -2px -2px 0 var(--imp-ix-solco),
+      inset 2px 2px 0 var(--imp-ix-labbro);
+  }
+}
+
+/* Messaggi della leva (aria-live="polite"): stesso inchiostro, nessun rosso, nessun lampo. */
+.imp-root .imp-ix-annuncio {
+  min-block-size: 1.55em;
+  color: var(--imp-inchiostro);
+}
+
+/* ================================================================== 9. mazzo "Per chi" (mobile) */
+
+@media (max-width: 1023.98px) {
+  .imp-root .imp-ix-mazzo {
+    --imp-ix-mazzo-pezzo: 280px;
+    --imp-ix-mazzo-passo: 12px;
+    --imp-ix-mazzo-margine: 20px;
+    display: flex;
+    gap: var(--imp-ix-mazzo-passo);
+    overflow-x: auto;
+    overflow-y: visible;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--imp-ix-mazzo-margine);
+    padding-inline: var(--imp-ix-mazzo-margine) 0;
+    padding-block: 16px;
+    scrollbar-width: none;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .imp-root .imp-ix-mazzo::-webkit-scrollbar {
+    display: none;
+  }
+
+  .imp-root .imp-ix-mazzo__pezzo {
+    flex: 0 0 var(--imp-ix-mazzo-pezzo);
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  /* Margine finale vero: Safari vecchi ignorano il padding destro dei contenitori scorrevoli. */
+  .imp-root .imp-ix-mazzo::after {
+    content: '';
+    flex: 0 0 max(1px, calc(var(--imp-ix-mazzo-margine) - var(--imp-ix-mazzo-passo)));
+  }
+
+  .imp-root .imp-ix-mazzo-nav {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .imp-root .imp-ix-mazzo-nav__nome {
+    min-block-size: 44px;
+    padding-inline: 8px;
+    border: 0;
+    background: transparent;
+    color: var(--imp-inchiostro);
+    font: inherit;
+    font-weight: 400;
+    text-decoration-line: none;
+    text-underline-offset: 0.3em;
+    cursor: pointer;
+  }
+
+  /* Il pezzo in vista: sottolineato e più pesante, non solo diverso di colore. */
+  .imp-root .imp-ix-mazzo-nav__nome[aria-current='true'] {
+    font-weight: 600;
+    text-decoration-line: underline;
+    text-decoration-thickness: 2px;
+  }
+
+  .imp-root .imp-ix-mazzo-nav__freccia {
+    display: inline-grid;
+    place-items: center;
+    inline-size: 44px;
+    block-size: 44px;
+    border: 0;
+    background: transparent;
+    color: var(--imp-inchiostro);
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .imp-root .imp-ix-mazzo-nav__freccia[aria-disabled='true'] {
+    cursor: default;
+    opacity: 0.45;
+  }
+}
+
+@media (min-width: 1024px) {
+  .imp-root .imp-ix-mazzo-nav {
+    display: none;
+  }
+}
+
+/* ================================================================== 10. onda della carta (fallback CSS) */
+
+/*
+ * Velo creato da paperWave.ts quando il WebGL non disegna la carta (e per la
+ * dissolvenza ridotta). Sta al livello del canvas, sotto il contenuto: cambia
+ * il foglio, non copre l'inchiostro. `data-carta` sul velo fa risolvere
+ * --imp-carta alla carta giusta (tokens.css vale anche per [data-carta] interni).
+ * Variabili scritte da paperWave.ts (nomi in motion/choreography.ts, VAR):
+ * --imp-onda-x, --imp-onda-y, --imp-onda-r, --imp-onda-bordo, --imp-onda-o.
+ */
+.imp-root .imp-ix-onda {
+  --imp-onda-x: 50vw;
+  --imp-onda-y: 50vh;
+  --imp-onda-r: 0px;
+  --imp-onda-bordo: 12px;
+  --imp-onda-o: 1;
+  position: fixed;
+  inset: 0;
+  z-index: var(--imp-z-canvas, 0);
+  background-color: var(--imp-carta);
+  opacity: var(--imp-onda-o);
+  pointer-events: none;
+  contain: strict;
+  /* Prima dello scambio: carta nuova DENTRO il cerchio, bordo bagnato sfumato. */
+  -webkit-mask-image: radial-gradient(
+    circle at var(--imp-onda-x) var(--imp-onda-y),
+    black calc(var(--imp-onda-r) - var(--imp-onda-bordo)),
+    transparent var(--imp-onda-r)
+  );
+  mask-image: radial-gradient(
+    circle at var(--imp-onda-x) var(--imp-onda-y),
+    black calc(var(--imp-onda-r) - var(--imp-onda-bordo)),
+    transparent var(--imp-onda-r)
+  );
+}
+
+/* Dopo lo scambio: la radice è già sulla carta nuova, il velo tiene la vecchia FUORI dal cerchio. */
+.imp-root .imp-ix-onda--invertita {
+  -webkit-mask-image: radial-gradient(
+    circle at var(--imp-onda-x) var(--imp-onda-y),
+    transparent calc(var(--imp-onda-r) - var(--imp-onda-bordo)),
+    black var(--imp-onda-r)
+  );
+  mask-image: radial-gradient(
+    circle at var(--imp-onda-x) var(--imp-onda-y),
+    transparent calc(var(--imp-onda-r) - var(--imp-onda-bordo)),
+    black var(--imp-onda-r)
+  );
+}
+
+/* Reduced motion: nessun cerchio, solo la carta vecchia che svanisce in 200 ms. */
+.imp-root .imp-ix-onda--dissolvenza {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+/*
+ * L'inchiostro che eredita il colore dalla radice cambia in 240 ms allo
+ * scambio (motion-designer, CARTA.onda.inchiostro), 200 ms con reduced motion.
+ * Solo il colore: il fondo lo cambia il velo.
+ */
+.imp-root {
+  transition: color 240ms linear;
+}
+
+/* ================================================================== 11. reduced motion */
+
+/*
+ * Doppia guardia: la preferenza di sistema e data-motion="reduced" scritto
+ * dallo scaffold su .imp-root (può arrivare anche da un'impostazione locale).
+ */
+.imp-root[data-motion='reduced'] {
+  transition: color 200ms linear;
+}
+
+.imp-root[data-motion='reduced'] .imp-ix-link,
+.imp-root[data-motion='reduced'] .imp-ix-premibile,
+.imp-root[data-motion='reduced'] .imp-ix-dial__icona,
+.imp-root[data-motion='reduced'] .imp-ix-leva__maniglia {
+  transition: none;
+}
+
+.imp-root[data-motion='reduced'] .imp-ix-premibile:active,
+.imp-root[data-motion='reduced'] .imp-ix-solleva {
+  transform: none;
+}
+
+.imp-root[data-motion='reduced'] .imp-ix-mazzo {
+  scroll-behavior: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .imp-root {
+    transition: color 200ms linear;
+  }
+
+  .imp-root .imp-ix-link,
+  .imp-root .imp-ix-premibile,
+  .imp-root .imp-ix-dial__icona,
+  .imp-root .imp-ix-leva__maniglia {
+    transition: none;
+  }
+
+  .imp-root .imp-ix-premibile:active,
+  .imp-root .imp-ix-solleva {
+    transform: none;
+  }
+
+  .imp-root .imp-ix-mazzo {
+    scroll-behavior: auto;
+  }
+}

@@ -148,6 +148,10 @@ void main() {
   float foil = 0.0;
   float contatto = 0.0;
   float costa = 0.0;
+  // Bordo dei pezzi con antialias: copertura del pezzo nel pixel e ombra
+  // di contatto che si vedrebbe sotto (per la fascia di 1 px del bordo).
+  float coperturaPezzo = 1.0;
+  float contattoSotto = 0.0;
 
   vec2 tx = 1.0 / uMeta.xy;
   float scalaH = 1.0 / (1.0 - HEIGHT_BIAS);
@@ -171,7 +175,14 @@ void main() {
     // --- Pezzo con carta propria, appoggiato sul foglio --------------------
     if (A.w > -0.5) {
       float sd = sdRett(q, meta);
-      if (sd < 0.0) {
+      // Ombra di contatto: la stessa sagoma spostata lontano dalla luce.
+      vec2 qs = q + LdLoc * (2.5 * dpr + B.w * 1.5);
+      float sds = sdRett(qs, meta);
+      float morb = 9.0 * dpr;
+      float ombraSagoma = 1.0 - smoothstep(-0.4 * morb, morb, sds);
+      if (sd < 0.5) {
+        coperturaPezzo = clamp(0.5 - sd, 0.0, 1.0);
+        contattoSotto = ombraSagoma;
         carta = leggiCarta(A.w);
         grad = vec2(0.0);
         ombraPortata = 0.0;
@@ -188,11 +199,7 @@ void main() {
         float fascia = 1.0 - smoothstep(0.0, max(B.w, 1.0), -sd);
         costa = fascia * dot(np, Ld);
       } else {
-        // Ombra di contatto: la stessa sagoma spostata lontano dalla luce.
-        vec2 qs = q + LdLoc * (2.5 * dpr + B.w * 1.5);
-        float sds = sdRett(qs, meta);
-        float morb = 9.0 * dpr;
-        contatto = max(contatto, 1.0 - smoothstep(-0.4 * morb, morb, sds));
+        contatto = max(contatto, ombraSagoma);
       }
     }
 
@@ -305,6 +312,13 @@ void main() {
     // Spigoli del solco in ombra anche sulla lamina.
     metallo = mix(metallo, metallo * 0.72, ombraPortata * 0.5);
     col = mix(col, min(metallo, vec3(0.97)), foil);
+  }
+
+  // Antialias del bordo del pezzo: nella fascia di 1 px si mescola con il
+  // foglio sotto (fondo più la sua ombra di contatto).
+  if (coperturaPezzo < 1.0) {
+    vec3 sotto = mix(foglio.fondo.rgb, foglio.ombra.rgb, contattoSotto * uPaper.z * foglio.ombra.a);
+    col = mix(sotto, col, coperturaPezzo);
   }
 
   gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);

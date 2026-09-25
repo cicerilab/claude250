@@ -11,12 +11,14 @@
      .imp-secco       lettera premuta senza inchiostro (a secco)
      .imp-inchiostro  lettera premuta e inchiostrata (a un colore)
      .imp-caldo       lettera premuta in lamina argento (lamina a caldo)
+     .imp-segno-caldo segno SVG in lamina (il marchio), via maschera
      .imp-lamina      superficie in lamina (bottone, leva, targhetta prezzo)
      .imp-foglio      pezzo di carta appoggiato sul foglio del sito
      .imp-taglio      modificatore di .imp-foglio: bordo tinto (taglio colorato)
      .imp-costa       spessore della carta visto di taglio (strisce "La carta")
      .imp-fibra       fibra della carta su qualsiasi superficie
      .imp-pressa      parola a riga singola che si allarga sotto la pressa
+     .imp-assi        elemento i cui assi wdth/wght arrivano da --imp-wdth/--imp-wght
 
    Variabili lette (tutte con default in tokens.css):
      --imp-press      0..1 pressione del blocco (0 piatto, 1 premuto)
@@ -99,8 +101,13 @@
    Solo tre usi nel sito: marchio, prezzo, leva.
    -------------------------------------------------------------------------- */
 .imp-root .imp-caldo {
+  /* Sulla lamina il bisello non scende mai sotto 1 px: a 20 px (marchio)
+     è il filo scuro e chiaro a rendere leggibile l'argento su Citrino. */
+  --_imp-d: calc(max(1px, 0.016em) * var(--imp-press) * var(--imp-rilievo));
   color: var(--imp-lamina);
   background-image: var(--imp-lamina-sfumatura-testo);
+  background-size: 100% 1lh;   /* la sfumatura riparte a ogni riga */
+  background-repeat: repeat-y;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -116,6 +123,35 @@
     background-image: none;
     -webkit-text-fill-color: currentColor;
   }
+}
+
+/* --------------------------------------------------------------------------
+   .imp-segno-caldo · un segno SVG (il marchio del vector-artist) in lamina
+   L'SVG ha fill="currentColor": qui lo si usa come maschera, così prende la
+   stessa sfumatura argento delle lettere. Struttura:
+     <span class="imp-segno-caldo" style="--imp-segno: url(<marchio ?url>)">
+       <span class="imp-segno-caldo__lamina"></span>
+     </span>
+   Le dimensioni le dà il builder al contenitore (larghezza = altezza × 9,41
+   per il marchio). Le ombre stanno sul contenitore perché il filtro sullo
+   stesso elemento verrebbe tagliato dalla maschera.
+   -------------------------------------------------------------------------- */
+.imp-root .imp-segno-caldo {
+  --_imp-d: calc(1px * var(--imp-press) * var(--imp-rilievo));
+  display: inline-block;
+  filter:
+    drop-shadow(calc(var(--_imp-d) * var(--imp-luce-x) * 1.1) calc(var(--_imp-d) * var(--imp-luce-y) * 1.1) 0 var(--imp-carta-ombra))
+    drop-shadow(calc(var(--_imp-d) * var(--imp-luce-x) * -0.9) calc(var(--_imp-d) * var(--imp-luce-y) * -0.9) 0 var(--imp-carta-luce));
+}
+
+.imp-root .imp-segno-caldo__lamina {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  background-color: var(--imp-lamina);
+  background-image: var(--imp-lamina-sfumatura-testo);
+  -webkit-mask: var(--imp-segno) center / contain no-repeat;
+  mask: var(--imp-segno) center / contain no-repeat;
 }
 
 /* --------------------------------------------------------------------------
@@ -140,7 +176,8 @@
 /* --------------------------------------------------------------------------
    .imp-foglio · un pezzo di carta appoggiato sul foglio del sito
    Il pezzo prende i colori della propria carta (mettere data-carta sul
-   pezzo); lo spessore (costa) è della sua carta; l'ombra di appoggio cade
+   pezzo); lo spessore (costa, --imp-spessore-pezzo: 1 / 1,8 / 1,1 / 1,3 px,
+   come nello shader) è della sua carta; l'ombra di appoggio cade
    sulla carta del sito (--imp-sito-ombra), corta e tinta: è un cartoncino
    spesso sul bancone, non una scheda che fluttua.
    -------------------------------------------------------------------------- */
@@ -152,16 +189,16 @@
   border-radius: var(--imp-raggio);
   box-shadow:
     var(--imp-foglio-bordo, 0 0 0 0 transparent),
-    0 var(--imp-spessore) 0 0 var(--imp-costa-colore, var(--imp-carta-costa)),
-    0 calc(var(--imp-spessore) + 1px) 0 0 color-mix(in srgb, var(--imp-sito-ombra) 55%, transparent),
-    0 calc(var(--imp-spessore) + 3px) calc(var(--imp-spessore) * 2 + 6px) calc(var(--imp-spessore) * -1) color-mix(in srgb, var(--imp-sito-ombra) 50%, transparent);
+    0 var(--imp-spessore-pezzo) 0 0 var(--imp-costa-colore, var(--imp-carta-costa)),
+    0 calc(var(--imp-spessore-pezzo) + 1px) 0 0 color-mix(in srgb, var(--imp-sito-ombra) 55%, transparent),
+    0 calc(var(--imp-spessore-pezzo) + 3px) calc(var(--imp-spessore-pezzo) * 2 + 8px) calc(var(--imp-spessore-pezzo) * -1 - 2px) color-mix(in srgb, var(--imp-sito-ombra) 50%, transparent);
 }
 
 /* .imp-taglio · taglio colorato: il bordo del cartoncino è tinto.
    Da sopra si vede come un filo sul perimetro, di taglio come la costa. */
 .imp-root .imp-foglio.imp-taglio {
   --imp-costa-colore: var(--imp-taglio);
-  --imp-foglio-bordo: inset 0 0 0 1.5px var(--imp-taglio);
+  --imp-foglio-bordo: inset 0 0 0 1px var(--imp-taglio);
 }
 
 /* --------------------------------------------------------------------------
@@ -196,6 +233,19 @@
 }
 
 /* --------------------------------------------------------------------------
+   .imp-assi · titoli e parole i cui assi li scrive il motion-designer
+   (usePressione scrive --imp-wdth / --imp-wght sull'elemento). Senza quei
+   valori valgono i default del titolo. Non per testo su più righe che deve
+   restare fermo: lì gli assi sono fissi (vedi DESIGN.md §3).
+   -------------------------------------------------------------------------- */
+.imp-root .imp-assi {
+  font-family: var(--imp-font-display);
+  font-weight: var(--imp-wght, 700);
+  font-variation-settings: "wdth" var(--imp-wdth, 100), "wght" var(--imp-wght, 700);
+  font-synthesis: none;
+}
+
+/* --------------------------------------------------------------------------
    Con lo shader acceso, i fantasmi registrati (.imp-relief, classe dello
    scaffold) diventano trasparenti: restano per layout, selezione e misura.
    Gli assi si fermano allo stato di arrivo: la discesa la fa lo shader.
@@ -211,6 +261,14 @@
 .imp-root[data-gl="on"] .imp-relief.imp-pressa {
   --_imp-wdth: var(--imp-wdth-arrivo, 150);
   --_imp-wght: var(--imp-wght-arrivo, 900);
+}
+
+.imp-root[data-gl="on"] .imp-relief.imp-segno-caldo {
+  filter: none;
+}
+
+.imp-root[data-gl="on"] .imp-relief.imp-segno-caldo > .imp-segno-caldo__lamina {
+  visibility: hidden;
 }
 
 .imp-root[data-gl="on"] .imp-relief:is(.imp-foglio, .imp-costa) {
@@ -236,6 +294,15 @@
     background-image: none;
     border: 1px solid ButtonText;
     -webkit-text-fill-color: ButtonText;
+  }
+
+  .imp-root .imp-segno-caldo {
+    filter: none;
+  }
+
+  .imp-root .imp-segno-caldo__lamina {
+    background-image: none;
+    background-color: CanvasText;
   }
 }
 

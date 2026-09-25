@@ -32,20 +32,23 @@ import type {
   PointerEvent as ReactPointerEvent,
 } from 'react';
 import { ticker } from '../core/ticker';
-import { MOLLE, Molla } from '../motion/spring';
+import { LEVA } from '../motion/choreography';
+import { Molla } from '../motion/spring';
 import { store } from '../state/store';
 import { attachMagnete } from './light';
 
 /* ------------------------------------------------------------------ costanti */
 
-/** Tempo di pressione per stampare (creative-director: circa 900 ms). */
-export const HOLD_DURATA_MS = 900;
+/** Tempo di pressione per stampare (creative-director: circa 900 ms; valore in motion/choreography.ts). */
+export const HOLD_DURATA_MS = LEVA.durata;
 /** Finestra per la seconda pressione breve (ux-architect: 6 s). */
 export const HOLD_FINESTRA_MS = 6_000;
 /** Sotto questa durata una pressione è "breve": arma o conferma, non annulla. */
 export const HOLD_SOGLIA_BREVE_MS = 250;
 /** Dopo un gesto gestito, il clic nativo che segue va ignorato per questo tempo. */
 const CLIC_GEMELLO_MS = 500;
+/** Spazio indivisibile: rende "nuovo" per aria-live un annuncio ripetuto. */
+const NBSP = '\u00a0';
 /** La pressa che scende dopo la doppia pressione: rapida ma visibile. */
 const DISCESA_DOPPIA_MS = 220;
 
@@ -129,7 +132,10 @@ export interface HoldRisultato {
 interface Gesto {
   modo: 'puntatore' | 'tastiera';
   id: number | string;
+  /** Origine del progress (arretrata se si riparte mentre la carta risale). */
   t0: number;
+  /** Istante reale della pressione, per distinguere breve e lunga. */
+  inizio: number;
 }
 
 interface Interno {
@@ -146,6 +152,18 @@ interface Interno {
 
 function tastoLeva(key: string): boolean {
   return key === ' ' || key === 'Enter' || key === 'Spacebar';
+}
+
+function durataDi(o: HoldOpzioni): number {
+  return Math.max(200, o.durata ?? HOLD_DURATA_MS);
+}
+
+function finestraDi(o: HoldOpzioni): number {
+  return Math.max(1000, o.finestraConferma ?? HOLD_FINESTRA_MS);
+}
+
+function sogliaBreveDi(o: HoldOpzioni): number {
+  return Math.max(50, o.sogliaBreve ?? HOLD_SOGLIA_BREVE_MS);
 }
 
 /* ------------------------------------------------------------------ hook */
@@ -166,16 +184,12 @@ export function useHoldToConfirm(opzioni: HoldOpzioni): HoldRisultato {
     ultimoGesto: Number.NEGATIVE_INFINITY,
     progress: 0,
     daScrivere: false,
-    molla: new Molla(0, MOLLE.risalita),
+    molla: new Molla(0, LEVA.mollaRisalita),
     timer: null,
   });
   const ascoltatori = useRef(new Set<(p: number) => void>());
 
   /* ---------- utilità interne (stabili: leggono solo ref) */
-
-  const durata = (): number => Math.max(200, opz.current.durata ?? HOLD_DURATA_MS);
-  const finestra = (): number => Math.max(1000, opz.current.finestraConferma ?? HOLD_FINESTRA_MS);
-  const sogliaBreve = (): number => Math.max(50, opz.current.sogliaBreve ?? HOLD_SOGLIA_BREVE_MS);
 
   const cambiaStato = useCallback((s: HoldStato) => {
     m.current.stato = s;
@@ -186,8 +200,8 @@ export function useHoldToConfirm(opzioni: HoldOpzioni): HoldRisultato {
     setAnnuncio((prima) => {
       if (!testo) return '';
       // Stesso testo di prima: un NBSP in coda lo rende "nuovo" per aria-live.
-      const base = prima.endsWith(' ') ? prima.slice(0, -1) : prima;
-      if (base === testo) return prima.endsWith(' ') ? testo : `${testo} `;
+      const base = prima.endsWith(NBSP) ? prima.slice(0, -1) : prima;
+      if (base === testo) return prima.endsWith(NBSP) ? testo : `${testo}${NBSP}`;
       return testo;
     });
   }, []);
@@ -229,7 +243,7 @@ export function useHoldToConfirm(opzioni: HoldOpzioni): HoldRisultato {
 
   const arma = useCallback(() => {
     const s = m.current;
-    s.armatoFino = performance.now() + finestra();
+    s.armatoFino = performance.now() + finestraDi(opz.current);
     cambiaStato('armato');
     annuncia(opz.current.testi.armato);
     pulisciTimer();
@@ -240,7 +254,7 @@ export function useHoldToConfirm(opzioni: HoldOpzioni): HoldRisultato {
         cambiaStato('pronto');
         annuncia('');
       }
-    }, finestra());
+    }, finestraDi(opz.current));
     ticker.wake();
   }, [annuncia, cambiaStato, pulisciTimer]);
 
@@ -260,8 +274,8 @@ export function useHoldToConfirm(opzioni: HoldOpzioni): HoldRisultato {
       if (o.disabilitato || s.stato === 'completo' || s.gesto) return;
       if (bloccato()) return;
       // Riparte dal punto in cui la carta sta risalendo, senza scatti.
-      const t0 = performance.now() - s.progress * durata();
-      s.gesto = { modo, id, t0 };
+      const ora = performance.now();
+      s.gesto = { modo, id, t0: ora - s.progress * durataDi(o), inizio: ora };
       s.molla.salta(s.progress);
       cambiaStato('tenendo');
       o.onInizio?.();
@@ -280,8 +294,7 @@ export function useHoldToConfirm(opzioni: HoldOpzioni): HoldRisultato {
       s.ultimoGesto = ora;
       if (s.stato === 'completo') return;
 
-      const tenuta = ora - g.t0 - 0;
-      const breve = ora - g.t0 < sogliaBreve() || tenuta < sogliaBreve();
+      const breve = ora - g.inizio < sogliaBreveDi(opz.current);
       s.molla.salta(s.progress);
       s.molla.verso(0);
       ticker.wake();
@@ -327,7 +340,7 @@ export function useHoldToConfirm(opzioni: HoldOpzioni): HoldRisultato {
     const aggiorna = (dt: number, ora: number): boolean => {
       const s = m.current;
       if (s.gesto) {
-        const p = Math.min(1, (ora - s.gesto.t0) / durata());
+        const p = Math.min(1, Math.max(0, (ora - s.gesto.t0) / durataDi(opz.current)));
         impostaProgress(p);
         if (p >= 1) {
           completa('tenuta');

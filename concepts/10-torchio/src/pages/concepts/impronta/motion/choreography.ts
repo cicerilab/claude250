@@ -18,6 +18,7 @@ import {
   assorbe,
   clamp,
   clamp01,
+  leva as curvaLeva,
   lerp,
   lineare,
   pressaCss,
@@ -35,9 +36,9 @@ import { MOLLE, type ParametriMolla } from './spring';
 export const VAR = {
   /** 0..1 su ogni blocco premuto. Il fallback CSS scala le ombre con questo. */
   press: '--imp-press',
-  /** Asse width di Anybody sui titoli premuti (numero, es. 150). */
+  /** Asse width (numero). Scritto solo se il profilo ha `assi` (default: no, lo fa `.imp-pressa`). */
   wdth: '--imp-wdth',
-  /** Asse weight di Anybody sui titoli premuti (numero, es. 900). */
+  /** Asse weight (numero). Come sopra. */
   wght: '--imp-wght',
   /** Progresso generico di una sezione, se non se ne indica un altro. */
   scrollP: '--imp-scroll-p',
@@ -118,7 +119,14 @@ export interface ProfiloPressione {
   readonly hover: number | null;
 }
 
-const ASSI_TITOLO: AssiPressione = { wdth: [120, 150], wght: [700, 900] };
+/**
+ * Gli assi dei titoli premuti li calcola il CSS dell'art-director dalla sola
+ * `--imp-press` (classe `.imp-pressa` in relief-fallback.css: wdth 120 → 150,
+ * wght 700 → 900, fermi all'arrivo con il GL acceso). Per questo i profili
+ * hanno `assi: null` e il motion scrive solo `--imp-press`. `ASSI_TITOLO`
+ * resta per un eventuale titolo premuto senza `.imp-pressa`.
+ */
+export const ASSI_TITOLO: AssiPressione = { wdth: [120, 150], wght: [700, 900] };
 
 /** Il bordo inferiore della viewport arretrato del 30%: "la sezione entra al 30%". */
 const ENTRA_AL_30 = '0px 0px -30% 0px';
@@ -132,7 +140,7 @@ export const PROFILI = {
     sfasamento: 0,
     riposo: 1,
     margine: '0px',
-    assi: ASSI_TITOLO,
+    assi: null,
     attesaMax: 450,
     hover: null,
   },
@@ -204,7 +212,7 @@ export const PROFILI = {
     sfasamento: 0,
     riposo: 1,
     margine: '0px 0px -25% 0px',
-    assi: ASSI_TITOLO,
+    assi: null,
     attesaMax: 0,
     hover: null,
   },
@@ -273,6 +281,16 @@ export const LEVA = {
   /** Molla della carta che risale se si lascia prima del tempo. */
   mollaRisalita: MOLLE.risalita as ParametriMolla,
 } as const;
+
+/**
+ * Pressione della prova mentre si tiene la leva: il progresso 0..1 della
+ * leva (lineare nel tempo, da interaction/useHoldToConfirm) passa per la
+ * curva `leva` e porta la prova dal suo riposo a 1. Nessun ritorno elastico
+ * qui: arriva con `urto()` al completamento.
+ */
+export function pressioneLeva(progressoLeva: number, riposo: number): number {
+  return lerp(riposo, 1, curvaLeva(progressoLeva));
+}
 
 /** Hover e fuoco sui blocchi con `profilo.hover`. */
 export const HOVER = {
@@ -457,9 +475,12 @@ export interface StatoOnda {
   readonly raggio: number;
   /** Larghezza della sfumatura del bordo (px). */
   readonly bordo: number;
-  /** Opacità dello strato (1 durante l'onda, 0..1 in dissolvenza ridotta). */
+  /** Opacità dello strato (1 durante l'onda; da 1 a 0 nella dissolvenza ridotta). */
   readonly opacita: number;
-  /** true dopo lo scambio di `data-carta`: lo strato mostra la carta vecchia fuori dal cerchio. */
+  /**
+   * false: lo strato mostra la carta nuova DENTRO il cerchio.
+   * true: `data-carta` è già la nuova, lo strato mostra la carta vecchia FUORI dal cerchio.
+   */
   readonly invertita: boolean;
   /** true quando l'onda è finita e lo strato va tolto. */
   readonly finita: boolean;
@@ -476,13 +497,16 @@ export function raggioFinaleOnda(g: GeometriaOnda): number {
 export function statoOnda(trascorsoMs: number, g: GeometriaOnda, ridotto: boolean): StatoOnda {
   const o = CARTA.onda;
   if (ridotto) {
+    // Dissolvenza pura: `data-carta` cambia subito (invertita), lo strato
+    // mostra la carta vecchia su tutto lo schermo (raggio 0 invertito) e
+    // svanisce mentre l'inchiostro cambia colore nello stesso tempo.
     const u = clamp01(trascorsoMs / o.dissolvenza);
     return {
       progresso: u,
-      raggio: raggioFinaleOnda(g),
+      raggio: 0,
       bordo: 0,
-      opacita: lineare(u),
-      invertita: false,
+      opacita: 1 - lineare(u),
+      invertita: true,
       finita: u >= 1,
     };
   }
