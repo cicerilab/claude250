@@ -417,7 +417,86 @@ performance-auditor su un telefono vero.
 ## 13. Aperto
 
 - Tempi reali su GPU mobile (performance-auditor).
-- Safari: `ctx.fontStretch` c'è da Safari 17; prima di allora il canvas
-  disegna Anybody a larghezza 100 e la correzione orizzontale per carattere
-  (fino a 1,6) recupera la larghezza, con glifi un poco più "stirati" del DOM.
-  Da vedere dal cross-browser-tester su WebKit.
+- WebKit: `ctx.fontStretch` **non c'è in WebKit 26** (cross-browser-tester
+  §4; la mia nota "c'è da Safari 17" era sbagliata). Il canvas disegna
+  Anybody a larghezza 100 e la correzione orizzontale per carattere (fino a
+  1,6) recupera la larghezza: ingombro e posizioni identici al DOM,
+  verificato dal cross-browser-tester; aste appena più sottili. Tiene.
+
+---
+
+## Giro 2 (loop; voti giuria: design 6, usabilità 5,5, creatività 7,5, contenuto 7)
+
+Richieste: rilievo più profondo e netto (è il prodotto del sito), luce più
+radente (14-16° a riposo), lamina il cui riflesso scorre davvero, lamina
+visibile su Citrino (section-builder-banco), grana dell'inchiostro in WebKit
+(cross-browser-tester O3), nota su `ctx.fontStretch` (aggiornata in §13),
+urto del motion-designer (G2.4). Toccati solo i miei file; il contratto con
+lo shader-engineer resta quello di §4 e §9 (stesse funzioni, stessi uniform,
+un solo campo facoltativo in più).
+
+### Cosa è cambiato
+
+| Tema | Prima | Ora |
+|---|---|---|
+| Luce | elevazione di `runtime.light` usata così com'è (riposo 22°) | `impostaLuce` passa l'elevazione per `elevazioneShader()`: 18-25° dell'interazione → **12-18°** nello shader, **riposo 15,4°**. `light.ts` e il fallback CSS restano come sono. |
+| Profondità | secco 0,018 em (max 4,5 px) | secco **0,02 em** (1,2-5 px), colore 0,016, lamina 0,014 |
+| Smusso | r1/r2/r3 0,006/0,014/0,03 em, fino a 8 px | **0,0028/0,006/0,013 em, massimo 3,2 px**, peso 0,72 su r1: parete ripida, labbro di luce netto, fondo piatto. r1 resta sotto 1 px fino a corpi di circa 300 px. |
+| Ombra | parete e ombra portata a metà strada verso `ombra` (forza 0,8, portata ×0,55) | **piena**: `ombraForza` 1 su tutte le carte, portata ×0,9, sensibilità della luce 3,2 (era 2,2), curva più ripida |
+| Lunghezza ombra | fino a 2,6 profondità | **ferma a 2 profondità**: con luce a 15° l'ombra geometrica sarebbe 3,6 volte e sembrerebbe un'estrusione. Piena e corta. |
+| Fibra | pendenza 0,018 | 0,011: con la luce più forte deve restare quasi invisibile |
+| Lamina | venatura orizzontale, lampada fuori schermo: riflesso quasi fermo | venatura verticale e rugosità stretta lungo di essa: **banda di riflesso orizzontale** sotto una lampada che sta dentro lo schermo e si sposta con l'azimut (puntatore, dito, giroscopio, dial). In più scorrere la pagina "gira il foglio" (il testo delle Tecniche dice "brilla quando giri il foglio"): la lampada oscilla di ±32% dello schermo per schermata di scroll, quindi anche nel pin delle Tecniche, dove la parola è ferma, il riflesso le passa sopra. Ferma se scroll e luce sono fermi. Tetto 0,5, mai oltre 0,97. |
+| Lamina su Citrino | metallo 0,44-0,7 × argento ≈ luminanza del Citrino: spariva | metallo più scuro (0,42-0,68) fuori dalla banda e **filo scuro**: le pareti lontane dalla luce e l'ombra portata portano il metallo a 0,3 × argento. Contorno leggibile su tutte le carte anche a luce ferma. |
+| Inchiostro (WebKit, O3) | densità variabile 0,93-1 con la fibra e formazione ±2% dentro il pieno: in WebKit una grana chiara | pieno **uniforme**: niente densità variabile, niente formazione; il film segue solo un quinto della luce del solco. Il bordo resta appena irregolare (soglia della fibra, già limitata a 0,3-0,7). |
+| Urto (G2.4) | assente | `DatiBloccoFrame.urto?` (facoltativo, 0 se manca). Nello shader: alone di carta schiacciata **attorno** al solco (4 campioni a 6 px, spostati lontano dalla luce, spento dentro le lettere), fino a un terzo verso `ombra`, solo mentre l'urto è acceso. Margine delle maschere portato ad almeno 11 px perché l'alone non venga tagliato. |
+
+Impacchettamento dell'urto senza nuovi uniform (restano 57 vec4):
+`uBlockB.z = round(stringiMin × 100) + urto × 0,99`; lo shader legge
+`floor(z) / 100` e `fract(z) / 0,99`. Lo scrive `scriviBlocco`, quindi per
+`blocks.ts` cambia solo che può passare `urto`.
+
+### Verifica
+
+- Pipeline in `scratchpad/gltest` (la stessa di §11, con i parametri nuovi
+  `scroll` e `urto`): blur, composite e rilievo **compilano e girano in
+  WebGL2 e WebGL1**, 0 errori, 1 draw call, su Citrino, Cotone, Cipria e
+  Grafite, con urto 0,5 e 1. Guardati gli zoom: solco netto con labbro di luce
+  e ombra piena; lamina che passa da grigio metallo ad argento chiaro quando la
+  banda la attraversa (scroll 200 → 330 → 450); alone dell'urto solo attorno.
+- `tsc -p tsconfig.app.json` ed `eslint` sui file di `webgl/`: verdi.
+- **Pagina vera**: `npx vite --port 8105 --strictPort` (chiuso alla fine),
+  Chromium con `--use-angle=swiftshader --enable-unsafe-swiftshader
+  --ignore-gpu-blocklist`, `?gl=1&carta=…`, font serviti in locale con
+  `route` (dal browser headless il proxy dell'ambiente rifiuta i certificati
+  di Google Fonts). `data-gl="on"` in tutti i casi. Guardati:
+  - hero a 1440 e 375 su Citrino, a 1440 su Cotone e Grafite: *impronta* ora
+    si legge come carta premuta a fondo, anche su Cotone (dove prima spariva)
+    e su Grafite; a 375 le due righe "impron / ta" hanno rilievo pieno;
+  - Per chi a 1440 su Citrino e Cotone: la partecipazione su Cipria ha i nomi
+    a secco netti e la data in inchiostro; biglietto e copertina negli
+    screenshot sono ancora vuoti (con SwiftShader la pressa sfalsata non
+    arriva in tempo, come già scritto dal cross-browser-tester §5);
+  - Tecniche a 1440: a secco su Citrino e Grafite, taglio su Cotone, lamina su
+    Citrino. "Pordenone" in lamina ora è un metallo leggibile con il filo
+    scuro, non più argento su giallo invisibile.
+- Script: `scratchpad/pagina.mjs` (hero, Per chi, Tecniche per carta e
+  larghezza) e `scratchpad/pagina-lamina.mjs`.
+
+### Visto, non mio
+
+- Sulla copertina Grafite di "Per chi" c'è una "L" chiara di 3-4 px sul lato
+  destro e in basso, spostata dal pezzo. Non viene dallo shader (con luce da
+  sinistra la costa GL sul lato destro è scura): sembra la costa CSS del pezzo
+  rimasta accesa con `data-gl="on"` (section-builder-per-chi / art-director).
+
+### Richieste
+
+- **shader-engineer** (`blocks.ts`): passare `urto` a `scriviBlocco` quando il
+  registro lo espone, e tenere il frame "sporco" finché l'urto è > 0. Al
+  registro (scaffold) serve `urto` accanto a `pressione`
+  (`registry.setUrto(id, v)`, scritto da `motion/usePressione`, che lo
+  calcola già). Finché manca vale 0 e non cambia nulla.
+- **art-director**: la luce del fallback CSS resta a 22° (scala
+  dell'interazione). Per lo stesso carattere radente, le ombre del fallback
+  possono allungarsi del 40% circa, cioè il rapporto tra tan(22°) e
+  tan(15,4°).

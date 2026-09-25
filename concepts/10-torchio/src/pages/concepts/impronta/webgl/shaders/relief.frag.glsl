@@ -335,7 +335,13 @@ void main() {
     // lunghe, il segno del rullo della lamina. Un solo campione in più, solo qui.
     float spazz = texture2D(tFiber, vec2(locale.x / FIBRA_LATO * 3.0, locale.y / (FIBRA_LATO * 12.0))).a - 0.5;
     vec3 V = vec3(0.0, 0.0, 1.0);
-    vec3 Lp = normalize(vec3(uLightPos.xy - p, max(uLightPos.z, 1.0)));
+    // Giro 2: scorrere la pagina è girare il foglio sotto la lampada ("brilla
+    // quando giri il foglio"): la lampada del riflesso oscilla in verticale di
+    // ±32% dello schermo per ogni schermata di scroll. Si muove solo se si
+    // muove lo scroll o la luce; a pagina ferma è ferma.
+    float giro = sin(uView.w * dpr / uView.y * 3.14159265);
+    vec2 lampada = uLightPos.xy + vec2(0.0, giro * 0.32 * uView.y);
+    vec3 Lp = normalize(vec3(lampada - p, max(uLightPos.z, 1.0)));
     vec3 H = normalize(Lp + V);
     // Venatura lungo l'asse y del blocco (giro 2), appena mossa dalla fibra:
     // il riflesso stretto diventa una banda orizzontale sotto la lampada.

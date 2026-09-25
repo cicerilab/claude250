@@ -371,7 +371,7 @@ export const LAMINA = {
   // schermo che segue la lampada. Tetto più alto ma sempre sotto il bianco.
   venaturaX: 0.075,
   venaturaY: 0.6,
-  riflessoMax: 0.6,
+  riflessoMax: 0.5,
   satinato: 0.3,
 } as const;
 
