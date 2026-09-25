@@ -252,3 +252,24 @@
   transform: translate(-50%, 0);
   outline: none;
 }
+
+/* --------------------------------------------------------------------------
+   Giro 2 (accessibility-auditor A2, WCAG 2.4.11): il fuoco portato in vista
+   dalla tastiera non deve finire sotto la testata attaccata in alto né sotto
+   i comandi fissi in basso (segnapagina, "Torna in Ciceri Lab" sotto 640 px).
+   Unica eccezione alla regola "niente selettori su html": `:has(.imp-root)`
+   la limita alla pagina del concept (nel sito non tocca le altre pagine).
+   Mobile/tablet: testata che rientra in alto (56 px) e segnapagina in basso
+   (56 px + area sicura). Desktop: testata fissa (56 px), niente in basso.
+   -------------------------------------------------------------------------- */
+html:has(.imp-root) {
+  scroll-padding-block:
+    calc(var(--imp-scroll-pad-testa, 56px) + 16px)
+    calc(var(--imp-scroll-pad-piede, 56px) + 24px + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 1024px) {
+  html:has(.imp-root) {
+    scroll-padding-block: calc(var(--imp-scroll-pad-testa, 56px) + 16px) 16px;
+  }
+}

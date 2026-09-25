@@ -112,7 +112,7 @@ Misurate con `getTotalLength()` in Chromium sui file ottimizzati.
 | punto metallico | `#filo-punto-metallico` | **300** | (non cuce) | |
 | punto metallico | `#graffa-1` | **99,9** | | |
 | punto metallico | `#graffa-2` | **99,9** | | |
-| servizio | `#freccia` | 23,6 | | |
+| servizio | freccia (senza id dal giro 2) | 23,6 | | |
 
 "Inizio" e "fine" sono frazioni del path: prima di "inizio" il filo scende dal bordo
 al primo foro, dopo "fine" riparte verso il bordo. Nella brossura, fermate utili per
@@ -201,7 +201,7 @@ onestà lo schema lo dice con il disegno:
 ## 4. `freccia.svg`
 
 Freccia diagonale in alto a destra, tratto 1,8 su 16, `stroke-linecap="square"`
-(spigolo vivo), `aria-hidden="true"`. Da usare a `1em` accanto al testo dei link
+(spigolo vivo), `aria-hidden="true"`, **nessun id** (giro 2). Da usare a `1em` accanto al testo dei link
 esterni (Apri in Maps, CiceriLab): il testo del link resta l'etichetta, la freccia è
 solo segnale. Non va usata per link interni né per "Prova la tua".
 
@@ -236,3 +236,16 @@ regole di porting.
   sopra il testo di ogni fermata.
 - **webgl-artist**: per il marchio in lamina usare la stringa `marchioImpronta` con
   `fill` sostituito in bianco (§2).
+
+## Giro 2
+
+- **B4 (awwwards-jury §5): id duplicato `freccia`.** `freccia.svg` viene inserita
+  inline più volte (Bottega, Colophon): tolto l'`id="freccia"` dal path, che nessuno
+  usava. Il file ora non ha id. Export di `index.ts` invariati.
+- Controllo degli altri id: nessun id si ripete tra i file (`grep` su `id="…"`).
+  Gli schemi `filo-*` sono inseriti una volta sola ciascuno da `SchemaFilo`
+  (Legatoria) e i loro id servono a `Filo.tsx` (regex su `id="filo-…"` e
+  `id="graffa-…"`): restano. Il marchio entra nella pagina solo come `?url`
+  (Testata, Colophon) e come stringa per la maschera del rilievo, mai inline
+  due volte: `marchio` e `marchio-titolo` restano.
+- `npm run typecheck` verde.
