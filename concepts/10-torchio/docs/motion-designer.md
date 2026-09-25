@@ -270,10 +270,13 @@ Uso di lenis da parte mia: solo `lenis.scroll` e
    `motion/choreography`, restituisce un `Record<\`--imp-${string}\`, string>`;
    in React va passato come `React.CSSProperties`). Contiene curve e durate
    per le transizioni CSS (§8).
-2. Hash iniziale (`#banco` nell'URL, o qualsiasi ancora): dopo il mount,
+2. Hash iniziale (`#banco` nell'URL, o qualsiasi ancora): al mount
+   `history.scrollRestoration = 'manual'` e, se il browser ha già saltato
+   all'ancora, `window.scrollTo(0, 0)` subito (prima della pressa, quindi
+   invisibile); poi
    `setTimeout(() => arrivaAllAncora(id), reducedMotion ? 0 : ANCORE.attesaIniziale)`.
-   Il browser non deve saltare da solo: `history.scrollRestoration = 'manual'`
-   dentro l'effetto, e l'ancora nell'URL si legge e poi si lascia com'è.
+   Si vede la pressa scendere nell'hero, poi il foglio scorre al banco
+   (ux-architect 1). L'hash nell'URL si lascia com'è.
 3. Clic sui link interni: un solo listener delegato su `.imp-root` per
    `a[href^="#"]` → `preventDefault()` → `arrivaAllAncora(id)`. Così testata,
    segnapagina, indice, colophon, "Prova la tua", "cos'è?", "Torna al banco"
@@ -324,8 +327,8 @@ Comportamento:
 - Ogni frame in moto: `registry.setPressione(reliefId, v)` in fase `update`,
   `--imp-press` (4 decimali, solo se cambia di almeno 1e-4) in fase `write`.
 - I valori sono sempre in 0..1.
-- `commands` è un oggetto stabile (stessa identità per tutta la vita del
-  componente): si può passare a callback e dipendenze senza problemi.
+- l'oggetto `ComandiPressione` restituito è stabile (stessa identità per
+  tutta la vita del componente): si può passare a callback e dipendenze senza problemi.
 
 ### 5.2 `useScrollProgress(ref, opzioni): ProgressoScroll`
 
@@ -411,7 +414,7 @@ Notazione delle timeline: `t` in ms dall'innesco; "valore" è la pressione
 | 0 | Hero: `usePressione` con `ingresso: 'montaggio'` aspetta `document.fonts.ready`, al massimo 450 ms | motion |
 | font pronti (≤ 450) + 160 | **La pressa scende** sulla parola *impronta*: 1100 ms di curva `pressa` | motion |
 | + 638 | contatto (58%): rilievo pieno, assi 150/900 | motion + CSS `.imp-pressa` |
-| + 800 circa | la carta restituisce l'1,7%, poi lo 0,3% | motion |
+| + 750 circa | la carta restituisce l'1,7%, poi lo 0,3% | motion |
 | + 1100 | fermo. `data-imp-pressa="premuta"` | motion |
 | in parallelo | l'arco lentissimo della luce parte solo nell'hero (interaction) | interaction |
 | quando arriva | il GL fa il suo primo frame con le maschere pronte e riprende la pressione dal registro, dallo stesso valore: dissolvenza canvas 300 ms lineare, i fantasmi perdono il `text-shadow` nello stesso istante | shader-engineer |
@@ -424,7 +427,7 @@ non da una comparsa.
 
 | Blocco | Innesco | Profilo | Timeline |
 |---|---|---|---|
-| parola *impronta* (`.imp-relief.imp-secco.imp-pressa`) | `ingresso: 'montaggio'`, `attendi: () => document.fonts.ready` | `PROFILI.heroParola`: ritardo 160, durata 1100, riposo 1 | 0-160 piatta; 160-798 discesa `pressa` 0 → 1, frena sul contatto; 798-1260 ritorno elastico (minimo 0,983 a circa 960); 1260 fermo a 1 |
+| parola *impronta* (`.imp-relief.imp-secco.imp-pressa`) | `ingresso: 'montaggio'`, `attendi: () => document.fonts.ready` | `PROFILI.heroParola`: ritardo 160, durata 1100, riposo 1 | 0-160 piatta; 160-798 discesa `pressa` 0 → 1, frena sul contatto; 798-1260 ritorno elastico (minimo 0,983 a circa 910); 1260 fermo a 1 |
 | H1, sottotitolo, "Prova la tua" | nessuno | nessuno | fermi dal primo frame |
 | dial della luce | nessuno | nessuno | fermo |
 
@@ -478,12 +481,26 @@ colpi dice "tre lavori diversi", non "una griglia".
 - Reduced motion: tutti a 0,86 subito; l'hover porta a 1 senza molla.
 
 ```tsx
-const pezzi = PEZZI.map((_, i) => usePressione(pezzoRefs[i], {
-  profilo: PER_CHI.profilo, reliefId: ids[i], indice: i, osserva: sezioneRef,
-}));
+// Pezzo.tsx: un hook per pezzo, l'innesco è la sezione intera.
+function Pezzo({ indice, sezioneRef, spec }: PezzoProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const reliefId = useRelief(ref, spec);
+  const pressa = usePressione(ref, {
+    profilo: PER_CHI.profilo, reliefId, indice, osserva: sezioneRef,
+  });
+  return (
+    <article
+      onPointerEnter={() => pressa.hover(true)}
+      onPointerLeave={() => pressa.hover(false)}
+      onFocus={() => pressa.hover(true)}
+      onBlur={() => pressa.hover(false)}
+    >
+      <div ref={ref} {...ATTESA_PRESSA} className="imp-perchi__pezzo imp-relief imp-foglio" aria-hidden="true" />
+      {/* h3, due righe, "Prova la tua": fermi */}
+    </article>
+  );
+}
 ```
-(Nel codice vero: un componente `Pezzo` per pezzo, ognuno con il suo hook e
-`indice`; gli hook non vanno chiamati in un ciclo.)
 
 ### 6.3 Le tecniche · la stessa parola, quattro volte (`#tecniche`)
 
@@ -584,8 +601,8 @@ per il 7% dell'intervallo di scroll. Con le soste di default
 | 0 | 0 | la sezione è entrata del 25% |
 | 0,13 → 0,20 | 0,18 fermo | **brossura cucita**: aggancio |
 | 0,37 → 0,44 | 0,42 fermo | **cartonato**: aggancio |
-| 0,60 → 0,67 | 0,66 fermo | **legatura giapponese**: aggancio |
-| 0,83 → 0,90 | 0,90 fermo | **punto metallico**: aggancio |
+| 0,62 → 0,69 | 0,66 fermo | **legatura giapponese**: aggancio |
+| 0,86 → 0,93 | 0,90 fermo | **punto metallico**: aggancio |
 | 1 | 1 | il filo arriva a "Prova la tua" |
 
 **Aggancio**: quando il filo raggiunge una fermata (con 0,004 d'anticipo), la
@@ -727,11 +744,11 @@ Timeline che propongo come definitiva (in `choreography.ts`: `CARTA.onda`,
 | **315** | **0,45** | 87% | lo strato si **inverte**: carta vecchia FUORI dal cerchio (stesso raggio, stessa immagine a schermo) | **scambio**: `data-carta` = nuova, l'inchiostro cambia colore in 240 ms (`--imp-dur-inchiostro`) |
 | 700 | 1 | 100% + 56 px | strato rimosso | nuova |
 
-Perché lo scambio al 45% e non alla fine: con Citrino → Grafite (e ritorno)
+Perché lo scambio al 45% e non alla fine? Con Citrino → Grafite (e ritorno)
 l'inchiostro si inverte (verde notte ↔ bianco). Se l'inchiostro cambia solo
 a onda finita, per 700 ms il testo sta nella carta sbagliata dentro il cerchio
-che cresce: verde notte su grafite, cioè illeggibile. Al 45% il cerchio copre
-già circa l'80% dello schermo, quindi l'inchiostro nuovo è giusto sulla parte
+che cresce: verde notte su grafite, cioè illeggibile. Al 45% del tempo il raggio è
+già all'87% del finale e il cerchio copre la maggior parte dello schermo, quindi l'inchiostro nuovo è giusto sulla parte
 più grande, e nei 240 ms della sua transizione l'onda finisce. L'inversione
 dello strato evita qualsiasi fotogramma di colore sbagliato: prima dello
 scambio lo strato disegna il nuovo dentro, dopo disegna il vecchio fuori.
