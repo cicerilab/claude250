@@ -2,17 +2,19 @@
    IMPRONTA · sezione 3, "La stessa parola, quattro volte" (#tecniche)
    section-builder-tecniche. Tutti i selettori partono da .imp-root.
    --------------------------------------------------------------------------
-   Variabili lette:
-     --imp-tecniche-p     0..1 progresso del pin (useScrollProgress, sul pin)
-     --imp-tecniche-giro  0..1 giro di tre quarti del taglio colorato
+   Variabili lette (scritte solo sull'elemento foglia che le usa, e
+   registrate con @property senza eredità: cambiarle a ogni frame non
+   ricalcola lo stile del resto della sezione):
+     --imp-tecniche-p     0..1 progresso del pin, sulla corsa
+     --imp-tecniche-giro  0..1 giro di tre quarti del taglio, sul biglietto
      --imp-press          0..1 pressione della parola (usePressione)
    Variabili locali:
      --imp-tecniche-n     caratteri della parola (inline, dal componente)
-     --imp-t-k/-dx/-dy    indice e sfalsamento di una fetta della pila (inline)
      --_imp-t-wdth        larghezza di Anybody della parola (100 / 112,5)
      --_imp-t-em          larghezza media di un carattere in em a quell'asse
      --_imp-t-gradi       rotazione massima del taglio (-32° / -24°)
-     --_imp-t-foglio      spessore di un biglietto della pila (7 / 5 px)
+     --_imp-t-foglio      spessore di un biglietto della pila (9 / 6 px)
+     --_imp-t-bordo       colore del taglio (quello della carta del sito)
      --_imp-t-zona        altezza massima della lastra (2/3 della sua larghezza)
    Struttura (pin):
      section.imp-tecniche
@@ -23,6 +25,18 @@
              .imp-tecniche__zona       la lastra (aria-hidden)
              .imp-tecniche__lato       nomi + corsa, poi la scheda della tecnica
    ========================================================================== */
+
+@property --imp-tecniche-p {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+
+@property --imp-tecniche-giro {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
 
 .imp-root .imp-tecniche {
   --_imp-t-wdth: 100;
@@ -305,7 +319,7 @@
   inset: 0;
   background: var(--imp-inchiostro);
   transform-origin: 0 50%;
-  transform: scaleX(var(--imp-tecniche-p, 0));
+  transform: scaleX(var(--imp-tecniche-p));
 }
 
 @media (min-width: 1024px) {
@@ -365,7 +379,7 @@
 
   .imp-root .imp-tecniche__corsa-fatta {
     transform-origin: 50% 0;
-    transform: scaleY(var(--imp-tecniche-p, 0));
+    transform: scaleY(var(--imp-tecniche-p));
   }
 }
 
@@ -395,7 +409,6 @@
 /* Un cartoncino spesso: costa di 2,5 px invece di quella di un pezzo
    appoggiato, così sulla stessa carta del sito il biglietto si stacca. */
 .imp-root .imp-tecniche__foglio {
-  --_imp-t-giro: 0;
   --imp-spessore-pezzo: 2.5px;
   inline-size: min(100cqi, calc(100cqb * 3 / 2));
   aspect-ratio: 3 / 2;
@@ -403,17 +416,14 @@
   display: flex;
   align-items: center;
   padding-block-start: 2cqi;
-  transform-style: preserve-3d;
   transform-origin: 50% 50%;
-  transform:
-    perspective(1400px)
-    rotateY(calc(var(--_imp-t-giro) * var(--_imp-t-gradi)));
 }
 
 /* Il giro vale solo per il taglio colorato: durante la ristampa verso
-   un'altra tecnica il biglietto resta dritto. */
+   un'altra tecnica il biglietto resta dritto. Solo transform. */
 .imp-root [data-tecnica="taglio"] .imp-tecniche__foglio {
-  --_imp-t-giro: var(--imp-tecniche-giro, 0);
+  transform-style: preserve-3d;
+  transform: perspective(1400px) rotateY(calc(var(--imp-tecniche-giro) * var(--_imp-t-gradi)));
 }
 
 .imp-root .imp-tecniche__parola {
@@ -567,12 +577,14 @@
 .imp-root .imp-tecniche__zona--statica {
   min-block-size: 0;
   container-type: inline-size;
-  --imp-tecniche-giro: 0;
 }
 
 .imp-root .imp-tecniche__zona--statica[data-tecnica="taglio"] {
+  padding-inline-end: var(--imp-sp-7);
+}
+
+.imp-root .imp-tecniche__zona--statica[data-tecnica="taglio"] .imp-tecniche__foglio {
   --imp-tecniche-giro: 1;
-  padding-inline-end: var(--imp-sp-5);
 }
 
 .imp-root .imp-tecniche__zona--statica .imp-tecniche__foglio {
@@ -618,8 +630,7 @@
     border: 1px solid CanvasText;
   }
 
-  .imp-root .imp-tecniche__fetta::before,
-  .imp-root .imp-tecniche__fetta::after {
+  .imp-root .imp-tecniche__pila {
     background: CanvasText;
     forced-color-adjust: none;
   }
