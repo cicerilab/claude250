@@ -1,0 +1,122 @@
+{
+  "source": "https://www.fellowbarber.com",
+  "tokens": {
+    "spacing": {
+      "scale": [
+        13,
+        15,
+        39,
+        42,
+        75
+      ],
+      "base_unit": "irregolare"
+    },
+    "typography": {
+      "families": [
+        "NeueHaasGroteskText Std",
+        "reckless"
+      ],
+      "scale": [
+        {
+          "role": "statement",
+          "size": "42px",
+          "weight": "400",
+          "family": "reckless"
+        },
+        {
+          "role": "h3",
+          "size": "24px",
+          "weight": "500",
+          "family": "reckless"
+        },
+        {
+          "role": "nav",
+          "size": "16px",
+          "weight": "400",
+          "family": "NeueHaasGroteskText Std"
+        },
+        {
+          "role": "button",
+          "size": "16px",
+          "weight": "500",
+          "family": "maiuscolo, tracking 3.2px"
+        }
+      ]
+    },
+    "colors": [
+      {
+        "role": "header/background",
+        "value": "#EBE7DF"
+      },
+      {
+        "role": "accent",
+        "value": "#00B373"
+      },
+      {
+        "role": "dark surface/button",
+        "value": "#363636"
+      },
+      {
+        "role": "footer",
+        "value": "#2B2B2B"
+      },
+      {
+        "role": "text",
+        "value": "#363636"
+      }
+    ],
+    "radius": [
+      "0px"
+    ],
+    "shadows": [
+      "0 2px 10px rgba(54,54,54,.15)"
+    ],
+    "image_ratios": [
+      {
+        "usage": "prodotto",
+        "ratio": "0.65:1"
+      },
+      {
+        "usage": "hero video",
+        "ratio": "2.4:1"
+      }
+    ],
+    "grid": {
+      "max_width": "1440px",
+      "columns": 4,
+      "gutter": "variabile"
+    }
+  },
+  "taste": [
+    {
+      "name": "Il verde come filo",
+      "trigger": "Quando si separano le voci di navigazione",
+      "decision": "Scelti filetti verticali verdi #00B373 da 1px tra le voci invece di spaziature o puntini",
+      "reason": "L'accento compare in un dettaglio funzionale piccolo e poi a campo pieno nella fascia stampa: riconoscibile, ma al 21.7% della superficie diventa decorazione",
+      "evidence": [
+        "nav: Book | Shop | Discover | Special Events | Careers con separatori verdi",
+        "background #00B373 areaPct 21.7"
+      ]
+    },
+    {
+      "name": "'Book' è la prima voce",
+      "trigger": "Quando si ordina la navigazione",
+      "decision": "Scelto 'Book' come prima voce e un bottone 'BOOK NOW' pieno #363636 a destra, invece di relegare la prenotazione a una pagina interna",
+      "reason": "Una catena di saloni vive di appuntamenti; ripeterlo in due posti nella stessa fascia è la loro misura di priorità (noi ne teniamo uno solo)",
+      "evidence": [
+        "header 112px con due richiami alla prenotazione",
+        "bottone maiuscolo tracking 3.2px, raggio 0"
+      ]
+    },
+    {
+      "name": "Hero che dipende da un terzo (errore)",
+      "trigger": "Quando la prima schermata è un video incorporato",
+      "decision": "Scelto un iframe YouTube come hero invece di un'immagine propria",
+      "reason": "Se il video non è disponibile la prima schermata diventa 'Video unavailable': 600px di nero con il logo di un altro",
+      "evidence": [
+        "screenshot 1440: 'YouTube Video unavailable' al posto dell'hero",
+        "focusVisible false, reducedMotion false"
+      ]
+    }
+  ]
+}

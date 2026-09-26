@@ -29,6 +29,15 @@ scattare: `await document.fonts.ready` e verifica che le famiglie siano caricate
 Scatta la **finestra** (non full-page) per le sezioni: le full-page mettono i
 fissi sopra il testo.
 
+## /taste e siti esterni in Chromium
+
+Il Chromium della sandbox non si fida della CA del proxy (ERR_CERT_AUTHORITY_INVALID).
+**Non** allentare mai la verifica TLS (niente flag, niente archivi certificati: il
+sistema di permessi lo blocca). Metodo che funziona: `page.route('**/*', ...)` e servire
+ogni richiesta scaricandola con **curl** (che verifica il TLS con il bundle del
+proxy), mantenendo status, content-type e body. Lavora in una sottocartella tua
+dello scratchpad (es. `scratchpad/<ruolo>-<N>/`): la cartella principale è condivisa.
+
 ## WebGL in headless
 
 Chromium in `/opt/pw-browsers`, `playwright` npm globale. Per avere WebGL:

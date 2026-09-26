@@ -1,0 +1,120 @@
+{
+  "source": "https://pankhurstlondon.com",
+  "tokens": {
+    "spacing": {
+      "scale": [
+        16,
+        24,
+        40,
+        48
+      ],
+      "base_unit": 8
+    },
+    "typography": {
+      "families": [
+        "Fraunces",
+        "Red Hat Text"
+      ],
+      "scale": [
+        {
+          "role": "hero statement",
+          "size": "40px",
+          "weight": "400",
+          "family": "Fraunces"
+        },
+        {
+          "role": "h2",
+          "size": "48px",
+          "weight": "400",
+          "family": "Fraunces"
+        },
+        {
+          "role": "body",
+          "size": "16px",
+          "weight": "400",
+          "family": "Red Hat Text"
+        },
+        {
+          "role": "nav/meta",
+          "size": "12-14px",
+          "weight": "400",
+          "family": "Red Hat Text"
+        }
+      ]
+    },
+    "colors": [
+      {
+        "role": "background",
+        "value": "#FFFFFF"
+      },
+      {
+        "role": "surface-alt",
+        "value": "#F4F4F4"
+      },
+      {
+        "role": "text/CTA",
+        "value": "#000000"
+      },
+      {
+        "role": "text on photo",
+        "value": "#FFFFFF / rgba(255,255,255,.8)"
+      },
+      {
+        "role": "muted",
+        "value": "#666666 / #999999"
+      }
+    ],
+    "radius": [
+      "0px"
+    ],
+    "shadows": [
+      "inset 0 0 0 1px (bordi bottone)"
+    ],
+    "image_ratios": [
+      {
+        "usage": "ritratto",
+        "ratio": "0.67:1"
+      },
+      {
+        "usage": "prodotto",
+        "ratio": "1:1"
+      }
+    ],
+    "grid": {
+      "max_width": "1360px",
+      "columns": 3,
+      "gutter": "40px margini laterali"
+    }
+  },
+  "taste": [
+    {
+      "name": "Un messaggio, un bottone",
+      "trigger": "Quando si apre la prima schermata",
+      "decision": "Scelti una frase di 40px, una riga di 16px e un solo bottone nero rettangolare 'BOOK NOW', invece di due CTA o di un carosello",
+      "reason": "Chi arriva deve capire che si prenota; un solo gesto possibile toglie la scelta",
+      "evidence": [
+        "screenshot 1440: un solo bottone 64x51 circa a x=40",
+        "nessun secondo CTA nella prima schermata"
+      ]
+    },
+    {
+      "name": "Nessun colore",
+      "trigger": "Quando si sceglie l'accento",
+      "decision": "Scelto solo nero/bianco/grigi (#000, #FFF, #F4F4F4, #666) invece di un colore di marca",
+      "reason": "Lusso inglese: il colore lo mettono le foto; per noi l'insegnamento è l'opposto speculare, un solo colore con un solo significato",
+      "evidence": [
+        "accentCandidates: solo #000 e #FFF",
+        "radius unico 0px"
+      ]
+    },
+    {
+      "name": "Il tempo come promessa",
+      "trigger": "Quando si scrive il posizionamento",
+      "decision": "Scelta la frase 'every visit is an opportunity to slow the clock' invece di elenchi di servizi",
+      "reason": "Vende il tempo passato in poltrona, non il taglio; per un barbiere di quartiere va tradotto in concreto (le mezz'ore della lista), non in slogan",
+      "evidence": [
+        "riga di 16px sotto il titolo nella prima schermata"
+      ]
+    }
+  ]
+}

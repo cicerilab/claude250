@@ -1,0 +1,134 @@
+{
+  "source": "https://www.anticabarbieriacolla.it",
+  "tokens": {
+    "spacing": {
+      "scale": [
+        8,
+        20,
+        24,
+        28,
+        40
+      ],
+      "base_unit": 4
+    },
+    "typography": {
+      "families": [
+        "IBM Plex Serif",
+        "Inter"
+      ],
+      "scale": [
+        {
+          "role": "h1/hero",
+          "size": "60px",
+          "weight": "300",
+          "family": "IBM Plex Serif"
+        },
+        {
+          "role": "h2",
+          "size": "38px",
+          "weight": "300",
+          "family": "IBM Plex Serif"
+        },
+        {
+          "role": "body",
+          "size": "18px",
+          "weight": "400",
+          "family": "Inter"
+        },
+        {
+          "role": "nav",
+          "size": "15.2px",
+          "weight": "400",
+          "family": "Inter (maiuscolo spaziato)"
+        },
+        {
+          "role": "small",
+          "size": "12px",
+          "weight": "400",
+          "family": "Inter"
+        }
+      ]
+    },
+    "colors": [
+      {
+        "role": "background-alt",
+        "value": "#F7F5F1"
+      },
+      {
+        "role": "background",
+        "value": "#FFFFFF"
+      },
+      {
+        "role": "accent (bottoni)",
+        "value": "#A6192E"
+      },
+      {
+        "role": "top-bar",
+        "value": "#CABFA5"
+      },
+      {
+        "role": "text",
+        "value": "#000000"
+      },
+      {
+        "role": "text-muted",
+        "value": "#94886C"
+      }
+    ],
+    "radius": [
+      "40px",
+      "32px",
+      "4px"
+    ],
+    "shadows": [
+      "0 8px 48px rgba(0,0,0,.15)"
+    ],
+    "image_ratios": [
+      {
+        "usage": "hero salone",
+        "ratio": "1.50:1 (1920x1278) a tutta larghezza"
+      },
+      {
+        "usage": "prodotti",
+        "ratio": "1:1"
+      }
+    ],
+    "grid": {
+      "max_width": "1440px",
+      "columns": 4,
+      "gutter": "20px"
+    }
+  },
+  "taste": [
+    {
+      "name": "Il salone vero come prova",
+      "trigger": "Quando si apre la home di una barbieria storica",
+      "decision": "Scelta una foto larga del salone reale (specchi, poltrone bianche, pareti di ritratti) sotto velatura scura, invece di una foto di prodotto o di un modello",
+      "reason": "Per chi deve entrare in un posto fisico la prova è il posto: gli specchi in fila dicono 'più poltrone, un mestiere' senza testo",
+      "evidence": [
+        "hero-location-2026.jpg 1920x1278 a 1440px",
+        "screenshot: specchi e poltrone in prospettiva, velatura scura sotto il titolo"
+      ]
+    },
+    {
+      "name": "Orari scritti come li dice il barbiere",
+      "trigger": "Quando si comunicano orari e posizione",
+      "decision": "Scelto testo corrente in tre righe ('Dal Martedì al Sabato / Mattino 9:30 – 13:00 · Pomeriggio 14:30 – 19:00 / Chiuso Domenica, Lunedì e Festivi') più 'Apri in mappa', invece di una tabella giorno per giorno o una mappa incorporata",
+      "reason": "Il cliente vuole sapere se oggi è aperto; una frase si legge in un colpo, una tabella di 7 righe no",
+      "evidence": [
+        "sezione 'Dove siamo' a metà pagina",
+        "bottone 'Apri in mappa' a contorno, raggio 40px"
+      ]
+    },
+    {
+      "name": "Il prezzo del taglio non c'è (restrizione sbagliata)",
+      "trigger": "Quando si decide cosa mostrare in home",
+      "decision": "Scelto di mostrare i prezzi dei prodotti dello shop (€ 36-120) e nascondere quelli dei servizi dietro 'Prenota l'esperienza', invece di un listino dei servizi",
+      "reason": "È una scelta commerciale (shop prima del salone); per una barberia di quartiere è l'errore da non fare: il prezzo della barba è la prima domanda",
+      "evidence": [
+        "testo home: 8 prodotti con prezzo, 0 servizi con prezzo",
+        "due CTA pieni #A6192E 'Prenota l'esperienza' e 'Entra nello shop' affiancati"
+      ]
+    }
+  ]
+}
