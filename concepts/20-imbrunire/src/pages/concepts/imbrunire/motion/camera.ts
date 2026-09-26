@@ -585,8 +585,8 @@ async function viaggia(
   metteWillChange(elementi);
 
   const guida = registra(v, palazzo.animate(kf.palazzo, tempi));
-  const strato = registra(v, dentro.strato.animate(kf.strato, tempi));
-  const scatola = registra(v, dentro.scatola.animate(kf.scatola, tempi));
+  registra(v, dentro.strato.animate(kf.strato, tempi));
+  registra(v, dentro.scatola.animate(kf.scatola, tempi));
   v.tratto = { da, a };
   v.guida = guida;
 
@@ -644,8 +644,6 @@ async function viaggia(
   const tenute = v.animazioni.filter((x) => x !== guida);
   trattenute = { animazioni: tenute, elementi: v.elementi.filter((el) => el !== palazzo) };
   v.animazioni = [];
-  void strato;
-  void scatola;
   chiudi(v, { completata: true });
 }
 
@@ -698,7 +696,7 @@ async function passaggio(tipo: 'carrello' | 'scala', da: SlugCella, a: SlugCella
 
   const tempiVia: KeyframeAnimationOptions = {
     duration: PASSAGGIO.buio,
-    easing: tipo === 'carrello' ? BEZIER_CSS.carrelloVia : BEZIER_CSS.carrelloVia,
+    easing: BEZIER_CSS.carrelloVia,
     fill: 'both',
   };
   const uscita: Animation[] = [
