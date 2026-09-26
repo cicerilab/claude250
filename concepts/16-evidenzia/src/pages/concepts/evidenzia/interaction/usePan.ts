@@ -291,6 +291,11 @@ export function usePan(scrollerRef: RefObject<HTMLElement>): void {
       segnaPan(el, '');
     };
 
+    /** Solo la cattura dello scroller: quella persa dai figli arriva qui per bubbling e non conta. */
+    const suCatturaPersa = (e: PointerEvent): void => {
+      if (e.target === el) suPointerCancel(e);
+    };
+
     const suVisibilita = (): void => {
       if (document.visibilityState === 'hidden') suPerditaFuoco();
     };
@@ -299,7 +304,7 @@ export function usePan(scrollerRef: RefObject<HTMLElement>): void {
     el.addEventListener('pointermove', suPointerMove);
     el.addEventListener('pointerup', suPointerUp);
     el.addEventListener('pointercancel', suPointerCancel);
-    el.addEventListener('lostpointercapture', suPointerCancel);
+    el.addEventListener('lostpointercapture', suCatturaPersa);
     el.addEventListener('click', suClicCattura, { capture: true });
     document.addEventListener('keydown', suKeyDown);
     document.addEventListener('keyup', suKeyUp);
@@ -311,7 +316,7 @@ export function usePan(scrollerRef: RefObject<HTMLElement>): void {
       el.removeEventListener('pointermove', suPointerMove);
       el.removeEventListener('pointerup', suPointerUp);
       el.removeEventListener('pointercancel', suPointerCancel);
-      el.removeEventListener('lostpointercapture', suPointerCancel);
+      el.removeEventListener('lostpointercapture', suCatturaPersa);
       el.removeEventListener('click', suClicCattura, { capture: true });
       document.removeEventListener('keydown', suKeyDown);
       document.removeEventListener('keyup', suKeyUp);

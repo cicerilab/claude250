@@ -54,11 +54,11 @@ export const FAMIGLIE = {
 /* --------------------------------------------------------------------------
    Soglie (le stesse media query scritte letterali nei CSS)
    -------------------------------------------------------------------------- */
-/** Sezione se larghezza ≥ 720 e altezza ≥ 560, altrimenti torre (tech-architect §5.1). */
-export const SOGLIA_SEZIONE = { larghezza: 720, altezza: 560 } as const;
-export const MQ_SEZIONE = '(min-width: 720px) and (min-height: 560px)';
+/** Sezione se larghezza ≥ 720 e altezza ≥ 640, altrimenti torre. Il tech-architect (§5.1) diceva 560: sotto 640 il palazzo non entra a una misura leggibile (docs/art-director.md §1.3). */
+export const SOGLIA_SEZIONE = { larghezza: 720, altezza: 640 } as const;
+export const MQ_SEZIONE = '(min-width: 720px) and (min-height: 640px)';
 /** Sezione su schermo basso: nastro compatto. */
-export const MQ_SEZIONE_BASSA = '(min-width: 720px) and (min-height: 560px) and (max-height: 820px)';
+export const MQ_SEZIONE_BASSA = '(min-width: 720px) and (min-height: 640px) and (max-height: 820px)';
 /** Schermi grandi: palazzo fino a 1400 px e testi più grandi. */
 export const MQ_GRANDE = '(min-width: 1920px) and (min-height: 1000px)';
 /** Sotto questa larghezza il ConceptBackButton passa in basso a sinistra. */
@@ -141,7 +141,7 @@ export const PALAZZO = {
   k: 0.53,
   max: 1180,
   maxAlto: 1400,
-  min: 540,
+  min: 480,
   /** frazione della larghezza della finestra: 0,82 da 1024, 0,92 sotto */
   vw: 0.82,
   vwTablet: 0.92,

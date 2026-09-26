@@ -10,7 +10,7 @@
    Contrasti WCAG calcolati con script: tabella in docs/art-director.md §2.
 
    Soglia sezione/torre (non si può scrivere come variabile in una media
-   query): @media (min-width: 720px) and (min-height: 560px) = sezione.
+   query): @media (min-width: 720px) and (min-height: 640px) = sezione.
    Lo stato vero lo scrive Imbrunire.tsx in data-imb-layout sulla radice:
    i token della torre stanno su [data-imb-layout="torre"].
    ========================================================================== */
@@ -215,7 +215,7 @@
      Altezza del palazzo = 0,53 × larghezza + parti fisse (tre fasce, manto
      del tetto, zoccolo): formula misurata, vedi tokens.ts geometriaPalazzo(). */
   --imb-palazzo-k: 0.53;
-  --imb-palazzo-min: 540px;
+  --imb-palazzo-min: 480px;
   --imb-palazzo-w: max(var(--imb-palazzo-min), min(var(--imb-palazzo-max), var(--imb-palazzo-vw), calc((100svh - var(--imb-sopra-palazzo) - var(--imb-marciapiede-h) - 3 * var(--imb-fascia-sezione) - var(--imb-manto) - var(--imb-zoccolo-h)) / var(--imb-palazzo-k))));
   --imb-palazzo-vw: 82vw;         /* 92vw sotto 1024 px (sotto) */
   --imb-sopra-palazzo: 222px;     /* sezione: testata 64 + nastro con riga di stato fino a ~206 + 16 */
@@ -370,7 +370,7 @@
 /* Sezione su schermi bassi (1366 × 768, 1280 × 720): nastro compatto,
    il palazzo guadagna altezza. Solo puntatore fine: le lune restano ≥ 24 px
    di bersaglio (WCAG 2.5.8) e il tocco usa comunque la torre o il foglio. */
-@media (min-width: 720px) and (min-height: 560px) and (max-height: 820px) {
+@media (min-width: 720px) and (min-height: 640px) and (max-height: 820px) {
   .imb-root {
     --imb-luna-d: 28px;
     --imb-luna-passo: 38px;

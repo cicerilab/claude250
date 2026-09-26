@@ -362,6 +362,14 @@ export function useSelezioneLune(nastro: RefObject<HTMLElement>, o: OpzioniSelez
   const iniziaTrascina = useCallback(() => {
     const p = premuto.current;
     if (p === null) return;
+    if (!selezionabile(p.indice)) {
+      // da una notte chiusa o occupata non parte nessuna selezione
+      premuto.current = null;
+      impostaGesto('fermo');
+      ultimoPuntatoreT.current = performance.now();
+      rifiuta(p.indice);
+      return;
+    }
     impostaGesto('trascina');
     impostaAncora(null);
     impostaPuntata(null);
@@ -370,7 +378,7 @@ export function useSelezioneLune(nastro: RefObject<HTMLElement>, o: OpzioniSelez
     ultimoIndice.current = p.indice;
     emetti({ da: p.indice, a: p.indice, motivo: null }, false);
     ticker.wake();
-  }, [emetti, impostaAncora, impostaGesto, impostaPuntata]);
+  }, [emetti, impostaAncora, impostaGesto, impostaPuntata, rifiuta, selezionabile]);
 
   /** Chiude il gesto. conferma=false (annullato, cancel, secondo dito) → torna la selezione di prima. */
   const chiudiGesto = useCallback(
@@ -426,11 +434,8 @@ export function useSelezioneLune(nastro: RefObject<HTMLElement>, o: OpzioniSelez
       const i = indiceDa(e.target, e.currentTarget);
       if (i === null || i < 0 || i >= luneRef.current.length) return;
       impostaAttiva(i);
-      if (!selezionabile(i)) {
-        ultimoPuntatoreT.current = performance.now();
-        rifiuta(i);
-        return;
-      }
+      // anche una luna non scelgibile (chiusa, occupata nel filtro) apre un "premuto":
+      // se diventa un tocco lo rifiuta tocco() e la riga di stato dice perché
       const el = nastro.current;
       const opzione = e.target instanceof Element ? e.target.closest(`[${ATTRIBUTO_INDICE}]`) : null;
       if (!el || !opzione) return;
@@ -460,7 +465,7 @@ export function useSelezioneLune(nastro: RefObject<HTMLElement>, o: OpzioniSelez
       }
       if (e.pointerType === 'touch') ticker.wake(); // conta la tenuta
     },
-    [chiudiGesto, impostaAttiva, impostaGesto, nastro, rifiuta, selezionabile],
+    [chiudiGesto, impostaAttiva, impostaGesto, nastro],
   );
 
   const onPointerMove = useCallback(
@@ -819,7 +824,6 @@ export function useSelezioneLune(nastro: RefObject<HTMLElement>, o: OpzioniSelez
       };
     },
     // `filtro` e `lune` cambiano l'esito di selezionabile (che legge gli specchi)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [intervallo, anteprima, attiva, ancora, idLuna, onClickLuna, selezionabile, filtro, lune],
   );
 

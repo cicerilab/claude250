@@ -454,6 +454,17 @@ export function useEvidenziatore(ref: RefObject<HTMLElement>, id: IdAnnuncio): v
       chiudi(false);
     };
 
+    /**
+     * La cattura persa conta solo se è quella dell'articolo: col dito il
+     * browser cattura il puntatore sull'elemento toccato, e spostarla
+     * sull'articolo fa arrivare qui (per bubbling) il `lostpointercapture`
+     * del figlio, che non è un annullamento.
+     */
+    const suCatturaPersa = (e: PointerEvent): void => {
+      if (e.target !== el) return;
+      suPointerCancel(e);
+    };
+
     /** Il trascinamento nativo di immagini e testo non deve rubare il gesto. */
     const suDragStart = (e: DragEvent): void => {
       e.preventDefault();
@@ -467,7 +478,7 @@ export function useEvidenziatore(ref: RefObject<HTMLElement>, id: IdAnnuncio): v
     el.addEventListener('pointermove', suPointerMove);
     el.addEventListener('pointerup', suPointerUp);
     el.addEventListener('pointercancel', suPointerCancel);
-    el.addEventListener('lostpointercapture', suPointerCancel);
+    el.addEventListener('lostpointercapture', suCatturaPersa);
     el.addEventListener('dragstart', suDragStart);
 
     return () => {
@@ -476,7 +487,7 @@ export function useEvidenziatore(ref: RefObject<HTMLElement>, id: IdAnnuncio): v
       el.removeEventListener('pointermove', suPointerMove);
       el.removeEventListener('pointerup', suPointerUp);
       el.removeEventListener('pointercancel', suPointerCancel);
-      el.removeEventListener('lostpointercapture', suPointerCancel);
+      el.removeEventListener('lostpointercapture', suCatturaPersa);
       el.removeEventListener('dragstart', suDragStart);
       if (attivo) chiudi(false);
     };
