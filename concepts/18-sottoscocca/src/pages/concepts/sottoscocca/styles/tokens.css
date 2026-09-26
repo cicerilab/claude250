@@ -1,0 +1,341 @@
+/*
+ * SOTTOSCOCCA · design tokens (art-director)
+ *
+ * Solo variabili --ssc-* su .ssc-root e i @font-face di ripiego. Nessuna regola
+ * di layout o di componente: quelle stanno in base.css, layout.css e nei CSS di
+ * sezione. Specchio numerico: tokens.ts. Contrasti: docs/art-director.md.
+ *
+ * Tema unico scuro (il pavimento dell'officina), bloccato: non esiste una
+ * variante chiara e non si segue prefers-color-scheme.
+ */
+
+/* ------------------------------------------------------------------------ */
+/* Ripieghi metrici dei font (niente salti quando arrivano i woff2)          */
+/* Tarati con fontTools su Tektur v6 e Red Hat Text v19 contro Arial /        */
+/* Liberation Sans (metriche identiche).                                      */
+/* ------------------------------------------------------------------------ */
+
+@font-face {
+  font-family: 'Ssc Red Hat Ripiego';
+  src: local('Arial'), local('ArialMT'), local('Liberation Sans'), local('Helvetica');
+  font-weight: 400 600;
+  size-adjust: 100.1%;
+  ascent-override: 101.7%;
+  descent-override: 30.47%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Ssc Red Hat Ripiego';
+  src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'), local('Helvetica Bold');
+  font-weight: 650 700;
+  size-adjust: 102.2%;
+  ascent-override: 99.61%;
+  descent-override: 29.84%;
+  line-gap-override: 0%;
+}
+
+/* Tektur largo (titoli, bottoni, marchio: wdth 100) */
+@font-face {
+  font-family: 'Ssc Tektur Ripiego';
+  src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'), local('Helvetica Bold');
+  font-weight: 400 900;
+  font-stretch: 92.5% 100%;
+  size-adjust: 102.5%;
+  ascent-override: 97.56%;
+  descent-override: 29.27%;
+  line-gap-override: 0%;
+}
+
+/* Tektur stretto (quote, cartellino, prezzi, targhette: wdth 80-90) */
+@font-face {
+  font-family: 'Ssc Tektur Ripiego';
+  src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'), local('Helvetica Bold');
+  font-weight: 400 900;
+  font-stretch: 75% 92%;
+  size-adjust: 90%;
+  ascent-override: 111.11%;
+  descent-override: 33.33%;
+  line-gap-override: 0%;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Token                                                                     */
+/* ------------------------------------------------------------------------ */
+
+.ssc-root {
+  color-scheme: dark;
+
+  /* Colori: cinque della direzione + tre derivati ------------------------- */
+  --ssc-nero: #1c1d1b;            /* nero grasso: fondo, pavimento, blocchi occupati */
+  --ssc-nero-alto: #2a2c29;       /* superficie appena sopra il pavimento: hover su nero, "passato" */
+  --ssc-verde: #5e7564;           /* verde macchina utensile: oggetti, centro dei punti, testo grande su nero */
+  --ssc-verde-ombra: #44584a;     /* pannelli con testo: quote, scheda, barra, corsie */
+  --ssc-bianco: #f0efe9;          /* bianco segnaletica: testo, linee a terra, asta, "il tuo" */
+  --ssc-bianco-premuto: #d9dbd3;  /* superficie bianca sotto il puntatore o premuta */
+  --ssc-zincato: #a3aaa4;         /* tacche minori, testo secondario su nero, bordi dei campi */
+  --ssc-gesso: #cdd2cb;           /* testo secondario sui pannelli verde ombra */
+
+  /* Triple per rgb(var(--x-rgb) / a) */
+  --ssc-nero-rgb: 28 29 27;
+  --ssc-verde-rgb: 94 117 100;
+  --ssc-verde-ombra-rgb: 68 88 74;
+  --ssc-bianco-rgb: 240 239 233;
+
+  /* Ruoli (usare questi nei componenti, non i colori nudi) ---------------- */
+  --ssc-fondo: var(--ssc-nero);
+  --ssc-testo: var(--ssc-bianco);
+  --ssc-testo-secondario: var(--ssc-zincato);        /* solo su nero */
+  --ssc-pannello: var(--ssc-verde-ombra);
+  --ssc-pannello-testo: var(--ssc-bianco);
+  --ssc-pannello-secondario: var(--ssc-gesso);       /* solo su verde ombra */
+  --ssc-azione: var(--ssc-bianco);                   /* bottone principale, il tuo blocco */
+  --ssc-azione-premuta: var(--ssc-bianco-premuto);
+  --ssc-su-azione: var(--ssc-nero);                  /* testo sul bianco */
+  --ssc-occupato: var(--ssc-nero);                   /* blocco occupato nel planning */
+  --ssc-occupato-bordo: var(--ssc-zincato);          /* 1 px: 3,23:1 sulla corsia */
+  --ssc-occupato-testo: var(--ssc-zincato);
+  --ssc-passato: var(--ssc-nero-alto);
+  --ssc-corsia: var(--ssc-verde-ombra);
+  --ssc-campo-fondo: var(--ssc-nero);
+  --ssc-campo-bordo: var(--ssc-zincato);
+  --ssc-campo-filo: var(--ssc-bianco);               /* filo inferiore del campo, 2 px */
+  --ssc-velo-hover: rgb(var(--ssc-bianco-rgb) / 0.1);
+  --ssc-selezione-fondo: var(--ssc-bianco);
+  --ssc-selezione-testo: var(--ssc-nero);
+
+  /* Veli sopra la scena ---------------------------------------------------- */
+  --ssc-velo-targhetta: rgb(var(--ssc-nero-rgb) / 0.9);     /* asta, etichette dei punti */
+  --ssc-velo-apertura: linear-gradient(
+    to top,
+    rgb(var(--ssc-nero-rgb) / 0.88) 0%,
+    rgb(var(--ssc-nero-rgb) / 0.82) 34%,
+    rgb(var(--ssc-nero-rgb) / 0) 62%
+  );
+  --ssc-velo-apertura-laterale: linear-gradient(
+    to right,
+    rgb(var(--ssc-nero-rgb) / 0.6) 0%,
+    rgb(var(--ssc-nero-rgb) / 0) 48%
+  );
+
+  /* Opacità ------------------------------------------------------------- */
+  --ssc-opacita-scena-planning: 0.2;
+  --ssc-opacita-corsia-no: 0.4;
+  --ssc-opacita-disabilitato: 0.45;
+
+  /* Font ------------------------------------------------------------------ */
+  --ssc-font-tecnico: Tektur, 'Ssc Tektur Ripiego', 'Arial Narrow', Arial, sans-serif;
+  --ssc-font-testo: 'Red Hat Text', 'Ssc Red Hat Ripiego', Arial, sans-serif;
+
+  /* Scala tipografica fluida 375 → 1440 (vedi tokens.ts TIPO) ------------ */
+  /* Tektur: corpo, larghezza (font-stretch), peso, interlinea               */
+  --ssc-t-marchio: min(clamp(2.8125rem, 1.7782rem + 4.4131vw, 5.75rem), calc(var(--ssc-misura-marchio) / 6.94));
+  --ssc-t-marchio-wdth: 100%;
+  --ssc-t-marchio-wght: 700;
+  --ssc-t-marchio-lh: 0.92;
+
+  --ssc-t-quota: clamp(6rem, 3.8873rem + 9.0141vw, 12rem);
+  --ssc-t-quota-wdth: 80%;
+  --ssc-t-quota-wght: 600;
+  --ssc-t-quota-lh: 0.84;
+  --ssc-t-quota-unita: 0.3em;          /* "cm" accanto alla cifra, wdth 100, wght 500 */
+
+  --ssc-t-cartellino: clamp(4rem, 2.7676rem + 5.2582vw, 7.5rem);
+  --ssc-t-cartellino-wdth: 80%;
+  --ssc-t-cartellino-wght: 700;
+
+  --ssc-t-giorno: clamp(2rem, 1.8239rem + 0.7512vw, 2.5rem);
+  --ssc-t-giorno-wdth: 85%;
+  --ssc-t-giorno-wght: 600;
+
+  --ssc-t-titolo2: clamp(1.875rem, 1.4789rem + 1.6901vw, 3rem);
+  --ssc-t-titolo2-wght: 600;
+  --ssc-t-titolo2-lh: 1.02;
+  --ssc-t-titolo2-tracking: -0.01em;
+
+  --ssc-t-titolo3: clamp(1.375rem, 1.243rem + 0.5634vw, 1.75rem);
+  --ssc-t-titolo3-wght: 600;
+  --ssc-t-titolo3-lh: 1.1;
+
+  --ssc-t-prezzo: clamp(1.5rem, 1.3239rem + 0.7512vw, 2rem);
+  --ssc-t-prezzo-wdth: 85%;
+  --ssc-t-prezzo-wght: 600;
+
+  --ssc-t-targhetta: 1.25rem;          /* 20 px: minimo di Tektur per parole */
+  --ssc-t-targhetta-wdth: 90%;
+  --ssc-t-targhetta-wght: 500;
+
+  --ssc-t-bottone: 1.25rem;            /* bottone principale in Tektur */
+  --ssc-t-bottone-wght: 600;
+
+  --ssc-t-numerale: 0.9375rem;         /* 15 px: SOLO numerali (asta, ore) */
+  --ssc-t-numerale-wght: 500;
+
+  /* Red Hat Text */
+  --ssc-t-lead: clamp(1.125rem, 1.059rem + 0.2817vw, 1.3125rem);
+  --ssc-t-lead-lh: 1.45;
+  --ssc-t-corpo: clamp(1.0625rem, 1.0405rem + 0.0939vw, 1.125rem);
+  --ssc-t-corpo-lh: 1.55;
+  --ssc-t-piccolo: clamp(0.9375rem, 0.9155rem + 0.0939vw, 1rem);
+  --ssc-t-piccolo-lh: 1.5;
+  --ssc-t-nota: 0.875rem;              /* 14 px: minimo assoluto */
+  --ssc-t-nota-wght: 500;
+  --ssc-t-etichetta: clamp(0.9375rem, 0.9155rem + 0.0939vw, 1rem);
+  --ssc-t-etichetta-wght: 700;
+  --ssc-t-bottone-testo: clamp(1rem, 0.978rem + 0.0939vw, 1.0625rem);
+  --ssc-t-bottone-testo-wght: 700;
+  --ssc-t-campo: 1.0625rem;            /* 17 px, mai sotto 16 (zoom iOS) */
+
+  --ssc-giustezza: 60ch;
+
+  /* Spazi (multipli di 4) --------------------------------------------------- */
+  --ssc-sp-1: 0.25rem;
+  --ssc-sp-2: 0.5rem;
+  --ssc-sp-3: 0.75rem;
+  --ssc-sp-4: 1rem;
+  --ssc-sp-5: 1.5rem;
+  --ssc-sp-6: 2rem;
+  --ssc-sp-7: 3rem;
+  --ssc-sp-8: 4rem;
+  --ssc-sp-9: 6rem;
+  --ssc-sp-10: 8rem;
+
+  /* Griglia: la pianta della postazione ------------------------------------- */
+  /* telefono (< 768): 4 colonne; banco = tutta la larghezza utile            */
+  --ssc-colonne: 4;
+  --ssc-canalino: 16px;
+  --ssc-margine: 16px;
+  --ssc-corsia-asta: 48px;             /* margine destro del testo che scorre accanto all'asta */
+  --ssc-asta: 32px;
+  --ssc-larghezza-utile: calc(100vw - var(--ssc-margine) - var(--ssc-corsia-asta));
+  --ssc-colonna: calc((var(--ssc-larghezza-utile) - (var(--ssc-colonne) - 1) * var(--ssc-canalino)) / var(--ssc-colonne));
+  --ssc-banco: var(--ssc-larghezza-utile);
+  --ssc-misura-marchio: var(--ssc-larghezza-utile);
+  --ssc-pannello-padding: 20px;
+  --ssc-testata: 56px;
+  --ssc-zona-ritorno: 72px;            /* bottone di ritorno: in basso a sinistra sotto 640 */
+
+  /* Planning verticale del telefono: scala delle ore + tre corsie */
+  --ssc-planning-scala: 44px;
+  --ssc-planning-corsia: 96px;
+
+  /* Livelli ---------------------------------------------------------------- */
+  --ssc-z-scena: 0;
+  --ssc-z-contenuto: 1;
+  --ssc-z-punti: 2;
+  --ssc-z-asta: 5;
+  --ssc-z-pannelli: 6;
+  --ssc-z-testata: 10;
+
+  /* Forme e segni ------------------------------------------------------------ */
+  --ssc-raggio: 0;                     /* lamiera tagliata: ovunque */
+  --ssc-raggio-punto: 50%;             /* unica eccezione: punti toccabili (tamponi) */
+  --ssc-filo: 1px;
+  --ssc-bordo: 2px;
+  --ssc-linea-terra: 4px;              /* 6 px da 768 */
+  --ssc-tratto: 10px;
+  --ssc-vuoto: 6px;
+  --ssc-tratteggio-orizzontale: repeating-linear-gradient(
+    90deg,
+    var(--ssc-bianco) 0 var(--ssc-tratto),
+    transparent var(--ssc-tratto) calc(var(--ssc-tratto) + var(--ssc-vuoto))
+  );
+  --ssc-tratteggio-verticale: repeating-linear-gradient(
+    180deg,
+    var(--ssc-bianco) 0 var(--ssc-tratto),
+    transparent var(--ssc-tratto) calc(var(--ssc-tratto) + var(--ssc-vuoto))
+  );
+
+  /* Punti toccabili */
+  --ssc-punto-area: 44px;
+  --ssc-punto-cerchio: 26px;
+  --ssc-punto-anello: 2px;
+  --ssc-punto-alone: 2px;              /* nero grasso attorno all'anello: si stacca da ogni fondo */
+
+  /* Fuoco: anello bianco 2 px, 3 px di distanza riempiti di nero grasso */
+  --ssc-fuoco-colore: var(--ssc-bianco);
+  --ssc-fuoco-spessore: 2px;
+  --ssc-fuoco-distanza: 3px;
+  --ssc-fuoco-alone: 0 0 0 var(--ssc-fuoco-distanza) var(--ssc-nero);
+
+  /* Asta */
+  --ssc-tacca-maggiore: 16px;
+  --ssc-tacca-minore: 8px;
+  --ssc-tacca-spessore: 2px;
+
+  /* Altezze dei controlli */
+  --ssc-controllo: 48px;
+  --ssc-controllo-grande: 56px;
+  --ssc-controllo-minimo: 44px;
+
+  /* Texture: vernice martellata dei banchi e delle macchine utensili.
+     Solo sui pannelli verde ombra; solo scurisce (non abbassa i contrasti). */
+  --ssc-martellata: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='m' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.16' numOctaves='3' seed='18' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.4 1.25'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23m)' opacity='.2'/%3E%3C/svg%3E");
+  --ssc-martellata-misura: 240px 240px;
+
+  /* Trattamento delle foto vere: meno saturazione, un velo di verde in
+     luce morbida, un filo più scure per sedere sul nero grasso. Non duotone. */
+  --ssc-foto-filtro: saturate(0.58) contrast(1.06) brightness(0.9);
+  --ssc-foto-velo: var(--ssc-verde);
+  --ssc-foto-velo-fusione: soft-light;
+  --ssc-foto-velo-opacita: 0.45;
+}
+
+/* Da 768 px: tablet ------------------------------------------------------- */
+@media (min-width: 768px) {
+  .ssc-root {
+    --ssc-colonne: 8;
+    --ssc-canalino: 20px;
+    --ssc-margine: 32px;
+    --ssc-corsia-asta: 64px;
+    --ssc-asta: 40px;
+    --ssc-banco: calc(52vw - var(--ssc-margine));
+    --ssc-misura-marchio: var(--ssc-banco);
+    --ssc-pannello-padding: 28px;
+    --ssc-testata: 64px;
+    --ssc-linea-terra: 6px;
+  }
+}
+
+/* Da 1024 px: banco c1-c5, postazione c6-c12, corsia dell'asta fuori griglia */
+@media (min-width: 1024px) {
+  .ssc-root {
+    --ssc-colonne: 12;
+    --ssc-canalino: 24px;
+    --ssc-margine: clamp(3rem, -0.0563rem + 4.507vw, 4rem);
+    --ssc-corsia-asta: 96px;
+    --ssc-asta: 48px;
+    --ssc-banco: min(calc(5 * var(--ssc-colonna) + 4 * var(--ssc-canalino)), 36rem);
+    --ssc-misura-marchio: calc(6 * var(--ssc-colonna) + 5 * var(--ssc-canalino));
+    --ssc-pannello-padding: 32px;
+  }
+}
+
+/* Oltre 1680 px la griglia smette di crescere (la scena no) */
+@media (min-width: 1680px) {
+  .ssc-root {
+    --ssc-larghezza-utile: calc(1680px - var(--ssc-margine) - var(--ssc-corsia-asta));
+  }
+}
+
+/* Contrasto alto richiesto: il secondario diventa bianco, niente texture */
+@media (prefers-contrast: more) {
+  .ssc-root {
+    --ssc-testo-secondario: var(--ssc-bianco);
+    --ssc-pannello-secondario: var(--ssc-bianco);
+    --ssc-occupato-bordo: var(--ssc-bianco);
+    --ssc-martellata: none;
+    --ssc-velo-targhetta: var(--ssc-nero);
+  }
+}
+
+/* Colori forzati (Windows): niente texture né veli, il sistema decide */
+@media (forced-colors: active) {
+  .ssc-root {
+    --ssc-martellata: none;
+    --ssc-velo-apertura: none;
+    --ssc-velo-apertura-laterale: none;
+    --ssc-fuoco-colore: Highlight;
+    --ssc-fuoco-alone: none;
+  }
+}
