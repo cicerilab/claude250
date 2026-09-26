@@ -20,7 +20,7 @@
    ========================================================================== */
 
 .imp-root .imp-colophon {
-  --_imp-colophon-fondo: calc(var(--imp-segnapagina-h) + 14px + var(--imp-tocco-min) + var(--imp-sp-6) + env(safe-area-inset-bottom, 0px));
+  --_imp-colophon-fondo: calc(var(--imp-segnapagina-h) + 14px + var(--imp-tocco-min) + var(--imp-sp-4) + env(safe-area-inset-bottom, 0px));
   /* Il fuoco da tastiera non finisce sotto la testata o il segnapagina. */
   --_imp-colophon-riparo-su: calc(var(--imp-testata-h-fissa) + var(--imp-sp-4));
   --_imp-colophon-riparo-giu: calc(var(--imp-segnapagina-h) + var(--imp-tocco-min) + var(--imp-sp-6) + env(safe-area-inset-bottom, 0px));
@@ -33,13 +33,13 @@
 
 @media (min-width: 640px) {
   .imp-root .imp-colophon {
-    --_imp-colophon-fondo: calc(var(--imp-segnapagina-h) + var(--imp-sp-7) + env(safe-area-inset-bottom, 0px));
+    --_imp-colophon-fondo: calc(var(--imp-segnapagina-h) + var(--imp-sp-5) + env(safe-area-inset-bottom, 0px));
   }
 }
 
 @media (min-width: 1024px) {
   .imp-root .imp-colophon {
-    --_imp-colophon-fondo: clamp(var(--imp-sp-8), 10vh, var(--imp-sp-9));
+    --_imp-colophon-fondo: clamp(var(--imp-sp-7), 6vh, var(--imp-sp-8));
     --_imp-colophon-riparo-giu: var(--imp-sp-6);
     scroll-margin-block-start: calc(var(--imp-testata-h-fissa) + var(--imp-sp-5));
   }
@@ -225,7 +225,8 @@
 .imp-root .imp-colophon__marchio {
   --_imp-d: calc(clamp(0.6px, 0.09vw, 1.4px) * var(--imp-press));
   display: block;
-  inline-size: 100%;
+  inline-size: calc(100% * var(--imp-colophon-riga, 1));
+  margin-inline: auto;
   aspect-ratio: 941 / 100;
   filter: drop-shadow(calc(var(--_imp-d) * var(--imp-luce-x) * -1) calc(var(--_imp-d) * var(--imp-luce-y) * -1) 0 color-mix(in srgb, var(--imp-carta-luce) 80%, transparent));
 }
@@ -255,6 +256,35 @@
 .imp-root .imp-colophon__f-luce {
   flood-color: var(--imp-carta-luce);
   flood-opacity: var(--imp-press);
+}
+
+/* Intero da 600 px; sotto, due righe IMPR / ONTA alla stessa scala
+   (ONTA a tutta area viva, IMPR all'82%), interlinea stretta come il
+   secco del sito (0,2 dell'altezza di una lettera). */
+.imp-root .imp-colophon__marchio-righe {
+  display: none;
+}
+
+@media (max-width: 599.98px) {
+  .imp-root .imp-colophon__marchio-intero {
+    display: none;
+  }
+
+  .imp-root .imp-colophon__marchio-righe {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    row-gap: calc(var(--imp-area-viva) / 514 * 20);
+  }
+
+  .imp-root .imp-colophon__marchio-righe > .imp-colophon__marchio {
+    --_imp-d: calc(0.8px * var(--imp-press));
+  }
+
+  /* La finestra taglia la parola: le lettere non escono dal loro riquadro. */
+  .imp-root .imp-colophon__marchio-righe .imp-colophon__marchio-svg {
+    overflow: hidden;
+  }
 }
 
 /* Su Grafite la parete deve scendere verso il nero, il labbro resta chiaro. */
@@ -293,7 +323,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-block-start: var(--imp-sp-8);
+  margin-block-start: var(--imp-sp-7);
 }
 
 .imp-root .imp-colophon__recapiti,

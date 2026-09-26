@@ -100,8 +100,8 @@ function mappaVuota(): Record<PezzoFermata, HTMLElement | null> {
 export default function Legatoria() {
   const corpoRef = useRef<HTMLDivElement>(null);
   const ingressoRef = useRef<HTMLSpanElement>(null);
+  const fineRef = useRef<HTMLDivElement>(null);
   const fineScendeRef = useRef<HTMLSpanElement>(null);
-  const fineTraversaRef = useRef<HTMLSpanElement>(null);
   const nodoRef = useRef<SVGSVGElement>(null);
   const fermateRef = useRef<Array<HTMLLIElement | null>>(Array.from({ length: N }, () => null));
   const pezziRef = useRef<Array<Record<PezzoFermata, HTMLElement | null>>>(Array.from({ length: N }, mappaVuota));
@@ -119,6 +119,19 @@ export default function Legatoria() {
   const misura = useCallback(() => {
     const pezzi: Array<{ el: Element | null; lunghezza: number }> = [];
     let scala = 1;
+
+    /*
+     * Da 600 px l'ultimo schema non occupa spazio sotto il suo testo: le
+     * righe finali salgono accanto a lui e il filo riparte dal suo piede,
+     * che può stare più in basso dell'inizio del blocco finale. Lo scarto va
+     * al CSS come --fine-inizio (letto solo da 600 px).
+     */
+    const fine = fineRef.current;
+    const ultimoSchema = pezziRef.current[N - 1]?.schema ?? null;
+    if (fine !== null && ultimoSchema !== null) {
+      const scarto = ultimoSchema.getBoundingClientRect().bottom - fine.getBoundingClientRect().top;
+      fine.style.setProperty('--fine-inizio', `${Math.round(scarto * 10) / 10}px`);
+    }
 
     pezzi.push({ el: ingressoRef.current, lunghezza: lunghezzaTratto(ingressoRef.current) });
 
@@ -139,7 +152,6 @@ export default function Legatoria() {
     });
 
     pezzi.push({ el: fineScendeRef.current, lunghezza: lunghezzaTratto(fineScendeRef.current) });
-    pezzi.push({ el: fineTraversaRef.current, lunghezza: lunghezzaTratto(fineTraversaRef.current) });
     pezzi.push({ el: nodoRef.current, lunghezza: 2 * Math.PI * NODO_R * scala });
 
     const totale = pezzi.reduce((s, p) => s + p.lunghezza, 0);
@@ -334,9 +346,8 @@ export default function Legatoria() {
             </ol>
           </fieldset>
 
-          <div className="imp-legatoria__fine">
+          <div ref={fineRef} className="imp-legatoria__fine">
             <TrattoFilo ref={fineScendeRef} ruolo="fine-scende" />
-            <TrattoFilo ref={fineTraversaRef} ruolo="fine-traversa" />
 
             <ul className="imp-legatoria__note imp-lista">
               <li className="imp-legatoria__riferimento">{LEGATORIA.riferimento}</li>

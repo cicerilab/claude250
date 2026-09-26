@@ -7,9 +7,8 @@
    - da 1024 px nel vuoto a sinistra di "ta", appeso alla linea della x;
    - sotto, subito sotto "ta".
    L'hero è alto quanto il suo contenuto (nessun min-height a schermo
-   intero, quindi nessun vuoto). Da 1680 px la parola esce dalla gabbia
-   della pagina e usa tutta la finestra (margini da libro), così a 2560 non
-   resta piccola: è la copertina.
+   intero, quindi nessun vuoto). Da 1680 px resta nella gabbia della pagina
+   come tutte le sezioni (giro 3: una sola regola di allineamento).
 
    Regole (DESIGN.md, art-director §3.4): solo variabili --imp-*; colore e
    ombre del rilievo li danno le classi materiali (.imp-secco,
@@ -21,6 +20,10 @@
 .imp-root .imp-hero {
   position: relative;
   padding-block: clamp(12px, 2.5svh, 32px) var(--imp-sp-7);
+  /* Giro 3: una sola regola di allineamento. L'hero sta nella stessa gabbia
+     da 1680 px di tutte le sezioni (come .imp-page), anche a 2560. */
+  max-inline-size: var(--imp-pagina-max);
+  margin-inline: auto;
   padding-inline: var(--imp-margine-interno) var(--imp-margine-esterno);
 }
 
@@ -301,17 +304,21 @@
     margin-block-start: var(--imp-sp-6);
   }
 
-  /* Sotto "ta", sul margine esterno, alla linea del bottone. */
+  /* Giro 3: agganciato alla parola. Appeso sotto il piede di "ta" (il box
+     della riga è alto 0,86 em della parola), chiuso sul margine esterno
+     come la parola stessa. */
   .imp-root .imp-hero__luce {
     display: inline-flex;
     grid-column: 9 / -1;
     grid-row: 2;
     justify-self: end;
-    align-self: end;
-    min-block-size: var(--imp-bottone-h-grande);
+    align-self: start;
+    margin-block-start: calc(0.86 * var(--_imp-fs) + var(--imp-sp-3));
+    min-block-size: var(--imp-tocco-min);
   }
 
-  .imp-root .imp-hero__piano[data-cliente][data-righe="2"] .imp-hero__luce {
-    grid-row: 3;
+  /* Testo del cliente su una riga sola: il dial pende da quella. */
+  .imp-root .imp-hero__piano[data-righe="1"] .imp-hero__luce {
+    grid-row: 1;
   }
 }

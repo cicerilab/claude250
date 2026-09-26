@@ -14,8 +14,7 @@
      --_imp-t-em          larghezza media di un carattere in em a quell'asse
      --_imp-t-gradi       rotazione massima del taglio (-32° / -24°)
      --_imp-t-foglio      spessore di un biglietto della pila (9 / 6 px)
-     --_imp-t-bordo       colore del taglio (quello della carta del sito)
-     --_imp-t-zona        altezza massima della lastra (2/3 della sua larghezza)
+     --_imp-t-zona        altezza massima della lastra (5/12 della sua larghezza)
    Struttura (pin):
      section.imp-tecniche
        .imp-tecniche__pin              400svh (350svh sotto 768)
@@ -43,10 +42,6 @@
   --_imp-t-em: 0.71;
   --_imp-t-gradi: -24deg;
   --_imp-t-foglio: 6px;
-  /* Il colore del taglio è quello scelto dall'art-director per la carta del
-     SITO (contrasta con il foglio su cui la pila è appoggiata): lo si fissa
-     qui, prima che la pila di Cotone ridefinisca --imp-taglio. */
-  --_imp-t-bordo: var(--imp-taglio);
   display: flow-root;
   position: relative;
   padding-block-end: var(--imp-piede);
@@ -138,16 +133,16 @@
 }
 
 /* Telefono e tablet: titolo in alto, nomi, lastra, scheda in basso sopra il
-   segnapagina. La lastra cresce fino a 2/3 della sua larghezza e si stringe
-   se l'altezza manca; l'aria che avanza va tra i blocchi, non intorno alla
-   lastra. */
+   segnapagina. La lastra è una striscia 12:5 (la parola la riempie): cresce
+   fino alla sua altezza piena e si stringe se l'altezza manca; l'aria che
+   avanza va tra i blocchi, non intorno alla lastra. */
 .imp-root .imp-tecniche__gabbia {
-  --_imp-t-zona: calc(var(--imp-area-viva) * 2 / 3);
+  --_imp-t-zona: calc(var(--imp-area-viva) * 5 / 12);
   flex: 1 1 auto;
   min-block-size: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto auto minmax(6rem, var(--_imp-t-zona)) auto;
+  grid-template-rows: auto auto minmax(5rem, var(--_imp-t-zona)) auto;
   align-content: space-between;
   row-gap: var(--imp-sp-4);
   padding-block: var(--imp-sp-4) calc(var(--imp-segnapagina-h) + var(--imp-sp-4));
@@ -190,16 +185,15 @@
   }
 }
 
-/* Desktop: in alto il titolo (c1-c7); sotto, a sinistra la lastra (c1-c7)
-   e a destra (c9-c12) i quattro nomi e la scheda della tecnica, con il piede
-   allineato al piede della lastra. La riga della lastra è alta almeno quanto
-   la colonna di destra e al massimo 2/3 della sua larghezza; il blocco intero
-   sta al centro del palco. */
+/* Desktop: colonna di sinistra (c1-c7) con titolo, lastra e sotto la
+   scheda della tecnica; a destra (c9-c12) i quattro nomi, alla stessa
+   altezza della lastra. Il blocco intero sta al centro del palco. La lastra
+   è larga quanto la colonna, ma mai tanto da non lasciare posto a titolo e
+   scheda (26rem) nella finestra. */
 @media (min-width: 1024px) {
   .imp-root .imp-tecniche__gabbia {
-    --_imp-t-zona: calc((var(--imp-colonna) * 7 + var(--imp-canalino) * 6) * 2 / 3);
     grid-template-columns: repeat(12, minmax(0, 1fr));
-    grid-template-rows: auto minmax(auto, var(--_imp-t-zona));
+    grid-template-rows: auto auto auto;
     align-content: center;
     column-gap: var(--imp-canalino);
     row-gap: var(--imp-sp-6);
@@ -218,32 +212,35 @@
   .imp-root .imp-tecniche__zona {
     grid-row: 2;
     grid-column: 1 / 8;
+    container-type: inline-size;
   }
 
-  .imp-root .imp-tecniche__lato {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    gap: var(--imp-sp-6);
+  .imp-root .imp-tecniche__palco .imp-tecniche__foglio {
+    inline-size: min(100cqi, calc((100svh - 26rem) * 12 / 5));
+  }
+
+  .imp-root .imp-tecniche__indice {
     grid-row: 2;
     grid-column: 9 / 13;
-    align-self: end;
+    align-self: center;
     padding-inline-start: var(--imp-sp-5);
+  }
+
+  .imp-root .imp-tecniche__scheda {
+    grid-row: 3;
+    grid-column: 1 / 8;
   }
 }
 
-/* Da 1680 la pagina smette di crescere: la lastra prende una colonna in più. */
+/* Da 1680 la pagina smette di crescere: la colonna prende una colonna in più. */
 @media (min-width: 1680px) {
-  .imp-root .imp-tecniche__gabbia {
-    --_imp-t-zona: calc((var(--imp-colonna) * 8 + var(--imp-canalino) * 7) * 2 / 3);
-  }
-
   .imp-root .imp-tecniche__testa,
-  .imp-root .imp-tecniche__zona {
+  .imp-root .imp-tecniche__zona,
+  .imp-root .imp-tecniche__scheda {
     grid-column: 1 / 9;
   }
 
-  .imp-root .imp-tecniche__lato {
+  .imp-root .imp-tecniche__indice {
     grid-column: 10 / 13;
   }
 }
@@ -410,8 +407,8 @@
    appoggiato, così sulla stessa carta del sito il biglietto si stacca. */
 .imp-root .imp-tecniche__foglio {
   --imp-spessore-pezzo: 2.5px;
-  inline-size: min(100cqi, calc(100cqb * 3 / 2));
-  aspect-ratio: 3 / 2;
+  inline-size: min(100cqi, calc(100cqb * 12 / 5));
+  aspect-ratio: 12 / 5;
   container-type: inline-size;
   display: flex;
   align-items: center;
@@ -454,9 +451,12 @@
    si vede la faccia di destra della pila: sette bordi dipinti affiancati,
    ognuno spesso --_imp-t-foglio, con una riga d'ombra dove un biglietto
    tocca l'altro e due toni alterni, perché il pennello non passa mai uguale.
-   Il colore è --_imp-t-bordo, il taglio della carta del sito (Citrino sul
-   Cotone, verde notte sul Citrino, Grafite sulla Cipria): una faccia piena,
-   non un contorno.
+   Il colore è un'altra carta del sistema, mai l'inchiostro e mai la carta
+   del sito (data-carta sulla faccia, scelto da CARTA_BORDO nel componente):
+   Cipria sul Citrino; Citrino su Cotone, Cipria e Grafite. La faccia usa
+   fondo, ombra e luce di quella carta: una tinta calda e piena, non un
+   contorno. Il fondo si scurisce verso l'ombra della carta del bordo, così
+   anche sulla carta del sito la faccia si stacca dal foglio.
    -------------------------------------------------------------------------- */
 .imp-root .imp-tecniche__pila {
   --_imp-t-fogli: 7;
@@ -467,24 +467,24 @@
   transform-origin: 100% 50%;
   transform: rotateY(-90deg);
   pointer-events: none;
-  background-color: var(--_imp-t-bordo);
+  background-color: var(--imp-carta);
   background-image:
     repeating-linear-gradient(
       90deg,
-      color-mix(in srgb, var(--_imp-t-bordo) 55%, var(--imp-carta-ombra)) 0 1px,
+      color-mix(in srgb, var(--imp-carta) 55%, var(--imp-carta-ombra)) 0 1px,
       transparent 1px var(--_imp-t-foglio)
     ),
     repeating-linear-gradient(
       90deg,
       transparent 0 var(--_imp-t-foglio),
-      color-mix(in srgb, var(--_imp-t-bordo) 90%, var(--imp-carta-luce)) var(--_imp-t-foglio) calc(var(--_imp-t-foglio) * 2)
+      color-mix(in srgb, var(--imp-carta) 90%, var(--imp-carta-luce)) var(--_imp-t-foglio) calc(var(--_imp-t-foglio) * 2)
     ),
     repeating-linear-gradient(
       180deg,
-      color-mix(in srgb, var(--_imp-t-bordo) 92%, var(--imp-carta-ombra)) 0 2px,
+      color-mix(in srgb, var(--imp-carta) 92%, var(--imp-carta-ombra)) 0 2px,
       transparent 2px 11px
     ),
-    linear-gradient(90deg, color-mix(in srgb, var(--_imp-t-bordo) 80%, var(--imp-carta-ombra)), var(--_imp-t-bordo));
+    linear-gradient(90deg, color-mix(in srgb, var(--imp-carta) 45%, var(--imp-carta-ombra)), color-mix(in srgb, var(--imp-carta) 70%, var(--imp-carta-ombra)));
 }
 
 /* --------------------------------------------------------------------------

@@ -930,6 +930,8 @@
 }
 
 .imp-root .imp-banco__prova {
+  /* Pressione del pezzo, letta dalle righe (vedi sotto). */
+  --imp-banco-pp: var(--imp-press, 1);
   /*
    * La prova si guarda da vicino: il solco è più marcato che sul foglio del
    * sito, e affonda con la leva. Tetto a 3: oltre, le due ombre nette del
@@ -1003,6 +1005,15 @@
    La prova: composizione per prodotto (misure in cqi del pezzo)
    Anybody mai sotto 20 px: le righe grandi hanno un minimo.
    -------------------------------------------------------------------------- */
+/*
+ * Giro 3: la prova non è mai un rettangolo vuoto. Prima che la pressa scenda
+ * (data-imp-pressa="attesa", pressione 0) le righe sono già premute a metà;
+ * poi seguono la pressa fino a 1. Stessa monotonia: la leva le approfondisce.
+ */
+.imp-root .imp-banco__prova .imp-banco__riga {
+  --imp-press: calc(0.55 + 0.45 * var(--imp-banco-pp));
+}
+
 .imp-root .imp-banco__riga {
   display: block;
   min-inline-size: 0;
@@ -1312,9 +1323,14 @@
   }
 
   /* Il successo va SOPRA la lastra, e la lastra smette di stare ferma. */
-  .imp-root .imp-banco__esito--ok {
+  .imp-root .imp-banco .imp-banco__esito--ok {
     order: -2;
     scroll-margin-block-start: calc(var(--imp-testata-h-fissa) + var(--imp-sp-4));
+  }
+
+  /* In fondo alla sezione resta il posto per i due bottoni fissi (sito e "Prova la tua"). */
+  .imp-root .imp-banco.imp-block {
+    padding-block-end: calc(var(--imp-piede) + 44px + env(safe-area-inset-bottom));
   }
 
   .imp-root .imp-banco[data-invio='sent'] .imp-banco__lastra {
@@ -1432,6 +1448,14 @@
     grid-column: 8 / span 5;
     grid-row: 1;
     max-inline-size: none;
+  }
+
+  /*
+   * Giro 3: dopo la leva (o la frase di successo) niente piede da 240 px:
+   * la sezione chiude con la testa della pagina, e la bottega arriva subito.
+   */
+  .imp-root .imp-banco.imp-block {
+    padding-block-end: var(--imp-testa);
   }
 
   /* Il successo prende il posto della leva, accanto alla prova che resta ferma. */

@@ -6,10 +6,10 @@
  *
  *   entra (orizzontale, in testa) ─ scende ─ SCHEMA ─ esce ─ traversa ─ coda
  *
- * e in fondo alla sezione: scende ─ traversa (sotto "Prova la tua") ─ nodo.
+ * e in fondo alla sezione: scende ─ nodo (accanto a "Prova la tua").
  * Da 600 px il filo va a serpentina da un lato all'altro della pagina
  * (schemi alternati a sinistra e a destra); su 375 scende nel margine
- * esterno, entra nello schema e sottolinea il nome della legatura. Quali
+ * interno, accanto al testo (mai intorno), ed entra in ogni schema. Quali
  * pezzi esistono e dove stanno lo decide `legatoria.css`: un pezzo nascosto
  * misura 0 e non conta nella lunghezza.
  *
@@ -23,7 +23,6 @@
  * stringa si prepara una volta, a livello di modulo (solo testo, nessun
  * accesso a window/document):
  * - al path del filo `pathLength="1"` e una classe;
- * - una copia SENZA id del path (la "guida" a matita) sotto al filo;
  * - alle graffe del punto metallico `pathLength="1"` e una classe;
  * - via `<title>`, `role`, `aria-labelledby`: il contenitore è aria-hidden e
  *   il testo per i lettori di schermo è `LEGATORIA.voci[].filoAlt`.
@@ -56,12 +55,11 @@ function preparaSchema(chiave: LegaturaSvg): string {
   const trovato = cerca.exec(svg);
   if (trovato !== null) {
     const originale = trovato[0];
-    const guida = originale.replace(`id="${dati.filoId}"`, 'class="imp-legatoria__guida"');
     const filo = originale.replace(
       `id="${dati.filoId}"`,
       `id="${dati.filoId}" class="imp-legatoria__cucito" pathLength="1"`,
     );
-    svg = svg.replace(originale, `${guida}${filo}`);
+    svg = svg.replace(originale, filo);
   }
 
   for (const tratto of dati.tratti ?? []) {
@@ -108,20 +106,19 @@ export type RuoloTratto =
   | 'esce'
   | 'traversa'
   | 'coda'
-  | 'fine-scende'
-  | 'fine-traversa';
+  | 'fine-scende';
 
 /** Tratti che corrono in orizzontale (si misurano in larghezza, si srotolano con scaleX). */
-const ORIZZONTALI: ReadonlySet<RuoloTratto> = new Set<RuoloTratto>(['entra', 'traversa', 'fine-traversa']);
+const ORIZZONTALI: ReadonlySet<RuoloTratto> = new Set<RuoloTratto>(['entra', 'traversa']);
 
 interface TrattoProps {
   readonly ruolo: RuoloTratto;
 }
 
 /**
- * Tratto dritto del filo: sotto il percorso a matita, sopra la riga
- * d'inchiostro larga quanto il filo degli schemi, che si srotola
- * (scaleX / scaleY) mentre `--imp-filo-p` attraversa il suo intervallo.
+ * Tratto dritto del filo: una riga d'inchiostro larga quanto il filo degli
+ * schemi, che si srotola (scaleX / scaleY) mentre `--imp-filo-p`
+ * attraversa il suo intervallo.
  */
 export const TrattoFilo = forwardRef<HTMLSpanElement, TrattoProps>(function TrattoFilo({ ruolo }, ref) {
   const verso = ORIZZONTALI.has(ruolo) ? 'orizzontale' : 'verticale';
@@ -137,9 +134,9 @@ export const TrattoFilo = forwardRef<HTMLSpanElement, TrattoProps>(function Trat
 });
 
 /**
- * Il nodo finale: il filo arriva da destra sotto "Prova la tua" e si chiude
- * su sé stesso, come il nodo con cui il legatore ferma l'ultima segnatura.
- * Il cerchio parte dal punto a destra (dove arriva il filo).
+ * Il nodo finale: il filo scende accanto a "Prova la tua" e si chiude su sé
+ * stesso, come il nodo con cui il legatore ferma l'ultima segnatura. Il
+ * cerchio parte dal punto in alto (dove arriva il filo).
  */
 export const NodoFilo = forwardRef<SVGSVGElement>(function NodoFilo(_props, ref) {
   const lato = NODO_R * 2 + 2.4;
@@ -153,7 +150,14 @@ export const NodoFilo = forwardRef<SVGSVGElement>(function NodoFilo(_props, ref)
       aria-hidden="true"
       focusable="false"
     >
-      <circle className="imp-legatoria__nodo-cerchio" cx={centro} cy={centro} r={NODO_R} pathLength="1" />
+      <circle
+        className="imp-legatoria__nodo-cerchio"
+        cx={centro}
+        cy={centro}
+        r={NODO_R}
+        pathLength="1"
+        transform={`rotate(-90 ${centro} ${centro})`}
+      />
     </svg>
   );
 });

@@ -23,8 +23,8 @@
  *   (una o due righe, spezzate tra le parole), la riga "La tua prova è in
  *   stampa." sostituisce il sottotitolo, la pressa si riarma e riscende;
  * - l'invito "luce col telefono" resta nel flusso, sotto il bottone.
- * Il dial della luce (solo desktop) sta sotto "ta", chiuso sul margine
- * esterno come la parola (giuria: allineato alla gabbia, accanto alla parola).
+ * Il dial della luce (solo desktop) pende dal piede di "ta", chiuso sul
+ * margine esterno come la parola (giuria giro 2: agganciato alla parola).
  *
  * Nessuna informazione solo nel rilievo; nessun accesso a window/document a
  * livello di modulo.
@@ -187,8 +187,8 @@ function InvitoLuce({ onEsito }: { onEsito: (annuncio: string | null) => void })
 }
 
 /**
- * Dial "Direzione della luce" (solo da 1024 px): sotto "ta", chiuso sul
- * margine esterno come la parola, alla linea del bottone.
+ * Dial "Direzione della luce" (solo da 1024 px): appeso sotto il piede di
+ * "ta", chiuso sul margine esterno come la parola.
  */
 function DialLuce() {
   const dial = useLuceDial();

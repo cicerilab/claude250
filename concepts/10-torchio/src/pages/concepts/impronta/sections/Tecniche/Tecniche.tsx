@@ -85,6 +85,20 @@ const PROFONDITA: Record<IdTecnica, number> = {
  */
 const CARTA_TAGLIO: Carta = 'cotone';
 
+/**
+ * Il colore del bordo dipinto: un'altra carta del sistema, mai l'inchiostro,
+ * e sempre diversa dalla carta del sito su cui la pila è appoggiata (giro 3
+ * della giuria: su Citrino il verde notte si leggeva come un filetto scuro).
+ * Sulla faccia della pila si mette `data-carta` di questa carta: il CSS usa
+ * il suo fondo e la sua ombra, cioè una tinta calda e piena.
+ */
+const CARTA_BORDO: Record<Carta, Carta> = {
+  citrino: 'cipria',
+  cotone: 'citrino',
+  cipria: 'citrino',
+  grafite: 'citrino',
+};
+
 /** Id del titolo della sezione (aria-labelledby). */
 const ID_TITOLO = 'imp-tecniche-titolo';
 
@@ -206,12 +220,14 @@ function Lastra({
   id,
   parola,
   parolaRef,
+  cartaSito,
   registrata,
   attesa,
 }: {
   id: IdTecnica;
   parola: string;
   parolaRef: RefObject<HTMLDivElement>;
+  cartaSito: Carta;
   registrata: boolean;
   attesa: boolean;
 }) {
@@ -225,7 +241,7 @@ function Lastra({
       className={taglio ? 'imp-tecniche__foglio imp-foglio imp-tecniche__foglio--pila' : 'imp-tecniche__foglio imp-foglio'}
       data-carta={taglio ? CARTA_TAGLIO : undefined}
     >
-      {taglio ? <span className="imp-tecniche__pila" /> : null}
+      {taglio ? <span className="imp-tecniche__pila" data-carta={CARTA_BORDO[cartaSito]} /> : null}
       <div
         ref={parolaRef}
         {...(attesa ? ATTESA_PRESSA : {})}
@@ -245,10 +261,22 @@ function TecnichePin({ parola, carta }: { parola: string; carta: Carta }) {
   const parolaRef = useRef<HTMLDivElement>(null);
   const dalBanco = useArrivoDalBanco();
 
-  /** Voce corrente nell'elenco: cambia subito al passo (è un indice). */
-  const [passo, setPasso] = useState(0);
-  /** Tecnica sotto la pressa (parola, titolo e righe): cambia al fondo della ristampa. */
+  /**
+   * Tecnica in vista: parola, indice, titolo e righe cambiano insieme, allo
+   * stesso stato, al fondo della ristampa (giro 3: col GL il testo restava
+   * indietro di uno stato rispetto all'indice). Se la platina tarda (ticker
+   * lento, scheda in secondo piano), una rete di sicurezza applica comunque
+   * l'ultimo passo alla fine della durata intera della ristampa.
+   */
   const [mostrata, setMostrata] = useState(0);
+  const ultimoPasso = useRef(0);
+  const sicurezza = useRef(0);
+  useEffect(
+    () => () => {
+      window.clearTimeout(sicurezza.current);
+    },
+    [],
+  );
 
   const voce = VOCI[mostrata] ?? VOCI[0];
   const id: IdTecnica = voce?.id ?? 'secco';
@@ -285,14 +313,18 @@ function TecnichePin({ parola, carta }: { parola: string; carta: Carta }) {
     isteresi: MOTO.isteresi,
     derivate: { [VAR.tecnicheGiro]: giroTecniche },
     onPasso: (indice, precedente) => {
-      setPasso(indice);
+      ultimoPasso.current = indice;
       if (precedente === -1) {
         setMostrata(indice);
         return;
       }
-      pressa.ristampa(() => {
-        setMostrata(indice);
-      });
+      const applica = (): void => {
+        window.clearTimeout(sicurezza.current);
+        setMostrata(ultimoPasso.current);
+      };
+      pressa.ristampa(applica);
+      window.clearTimeout(sicurezza.current);
+      sicurezza.current = window.setTimeout(applica, MOTO.ristampa.risalita + MOTO.ristampa.discesa);
     },
   });
 
@@ -303,14 +335,14 @@ function TecnichePin({ parola, carta }: { parola: string; carta: Carta }) {
           <Testa statica={false} />
 
           <div className="imp-tecniche__zona" aria-hidden="true">
-            <Lastra id={id} parola={parola} parolaRef={parolaRef} registrata={!taglio} attesa />
+            <Lastra id={id} parola={parola} parolaRef={parolaRef} cartaSito={carta} registrata={!taglio} attesa />
           </div>
 
           <div className="imp-tecniche__lato">
             <div className="imp-tecniche__indice">
               <ol className="imp-tecniche__elenco imp-lista" aria-label={TESTI.elencoAria}>
                 {VOCI.map((v, i) => {
-                  const corrente = i === passo;
+                  const corrente = i === mostrata;
                   return (
                     <li key={v.id} className="imp-tecniche__voce-indice">
                       <button
@@ -356,7 +388,7 @@ function TecnichePin({ parola, carta }: { parola: string; carta: Carta }) {
 /* ------------------------------------------------------------------ resa statica */
 
 /** Una lastra già premuta nella sua tecnica (reduced motion, finestra bassa). */
-function LastraStatica({ voce, parola }: { voce: Voce; parola: string }) {
+function LastraStatica({ voce, parola, carta }: { voce: Voce; parola: string; carta: Carta }) {
   const parolaRef = useRef<HTMLDivElement>(null);
   const taglio = voce.id === 'taglio';
   const reliefId = useRelief(
@@ -375,7 +407,14 @@ function LastraStatica({ voce, parola }: { voce: Voce; parola: string }) {
 
   return (
     <div className="imp-tecniche__zona imp-tecniche__zona--statica" aria-hidden="true" data-tecnica={voce.id}>
-      <Lastra id={voce.id} parola={parola} parolaRef={parolaRef} registrata={!taglio} attesa={false} />
+      <Lastra
+        id={voce.id}
+        parola={parola}
+        parolaRef={parolaRef}
+        cartaSito={carta}
+        registrata={!taglio}
+        attesa={false}
+      />
     </div>
   );
 }
@@ -388,7 +427,7 @@ function TecnicheStatiche({ parola, carta }: { parola: string; carta: Carta }) {
       <ol className="imp-tecniche__blocchi imp-lista" aria-label={TESTI.elencoAria}>
         {VOCI.map((v) => (
           <li key={v.id} className="imp-tecniche__blocco">
-            <LastraStatica voce={v} parola={parola} />
+            <LastraStatica voce={v} parola={parola} carta={carta} />
             <div className="imp-tecniche__testo-statico">
               <Spiegazione voce={v} parola={parola} carta={carta} />
             </div>

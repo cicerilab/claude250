@@ -807,7 +807,7 @@ export default function Testata() {
             ) : (
               <a
                 href="#banco"
-                className="imp-testata__cta imp-ix-premibile"
+                className="imp-testata__cta imp-lamina imp-ix-premibile"
                 aria-label={TESTATA.provaAria}
                 data-imp-richiamo="testata"
                 aria-hidden={ctaTestata ? undefined : true}
@@ -835,7 +835,7 @@ export default function Testata() {
 
       <a
         href="#banco"
-        className="imp-segnapagina imp-ix-premibile"
+        className="imp-segnapagina imp-lamina imp-ix-premibile"
         aria-label={TESTATA.provaAria}
         data-imp-richiamo="segnapagina"
         data-visibile={richiamoVisibile ? '' : undefined}

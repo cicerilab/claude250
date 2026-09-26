@@ -51,8 +51,11 @@
   justify-content: space-between;
   gap: var(--imp-sp-4);
   block-size: 100%;
-  /* Giro 2: testata chiusa su margini simmetrici (il margine interno da
-     entrambi i lati), a tutta finestra come la parola dell'hero. */
+  /* Testata chiusa su margini simmetrici (il margine interno da entrambi i
+     lati), dentro la stessa gabbia da 1680 px di tutte le sezioni (giro 3:
+     una sola regola di allineamento anche a 2560). */
+  max-inline-size: var(--imp-pagina-max);
+  margin-inline: auto;
   padding-inline: var(--imp-margine-interno);
 }
 
@@ -117,9 +120,10 @@
 }
 
 /*
- * "Prova la tua" della testata e dell'angolo in basso: inchiostro pieno sulla
- * carta, come una riga stampata a un colore. La lamina resta all'hero (un
- * solo punto di lusso per schermo, giuria giro 1 §3).
+ * "Prova la tua" della testata e dell'angolo in basso: la stessa lamina
+ * dell'hero e del colophon (classe .imp-lamina dell'art-director), in
+ * piccolo, 44 px. Giro 3: una sola azione, un solo aspetto. Colore, fondo e
+ * bordi li dà .imp-lamina: qui solo misura e tipografia.
  */
 .imp-root .imp-testata__cta,
 .imp-root .imp-segnapagina {
@@ -128,8 +132,6 @@
   justify-content: center;
   min-block-size: var(--imp-tocco-min);
   padding-inline: var(--imp-sp-5);
-  color: var(--imp-carta);
-  background-color: var(--imp-inchiostro);
   font-size: var(--imp-fs-bottone);
   font-weight: var(--imp-wght-bottone);
   line-height: var(--imp-lh-interfaccia);
@@ -139,14 +141,6 @@
 
 .imp-root .imp-testata__cta {
   inline-size: 100%;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .imp-root :is(.imp-testata__cta, .imp-segnapagina):hover {
-    text-decoration-line: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 0.25em;
-  }
 }
 
 .imp-root .imp-testata__sul-banco {
@@ -177,10 +171,11 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: var(--imp-fs-piccolo);
-  font-weight: var(--imp-wght-interfaccia);
+  /* Giro 3: "indice" leggibile accanto al nome della sezione (16 px, 600). */
+  font-size: 1rem;
+  font-weight: var(--imp-wght-corpo-forte);
   line-height: 1;
-  color: var(--imp-inchiostro-velato);
+  color: var(--imp-inchiostro);
 }
 
 /* Il foglio dell'indice scende da qui: un triangolo pieno che punta in giù. */
@@ -321,8 +316,9 @@
   z-index: var(--imp-z-testata);
   padding-inline: 18px;
   font-size: 1rem;
+  /* I bordi della lamina, più un'ombra corta tinta: è appoggiato sopra il testo. */
   box-shadow:
-    0 1px 0 0 var(--imp-carta-costa),
+    var(--imp-lamina-bordi, inset 0 0 0 1px var(--imp-lamina-bordo)),
     0 8px 14px -10px var(--imp-carta-ombra);
   transform: translateY(calc(100% + 24px + env(safe-area-inset-bottom)));
   visibility: hidden;
@@ -349,6 +345,18 @@
 @media (min-width: 1024px) {
   .imp-root .imp-segnapagina {
     display: none;
+  }
+}
+
+/* Sotto 1024 px: in fondo alla pagina uno spazio alto quanto i comandi fissi
+   in basso ("Torna in Ciceri Lab" del sito, "Prova la tua"), così l'ultima
+   riga del colophon non resta sotto di loro (giuria giro 2, punto 9).
+   È un ::after del contenitore: nessun elemento in più, nessun altro file. */
+@media (max-width: 1023.98px) {
+  .imp-root .imp-contenuto::after {
+    content: "";
+    display: block;
+    block-size: calc(var(--imp-segnapagina-h) + max(env(safe-area-inset-bottom), 14px));
   }
 }
 

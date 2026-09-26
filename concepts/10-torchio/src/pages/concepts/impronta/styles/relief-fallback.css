@@ -17,7 +17,6 @@
      .imp-taglio      modificatore di .imp-foglio: bordo tinto (taglio colorato)
      .imp-costa       spessore della carta visto di taglio (strisce "La carta")
      .imp-fibra       fibra della carta su qualsiasi superficie
-     .imp-superficie  superficie sollevata tinta (tasti, campi, pannelli)
      .imp-pressa      parola a riga singola che si allarga sotto la pressa
 
    Variabili lette (tutte con default in tokens.css):
@@ -39,8 +38,11 @@
 }
 
 /* --------------------------------------------------------------------------
-   Unità del rilievo (giro 2: più profondo e più netto).
-   --_imp-d: passo del bisello, 0,02 em del corpo, mai sotto 1 px, scalato
+   Unità del rilievo (giro 3: il solco non svanisce con il corpo).
+   --_imp-d: passo del bisello, 0,016 em + 1 px (mai sotto 1,5 px): a 30 px
+   di corpo 1,5 px, a 60 px 2 px, a 145 px 3,3 px. La parte fissa tiene netto
+   il solco dei corpi medi (tecniche, prova del banco) come quello dell'hero;
+   scalato
    da pressione e profondità. Sfocature mai oltre 1 px: il solco del piombo
    ha lo spigolo netto, è la luce radente a farlo leggere.
    --_imp-dx / --_imp-dy: lo stesso passo proiettato sulla direzione della luce.
@@ -49,7 +51,7 @@
    è la lettura di una lettera PREMUTA dentro il foglio, non in rilievo.
    -------------------------------------------------------------------------- */
 .imp-root :is(.imp-secco, .imp-inchiostro, .imp-caldo) {
-  --_imp-d: calc(max(1px, 0.02em) * var(--imp-press) * var(--imp-rilievo));
+  --_imp-d: calc(max(1.5px, 0.016em + 1px) * var(--imp-press) * var(--imp-rilievo));
   --_imp-dx: calc(var(--_imp-d) * var(--imp-luce-x));
   --_imp-dy: calc(var(--_imp-d) * var(--imp-luce-y));
   --_imp-sfuma: min(1px, var(--_imp-d));
@@ -129,15 +131,6 @@
     drop-shadow(calc(var(--_imp-dx) * -0.8) calc(var(--_imp-dy) * -0.8) 0 var(--imp-carta-luce));
 }
 
-/* Se il ritaglio sul testo non è supportato: argento pieno, ben leggibile
-   come forma, ombre invariate. */
-@supports not ((-webkit-background-clip: text) or (background-clip: text)) {
-  .imp-root .imp-caldo {
-    background-image: none;
-    -webkit-text-fill-color: currentColor;
-  }
-}
-
 /* --------------------------------------------------------------------------
    .imp-segno-caldo · un segno SVG (il marchio del vector-artist) in lamina
    L'SVG ha fill="currentColor": qui lo si usa come maschera, così prende la
@@ -188,22 +181,6 @@
   -webkit-text-fill-color: var(--imp-su-lamina);
   border-radius: var(--imp-raggio);
   box-shadow: var(--imp-lamina-bordi);
-}
-
-/* --------------------------------------------------------------------------
-   .imp-superficie · superficie sollevata (tasti di scelta, campi, pannelli)
-   Tinta della carta (--imp-superficie: Citrino #EBD958, Cotone #E2E3DF,
-   Cipria #EFC7C1, Grafite #36383C), mai bianco puro. Nessun bordino
-   tutt'intorno: labbro di luce in alto, costa sotto, ombra corta tinta.
-   Per lo stato scelto il builder aggiunge il bordo interno inchiostro
-   (--imp-bordo-scelto) sopra --imp-ombra-superficie.
-   -------------------------------------------------------------------------- */
-.imp-root .imp-superficie {
-  background-color: var(--imp-superficie);
-  background-image: var(--imp-fibra);
-  color: var(--imp-inchiostro);
-  border-radius: var(--imp-raggio);
-  box-shadow: var(--imp-ombra-superficie);
 }
 
 /* --------------------------------------------------------------------------

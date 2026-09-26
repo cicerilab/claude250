@@ -22,7 +22,7 @@
  * delegato di Impronta.tsx; nessun accesso a window/document a livello di
  * modulo.
  */
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState, type CSSProperties } from 'react';
 import './colophon.css';
 
 import { freccia, marchioImpronta } from '../../assets/svg';
@@ -65,15 +65,44 @@ function FraseCarta({ carta }: { carta: Carta }) {
 }
 
 /**
+ * Finestre sul marchio (viewBox 0 0 941 100). Sopra i 600 px il marchio è
+ * intero; sotto va su due righe, IMPR / ONTA, così a 375 è alto 65 px invece
+ * di 36. Le righe hanno la stessa scala: ONTA (514 unità) riempie l'area viva,
+ * IMPR ne occupa l'82%. Il taglio cade nel vuoto tra la R (fine a 415) e la
+ * O (inizio a 431).
+ */
+const FINESTRE = {
+  intero: { x: 0, w: 941 },
+  impr: { x: 0, w: 423 },
+  onta: { x: 427, w: 514 },
+} as const;
+const RIGA_MAX = FINESTRE.onta.w;
+
+type Finestra = keyof typeof FINESTRE;
+
+/** Il markup del marchio con la finestra voluta: lo stesso che riceve lo shader. */
+function marchioFinestra(f: Finestra): string {
+  const { x, w } = FINESTRE[f];
+  return marchioImpronta.replace(/viewBox="[^"]*"/, `viewBox="${x} 0 ${w} 100"`);
+}
+
+const SVG_FINESTRE: Record<Finestra, string> = {
+  intero: marchioFinestra('intero'),
+  impr: marchioFinestra('impr'),
+  onta: marchioFinestra('onta'),
+};
+
+/**
  * Il marchio premuto a secco. Registrato come rilievo SVG (lo disegna lo
  * shader quando c'è); il fallback è l'SVG in linea con il solco nel filtro.
  */
-function Sigillo() {
+function Sigillo({ finestra }: { finestra: Finestra }) {
   const ref = useRef<HTMLDivElement>(null);
+  const { x, w } = FINESTRE[finestra];
   const idFiltro = `imp-colophon-solco-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   const reliefId = useRelief(ref, {
     kind: 'svg',
-    svg: marchioImpronta,
+    svg: SVG_FINESTRE[finestra],
     tecnica: 'secco',
     profondita: 1,
     tracking: 'doc',
@@ -82,8 +111,19 @@ function Sigillo() {
   usePressione(ref, { profilo: MOTO.profilo, reliefId });
 
   return (
-    <div ref={ref} {...ATTESA_PRESSA} className="imp-colophon__marchio imp-relief" aria-hidden="true">
-      <svg className="imp-colophon__marchio-svg" viewBox="0 0 941 100" focusable="false">
+    <div
+      ref={ref}
+      {...ATTESA_PRESSA}
+      className={`imp-colophon__marchio imp-colophon__marchio--${finestra} imp-relief`}
+      style={
+        {
+          aspectRatio: `${w} / 100`,
+          '--imp-colophon-riga': finestra === 'intero' ? 1 : w / RIGA_MAX,
+        } as CSSProperties
+      }
+      aria-hidden="true"
+    >
+      <svg className="imp-colophon__marchio-svg" viewBox={`${x} 0 ${w} 100`} focusable="false">
         <defs>
           <filter id={idFiltro} x="-2%" y="-10%" width="104%" height="120%" colorInterpolationFilters="sRGB">
             {/* parete in ombra: la carta attorno, spostata via dalla luce, ritagliata dentro la lettera */}
@@ -250,7 +290,13 @@ export default function Colophon() {
         </div>
 
         <div className="imp-colophon__sigillo">
-          <Sigillo />
+          <div className="imp-colophon__marchio-intero">
+            <Sigillo finestra="intero" />
+          </div>
+          <div className="imp-colophon__marchio-righe">
+            <Sigillo finestra="impr" />
+            <Sigillo finestra="onta" />
+          </div>
           <p className="imp-colophon__bottega imp-piccolo">
             <span className="imp-colophon__bottega-nome">{COMUNI.marchioSotto}</span>{' '}
             <span className="imp-colophon__bottega-citta">{COMUNI.citta}</span>

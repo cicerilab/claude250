@@ -63,9 +63,7 @@
   --imp-fs-titolo-2: clamp(1.875rem, calc(1.215rem + 2.817vw), 3.75rem);    /* H2 sezioni 30 → 60 */
   --imp-fs-titolo-3: clamp(1.375rem, calc(1.199rem + 0.751vw), 1.875rem);   /* H3 22 → 30 */
   --imp-fs-nome: clamp(1.25rem, calc(1.206rem + 0.188vw), 1.375rem);        /* parola-nome 20 → 22 */
-  --imp-fs-secco-grande: clamp(2rem, calc(1.384rem + 2.629vw), 3.75rem);    /* indirizzo, nomi carta 32 → 60 */
   --imp-fs-prezzo: clamp(1.75rem, calc(1.398rem + 1.502vw), 2.75rem);       /* prezzo in lamina 28 → 44 */
-  --imp-fs-marchio: 1.25rem;                                                /* IMPRONTA in testata, 20 */
   --imp-fs-lead: clamp(1.125rem, calc(1.059rem + 0.282vw), 1.3125rem);      /* sottotitolo hero 18 → 21 */
   --imp-fs-corpo: clamp(1.0625rem, calc(1.04rem + 0.094vw), 1.125rem);      /* corpo 17 → 18 */
   --imp-fs-piccolo: clamp(0.9375rem, calc(0.915rem + 0.094vw), 1rem);       /* didascalie, colophon 15 → 16 */
@@ -90,7 +88,6 @@
   --imp-trk-titolo: -0.012em;
   --imp-trk-titolo-3: -0.005em;
   --imp-trk-nome: 0em;
-  --imp-trk-marchio: 0.04em;
   --imp-trk-corpo: 0em;
   --imp-trk-piccolo: 0.005em;
 
@@ -99,7 +96,6 @@
      75, 87.5, 100, 112.5, 125, 150 (vedi CANVAS_STRETCH in tokens.ts). */
   --imp-wdth-hero: 100;
   --imp-wght-hero: 900;
-  --imp-hero-em: 5.479;           /* larghezza di "impronta" in em a wght 900, tracking incluso */
   --imp-wdth-titolo-1: 100;
   --imp-wght-titolo-1: 700;
   --imp-wdth-titolo-2: 100;
@@ -112,12 +108,16 @@
   --imp-wght-secco-grande: 800;
   --imp-wdth-prezzo: 125;
   --imp-wght-prezzo: 900;
-  --imp-wdth-marchio: 150;
-  --imp-wght-marchio: 800;
   --imp-wght-corpo: 400;
   --imp-wght-corpo-forte: 600;
   --imp-wght-interfaccia: 500;
   --imp-wght-bottone: 600;
+
+  /* Fibra della carta (giro 3: una sola per tutte le carte, −0,4 KB gz).
+     Macchie scure quasi nere e chiare quasi bianche, a bassissima opacità,
+     stirate in orizzontale (senso della fibra). Si adatta da sola: sulle
+     carte chiare si vedono le scure, su Grafite le chiare. Statica. */
+  --imp-fibra: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='280'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8 .22' numOctaves='3' seed='7' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' values='0 0 0 0 .1 0 0 0 0 .1 0 0 0 0 .08 .5 0 0 0 -.26' result='s'/%3E%3CfeColorMatrix in='n' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 .96 -.62 0 0 0 .28' result='l'/%3E%3CfeMerge%3E%3CfeMergeNode in='s'/%3E%3CfeMergeNode in='l'/%3E%3C/feMerge%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
 
   /* Pressione (0 → 1). Scritta dal motion-designer sugli elementi premuti.
      Qui il default: tutto già premuto (pagina statica, reduced motion). */
@@ -148,9 +148,6 @@
   --imp-colonna: calc((var(--imp-area-viva) - (var(--imp-colonne) - 1) * var(--imp-canalino)) / var(--imp-colonne));
   --imp-giustezza: 62ch;
   --imp-giustezza-stretta: 44ch;
-
-  /* Corpo della parola dell'hero: riempie l'area viva, mai tagliata. */
-  --imp-fs-secco-hero: calc(var(--imp-area-viva) / var(--imp-hero-em));
 
   /* Spazi (multipli di 4 px) */
   --imp-sp-1: 0.25rem;  /* 4 */
@@ -217,7 +214,6 @@
   --imp-z-canvas: 0;
   --imp-z-contenuto: 1;
   --imp-z-testata: 10;
-  --imp-z-onda: 20;
 }
 
 /* Breakpoint: 600 (margini da libro) e 1024 (desktop). */
@@ -228,7 +224,6 @@
     --imp-colonne: 8;
     --imp-canalino: 22px;
     --imp-wdth-hero: 125;
-    --imp-hero-em: 6.819;
   }
 }
 
@@ -237,7 +232,6 @@
     --imp-colonne: 12;
     --imp-canalino: 24px;
     --imp-wdth-hero: 150;
-    --imp-hero-em: 8.158;
     --imp-wdth-titolo-2: 110;
     --imp-wdth-secco-grande: 150;
   }
@@ -265,8 +259,6 @@
   --imp-taglio: #17231D;
   --imp-spessore: 3px;          /* costa delle strisce "La carta" (esagerata) */
   --imp-spessore-pezzo: 1px; /* costa di un pezzo appoggiato, uguale al GL */
-  /* Fibra statica: un solo SVG, macchie scure (ombra) e chiare (luce), senso della fibra orizzontale. */
-  --imp-fibra: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='280'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8 .22' numOctaves='3' seed='7' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' values='0 0 0 0 0.612 0 0 0 0 0.541 0 0 0 0 0.118 0.42 0 0 0 -0.22' result='s'/%3E%3CfeColorMatrix in='n' values='0 0 0 0 0.961 0 0 0 0 0.914 0 0 0 0 0.494 -0.46 0 0 0 0.2' result='l'/%3E%3CfeMerge%3E%3CfeMergeNode in='s'/%3E%3CfeMergeNode in='l'/%3E%3C/feMerge%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
 }
 
 .imp-root[data-carta="cotone"],
@@ -284,8 +276,6 @@
   --imp-taglio: #E4CF3F;
   --imp-spessore: 6px;          /* costa delle strisce "La carta" (esagerata) */
   --imp-spessore-pezzo: 1.8px; /* costa di un pezzo appoggiato, uguale al GL */
-  /* Fibra statica: un solo SVG, macchie scure (ombra) e chiare (luce), senso della fibra orizzontale. */
-  --imp-fibra: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='280'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8 .22' numOctaves='3' seed='7' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' values='0 0 0 0 0.725 0 0 0 0 0.729 0 0 0 0 0.702 0.46 0 0 0 -0.24' result='s'/%3E%3CfeColorMatrix in='n' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 -0.5 0 0 0 0.22' result='l'/%3E%3CfeMerge%3E%3CfeMergeNode in='s'/%3E%3CfeMergeNode in='l'/%3E%3C/feMerge%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
 }
 
 .imp-root[data-carta="cipria"],
@@ -303,8 +293,6 @@
   --imp-taglio: #2A2C2F;
   --imp-spessore: 4px;          /* costa delle strisce "La carta" (esagerata) */
   --imp-spessore-pezzo: 1.1px; /* costa di un pezzo appoggiato, uguale al GL */
-  /* Fibra statica: un solo SVG, macchie scure (ombra) e chiare (luce), senso della fibra orizzontale. */
-  --imp-fibra: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='280'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8 .22' numOctaves='3' seed='7' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' values='0 0 0 0 0.663 0 0 0 0 0.467 0 0 0 0 0.435 0.42 0 0 0 -0.22' result='s'/%3E%3CfeColorMatrix in='n' values='0 0 0 0 0.969 0 0 0 0 0.847 0 0 0 0 0.827 -0.46 0 0 0 0.2' result='l'/%3E%3CfeMerge%3E%3CfeMergeNode in='s'/%3E%3CfeMergeNode in='l'/%3E%3C/feMerge%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
 }
 
 .imp-root[data-carta="grafite"],
@@ -322,8 +310,6 @@
   --imp-taglio: #E4CF3F;
   --imp-spessore: 5px;          /* costa delle strisce "La carta" (esagerata) */
   --imp-spessore-pezzo: 1.3px; /* costa di un pezzo appoggiato, uguale al GL */
-  /* Fibra statica: un solo SVG, macchie scure (ombra) e chiare (luce), senso della fibra orizzontale. */
-  --imp-fibra: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='280'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8 .22' numOctaves='3' seed='7' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' values='0 0 0 0 0.078 0 0 0 0 0.082 0 0 0 0 0.09 0.5 0 0 0 -0.27' result='s'/%3E%3CfeColorMatrix in='n' values='0 0 0 0 0.267 0 0 0 0 0.278 0 0 0 0 0.294 -0.52 0 0 0 0.24' result='l'/%3E%3CfeMerge%3E%3CfeMergeNode in='s'/%3E%3CfeMergeNode in='l'/%3E%3C/feMerge%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
 }
 
 /* --------------------------------------------------------------------------
@@ -338,10 +324,7 @@
   --imp-selezione-testo: var(--imp-carta);
 
   /* Profondità (vedi DESIGN.md §6). Tutte le ombre sono tinte della carta. */
-  --imp-ombra-costa: 0 var(--imp-spessore) 0 0 var(--imp-carta-costa);
   --imp-ombra-testata: 0 1px 0 0 var(--imp-carta-costa), 0 10px 14px -14px var(--imp-carta-ombra);
-  --imp-ombra-segnapagina: 0 -1px 0 0 var(--imp-carta-costa), 0 -10px 14px -14px var(--imp-carta-ombra);
-  --imp-ombra-indice: 0 -1px 0 0 var(--imp-carta-costa), 0 -24px 40px -28px var(--imp-carta-ombra);
   --imp-ombra-premuto: inset 0 2px 3px -1px color-mix(in srgb, var(--imp-carta-ombra) 70%, transparent);
   /* Superficie sollevata (tasti, campi, pannelli): labbro di luce in alto,
      costa in basso, ombra di appoggio corta. Niente bordino tutt'intorno. */
@@ -350,8 +333,6 @@
 
 /* Solo sulla radice: com'è la carta del sito sotto ai fogli interni. */
 .imp-root {
-  --imp-sito-carta: var(--imp-carta);
   --imp-sito-ombra: var(--imp-carta-ombra);
-  --imp-sito-costa: var(--imp-carta-costa);
   --imp-sito-inchiostro: var(--imp-inchiostro);
 }

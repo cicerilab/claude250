@@ -144,3 +144,27 @@ fine), Playwright con font serviti da `page.route` + curl (proxy),
 screenshot a 375 / 768 / 1440 / 2560 su Citrino e Cotone, più Cotone 1440
 `?gl=0`: `/tmp/claude-0/shots-bottega/g2-*.png`. Nessuno scroll
 orizzontale. `tsc` ed `eslint` puliti sui file della sezione.
+
+## Giro 3
+
+- **Vuoto tra intro e indirizzo**: da ~120 px (riga della griglia più
+  margine) a 32 px su ogni larghezza: `margin-block-start` del
+  frontespizio = `--imp-sp-6` meno la riga della griglia
+  (`--_imp-bottega-riga`, 64 / 96 px). Intro e indirizzo premuto ora si
+  leggono come un blocco; il resto del ritmo (orari, chi c'è, piede) non
+  cambia.
+- **Override di Cotone tolto**: l'art-director ha rinforzato il secco su
+  Cotone in globale. Con `--imp-rilievo` 2,4 locale il solco diventava
+  pesante; senza override (e senza l'1,6 generico) a 1440 `?gl=0` il
+  secco su Cotone si legge netto e resta materiale, su Citrino uguale a
+  prima. Nessun override di profondità nella sezione.
+- **Gerarchia a 375 e 1440 riverificata**: H2 → indirizzo premuto →
+  riga d'editore (gemello + tre link ~20 px + nota) → stato in una riga →
+  orari / chi c'è → piede. L'indirizzo è l'unico elemento grande.
+- Nota: negli scatti a 375 le righe premute sono fotografate a metà
+  discesa della pressa (testo al 70% della larghezza di arrivo), quindi
+  più chiare del riposo. L'allineamento del rilievo GL sopra i link a 375 è
+  dello shader-engineer.
+
+Screenshot: `/tmp/claude-0/shots-bottega/g3-{citrino,cotone}-{375,1440}-gl0.png`.
+`tsc` ed `eslint` puliti sui file della sezione.
