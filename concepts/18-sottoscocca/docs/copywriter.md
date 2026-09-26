@@ -82,7 +82,7 @@ import { LAVORI, PUNTI, ORARI, pontiAdatti, durataMinuti } from '../../content/l
 | `RECAPITI` | officina, piede, P0, F5 | `indirizzoRiga1/2`, `indirizzoAria`, `chiama`, `chiamaAria`, `chiamaHref`, `scrivi`, `scriviAria`, `scriviHref`, `maps`, `mapsAria`, `mapsHref`, `nota` |
 | `OFFICINA` | officina | `titolo`, `come`, `orariTitolo`, `orari[]`, `picchi`, `chi`, `storia`, `attesa`, `noFacciamo`, `voci[]` (3 recensioni), `vociAria`, `fotoAlt.{ponte, attrezzatura, esterno}` |
 | `FALLBACK` | Fondale | `alt` (vuoto), `descrizione` per 0/80/180, `fermoAlt` (vuoto) |
-| `PIEDE` | piede | `marchio`, `finzione`, `modello`, `modelloHref`, `modelloAria`, `fotoTitolo`, `foto(autore)`, `fotoAria(autore)`, `conceptDi`, `indiceTitolo`, `indiceAria`, `indice[]`, `trovaUnBuco`, `ricomincia`, `ricominciaAria`, `ricominciato` |
+| `PIEDE` | piede | `marchio`, `finzione`, `modello`, `modelloHref`, `modelloAria`, `fotoTitolo`, `foto(credito)`, `fotoAria(credito)`, `licenzaAria(credito)`, `fotoModificate`, `conceptDi`, `indiceTitolo`, `indiceAria`, `indice[]`, `trovaUnBuco`, `ricomincia`, `ricominciaAria`, `ricominciato` |
 | `ANNUNCI` | regione `aria-live` | `plateau(q)`, `aggiunto(id, tot)`, `sostituito(nuovo, vecchio, tot)`, `tolto(id, tot)`, `schedaAperta(id)`, `ricominciato` |
 | `LAVORI_NOMI` | scheda, parcheggio, barra | per `IdLavoro`: `nome`, `breve`, `parlato`, `nota` |
 | `PONTI_TESTI` | planning | per ponte: `nome`, `targhetta`, `chi`, `aria` |
@@ -349,8 +349,27 @@ Chi cambia un testo resta sotto questi limiti o avvisa art-director e builder.
 - **photo-editor**: se le foto scelte non corrispondono a
   `DEPOSITO_TESTI.fotoAlt` o `OFFICINA.fotoAlt.*` (soggetto diverso, nessuna foto
   per "esterno"), scrivetemi cosa si vede davvero e riscrivo l'`alt`.
-  `PIEDE.foto(autore)` prende l'autore dal vostro `assets/foto/index.ts`.
+  (Fatto, vedi "Giro foto" in fondo.)
 - **art-director**: la cifra delle quote ("20 cm") è in `*.cifra`; le
   targhette dei ponti sono su due righe (`nome` + `targhetta`).
 - **seo-engineer (ondata 4)**: `META` e `VETRINA` sono pronti; JSON-LD come
   WebPage/CreativeWork di Ciceri Lab, mai LocalBusiness.
+
+---
+
+## Giro foto (dopo il photo-editor)
+
+Le 6 foto vengono da Wikimedia Commons e Flickr, nessuna da Unsplash. Le tre
+di Deposito e Officina le ho guardate con Read e ho riscritto gli `alt` su
+quello che si vede: `DEPOSITO_TESTI.fotoAlt` (scaffali di ferro, gomme
+invernali, muro di pietra), `OFFICINA.fotoAlt.ponte` (interno di un gommista,
+auto sulle pedane col portellone aperto), `OFFICINA.fotoAlt.attrezzatura`
+(colonna blu del ponte con quadro e centralina). `OFFICINA.fotoAlt.esterno`
+resta ma non è usata (nessuna foto). `FALLBACK.descrizione` allineata ai
+soggetti veri (le foto del fallback restano decorative).
+Crediti nel piede: `PIEDE.foto(c)` → "AnnSophieQ, Flickr, CC BY-SA 2.0",
+`PIEDE.fotoAria(c)`, nuova `PIEDE.licenzaAria(c)` per il link alla licenza,
+nuova `PIEDE.fotoModificate` ("Foto ritagliate e ridimensionate."). Il
+parametro è `CreditoFotoTesto` (autore, fonte, licenza): `CreditoFoto` di
+`assets/foto/index.ts` ci entra così com'è. Nessuna chiave rinominata,
+typecheck verde. Il builder del piede passa ogni voce di `CREDITI_FOTO`.

@@ -564,7 +564,7 @@ export const DEPOSITO_TESTI = {
   aggiunto: 'Cambio gomme nel tuo lavoro, togli',
   aggiungiAria: 'Aggiungi al lavoro il cambio gomme',
   /** Foto stock: l'alt descrive quello che si vede, non dice "il nostro deposito". */
-  fotoAlt: 'Scaffali di gomme in un deposito, i treni impilati uno sopra l\'altro.',
+  fotoAlt: 'Scaffali di ferro pieni di gomme invernali su tre piani, contro un muro di pietra, con qualche cartellino appeso.',
 } as const;
 
 /* ================================================================== il ponte libero · planning */
@@ -900,8 +900,9 @@ export const OFFICINA = {
   vociAria: 'Cosa dicono i clienti',
   /** Foto stock: l'alt dice quello che si vede, mai "la nostra officina". */
   fotoAlt: {
-    ponte: 'Un\'auto alzata su un ponte a due colonne in un\'officina ordinata.',
-    attrezzatura: 'Il pavimento di un\'officina con le linee di una postazione e l\'attrezzatura al muro.',
+    ponte: 'L\'interno di un gommista: un\'auto grigia sulle pedane col portellone aperto, pile di gomme e cerchi sugli scaffali, neon sotto le travi di legno.',
+    attrezzatura: 'La colonna blu di un ponte sollevatore con il quadro elettrico e la centralina, accanto al retro di un\'auto grigia.',
+    /** Nessuna foto dell'esterno (photo-editor): chiave tenuta, oggi non usata. */
     esterno: 'L\'ingresso di un\'officina con la serranda alzata.',
   },
 } as const;
@@ -918,15 +919,22 @@ export const OFFICINA = {
 export const FALLBACK = {
   alt: '',
   descrizione: {
-    0: 'Un\'auto ferma su un ponte a due colonne, ruote a terra.',
-    80: 'Una ruota smontata con disco e pinza in vista, all\'altezza degli occhi.',
-    180: 'Il sottoscocca di un\'auto visto da sotto, con lo scarico.',
+    0: 'Un\'utilitaria grigia su un ponte a due colonne blu, vista di lato, in un\'officina con le linee gialle a terra.',
+    80: 'Una ruota tolta: disco del freno, pinza e mozzo in primo piano, sopra la molla blu della sospensione.',
+    180: 'Il sottoscocca visto da sotto: albero di trasmissione, giunto e culla, con due mani in guanti blu.',
   },
   /** Fermi immagine della scena 3D (piano B): decorativi. */
   fermoAlt: '',
 } as const;
 
 /* ================================================================== piede */
+
+/** Forma minima di `CreditoFoto` (assets/foto/index.ts), scritta qui per non importare i .webp. */
+export interface CreditoFotoTesto {
+  readonly autore: string;
+  readonly fonte: string;
+  readonly licenza: string;
+}
 
 export const PIEDE = {
   marchio: 'SOTTOSCOCCA, officina e gommista',
@@ -935,9 +943,15 @@ export const PIEDE = {
   modelloHref: RECAPITI_DATI.kenneyHref,
   modelloAria: 'Car Kit di Kenney, licenza CC0 (si apre in una nuova scheda)',
   fotoTitolo: 'Foto',
-  /** "Foto di Nome Cognome su Unsplash": autore e URL da `assets/foto/index.ts`. */
-  foto: (autore: string): string => `${autore} su Unsplash`,
-  fotoAria: (autore: string): string => `Foto di ${autore} su Unsplash (si apre in una nuova scheda)`,
+  /**
+   * Credito di una foto, da `CREDITI_FOTO` di `assets/foto/index.ts`:
+   * "AnnSophieQ, Flickr, CC BY-SA 2.0". Autore linkato a `url`, licenza a `licenzaUrl`.
+   */
+  foto: (c: CreditoFotoTesto): string => `${c.autore}, ${c.fonte}, ${c.licenza}`,
+  fotoAria: (c: CreditoFotoTesto): string => `Foto di ${c.autore} su ${c.fonte} (si apre in una nuova scheda)`,
+  licenzaAria: (c: CreditoFotoTesto): string => `Licenza ${c.licenza} (si apre in una nuova scheda)`,
+  /** Nota unica sotto i crediti (serve per CC BY-SA). */
+  fotoModificate: 'Foto ritagliate e ridimensionate.',
   conceptDi: 'Un concept di Ciceri Lab',
   indiceTitolo: 'Indice',
   indiceAria: 'Indice della pagina',
