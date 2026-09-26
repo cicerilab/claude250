@@ -8,7 +8,6 @@
 
 const QUERY_REDUCED = '(prefers-reduced-motion: reduce)';
 const QUERY_COARSE = '(pointer: coarse)';
-const QUERY_SCRIPTING = '(scripting: enabled)';
 
 /** Il MediaQueryList di `query`, o null fuori dal browser. */
 export function mediaQuery(query: string): MediaQueryList | null {
@@ -53,13 +52,13 @@ export function isCoarsePointer(): boolean {
 }
 
 /**
- * `@media (scripting: enabled)`. I browser che non conoscono la feature
- * rispondono false anche con JavaScript acceso: qui siamo per forza in JS,
- * quindi fuori dal prerender la risposta è sempre true.
+ * JavaScript attivo. Il CSS usa `@media (scripting: none)` per la resa senza
+ * script; qui siamo per forza in JS, quindi basta sapere se c'è una finestra
+ * (false nel prerender). I browser che non conoscono `scripting` non
+ * cambiano la risposta.
  */
 export function supportaScripting(): boolean {
-  if (typeof window === 'undefined') return false;
-  return corrisponde(QUERY_SCRIPTING) || true;
+  return typeof window !== 'undefined';
 }
 
 /**

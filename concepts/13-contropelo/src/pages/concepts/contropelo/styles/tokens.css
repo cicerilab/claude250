@@ -234,6 +234,7 @@
     --ctp-t-insegna: clamp(1.75rem, 1.1071rem + 0.7143vw, 2.25rem);  /* 28 → 36 */
     --ctp-t-barbiere: clamp(1.25rem, 0.9286rem + 0.3571vw, 1.5rem);  /* 20 → 24 */
     --ctp-listino-max: 44rem;
+    --ctp-riga-lista-h: 52px;
     --ctp-vetro-y: 96px;
     --ctp-lista-y: 80px;
   }

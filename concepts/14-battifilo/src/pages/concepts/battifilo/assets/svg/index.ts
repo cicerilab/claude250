@@ -28,24 +28,24 @@ export { polvereTesseraUrl, polvereBordoUrl, gancio, schemaMisura }
 
 /**
  * Tessera della polvere del battifilo (maschera ripetuta in orizzontale).
- * viewBox 240 × 24: nucleo pieno alto 5,3 unità al centro (y 9,4-14,6), polvere che si
- * dirada fino a y 3 e y 21. Rapporto larghezza/altezza 10: con l'elemento alto 24 px
+ * viewBox 240 × 24: nucleo denso alto circa 6 unità al centro (y 9-15, copertura 80-90%),
+ * polvere che si dirada fino a y 6 e y 18; sopra e sotto è vuota (margine per la battuta). Rapporto larghezza/altezza 10: con l'elemento alto 24 px
  * la tessera si ripete ogni 240 px senza cuciture (turbolenza con stitchTiles).
  */
 export const TESSERA = {
   url: polvereTesseraUrl,
   larghezza: 240,
   altezza: 24,
-  /** altezza consigliata dell'elemento mascherato, in px CSS (nucleo ~5,3 px) */
+  /** altezza consigliata dell'elemento mascherato, in px CSS (nucleo ~6 px) */
   altezzaCss: 24,
-  /** misure ammesse dell'elemento (sotto 20 il nucleo scende sotto 4,4 px) */
+  /** misure ammesse dell'elemento (sotto 20 il nucleo scende sotto 5 px) */
   altezzaMinCss: 20,
   altezzaMaxCss: 28,
   /** centro della linea in frazione dell'altezza: l'asse del filo e del gancio */
   asse: 0.5,
 } as const
 
-/** Maschera "a spruzzo" per le marcature stencil (lacune minute, ~5% della superficie). */
+/** Maschera "a spruzzo" per le marcature stencil (lacune minute, circa il 4% della superficie). */
 export const SPRUZZO = {
   url: polvereBordoUrl,
   lato: 160,

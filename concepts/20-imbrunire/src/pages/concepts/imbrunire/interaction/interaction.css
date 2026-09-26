@@ -1,0 +1,512 @@
+/* ==========================================================================
+   IMBRUNIRE · stati di interazione (interaction-designer)
+   --------------------------------------------------------------------------
+   Anello di fuoco, stati hover/active/focus, aree di tocco, e la meccanica
+   visiva dei gesti (lune, celle, foglio, swipe) guidata dagli attributi
+   data-imb-ix-* che scrivono gli hook di questa cartella.
+
+   Regole:
+   - ogni selettore parte da .imb-root (tech-architect §5.1);
+   - nessun hex: colori dell'art-director (styles/tokens.css), tempi e curve
+     del motion-designer (motion/variabili.ts, sulla radice);
+   - si animano solo opacity, transform/translate/scale e colori di piccoli
+     elementi; mai niente su un elemento preserve-3d (tech-architect §5.2);
+   - le grandi superfici cambiano al massimo una volta ogni 500 ms (il calore
+     della cella lo limita useCaloreCella) e mai in meno di 400 ms;
+   - niente cursore custom, niente glow che pulsa, niente spinner.
+   ========================================================================== */
+
+/* ================================================================== 1. anello di fuoco */
+
+/* Due toni (art-director): luce all'esterno, un filo di notte dentro, così
+   l'anello si legge anche sull'intonaco (luce da sola sull'intonaco è 2,29:1). */
+.imb-root :focus-visible {
+  outline: var(--imb-fuoco-spessore) solid var(--imb-fuoco);
+  outline-offset: var(--imb-fuoco-distanza);
+  box-shadow: 0 0 0 var(--imb-fuoco-distanza) var(--imb-fuoco-alone);
+}
+
+.imb-root :focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Titoli raggiunti col fuoco programmato (stanza aperta, successo): più aria */
+.imb-root [tabindex='-1']:focus-visible {
+  outline-offset: 6px;
+  box-shadow: none;
+}
+
+/* Il listbox delle lune non si cerchia tutto: si cerchia la luna attiva */
+.imb-root [data-imb-ix-lune]:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.imb-root [data-imb-ix-lune]:focus-visible [data-imb-ix-attiva='true'] {
+  outline: var(--imb-fuoco-spessore) solid var(--imb-fuoco);
+  outline-offset: 0;
+  box-shadow: inset 0 0 0 var(--imb-fuoco-distanza) var(--imb-fuoco-alone);
+}
+
+/* ================================================================== 2. bottoni, link, aree di tocco */
+
+/* Bottone primario: testo notte su luce (9,5:1). Spigoli vivi. */
+.imb-root .imb-ix-bottone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--imb-s-2);
+  min-height: var(--imb-bottone-h);
+  min-width: var(--imb-tocco);
+  padding: 0 var(--imb-s-5);
+  border: 0;
+  border-radius: var(--imb-raggio);
+  background: var(--imb-azione);
+  color: var(--imb-su-azione);
+  font: var(--imb-peso-forte) var(--imb-t-bottone) / 1.2 var(--imb-font-testo);
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition:
+    background-color var(--imb-dur-rapida) var(--imb-curva-rapida),
+    translate var(--imb-dur-rapida) var(--imb-curva-rapida);
+}
+
+.imb-root .imb-ix-bottone--grande {
+  min-height: var(--imb-bottone-primario-h);
+}
+
+/* Secondario: contorno di luna, testo luna. Diventa luce solo al passaggio. */
+.imb-root .imb-ix-bottone--contorno {
+  background: transparent;
+  color: var(--imb-testo);
+  box-shadow: inset 0 0 0 1px rgb(var(--imb-luna-rgb) / 0.55);
+  transition:
+    color var(--imb-dur-rapida) var(--imb-curva-rapida),
+    box-shadow var(--imb-dur-rapida) var(--imb-curva-rapida),
+    translate var(--imb-dur-rapida) var(--imb-curva-rapida);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .imb-root .imb-ix-bottone:not(.imb-ix-bottone--contorno):not([aria-disabled='true']):hover {
+    background: var(--imb-luna);
+  }
+
+  .imb-root .imb-ix-bottone--contorno:not([aria-disabled='true']):hover {
+    color: var(--imb-luce);
+    box-shadow: inset 0 0 0 1px var(--imb-luce);
+  }
+}
+
+/* Pressione: il bottone scende di un pixel, come un interruttore */
+.imb-root .imb-ix-bottone:not([aria-disabled='true']):active,
+.imb-root .imb-ix-bottone[aria-busy='true'] {
+  translate: 0 1px;
+}
+
+/* "Ti teniamo la stanza…": resta premuto, leggibile, nessuno spinner */
+.imb-root .imb-ix-bottone[aria-busy='true'] {
+  cursor: progress;
+  background: var(--imb-luna-velata);
+}
+
+.imb-root .imb-ix-bottone[aria-disabled='true']:not([aria-busy='true']) {
+  cursor: default;
+  opacity: 0.45;
+}
+
+/* Frecce e bottoni d'icona fuori uso (fine del nastro): velati, restano tabulabili */
+.imb-root button[aria-disabled='true'] {
+  cursor: default;
+}
+
+/* Link nel testo: sottolineatura sottile che si ispessisce e si scalda */
+.imb-root .imb-ix-link {
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+  text-decoration-color: rgb(var(--imb-luna-rgb) / 0.6);
+  cursor: pointer;
+  transition:
+    text-decoration-color var(--imb-dur-rapida) var(--imb-curva-rapida),
+    color var(--imb-dur-rapida) var(--imb-curva-rapida);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .imb-root .imb-ix-link:hover {
+    color: var(--imb-luce);
+    text-decoration-color: var(--imb-luce);
+    text-decoration-thickness: 2px;
+  }
+}
+
+/* Area di tocco minima (lune, ore, porte, tacche della scala, "Svuota") */
+.imb-root .imb-ix-tocco {
+  min-width: var(--imb-tocco);
+  min-height: var(--imb-tocco);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Area di tocco allargata attorno a un segno piccolo, senza spostare nulla */
+.imb-root .imb-ix-tocco-esteso {
+  position: relative;
+}
+
+.imb-root .imb-ix-tocco-esteso::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max(100%, var(--imb-tocco));
+  height: max(100%, var(--imb-tocco));
+  translate: -50% -50%;
+}
+
+/* ================================================================== 3. celle del palazzo */
+
+.imb-root [data-imb-ix-cella] {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Velo di calore (+8% di luce). L'elemento lo mette la Scatola sulla faccia di
+   fondo, sopra la foto: <span data-imb-ix-velo-calore aria-hidden="true">.
+   Entra in 400 ms, esce in 600 ms (motion-designer). */
+.imb-root [data-imb-ix-velo-calore] {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 80% 75% at 50% 40%,
+    rgb(var(--imb-luce-rgb) / calc(var(--imb-calore) * 2)),
+    rgb(var(--imb-luce-rgb) / var(--imb-calore)) 60%,
+    rgb(var(--imb-luce-rgb) / 0) 100%
+  );
+  opacity: 0;
+  transition: opacity var(--imb-luce-calore-esce) var(--imb-luce-spegni-curva);
+}
+
+.imb-root [data-imb-ix-calda='true'] [data-imb-ix-velo-calore] {
+  opacity: 1;
+  transition: opacity var(--imb-luce-calore-entra) var(--imb-luce-accendi-curva);
+}
+
+/* "da 128 € a notte": nella sezione compare al passaggio o al fuoco; nella
+   torre è sempre scritto (non c'è passaggio del dito). Solo opacità: nessun
+   salto di impaginazione. */
+.imb-root[data-imb-layout='sezione'] [data-imb-ix-cella] [data-imb-ix-prezzo] {
+  opacity: 0;
+  transition: opacity var(--imb-luce-calore-esce) var(--imb-curva-rapida);
+}
+
+.imb-root[data-imb-layout='sezione'] [data-imb-ix-cella][data-imb-ix-calda='true'] [data-imb-ix-prezzo],
+.imb-root[data-imb-layout='sezione'] [data-imb-ix-cella]:focus-visible [data-imb-ix-prezzo] {
+  opacity: 1;
+  transition: opacity var(--imb-luce-calore-entra) var(--imb-curva-rapida);
+}
+
+/* ================================================================== 4. il nastro delle lune */
+
+/* Il contenitore che scorre (useNastroScorrimento) */
+.imb-root [data-imb-ix-scorre] {
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain; /* niente "pagina indietro" del browser a fine nastro */
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--imb-luna-spenta-rgb) / 0.45) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .imb-root [data-imb-ix-scorre] {
+    cursor: grab;
+  }
+}
+
+.imb-root [data-imb-ix-scorre='trascina'],
+.imb-root [data-imb-ix-scorre='trascina'] * {
+  cursor: grabbing;
+  user-select: none;
+}
+
+/* Il listbox (useSelezioneLune) */
+.imb-root [data-imb-ix-lune] {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.imb-root [data-imb-ix-lune='trascina'],
+.imb-root [data-imb-ix-lune='fuori'] {
+  cursor: ew-resize;
+}
+
+/* Ogni luna: il dito in orizzontale seleziona, in verticale scorre il foglio */
+.imb-root [data-imb-ix-indice] {
+  position: relative;
+  min-width: var(--imb-tocco);
+  min-height: var(--imb-tocco);
+  border-radius: var(--imb-raggio-disco);
+  cursor: pointer;
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.imb-root [data-imb-ix-indice][aria-disabled='true'] {
+  cursor: default;
+}
+
+/* Il disco si abbassa appena sotto il dito (mai sulla luna chiusa) */
+.imb-root [data-imb-ix-indice] > svg {
+  transition: scale var(--imb-dur-rapida) var(--imb-curva-rapida);
+}
+
+.imb-root [data-imb-ix-indice]:not([aria-disabled='true']):active > svg {
+  scale: 0.94;
+}
+
+/* Base di luce sotto le lune scelte: segmenti separati, mai una pillola che
+   unisce le notti. Più lunga su arrivo e ultima notte. */
+.imb-root [data-imb-ix-indice]::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: calc(var(--imb-luna-base-w) * 0.55);
+  height: var(--imb-luna-base-h);
+  translate: -50% 0;
+  background: var(--imb-luce);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--imb-dur-rapida) var(--imb-curva-rapida);
+}
+
+.imb-root [data-imb-ix-scelta]::after {
+  opacity: 1;
+}
+
+.imb-root [data-imb-ix-scelta='inizio']::after,
+.imb-root [data-imb-ix-scelta='fine']::after,
+.imb-root [data-imb-ix-scelta='sola']::after,
+.imb-root [data-imb-ix-ancora='true']::after {
+  width: var(--imb-luna-base-w);
+}
+
+/* Dopo il primo tocco: l'arrivo fissato è pieno, le notti fino al puntatore
+   sono un'anteprima velata (P3) */
+.imb-root [data-imb-ix-ancora='true']::after {
+  opacity: 1;
+}
+
+.imb-root [data-imb-ix-anteprima='true']:not([data-imb-ix-ancora='true'])::after {
+  opacity: 0.45;
+}
+
+/* Trascinando lontano dal nastro: rilasciando si annulla, e si vede */
+.imb-root [data-imb-ix-lune='fuori'] [data-imb-ix-scelta]::after {
+  opacity: 0.3;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .imb-root [data-imb-ix-lune='fermo'] [data-imb-ix-indice]:not([aria-disabled='true']):not([data-imb-ix-scelta]):hover::after {
+    opacity: 0.35;
+  }
+}
+
+/* ================================================================== 5. finestre dell'ora d'arrivo */
+
+/* <label class="imb-ix-finestra"><input type="radio" class="imb-sr" …><span>19:30</span></label>
+   Spenta: notte profonda nel telaio di poché. Scelta: luce, testo notte,
+   accesa in 400 ms come una lampada (una finestra sola: piccola superficie). */
+.imb-root .imb-ix-finestra {
+  display: inline-grid;
+  place-items: center;
+  min-width: var(--imb-tocco);
+  width: var(--imb-finestra-w);
+  height: var(--imb-finestra-h);
+  background: var(--imb-finestra-spenta);
+  box-shadow: inset 0 0 0 var(--imb-finestra-telaio-w) var(--imb-finestra-telaio);
+  color: var(--imb-testo);
+  font: var(--imb-peso-medio) var(--imb-t-micro) / 1 var(--imb-font-testo);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition:
+    background-color var(--imb-dur-ora-arrivo) var(--imb-curva-ora-arrivo),
+    color var(--imb-dur-ora-arrivo) var(--imb-curva-ora-arrivo),
+    box-shadow var(--imb-dur-rapida) var(--imb-curva-rapida);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .imb-root .imb-ix-finestra:hover {
+    box-shadow: inset 0 0 0 var(--imb-finestra-telaio-w) var(--imb-luce);
+  }
+}
+
+.imb-root .imb-ix-finestra:has(input:checked) {
+  background: var(--imb-finestra-accesa);
+  color: var(--imb-su-azione);
+}
+
+.imb-root .imb-ix-finestra:has(input:focus-visible) {
+  outline: var(--imb-fuoco-spessore) solid var(--imb-fuoco);
+  outline-offset: var(--imb-fuoco-distanza);
+}
+
+/* ================================================================== 6. il foglio dal basso */
+
+/*
+ * Stati (useFoglio): 'meta' | 'tutto' | 'chiuso' | 'spento'.
+ * Il foglio è alto quanto lo spazio sotto la testata; in 'meta' scivola in
+ * giù lasciando visibile --imb-ix-foglio-meta (scritto da useFoglio in px).
+ * Il foglio delle lune ha solo 'meta': imposta
+ *   --imb-ix-foglio-altezza: var(--imb-ix-foglio-meta)
+ * così non ha niente nascosto sotto. Il fondo tiene libera la fascia del
+ * ConceptBackButton (--imb-riserva-fondo) e sale sopra la tastiera virtuale.
+ */
+.imb-root [data-imb-ix-foglio]:not([data-imb-ix-foglio='spento']) {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--imb-z-foglio);
+  display: flex;
+  flex-direction: column;
+  height: var(--imb-ix-foglio-altezza, calc(100dvh - var(--imb-testata-h)));
+  max-height: calc(100dvh - var(--imb-testata-h));
+  padding-bottom: calc(var(--imb-riserva-fondo) + env(safe-area-inset-bottom, 0px));
+  background: var(--imb-foglio);
+  color: var(--imb-testo);
+  overscroll-behavior: contain;
+  translate: 0 calc(0px - var(--imb-ix-tastiera, 0px));
+  transform: translate3d(0, 0, 0);
+  transition:
+    transform var(--imb-dur-foglio) var(--imb-curva-foglio),
+    translate var(--imb-dur-foglio) var(--imb-curva-foglio),
+    visibility 0s linear 0s;
+}
+
+.imb-root [data-imb-ix-foglio='meta'] {
+  transform: translate3d(0, calc(100% - var(--imb-ix-foglio-meta, 50dvh)), 0);
+}
+
+.imb-root [data-imb-ix-foglio='chiuso'] {
+  transform: translate3d(0, 100%, 0);
+  visibility: hidden;
+  transition:
+    transform var(--imb-dur-foglio) var(--imb-curva-foglio),
+    translate var(--imb-dur-foglio) var(--imb-curva-foglio),
+    visibility 0s linear var(--imb-dur-foglio);
+}
+
+/* Durante il trascinamento il foglio segue il pollice, senza transizione */
+.imb-root [data-imb-ix-foglio][data-imb-ix-trascina='true'] {
+  transform: translate3d(0, var(--imb-ix-foglio-y, 0px), 0);
+  transition: none;
+}
+
+@starting-style {
+  .imb-root [data-imb-ix-foglio='meta'],
+  .imb-root [data-imb-ix-foglio='tutto'] {
+    transform: translate3d(0, 100%, 0);
+  }
+}
+
+/* La maniglia: la fascia in cima al foglio. Il dito qui trascina il foglio. */
+.imb-root [data-imb-ix-maniglia] {
+  position: relative;
+  flex: none;
+  min-height: var(--imb-tocco);
+  touch-action: none;
+  cursor: grab;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.imb-root [data-imb-ix-trascina='true'] [data-imb-ix-maniglia] {
+  cursor: grabbing;
+}
+
+/* Il segno della maniglia: un tratto di luna spenta, spigoli vivi */
+.imb-root [data-imb-ix-maniglia]::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: var(--imb-s-2);
+  width: 40px;
+  height: 4px;
+  translate: -50% 0;
+  background: var(--imb-luna-spenta);
+  opacity: 0.7;
+}
+
+/* Il corpo del foglio scorre da sé e non trascina il foglio */
+.imb-root [data-imb-ix-foglio] [data-imb-ix-foglio-corpo] {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* ================================================================== 7. swipe d'uscita dalla stanza */
+
+/* Sull'involucro della foto dello strato Dentro (non sulle facce 3D) */
+.imb-root [data-imb-ix-swipe='fermo'],
+.imb-root [data-imb-ix-swipe='segue'] {
+  touch-action: pan-x pinch-zoom;
+  translate: 0 var(--imb-ix-swipe-y, 0px);
+  transition: translate var(--imb-dur-foglio) var(--imb-curva-foglio);
+}
+
+.imb-root [data-imb-ix-swipe='segue'] {
+  transition: none;
+}
+
+/* ================================================================== 8. reduced motion e contrasto forzato */
+
+/* Le durate arrivano già a 0 (o 250 ms per le luci) da motion/variabili.ts;
+   qui si tolgono le piccole spinte fisiche, per chi le preferisce ferme. */
+.imb-root[data-imb-motion='reduced'] .imb-ix-bottone:active,
+.imb-root[data-imb-motion='reduced'] .imb-ix-bottone[aria-busy='true'] {
+  translate: none;
+}
+
+.imb-root[data-imb-motion='reduced'] [data-imb-ix-indice]:active > svg {
+  scale: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .imb-root [data-imb-ix-swipe] {
+    translate: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .imb-root :focus-visible,
+  .imb-root [data-imb-ix-lune]:focus-visible [data-imb-ix-attiva='true'],
+  .imb-root .imb-ix-finestra:has(input:focus-visible) {
+    outline-color: Highlight;
+  }
+
+  .imb-root [data-imb-ix-indice]::after {
+    background: CanvasText;
+  }
+
+  .imb-root [data-imb-ix-indice][aria-selected='true'] {
+    outline: 1px solid CanvasText;
+  }
+
+  .imb-root .imb-ix-finestra:has(input:checked) {
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .imb-root .imb-ix-bottone--contorno,
+  .imb-root .imb-ix-finestra {
+    border: 1px solid ButtonText;
+  }
+}
