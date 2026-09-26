@@ -59,6 +59,19 @@
   line-gap-override: 0%;
 }
 
+/* Marchio SOTTOSCOCCA (maiuscolo, wdth 100, wght 700): le maiuscole di Arial
+   sono più larghe di quelle di Tektur del 17%, quindi un ripiego a sé.
+   Misurato in Chromium: 615 px con Tektur, 615 px con questo ripiego a 1440. */
+@font-face {
+  font-family: 'Ssc Marchio Ripiego';
+  src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'), local('Helvetica Bold');
+  font-weight: 400 900;
+  size-adjust: 87.6%;
+  ascent-override: 114.16%;
+  descent-override: 34.25%;
+  line-gap-override: 0%;
+}
+
 /* ------------------------------------------------------------------------ */
 /* Token                                                                     */
 /* ------------------------------------------------------------------------ */
@@ -106,11 +119,13 @@
 
   /* Veli sopra la scena ---------------------------------------------------- */
   --ssc-velo-targhetta: rgb(var(--ssc-nero-rgb) / 0.9);     /* asta, etichette dei punti */
+  /* Telefono: il testo dell'apertura occupa fino al 55% basso della finestra,
+     quindi il velo resta a 0,82 fino a lì. Da 768 il testo sta nel 34% basso. */
   --ssc-velo-apertura: linear-gradient(
     to top,
     rgb(var(--ssc-nero-rgb) / 0.88) 0%,
-    rgb(var(--ssc-nero-rgb) / 0.82) 34%,
-    rgb(var(--ssc-nero-rgb) / 0) 62%
+    rgb(var(--ssc-nero-rgb) / 0.82) 55%,
+    rgb(var(--ssc-nero-rgb) / 0) 78%
   );
   --ssc-velo-apertura-laterale: linear-gradient(
     to right,
@@ -126,6 +141,7 @@
   /* Font ------------------------------------------------------------------ */
   --ssc-font-tecnico: Tektur, 'Ssc Tektur Ripiego', 'Arial Narrow', Arial, sans-serif;
   --ssc-font-testo: 'Red Hat Text', 'Ssc Red Hat Ripiego', Arial, sans-serif;
+  --ssc-font-marchio: Tektur, 'Ssc Marchio Ripiego', Arial, sans-serif;   /* solo "SOTTOSCOCCA" in maiuscolo */
 
   /* Scala tipografica fluida 375 → 1440 (vedi tokens.ts TIPO) ------------ */
   /* Tektur: corpo, larghezza (font-stretch), peso, interlinea               */
@@ -168,7 +184,8 @@
   --ssc-t-bottone: 1.25rem;            /* bottone principale in Tektur */
   --ssc-t-bottone-wght: 600;
 
-  --ssc-t-numerale: 0.9375rem;         /* 15 px: SOLO numerali (asta, ore) */
+  --ssc-t-numerale: 0.875rem;          /* 14 px wdth 80 sul telefono (stanno dentro l'asta da 32 px), */
+  --ssc-t-numerale-wdth: 80%;          /* 15 px wdth 100 da 768. SOLO numerali (asta, ore) */
   --ssc-t-numerale-wght: 500;
 
   /* Red Hat Text */
@@ -270,15 +287,17 @@
 
   /* Texture: vernice martellata dei banchi e delle macchine utensili.
      Solo sui pannelli verde ombra; solo scurisce (non abbassa i contrasti). */
-  --ssc-martellata: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='m' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.16' numOctaves='3' seed='18' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.4 1.25'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23m)' opacity='.2'/%3E%3C/svg%3E");
+  --ssc-martellata: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='m' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.28' numOctaves='3' seed='18' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.4 1.25'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23m)' opacity='.12'/%3E%3C/svg%3E");
   --ssc-martellata-misura: 240px 240px;
 
-  /* Trattamento delle foto vere: meno saturazione, un velo di verde in
-     luce morbida, un filo più scure per sedere sul nero grasso. Non duotone. */
-  --ssc-foto-filtro: saturate(0.58) contrast(1.06) brightness(0.9);
+  /* Trattamento delle foto vere: saturazione al 40%, un velo di tinta verde
+     (fusione "color" al 26%: sposta la tinta, lascia luci e ombre), un filo
+     più scure per sedere sul nero grasso. Non è un duotone: i colori veri
+     restano riconoscibili, solo spenti verso il verde grigio. */
+  --ssc-foto-filtro: saturate(0.4) contrast(1.06) brightness(0.9);
   --ssc-foto-velo: var(--ssc-verde);
-  --ssc-foto-velo-fusione: soft-light;
-  --ssc-foto-velo-opacita: 0.45;
+  --ssc-foto-velo-fusione: color;
+  --ssc-foto-velo-opacita: 0.26;
 }
 
 /* Da 768 px: tablet ------------------------------------------------------- */
@@ -294,6 +313,14 @@
     --ssc-pannello-padding: 28px;
     --ssc-testata: 64px;
     --ssc-linea-terra: 6px;
+    --ssc-t-numerale: 0.9375rem;
+    --ssc-t-numerale-wdth: 100%;
+    --ssc-velo-apertura: linear-gradient(
+      to top,
+      rgb(var(--ssc-nero-rgb) / 0.88) 0%,
+      rgb(var(--ssc-nero-rgb) / 0.82) 34%,
+      rgb(var(--ssc-nero-rgb) / 0) 62%
+    );
   }
 }
 

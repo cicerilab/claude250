@@ -246,7 +246,8 @@ export const TIPO = {
   prezzo: { famiglia: 'tecnica', min: 24, max: 32, wdth: 85, wght: 600, interlinea: 1, tracking: 0, tabellare: true, css: '--ssc-t-prezzo' },
   targhetta: { famiglia: 'tecnica', min: 20, max: 20, wdth: 90, wght: 500, interlinea: 1.15, tracking: 0, tabellare: true, css: '--ssc-t-targhetta' },
   bottone: { famiglia: 'tecnica', min: 20, max: 20, wdth: 100, wght: 600, interlinea: 1, tracking: 0, css: '--ssc-t-bottone' },
-  numerale: { famiglia: 'tecnica', min: 15, max: 15, wdth: 100, wght: 500, interlinea: 1, tracking: 0, tabellare: true, css: '--ssc-t-numerale' },
+  /** Solo numerali: 14 px wdth 80 sotto 768 (dentro l'asta da 32 px), 15 px wdth 100 da 768 (a gradino, non fluido). */
+  numerale: { famiglia: 'tecnica', min: 14, max: 15, wdth: 100, wght: 500, interlinea: 1, tracking: 0, tabellare: true, css: '--ssc-t-numerale' },
   lead: { famiglia: 'testo', min: 18, max: 21, wght: 400, interlinea: 1.45, tracking: 0, css: '--ssc-t-lead' },
   corpo: { famiglia: 'testo', min: 17, max: 18, wght: 400, interlinea: 1.55, tracking: 0, css: '--ssc-t-corpo' },
   piccolo: { famiglia: 'testo', min: 15, max: 16, wght: 400, interlinea: 1.5, tracking: 0.003, css: '--ssc-t-piccolo' },
@@ -258,9 +259,9 @@ export const TIPO = {
 
 export type IdTipo = keyof typeof TIPO;
 
-/** Tektur mai sotto 20 px per parole; 15 px solo per numerali (asta, ore). */
+/** Tektur mai sotto 20 px per parole; 14-15 px solo per numerali (asta, ore). */
 export const TEKTUR_MIN_PAROLE_PX = 20;
-export const TEKTUR_MIN_NUMERALI_PX = 15;
+export const TEKTUR_MIN_NUMERALI_PX = 14;
 
 /** Giustezza massima del corpo in caratteri. */
 export const GIUSTEZZA_CH = 60;
