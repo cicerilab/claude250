@@ -62,8 +62,8 @@ export const CHIAVI: Record<Orientamento, Quattro> = {
   ],
   portrait: [
     // 0 cm: tre quarti, l'auto nella meta' alta (punti in y 10-54%)
-    { posizione: [6.8, 2.6, 9.8], bersaglio: [0.0, 0.55, 0.1], alto: [0, 1, 0], fov: 48, spostamento: [0.02, 0.2] },
-    { posizione: [6.2, 2.0, 8.6], bersaglio: [0.05, 0.7, 0.2], alto: [0, 1, 0], fov: 48, spostamento: [0.02, 0.2] },
+    { posizione: [7.6, 2.7, 10.6], bersaglio: [0.0, 0.6, 0.0], alto: [0, 1, 0], fov: 48, spostamento: [-0.03, 0.2] },
+    { posizione: [9.4, 1.9, 7.6], bersaglio: [0.0, 0.8, -0.05], alto: [0, 1, 0], fov: 48, spostamento: [-0.03, 0.2] },
     // 80 cm: la ruota riempie la meta' alta
     { posizione: [2.9, 1.35, 2.9], bersaglio: [0.62, 1.12, 1.3], alto: [0, 1, 0], fov: 46, spostamento: [0.0, 0.2] },
     // 180 cm: pianale in verticale, muso in alto (punti in y 10-78%)

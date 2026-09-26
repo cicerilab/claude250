@@ -97,8 +97,6 @@ function geometria(
       transform: v.rotazione === 0 ? undefined : `rotate(${v.rotazione}deg)`,
       '--evd-riga-o': numero(offset / totale),
       '--evd-riga-f': numero(quota),
-      // lo sbordo resta fuori dalla corsa: il tratto parte dalla prima lettera
-      '--evd-riga-sbordo': numero(ing.sbordo / ing.larghezza),
     };
     offset += riga.w;
     return {

@@ -27,7 +27,12 @@ export type EventoTratto =
   /** il gesto è partito (dopo la soglia): il tratto segue il runtime da ora */
   | { readonly tipo: 'inizio'; readonly modo: ModoTratto }
   /** rilascio oltre il 55%: il tratto si completa da `da` fino a fine riga (160 ms) */
-  | { readonly tipo: 'completa'; readonly da: number }
+  | {
+      readonly tipo: 'completa';
+      readonly da: number;
+      /** velocità della mano al rilascio, frazioni di riga al secondo (per lo slancio di motion/tratto.ts) */
+      readonly velocita?: number;
+    }
   /** rilascio sotto il 55% o gesto annullato: il tratto torna al punto di partenza (200 ms) */
   | { readonly tipo: 'ritira'; readonly da: number; readonly a: number }
   /** ripasso oltre il 55%: il rosa si scolora (250 ms) */

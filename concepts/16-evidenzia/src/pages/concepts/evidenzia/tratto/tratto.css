@@ -1,0 +1,137 @@
+/*
+ * EVIDENZIA · il tratto dell'evidenziatore (interaction-designer).
+ *
+ * Resa: docs/vector-artist.md §3.3 con le opacità dei token dell'art-director
+ * (--evd-tratto-*). Il gruppo (<svg> di riga) si compone e poi moltiplica sul
+ * testo: il nero resta nero, la carta diventa rosa. Il rosa si usa solo qui
+ * (tech-architect §5): mai su testo, bottoni, link o fondi.
+ *
+ * Variabili sul nodo foglia .evd-tratto__segno[data-evdvar]:
+ *   --evd-avanzamento  0..1  fine del tratto sulla lunghezza di tutte le righe
+ *                            (registrata dal motion-designer in motion/tratto.ts)
+ *   --evd-inizio       0..1  dove la punta si è posata (registrata qui sotto)
+ *   --evd-ripasso      0..1  quanto il gesto di ripasso ha coperto (registrata qui)
+ * Su ogni <svg> di riga (inline, da Tratto.tsx):
+ *   --evd-riga-o  quota di lunghezza prima di questa riga
+ *   --evd-riga-f  quota di lunghezza di questa riga
+ */
+
+@property --evd-inizio {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+@property --evd-ripasso {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+.evd-root .evd-tratto {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* nessun contesto di isolamento: il multiply deve vedere il testo sotto */
+}
+
+.evd-root .evd-tratto__segno {
+  position: absolute;
+  inset: 0;
+  display: block;
+  transition:
+    --evd-inizio 160ms var(--evd-ease-mano, ease-out),
+    --evd-ripasso 200ms var(--evd-ease-rientro, ease-out);
+}
+
+/* durante il gesto i valori seguono la mano, senza ritardi */
+.evd-root .evd-tratto__segno[data-evd-gesto] {
+  transition: none;
+}
+
+.evd-root .evd-tratto__riga {
+  position: absolute;
+  display: block;
+  overflow: visible;
+  transform-origin: 0 50%;
+  mix-blend-mode: var(--evd-tratto-blend, multiply);
+  opacity: calc(var(--evd-tratto-opacita) * (1 - 0.6 * var(--evd-ripasso)));
+  --evd-tratto-fine: clamp(0, (var(--evd-avanzamento) - var(--evd-riga-o)) / var(--evd-riga-f), 1);
+  --evd-tratto-partenza: clamp(0, (var(--evd-inizio) - var(--evd-riga-o)) / var(--evd-riga-f), 1);
+  clip-path: inset(0 calc((1 - var(--evd-tratto-fine)) * 100%) 0 calc(var(--evd-tratto-partenza) * 100%));
+}
+
+.evd-root .evd-tratto__corpo {
+  fill: var(--evd-tratto-colore);
+  fill-opacity: var(--evd-tratto-corpo);
+}
+
+/* più inchiostro dove la punta si ferma: gli estremi arrivano a --evd-tratto-estremita */
+.evd-root .evd-tratto__inchiostro {
+  fill: var(--evd-tratto-colore);
+  fill-opacity: calc((var(--evd-tratto-estremita) - var(--evd-tratto-corpo)) / (1 - var(--evd-tratto-corpo)));
+}
+
+/* striature: carta sopra il rosa, fino all'opacità composta --evd-tratto-striatura */
+.evd-root .evd-tratto__stria {
+  fill: var(--evd-carta);
+  fill-opacity: calc(1 - var(--evd-tratto-striatura) / var(--evd-tratto-corpo));
+}
+
+/* il quinto annuncio: evidenziatore scarico, pallido, a strisce (forma del vector-artist) */
+.evd-root .evd-tratto__segno--scarico .evd-tratto__riga {
+  opacity: var(--evd-tratto-scarico);
+}
+
+.evd-root .evd-tratto__segno--scarico .evd-tratto__corpo {
+  fill-opacity: 1;
+}
+
+/* TrattoSu: il testo che porta un tratto fuori dagli annunci (tappe, "Hai segnato", "Segna") */
+.evd-root .evd-tratto-su {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: baseline;
+}
+
+.evd-root .evd-tratto-su__testo {
+  position: relative;
+}
+
+/* reduced motion: nessuna transizione (motion/tratto.ts dà già lo stato finale) */
+.evd-root[data-motion='reduced'] .evd-tratto__segno {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .evd-root .evd-tratto__segno {
+    transition: none;
+  }
+}
+
+/*
+ * Contrasto forzato (tokens.css §3): niente rosa né multiply. Il tratto
+ * diventa una barra Highlight alta 4 px sotto la riga, mai sopra il testo.
+ */
+@media (forced-colors: active) {
+  .evd-root .evd-tratto__riga {
+    mix-blend-mode: normal;
+    opacity: 1;
+    forced-color-adjust: none;
+  }
+
+  .evd-root .evd-tratto__riga > path {
+    display: none;
+  }
+
+  .evd-root .evd-tratto__riga::before {
+    content: none;
+  }
+
+  .evd-root .evd-tratto__riga {
+    height: 4px !important;
+    transform: translateY(calc(var(--evd-riga-h-forzato, 1.1em))) !important;
+    background: Highlight;
+  }
+}

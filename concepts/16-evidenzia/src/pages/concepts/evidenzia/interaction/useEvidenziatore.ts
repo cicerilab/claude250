@@ -95,6 +95,10 @@ interface Gesto {
   /** posizione corrente lungo le righe, px locali */
   pos: number;
   togliUpdate: (() => void) | null;
+  /** ultimi due campioni (tempo ms, bersaglio) per la velocità al rilascio */
+  tPrec: number;
+  bPrec: number;
+  velocita: number;
 }
 
 function nuovoGesto(): Gesto {
@@ -116,6 +120,9 @@ function nuovoGesto(): Gesto {
     pos0: 0,
     pos: 0,
     togliUpdate: null,
+    tPrec: 0,
+    bPrec: 0,
+    velocita: 0,
   };
 }
 
@@ -254,7 +261,7 @@ export function useEvidenziatore(ref: RefObject<HTMLElement>, id: IdAnnuncio): v
         if (g.modo === 'segna') {
           if (ok) {
             segni.attendi(id, 'aggiunta');
-            segni.emetti(id, { tipo: 'completa', da });
+            segni.emetti(id, { tipo: 'completa', da, velocita: Math.max(0, g.velocita) });
             const esito = evidenzia(id, 'gesto');
             if (esito === 'pieno') {
               segni.annullaAttesa(id);
@@ -347,6 +354,14 @@ export function useEvidenziatore(ref: RefObject<HTMLElement>, id: IdAnnuncio): v
       v.riga = r0 !== undefined && g.pos > r0.w ? 1 : 0;
       if (g.modo === 'segna') {
         v.bersaglio = g.totale > 0 ? Math.max(g.pos0, g.pos) / g.totale : 0;
+        const dtMs = e.timeStamp - g.tPrec;
+        if (g.tPrec > 0 && dtMs > 4) {
+          const istantanea = ((v.bersaglio - g.bPrec) * 1000) / dtMs;
+          // media mobile corta: un ultimo campione nervoso non decide lo slancio
+          g.velocita = g.velocita * 0.4 + istantanea * 0.6;
+        }
+        g.tPrec = e.timeStamp;
+        g.bPrec = v.bersaglio;
       } else {
         segni.impostaRipasso(id, limita(copertura(g) / SOGLIA_COMPLETA, 0, 1));
       }
