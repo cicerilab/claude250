@@ -147,7 +147,6 @@
   --imb-t-marchio: clamp(16px, 14.94px + 0.282vw, 19px);     /* nome dell'albergo nella testata (h1) */
   --imb-t-mese: clamp(15px, 14.3px + 0.188vw, 17px);         /* mese sul nastro delle lune */
   --imb-t-fregio: clamp(14px, 12.94px + 0.282vw, 17px);      /* frase incisa nello zoccolo */
-  --imb-t-nome-spazio: clamp(15px, 14.3px + 0.188vw, 17px);  /* portico, androne, colazione: celle strette */
   --imb-t-iscrizione-cella: 11cqi;                            /* ALBERGO IMBRUNIRE dentro la cella piccola (la cella è un contenitore) */
   --imb-lh-display: 1.1;
 
@@ -228,16 +227,16 @@
   --imb-binario-scala: 6px;       /* torre: binario verticale a destra */
   --imb-fascia-nome-min: 48px;    /* il solaio sotto ogni piano È la fascia del nome (poché) */
   --imb-fascia-sezione: 46px;     /* sezione: altezza FISSA, una riga di nome + una riga piccola, mai a capo */
-  /* Sezione: la fascia è un contenitore (container-type: inline-size) e il
-     nome si adatta alla cella senza andare a capo:
+  /* Sezione: il palazzo è un contenitore (container-type: inline-size) e
+     TUTTI i nomi hanno la stessa misura, legata alla sua larghezza:
        font-size: clamp(var(--imb-t-nome-min), var(--imb-nome-adatta), var(--imb-t-nome-cella))
-     12,5cqi regge i nomi fino a 12 lettere (IL CAMPANILE, SUL NONCELLO);
-     gli spazi comuni hanno nomi corti in cella (PORTICO, ANDRONE, COLAZIONE)
-     e usano 17cqi. Sotto il minimo il nome può andare su due righe. */
-  --imb-nome-adatta: 12.5cqi;
-  --imb-nome-adatta-spazio: 17cqi;
+     2,2cqi fa entrare su una riga i nomi più lunghi nelle celle più strette
+     (LA SOFFITTA nel 24%, PORTICO nel 17%, COLAZIONE nel 23%) da 574 a 1400 px
+     di palazzo. In cella gli spazi comuni hanno il nome corto (PORTICO,
+     ANDRONE, COLAZIONE); il nome intero sta nel pannello. white-space: nowrap. */
+  --imb-nome-adatta: 2.2cqi;
   --imb-t-nome-min: 13px;
-  --imb-t-sub-min: 12px;          /* riga piccola della fascia: clamp(12px, 8cqi, --imb-t-piccolo) */
+  --imb-t-sub-min: 12px;          /* riga piccola della fascia: clamp(12px, 1.5cqi, --imb-t-piccolo) */
   --imb-modulo: 7.2;              /* u = larghezza del palazzo / 7,2: altezza di riferimento di un piano */
   --imb-h-sottotetto: 0.95;       /* altezze delle scatole in u (ux-architect §2.2) */
   --imb-h-nobile: 1.2;
@@ -382,7 +381,6 @@
   .imb-root {
     --imb-palazzo-max: var(--imb-palazzo-max-alto);
     --imb-t-nome-cella: 22px;
-    --imb-t-nome-spazio: 19px;
     --imb-t-corpo: 18px;
     --imb-t-piccolo: 16px;
     --imb-t-marchio: 21px;

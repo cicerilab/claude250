@@ -705,7 +705,7 @@ export const ANDRONE = {
     { termine: 'Scale', definizione: 'Niente ascensore. La Corte è al piano terra, senza gradini.' },
     {
       termine: 'Animali',
-      definizione: 'Piccoli, fino a 10 kg, su richiesta: 10 € a notte. Non nel sottotetto, le scale sono strette.',
+      definizione: 'Piccoli, fino a 10 kg: 10 € a notte. Non nel sottotetto, le scale sono strette.',
     },
     { termine: 'Parcheggio', definizione: 'Il corso è pedonale. Garage convenzionato a 250 m, 12 € ogni 24 ore.' },
     {
@@ -731,7 +731,7 @@ export const COLAZIONE = {
   /** Tre righe al massimo: cosa c'è e da dove viene. */
   righe: [
     'Pane e brioche dal forno del quartiere. Le torte le fa Sandro, il pomeriggio.',
-    'Latte, burro e formaggi di una latteria della Pedemontana; marmellate e frutta di stagione.',
+    'Latte e formaggi di una latteria della Pedemontana, marmellate, frutta di stagione.',
     'Uova su richiesta, caffè della moka o della macchina, tè e tisane.',
   ],
   esigenze: 'Senza glutine, senza lattosio o vegana: dillo il giorno prima.',
@@ -1035,7 +1035,7 @@ export const PRENOTA = {
     notaFacoltativo: '(facoltativo)',
     notaAiuto: 'Un\'allergia, un cane piccolo, una culla, un treno che arriva tardi.',
     /** Al posto di notaAiuto nelle tre stanze del sottotetto. */
-    notaAiutoSottotetto: 'Un\'allergia, una culla, un treno che arriva tardi. Nel sottotetto niente animali: le scale sono strette.',
+    notaAiutoSottotetto: 'Un\'allergia, una culla, un arrivo tardi. Niente animali nel sottotetto: scale strette.',
   },
 
   /** Riepilogo errori in aria-live all'invio (F1). */

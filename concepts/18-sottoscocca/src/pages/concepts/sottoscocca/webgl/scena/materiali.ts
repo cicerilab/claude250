@@ -129,9 +129,11 @@ export function creaMateriali(tex: TextureScena): Materiali {
   const cerchioAperto = lambert(zincato.clone(), { doppio: true });
   cerchioAperto.transparent = true;
   cerchioAperto.depthWrite = false;
+  cerchioAperto.forceSinglePass = true;
   const gommaAperta = evidenziabile(nero, { doppio: true });
   gommaAperta.transparent = true;
   gommaAperta.depthWrite = false;
+  gommaAperta.forceSinglePass = true;
 
   const pavimento = new MeshBasicMaterial({ color: 0xffffff, map: tex.pavimento, side: FrontSide });
   const ombra = new MeshBasicMaterial({
