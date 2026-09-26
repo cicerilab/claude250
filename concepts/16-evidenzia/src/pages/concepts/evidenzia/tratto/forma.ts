@@ -130,7 +130,7 @@ function profilo(tipo: Punta, r: Casuale): { passi: number; f: (t: number) => nu
     case 'pressata': {
       const k = tra(r, 0.1, 0.15)
       const c = tra(r, 0.42, 0.58)
-      return { passi: 10, f: (t) => k * Math.sin(Math.PI * t) ** 1.3 * (1 + 0.3 * (c - 0.5)) }
+      return { passi: 10, f: (t) => k * Math.max(0, Math.sin(Math.PI * t)) ** 1.3 * (1 + 0.3 * (c - 0.5)) }
     }
   }
 }
@@ -196,7 +196,7 @@ export function formaTratto(o: OpzioniForma): FormaTratto {
   // il corpo sta dentro un margine orizzontale: le punte "pressata" e "sfrangiata"
   // sporgono in fuori senza essere tagliate dal bordo del viewBox
   const mh = Math.min(H * 0.14, larghezza * 0.08)
-  const L = Math.max(larghezza - mh * 2, 1)
+  const L = larghezza - mh * 2
 
   // punta a scalpello: sbieco da un angolo di 14-24 gradi, mai oltre un quinto del tratto
   const angolo = (tra(r, 14, 24) * Math.PI) / 180
@@ -312,7 +312,7 @@ export function formaTratto(o: OpzioniForma): FormaTratto {
       const sotto: Punto[] = []
       for (const x of campioni(a, b, passo)) {
         const u = (x - a) / (b - a)
-        const affina = Math.sin(Math.PI * u) ** 0.5
+        const affina = Math.max(0, Math.sin(Math.PI * u)) ** 0.5
         const c = su(x) + f * (giu(x) - su(x)) + ondaStria(x)
         sopra.push([x, c - (spessore / 2) * affina])
         sotto.push([x, c + (spessore / 2) * affina])
@@ -359,7 +359,7 @@ function strisceScariche(
     const sotto: Punto[] = []
     for (const x of campioni(xs, xe, passo)) {
       const alt = giu(x) - su(x)
-      const affina = Math.min(1, (x - xs) / coda, (xe - x) / coda) ** 0.7
+      const affina = Math.max(0, Math.min(1, (x - xs) / coda, (xe - x) / coda)) ** 0.7
       const centro = su(x) + ((a + b) / 2) * alt
       const semi = ((b - a) / 2) * alt * Math.max(affina, 0.15)
       sopra.push([x, centro - semi])

@@ -65,8 +65,10 @@ import type {
   PointerEvent as ReactPointerEvent,
   RefCallback,
 } from 'react';
+import { PASSO_MINUTI as PASSO_PLANNING } from '../content/lavori';
 import type { Ponte } from '../content/lavori';
 import { ticker } from '../core/ticker';
+import { DURATE } from '../motion/choreography';
 import { runtime } from '../state/runtime';
 import { useSottoscocca } from '../state/store';
 import { adesso } from './util';
@@ -82,9 +84,9 @@ const TOLLERANZA_TOUCH_PX = 8;
 /** Movimento del mouse che trasforma una pressione in trascinamento. */
 const SOGLIA_MOUSE_PX = 4;
 /** Passo di aggancio del planning (creative-director 4.4: 10 minuti). */
-export const PASSO_MINUTI = 10;
-/** Durata dello scivolamento di aggancio (uguale a `--ssc-ix-aggancio-ms` in interaction.css). */
-export const AGGANCIO_MS = 220;
+export const PASSO_MINUTI = PASSO_PLANNING;
+/** Durata dello scivolamento di aggancio (DURATE.bloccoAggancio, uguale a `--ssc-ix-aggancio-ms` in interaction.css). */
+export const AGGANCIO_MS = DURATE.bloccoAggancio;
 /** Finestra in cui il clic nativo dopo un trascinamento viene ignorato. */
 const CLIC_GEMELLO_MS = 400;
 
@@ -428,7 +430,7 @@ export function useTrascinaBlocco(opzioni: OpzioniTrascinaBlocco): TrascinaBlocc
         opz.current.onRilascio(null, esito ?? 'annullato');
       }
     },
-    [impostaPresa, preparaAggancio, pulisciTimer, staccaEsc, staccaTicker],
+    [impostaPresa, preparaAggancio, pulisciTimer, scriviSpostamento, staccaEsc, staccaTicker],
   );
 
   const afferra = useCallback(() => {

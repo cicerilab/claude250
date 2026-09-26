@@ -127,7 +127,7 @@ export function useTrascinaAttorno(ref: RefObject<Element>, o: OpzioniTrascina):
     type Fase = 'riposo' | 'attesa' | 'presa';
     let fase: Fase = 'riposo';
     let idPuntatore = -1;
-    let sogliaPx = SOGLIA_TOCCO_PX.dito;
+    let sogliaPx: number = SOGLIA_TOCCO_PX.dito;
     let x0 = 0;
     let y0 = 0;
     let grezzoPrec = 0;

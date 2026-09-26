@@ -33,10 +33,11 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { PASSO_MINUTI } from '../content/lavori';
 import { eTastoModificato } from './util';
 
 /** Passo della tastiera sul tempo (uguale al passo di aggancio del planning). */
-export const PASSO_TASTIERA_MINUTI = 10;
+export const PASSO_TASTIERA_MINUTI = PASSO_MINUTI;
 /** Dopo quanto dall'ultima ripetizione di una freccia si annuncia la posizione raggiunta. */
 export const ANNUNCIO_FERMO_MS = 350;
 

@@ -5,7 +5,7 @@
  * gli altri restano verdi". ux-architect 7.4: al passaggio del puntatore
  * (puntatore fine) il pezzo si evidenzia. Qui si decide il BERSAGLIO (0 o 1
  * per pezzo); la transizione di 250 ms verso il bersaglio la fa
- * motion/molle.ts scrivendo `runtime.evidenza`, e il materiale la legge.
+ * motion/molle.ts (`IngressoPonte.evidenze` = `evidenzeCorrenti()`) scrivendo `runtime.evidenza`, e il materiale la legge.
  *
  * Regole:
  * - un solo punto evidenziato alla volta;
@@ -36,6 +36,7 @@ let puntoScheda: IdPunto | null = null;
 let puntoIndicato: IdPunto | null = null;
 let impegnato: IdPunto | null = null;
 let pezziImpegnati: ReadonlySet<IdPezzo> = new Set<IdPezzo>();
+let elencoImpegnato: readonly IdPezzo[] = [];
 let ultimoCambio = Number.NEGATIVE_INFINITY;
 let timer: ReturnType<typeof setTimeout> | null = null;
 const ascoltatori = new Set<(punto: IdPunto | null) => void>();
@@ -54,7 +55,8 @@ function annullaTimer(): void {
 function impegna(punto: IdPunto | null, ora: number): void {
   impegnato = punto;
   ultimoCambio = ora;
-  pezziImpegnati = new Set<IdPezzo>(punto ? PUNTI[punto].pezzi : []);
+  elencoImpegnato = punto ? [...PUNTI[punto].pezzi] : [];
+  pezziImpegnati = new Set<IdPezzo>(elencoImpegnato);
   runtime.markDirty();
   ticker.wake();
   ascoltatori.forEach((fn) => fn(punto));
@@ -105,6 +107,15 @@ export function bersaglioEvidenza(pezzo: IdPezzo): 0 | 1 {
   return pezziImpegnati.has(pezzo) ? 1 : 0;
 }
 
+/**
+ * Pezzi da evidenziare adesso, come li vuole `IngressoPonte.evidenze` di
+ * motion/molle.ts. Stesso array finché il bersaglio non cambia (confronto per
+ * riferimento possibile).
+ */
+export function evidenzeCorrenti(): readonly IdPezzo[] {
+  return elencoImpegnato;
+}
+
 /** Pezzi evidenziati adesso (insieme non modificabile). */
 export function pezziEvidenziati(): ReadonlySet<IdPezzo> {
   return pezziImpegnati;
@@ -130,6 +141,7 @@ export function azzeraEvidenza(): void {
   puntoIndicato = null;
   impegnato = null;
   pezziImpegnati = new Set<IdPezzo>();
+  elencoImpegnato = [];
   ultimoCambio = Number.NEGATIVE_INFINITY;
   ascoltatori.clear();
 }

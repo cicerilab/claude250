@@ -17,9 +17,8 @@
  *   500 ms (le corsie si attenuano una volta per trascinamento, i pezzi della
  *   scena passano da interaction/evidenza.ts che li limita).
  *
- * Colori: solo token dell'art-director (styles/tokens.css), qui rinominati una
- * volta in --ssc-ix-* così un cambio di nome si corregge in un punto solo.
- * Nessun hex in questo file. Ogni selettore comincia con .ssc-root.
+ * Colori, fuoco e tampone: token dell'art-director (styles/tokens.css), i
+ * colori rinominati una volta in --ssc-ix-*. Nessun hex in questo file. Ogni selettore comincia con .ssc-root.
  *
  * Classi da applicare (le sezioni le aggiungono accanto alle proprie):
  *   .ssc-ix-premibile (+ --pieno, --contorno, --pannello)   bottoni
@@ -54,23 +53,24 @@
   --ssc-ix-verde-ombra: var(--ssc-verde-ombra);
   --ssc-ix-zincato: var(--ssc-zincato);
 
-  /* Tempi e curve: i nomi --ssc-curva-* li espone il motion-designer; qui il ripiego. */
+  /* Tempi e curve: valori di motion/choreography.ts (DURATE) e motion/easing.ts (BEZIER_CSS). */
   --ssc-ix-rapido: 90ms;
-  --ssc-ix-medio: 150ms;
-  --ssc-ix-evidenza: 250ms;
-  --ssc-ix-aggancio-ms: 220ms;
-  --ssc-ix-presa-ms: 250ms; /* PRESA_TOUCH_MS (400) − ATTESA_VISIBILE_MS (150) */
-  --ssc-ix-curva: var(--ssc-curva-aggancio, cubic-bezier(0.25, 0, 0.1, 1));
-  --ssc-ix-curva-foglio: var(--ssc-curva-foglio, cubic-bezier(0.2, 0, 0, 1));
+  --ssc-ix-medio: 200ms;                          /* DURATE.corsieAttenua */
+  --ssc-ix-evidenza: 250ms;                       /* DURATE.evidenza */
+  --ssc-ix-aggancio-ms: 160ms;                    /* DURATE.bloccoAggancio */
+  --ssc-ix-ritorno-foglio: 200ms;                 /* DURATE.foglioRitorno */
+  --ssc-ix-presa-ms: 250ms;                       /* PRESA_TOUCH_MS (400) − ATTESA_VISIBILE_MS (150) */
+  --ssc-ix-curva: cubic-bezier(0.15, 0.9, 0.3, 1);        /* aggancio */
+  --ssc-ix-curva-foglio: cubic-bezier(0.2, 0.7, 0.2, 1);  /* cassetto */
 
   /* Zone da non coprire con il fuoco (ux-architect 2.2, 7.6). */
   --ssc-ix-margine-alto: 88px;
   --ssc-ix-margine-basso: 24px;
   --ssc-ix-barra-altezza: 64px;
 
-  /* Tampone. */
-  --ssc-ix-punto-area: 44px;
-  --ssc-ix-punto-d: 30px;
+  /* Tampone (token dell'art-director). */
+  --ssc-ix-punto-area: var(--ssc-punto-area);
+  --ssc-ix-punto-d: var(--ssc-punto-cerchio);
 }
 
 @media (max-width: 639.98px) {
@@ -84,8 +84,8 @@
 /* ------------------------------------------------------------------ fuoco: la linea a terra */
 
 .ssc-root :focus-visible {
-  outline: 2px solid var(--ssc-ix-bianco);
-  outline-offset: 3px;
+  outline: var(--ssc-fuoco-spessore) solid var(--ssc-fuoco-colore);
+  outline-offset: var(--ssc-fuoco-distanza);
 }
 
 .ssc-root :focus:not(:focus-visible) {
@@ -214,8 +214,8 @@
   border-radius: 50%;
   background: var(--ssc-ix-verde);
   box-shadow:
-    0 0 0 2px var(--ssc-ix-bianco),
-    0 0 0 4px color-mix(in srgb, var(--ssc-ix-nero) 55%, transparent);
+    0 0 0 var(--ssc-punto-anello) var(--ssc-ix-bianco),
+    0 0 0 calc(var(--ssc-punto-anello) + var(--ssc-punto-alone)) var(--ssc-ix-nero);
   transition:
     box-shadow var(--ssc-ix-rapido) linear,
     background-color var(--ssc-ix-evidenza) linear,
@@ -225,8 +225,8 @@
 @media (hover: hover) and (pointer: fine) {
   .ssc-root .ssc-ix-punto:hover::before {
     box-shadow:
-      0 0 0 3px var(--ssc-ix-bianco),
-      0 0 0 5px color-mix(in srgb, var(--ssc-ix-nero) 55%, transparent);
+      0 0 0 calc(var(--ssc-punto-anello) + 1px) var(--ssc-ix-bianco),
+      0 0 0 calc(var(--ssc-punto-anello) + 1px + var(--ssc-punto-alone)) var(--ssc-ix-nero);
   }
 }
 
@@ -292,7 +292,7 @@
 }
 
 .ssc-root .ssc-ix-planning[data-ssc-trascina='si'] .ssc-ix-corsia[data-ssc-adatta='no'] {
-  opacity: 0.4;
+  opacity: var(--ssc-opacita-corsia-no);
 }
 
 /* Il perché della corsia non adatta si legge solo mentre si trascina ("Il ponte 3 fa solo gomme"). */
@@ -417,7 +417,7 @@
 
 .ssc-root .ssc-ix-scheda {
   translate: 0 var(--ssc-ix-scheda-dy, 0px);
-  transition: translate 240ms var(--ssc-ix-curva-foglio);
+  transition: translate var(--ssc-ix-ritorno-foglio) var(--ssc-ix-curva-foglio);
   overscroll-behavior: contain;
 }
 

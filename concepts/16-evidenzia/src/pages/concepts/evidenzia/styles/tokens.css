@@ -1,0 +1,341 @@
+/* ==========================================================================
+   EVIDENZIA · design tokens (art-director, ondata 2)
+   --------------------------------------------------------------------------
+   Unico file CSS in cui vivono colori, misure e corpi del concept. Nessun
+   altro file scrive un hex: tutti usano var(--evd-*).
+   Contrasti calcolati con script in docs/art-director.md (tabella e appendice).
+
+   Tre famiglie di misure:
+   - FOGLIO (da 640 px in su): valori FISSI. Il foglio è un oggetto stampato
+     di 1840 px, identico a 768 e a 2560; cambia solo la porzione visibile.
+   - COLONNA (sotto 640 px): valori fluidi 320 → 639 px, dichiarati nella
+     media query in fondo.
+   - PANNELLI (scheda e giro): valori fluidi 375 → 1440 px.
+   Tutti i corpi sono in rem: lo zoom del browser funziona sempre.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Font di ripiego con metriche tarate (niente salto dell'impaginato).
+   Misurati il 26/09/2026 sui woff2 latin serviti da Google Fonts
+   (Libre Franklin v20, Newsreader v26) contro Liberation Sans/Serif, che
+   hanno le stesse metriche di Arial e Times New Roman.
+   - Franklin 800 vs Arial Bold: larghezza 101,1% (700: 100,3%, 900: 102,0%);
+     ascent 0,966, descent 0,246 (upm 1000).
+   - Newsreader 400, opsz 15-16 vs Times: 104,3-106,7% → 105,5%;
+     ascent 0,735, descent 0,265 (upm 2000).
+   - Newsreader corsivo 400 (opsz 18) vs Times Italic: 92,4%.
+   Georgia NON è usata come ripiego: non esiste su Linux/Android e non ha un
+   gemello metrico; Times/Liberation Serif/Tinos sì.
+   -------------------------------------------------------------------------- */
+@font-face {
+  font-family: "Evidenzia Franklin Ripiego";
+  src: local("Arial Bold"), local("Arial-BoldMT"), local("Liberation Sans Bold"), local("LiberationSans-Bold"), local("Arimo Bold"), local("Helvetica Neue Bold"), local("Helvetica Bold");
+  font-weight: 400 900;
+  font-style: normal;
+  size-adjust: 101.1%;
+  ascent-override: 95.55%;
+  descent-override: 24.33%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Evidenzia Newsreader Ripiego";
+  src: local("Times New Roman"), local("TimesNewRomanPSMT"), local("Liberation Serif"), local("LiberationSerif"), local("Tinos"), local("Times");
+  font-weight: 400;
+  font-style: normal;
+  size-adjust: 105.5%;
+  ascent-override: 69.67%;
+  descent-override: 25.12%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Evidenzia Newsreader Ripiego";
+  src: local("Times New Roman Italic"), local("TimesNewRomanPS-ItalicMT"), local("Liberation Serif Italic"), local("LiberationSerif-Italic"), local("Tinos Italic"), local("Times Italic");
+  font-weight: 400;
+  font-style: italic;
+  size-adjust: 92.4%;
+  ascent-override: 79.55%;
+  descent-override: 28.68%;
+  line-gap-override: 0%;
+}
+
+/* --------------------------------------------------------------------------
+   1. Token del concept (foglio da 640 px in su)
+   -------------------------------------------------------------------------- */
+.evd-root {
+  color-scheme: light;
+
+  /* ---------- Colori base (i cinque della matrice) ---------- */
+  --evd-carta: #E4DFD1;          /* fondo unico: foglio, scheda, giro, campi, mappa */
+  --evd-nero: #1C1C1A;           /* nero stampa: testo, titoli, barre, bottoni, fili */
+  --evd-secondario: #4F4C46;     /* testo secondario: Rif., date, zona. MAI sotto il tratto */
+  --evd-retino: #8F8B82;         /* filetti di colonna, punti delle foto, sagome della minipagina. MAI testo */
+  --evd-rosa: #EE5A9E;           /* SOLO gesti dell'utente: tratto, posti, segni, marcatori, percorso */
+
+  /* ---------- Colori derivati (tutti dai cinque sopra) ---------- */
+  --evd-carta-premuta: #D4CFC2;  /* carta + 8% nero: stato :active dei bottoni di testo, riga trascinata */
+  --evd-velo: #1C1C1A4D;         /* nero 30%: foglio oscurato sotto scheda e giro */
+  --evd-ombra-tinta: #58503C;    /* ombra color carta (mai nera) */
+  --evd-retino-piatto: #B3AEA2;  /* carta + 60% retino: foto a retino in Pagina intera (niente moiré) */
+
+  /* ---------- Ruoli (usare questi nei CSS di sezione) ---------- */
+  --evd-fondo: var(--evd-carta);
+  --evd-testo: var(--evd-nero);
+  --evd-testo-secondario: var(--evd-secondario);
+  --evd-filetto-colore: var(--evd-retino);
+  --evd-filo-colore: var(--evd-nero);
+  --evd-bottone-fondo: var(--evd-nero);
+  --evd-bottone-testo: var(--evd-carta);
+  --evd-bottone-disattivo-fondo: var(--evd-secondario);   /* "Mando il giro…": 6,43:1 con testo carta */
+  --evd-barra-fondo: var(--evd-nero);
+  --evd-barra-testo: var(--evd-carta);
+  --evd-campo-fondo: var(--evd-carta);                    /* niente campi bianchi */
+  --evd-campo-bordo: var(--evd-nero);
+  --evd-errore-testo: var(--evd-nero);                    /* nessun rosso: l'errore si dice a parole, in 700 */
+  --evd-selezione-fondo: var(--evd-nero);
+  --evd-selezione-testo: var(--evd-carta);
+  --evd-posto-vuoto: var(--evd-secondario);               /* filetto tratteggiato: 6,43:1, non il retino (2,55:1) */
+
+  /* ---------- Tratto dell'evidenziatore ----------
+     Il gruppo SVG del tratto ha opacità --evd-tratto-opacita ed è in multiply.
+     Dentro il gruppo le opacità sono RELATIVE: corpo 0,88, striature 0,62,
+     estremità a scalpello 1 (più inchiostro). Composto: 0,75 / 0,53 / 0,85.
+     Tetto: mai oltre 0,85 composto sotto testo nero (a 1,0 il nero scende a
+     4,28:1 e fallisce; il limite calcolato è 0,945). Niente tratti sovrapposti. */
+  --evd-tratto-colore: var(--evd-rosa);
+  --evd-tratto-blend: multiply;
+  --evd-tratto-opacita: 0.85;
+  --evd-tratto-corpo: 0.88;
+  --evd-tratto-striatura: 0.62;
+  --evd-tratto-estremita: 1;
+  --evd-tratto-scarico: 0.35;          /* opacità del gruppo per il quinto annuncio (tratto pallido) */
+  --evd-tratto-altezza: 1.15;          /* × corpo della riga d'attacco */
+  --evd-tratto-dy-max: 2px;
+  --evd-tratto-rotazione-max: 0.6deg;
+
+  /* ---------- Mappa ---------- */
+  --evd-mappa-filtro: grayscale(0.35);
+  --evd-percorso-colore: var(--evd-rosa);
+  --evd-percorso-opacita: 0.55;
+  --evd-percorso-spessore: 11px;
+  --evd-marcatore-l: 40px;
+  --evd-marcatore-h: 26px;
+  --evd-marcatore-agenzia: 28px;       /* quadrato nero pieno, lettera in carta */
+  --evd-attribuzione-fondo: #E4DFD1E6; /* carta al 90% sopra i tile: 12,74:1 con il nero */
+
+  /* ---------- Famiglie ---------- */
+  --evd-font-titoli: "Libre Franklin", "Evidenzia Franklin Ripiego", Arial, "Helvetica Neue", sans-serif;
+  --evd-font-testo: "Newsreader", "Evidenzia Newsreader Ripiego", "Times New Roman", Times, serif;
+
+  /* ---------- Pesi (Franklin solo 500/700/800/900; Newsreader solo 400) ---------- */
+  --evd-peso-testata: 900;
+  --evd-peso-attacco: 800;
+  --evd-peso-titolo: 800;
+  --evd-peso-prezzo: 700;
+  --evd-peso-interfaccia: 700;
+  --evd-peso-servizio: 500;
+  --evd-peso-testo: 400;
+
+  /* ---------- Corpi del FOGLIO (fissi) ---------- */
+  --evd-fs-testata: 9rem;               /* 144: EVIDENZIA = 5,61 em = 808 px su c1-c3 (844) */
+  --evd-fs-riquadro: 2.125rem;          /* 34: "Il giro di sabato lo prepariamo noi." = 530 px su 556 */
+  --evd-fs-sottotesto: 1.125rem;        /* 18, Newsreader: le 20 parole del riquadro, riga della testata */
+  --evd-fs-come-funziona: 1rem;         /* 16, Franklin 700 titoletto / Newsreader testo in c3 */
+  --evd-fs-barra: 1.25rem;              /* 20, Franklin 800 carta su nero */
+  --evd-fs-attacco-t: 1.375rem;         /* 22, attacco degli annunci di testa (2 righe) */
+  --evd-fs-attacco-r: 1.25rem;          /* 20, attacco degli annunci a riquadro (1 riga su 556) */
+  --evd-fs-attacco: 1rem;               /* 16, attacco di P e F: circa 32 caratteri per riga a 268 px */
+  --evd-fs-cerchiamo: 1rem;             /* 16, Franklin 700 (non 800): si distingue dagli annunci */
+  --evd-fs-testo: 0.9375rem;            /* 15, Newsreader: testo degli annunci */
+  --evd-fs-prezzo: 1.0625rem;           /* 17, Franklin 700 tabellare */
+  --evd-fs-prezzo-grande: 1.25rem;      /* 20, prezzo di T e R */
+  --evd-fs-box-titolo: 1.25rem;         /* 20, titoli dei box redazionali (sopra filo nero, non su barra) */
+  --evd-fs-listino: 0.9375rem;          /* 15, Franklin 500 tabellare: zona e €/m² */
+  --evd-fs-citazione: 1.125rem;         /* 18, Newsreader corsivo: solo "Hanno comprato con noi" */
+  --evd-fs-sommario: 1rem;              /* 16, Franklin 700, link sottolineati */
+  --evd-fs-data: 1.125rem;              /* 18, Franklin 700: "sabato 3 ottobre 2026" */
+  --evd-fs-bottone: 0.9375rem;          /* 15, Franklin 700: Evidenzia, Leggi, Pagina intera */
+  --evd-fs-bottone-grande: 1.0625rem;   /* 17, Prepara il giro, Manda il giro */
+  --evd-fs-servizio: 0.875rem;          /* 14, minimo assoluto: Rif., piede, crediti, attribuzione OSM */
+
+  /* Interlinea */
+  --evd-lh-testata: 0.86;
+  --evd-lh-riquadro: 1.08;
+  --evd-lh-titolo: 1.1;                 /* attacchi T e R, titoli dei box, titoli di scheda e giro */
+  --evd-lh-attacco: 1.2;                /* attacco P/F: riga di 19,2 px, il tratto è alto 18,4 */
+  --evd-lh-barra: 1;
+  --evd-lh-testo: 1.4;                  /* 15 × 1,4 = 21 px: righe intere, pareggio delle colonne esatto */
+  --evd-lh-sottotesto: 1.45;
+  --evd-lh-lettura: 1.5;                /* descrizione in scheda */
+  --evd-lh-interfaccia: 1.15;
+  --evd-lh-servizio: 1.35;
+
+  /* Spaziatura tra le lettere */
+  --evd-trk-testata: -0.02em;
+  --evd-trk-titolo: -0.015em;
+  --evd-trk-attacco: -0.01em;
+  --evd-trk-barra: -0.005em;
+  --evd-trk-testo: 0em;
+
+  /* Numeri: prezzi, orari, listino sempre tabellari */
+  --evd-cifre: tabular-nums lining-nums;
+
+  /* ---------- Corpi dei PANNELLI (scheda, giro), fluidi 375 → 1440 ---------- */
+  --evd-fs-scheda-titolo: clamp(1.5rem, calc(1.324rem + 0.7512vw), 2rem);        /* 24 → 32 */
+  --evd-fs-scheda-prezzo: clamp(1.75rem, calc(1.574rem + 0.7512vw), 2.25rem);    /* 28 → 36 */
+  --evd-fs-confronto: clamp(1.125rem, calc(1.081rem + 0.1878vw), 1.25rem);       /* 18 → 20, Franklin 700 */
+  --evd-fs-descrizione: clamp(1.0625rem, calc(1.04rem + 0.0939vw), 1.125rem);    /* 17 → 18, Newsreader */
+  --evd-fs-pannello-testo: clamp(1rem, calc(0.978rem + 0.0939vw), 1.0625rem);    /* 16 → 17 */
+  --evd-fs-giro-titolo: clamp(1.75rem, calc(1.486rem + 1.127vw), 2.5rem);        /* 28 → 40 */
+  --evd-fs-orario: clamp(1.5rem, calc(1.368rem + 0.5634vw), 1.875rem);           /* 24 → 30, Franklin 700 tabellare */
+  --evd-fs-etichetta: 1rem;             /* 16, Franklin 700 sopra ogni campo */
+  --evd-fs-campo: 1.0625rem;            /* 17: niente zoom automatico di iOS */
+  --evd-fs-errore: 1rem;                /* 16, Franklin 700 nero sotto il campo */
+
+  /* ---------- Spazi (fitti: è un giornale) ---------- */
+  --evd-sp-1: 4px;
+  --evd-sp-2: 8px;
+  --evd-sp-3: 12px;
+  --evd-sp-4: 16px;
+  --evd-sp-5: 20px;                     /* = canaletto */
+  --evd-sp-6: 24px;
+  --evd-sp-7: 32px;
+  --evd-sp-8: 48px;
+  --evd-sp-9: 64px;
+
+  /* ---------- Griglia del foglio (vincoli dell'ux-architect 5, 5.1) ---------- */
+  --evd-foglio-l: 1840px;               /* 66 + 6×268 + 5×20 + 66 */
+  --evd-foglio-h: 2060px;               /* stima: la misura vera la dà l'impaginato */
+  --evd-colonne: 6;
+  --evd-colonna: 268px;
+  --evd-canaletto: 20px;
+  --evd-margine: 66px;                  /* margine sinistro e destro del foglio */
+  --evd-margine-alto: 72px;             /* la testata parte sotto ConceptBackButton */
+  --evd-foglio-spazio-destro: 360px;    /* il molo non copre mai l'ultima colonna */
+  --evd-foglio-spazio-basso: 320px;
+  --evd-span-2: 556px;                  /* 2 colonne + 1 canaletto */
+  --evd-span-3: 844px;
+  --evd-span-4: 1132px;
+  --evd-span-6: 1708px;
+
+  /* Fili e filetti */
+  --evd-filetto: 1px;                   /* retino: al centro del canaletto e tra annunci */
+  --evd-filo: 1px;                      /* nero: sopra il piede, bordo del molo, bordo dei campi */
+  --evd-filo-testata: 3px;              /* nero: unico filo spesso, sotto la testata */
+  --evd-bordo-riquadro: 2px;            /* nero: annuncio a riquadro, box "Hanno comprato" */
+  --evd-annunci-stacco: 12px;           /* sopra e sotto il filetto retino tra due annunci */
+  --evd-barra-h: 36px;
+
+  /* Foto a retino sul foglio: altezze fisse (CLS 0) */
+  --evd-foto-t-h: 200px;
+  --evd-foto-f-h: 168px;
+  --evd-foto-r-l: 258px;
+  --evd-foto-r-h: 160px;
+  --evd-retino-passo: 4px;              /* passo del punto in CSS px (8 px nel file 2×), 45° */
+
+  /* ---------- Molo (comandi fissi, desktop e tablet) ---------- */
+  --evd-molo-l: 320px;
+  --evd-molo-distanza: 24px;
+  --evd-molo-ridotto-h: 52px;           /* sotto i 560 px di altezza della finestra */
+  --evd-minipagina-l: 150px;
+  --evd-minipagina-h: 168px;
+  --evd-posto-tratto-l: 36px;           /* tratto dentro un posto da 44 × 44 */
+  --evd-posto-tratto-h: 14px;
+
+  /* ---------- Pannelli ---------- */
+  --evd-scheda-l: 720px;
+  --evd-scheda-testa-h: 56px;
+  --evd-giro-l: 960px;
+  --evd-giro-mappa-l: 520px;
+  --evd-giro-colonna-l: 440px;
+  --evd-giro-testa-h: 64px;
+  --evd-scheda-foto-h: clamp(240px, 42svh, 460px);
+
+  /* ---------- Misure di interfaccia ---------- */
+  --evd-tocco: 44px;
+  --evd-bottone-h: 44px;
+  --evd-bottone-h-grande: 52px;
+  --evd-campo-h: 48px;
+  --evd-raggio: 0;                      /* spigolo vivo ovunque; unica eccezione: la punta del tratto */
+
+  /* ---------- Fuoco e link ----------
+     outline nero 2 px con 2 px di stacco, e un alone carta di 2 px che riempie
+     lo stacco: resta visibile anche su barre e bottoni neri. */
+  --evd-fuoco-colore: var(--evd-nero);
+  --evd-fuoco-spessore: 2px;
+  --evd-fuoco-distanza: 2px;
+  --evd-fuoco-alone: 0 0 0 2px var(--evd-carta);
+  --evd-sottolineatura: 1px;
+  --evd-sottolineatura-hover: 2px;
+  --evd-sottolineatura-distanza: 0.18em;
+
+  /* ---------- Profondità (una sola ombra, solo durante lo stacco) ---------- */
+  --evd-ombra-stacco: 0 2px 0 #58503C29, 0 14px 28px -10px #58503C6B;
+  --evd-filo-pannello: 1px solid var(--evd-nero);   /* bordo sinistro di scheda e giro: niente ombra */
+
+  /* ---------- Livelli (z-index) ---------- */
+  --evd-z-foglio: 0;
+  --evd-z-comandi: 20;
+  --evd-z-scarico: 25;
+  --evd-z-velo: 30;
+  --evd-z-scheda: 40;
+  --evd-z-giro: 50;
+}
+
+/* --------------------------------------------------------------------------
+   2. COLONNA del giornale piegato (sotto 640 px): corpi fluidi 320 → 639
+   -------------------------------------------------------------------------- */
+@media (max-width: 639.98px) {
+  .evd-root {
+    --evd-fs-testata: clamp(2.75rem, calc((100vw - 2rem) * 0.1516), 5.5rem);   /* 52 a 375 (0,85 della colonna) */
+    --evd-fs-riquadro: clamp(1.75rem, calc(1.248rem + 2.508vw), 2.25rem);       /* 28 a 320, 29,4 a 375, 36 a 639 */
+    --evd-fs-sottotesto: clamp(1rem, calc(0.8746rem + 0.627vw), 1.125rem);     /* 16 → 18 */
+    --evd-fs-barra: 1.125rem;             /* 18 */
+    --evd-fs-attacco-t: 1.375rem;         /* 22 */
+    --evd-fs-attacco-r: 1.25rem;          /* 20 */
+    --evd-fs-attacco: 1.125rem;           /* 18: quasi sempre una riga a 343 px */
+    --evd-fs-cerchiamo: 1.0625rem;
+    --evd-fs-testo: 1rem;                 /* 16 */
+    --evd-fs-prezzo: 1.125rem;            /* 18 */
+    --evd-fs-prezzo-grande: 1.25rem;
+    --evd-fs-listino: 1rem;
+    --evd-fs-bottone: 1rem;
+    --evd-fs-sommario: 1rem;
+    --evd-fs-data: 1rem;
+    --evd-lh-testo: 1.45;
+    --evd-lh-attacco: 1.2;
+
+    --evd-colonna-margine: 16px;
+    --evd-colonna-fondo: 88px;            /* ConceptBackButton in basso a sinistra */
+    --evd-barra-giro-h: 48px;
+    --evd-striscia-h: 44px;
+    --evd-posto-tratto-l: 24px;
+    --evd-posto-tratto-h: 10px;
+    --evd-foto-t-h: 200px;
+    --evd-foto-f-h: 190px;
+    --evd-foto-r-l: 170px;               /* due foto affiancate a 343: 170 + 3 + 170 */
+    --evd-foto-r-h: 120px;
+    --evd-campo-h: 56px;
+    --evd-bottone-h-grande: 56px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   3. Contrasto forzato (Windows): il rosa e il multiply spariscono,
+   il tratto diventa il colore di sistema "Highlight".
+   -------------------------------------------------------------------------- */
+@media (forced-colors: active) {
+  .evd-root {
+    --evd-carta: Canvas;
+    --evd-nero: CanvasText;
+    --evd-secondario: CanvasText;
+    --evd-retino: GrayText;
+    --evd-rosa: Highlight;
+    --evd-carta-premuta: Canvas;
+    --evd-tratto-blend: normal;
+    --evd-tratto-opacita: 1;
+    --evd-selezione-fondo: Highlight;
+    --evd-selezione-testo: HighlightText;
+  }
+}

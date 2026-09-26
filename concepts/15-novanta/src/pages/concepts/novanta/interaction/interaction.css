@@ -1,0 +1,338 @@
+/*
+ * NOVANTA · stati di interazione (interaction-designer).
+ *
+ * Ganci che le sezioni mettono sui propri elementi (nessuna classe di layout):
+ *   data-nov-ix="rotante"        disco, braccio, anello, fascia a 90°: si
+ *                                trascinano (touch-action: none, niente selezione)
+ *   data-nov-ix="presa"          la parte che si afferra (braccio, manopola,
+ *                                anello): cursore "grab"
+ *   data-nov-ix="tocca"          superficie che si tocca per andare lì (disco)
+ *   data-nov-ix-presa="1"        lo scrive trascina.ts durante il gesto
+ *   data-nov-ix-scorre           area che scorre col dito (Palco, colonna del
+ *                                modulo, "Tutte le ore libere")
+ *   data-nov-ix-rotella="blocca" dove la rotella non ruota mai (colonna del modulo)
+ *   .nov-ix-fuoco                cerchio SVG attorno alla manopola / all'indice:
+ *                                è l'anello di focus dello slider in SVG
+ *   .nov-ix-anteprima            braccio fantasma: all'hover di una parola del
+ *                                quadrante mostra dove andrà il braccio
+ *   .nov-ix-pillola              bottone a pillola (pieno o a contorno)
+ *   .nov-ix-parola               parola del quadrante (link del nav)
+ *   .nov-ix-link                 link di testo (tel:, Apri in Maps, Cambia)
+ *
+ * Tutti i selettori partono da .nov-root. Nessun hex: solo i ruoli di
+ * styles/tokens.css. Si anima solo transform, opacity e spessori; nessun
+ * cambio di colore su grandi superfici (le pillole e le parole sono piccole).
+ * Niente cursore custom, niente cerchio che segue il mouse, niente bottoni
+ * magnetici (creative-director §4.7): il cursore di sistema dice cosa si può fare.
+ */
+
+/* ================================================================== 0. variabili locali */
+
+.nov-root {
+  --nov-ix-rapido: 120ms;
+  --nov-ix-medio: 200ms;
+  --nov-ix-curva: var(--nov-motion-curva, cubic-bezier(0.333, 0.5, 0.667, 1));
+  --nov-ix-premuto: translateY(1px) scale(0.985);
+  --nov-ix-manopola-hover: 1.12;
+  --nov-ix-manopola-presa: 1.2;
+}
+
+/* ================================================================== 1. anello di focus */
+
+/* Una riga petrolio da 3 px a 3 px di distanza, ovunque: su albicocca 8,49:1,
+   su gesso 11,14:1. È parte del linguaggio (trend-researcher P10), non QA. */
+.nov-root :focus-visible {
+  outline: var(--nov-focus-anello);
+  outline-offset: var(--nov-focus-distanza);
+}
+
+.nov-root :focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Bottone pieno: l'anello resta petrolio, staccato dal pieno petrolio dai 3 px
+   di albicocca. Le pillole lo seguono nella forma. */
+.nov-root .nov-ix-pillola:focus-visible {
+  border-radius: var(--nov-pillola);
+}
+
+/* Slider disegnati in SVG (braccio, anello): il contorno CSS sugli elementi
+   SVG è incoerente tra i browser e avvolgerebbe il braccio intero. L'anello
+   di focus è un cerchio attorno alla manopola (o all'indice dell'anello),
+   disegnato dalla sezione con la classe .nov-ix-fuoco. */
+.nov-root [role='slider']:has(.nov-ix-fuoco):focus-visible {
+  outline: none;
+}
+
+.nov-root .nov-ix-fuoco {
+  fill: none;
+  stroke: var(--nov-focus);
+  stroke-width: var(--nov-focus-spessore);
+  opacity: 0;
+  pointer-events: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.nov-root [role='slider']:focus-visible .nov-ix-fuoco {
+  opacity: 1;
+}
+
+/* Il focus arriva da tastiera anche dopo un clic sul disco (focusSu): se il
+   browser non considera "visibile" quel focus, il cerchio resta spento. */
+
+/* Titoli che ricevono il focus da script (h2 con tabindex=-1 dopo "Prenota",
+   dopo una parola del quadrante, dopo Invio sullo slider): nessun anello, il
+   titolo è già la cosa più evidente dello schermo e l'annuncio lo fa aria-live. */
+.nov-root h2[tabindex='-1']:focus {
+  outline: none;
+}
+
+/* ================================================================== 2. oggetti che ruotano */
+
+.nov-root [data-nov-ix='rotante'] {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nov-root [data-nov-ix='presa'] {
+  cursor: grab;
+}
+
+.nov-root [data-nov-ix='tocca'] {
+  cursor: pointer;
+}
+
+/* Durante la presa: mano chiusa su tutta la pagina (il puntatore catturato
+   può uscire dal disco) e nessuna selezione di testo accidentale. */
+.nov-root:has([data-nov-ix-presa='1']),
+.nov-root:has([data-nov-ix-presa='1']) * {
+  cursor: grabbing !important;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Manopola: il cerchio disegnato (classe della sezione dentro il gruppo
+   .nov-ix-manopola) cresce appena all'hover e alla presa. Nessun cambio di
+   colore: è l'oggetto che si solleva di un filo sotto la mano. */
+.nov-root .nov-ix-manopola {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform var(--nov-ix-medio) var(--nov-ix-curva);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nov-root [data-nov-ix='presa']:hover .nov-ix-manopola {
+    transform: scale(var(--nov-ix-manopola-hover));
+  }
+}
+
+.nov-root [data-nov-ix-presa='1'] .nov-ix-manopola,
+.nov-root [data-nov-ix-presa='1'].nov-ix-manopola {
+  transform: scale(var(--nov-ix-manopola-presa));
+}
+
+/* ================================================================== 3. anteprima dalle parole */
+
+/*
+ * All'hover (o al focus) di una parola del quadrante compare un braccio
+ * fantasma all'angolo di destinazione: una riga petrolio sottile al 35%,
+ * dal perno all'arco. Dice "il braccio andrà qui" prima del clic, senza
+ * muovere niente. La sezione la disegna a 0° come il braccio, nello stesso
+ * gruppo con lo stesso transform-origin sul perno, e mette data-gradi="N"
+ * su ogni parola (.nov-ix-parola). Solo CSS, nessun JS per frame.
+ */
+.nov-root .nov-ix-anteprima {
+  --nov-ix-anteprima-g: 0;
+  opacity: 0;
+  pointer-events: none;
+  stroke: var(--nov-strumento);
+  stroke-width: 2px;
+  stroke-linecap: round;
+  transform-box: view-box;
+  rotate: calc(var(--nov-ix-anteprima-g) * -1deg);
+  transition: opacity var(--nov-ix-medio) var(--nov-ix-curva);
+}
+
+.nov-root[data-geo='fondo'] .nov-ix-anteprima {
+  rotate: calc(var(--nov-ix-anteprima-g) * 1deg);
+}
+
+.nov-root:has(.nov-ix-parola:is(:hover, :focus-visible)) .nov-ix-anteprima {
+  opacity: 0.35;
+}
+
+/* Sulla parola dell'angolo attivo l'anteprima coinciderebbe col braccio: spenta. */
+.nov-root:has(.nov-ix-parola[aria-current]:is(:hover, :focus-visible)) .nov-ix-anteprima {
+  opacity: 0;
+}
+
+.nov-root:has(.nov-ix-parola[data-gradi='0']:is(:hover, :focus-visible)) .nov-ix-anteprima { --nov-ix-anteprima-g: 0; }
+.nov-root:has(.nov-ix-parola[data-gradi='30']:is(:hover, :focus-visible)) .nov-ix-anteprima { --nov-ix-anteprima-g: 30; }
+.nov-root:has(.nov-ix-parola[data-gradi='60']:is(:hover, :focus-visible)) .nov-ix-anteprima { --nov-ix-anteprima-g: 60; }
+.nov-root:has(.nov-ix-parola[data-gradi='90']:is(:hover, :focus-visible)) .nov-ix-anteprima { --nov-ix-anteprima-g: 90; }
+.nov-root:has(.nov-ix-parola[data-gradi='120']:is(:hover, :focus-visible)) .nov-ix-anteprima { --nov-ix-anteprima-g: 120; }
+.nov-root:has(.nov-ix-parola[data-gradi='150']:is(:hover, :focus-visible)) .nov-ix-anteprima { --nov-ix-anteprima-g: 150; }
+.nov-root:has(.nov-ix-parola[data-gradi='180']:is(:hover, :focus-visible)) .nov-ix-anteprima { --nov-ix-anteprima-g: 180; }
+
+/* Durante il trascinamento l'anteprima non c'è: c'è il braccio vero. */
+.nov-root:has([data-nov-ix-presa='1']) .nov-ix-anteprima {
+  opacity: 0;
+}
+
+/* ================================================================== 4. parole del quadrante */
+
+/*
+ * Attiva e inattive si distinguono per peso e sottolineatura, non per colore
+ * (il petrolio al 60% è 3,24:1 e non passa: trend-researcher §4.1). Area di
+ * tocco almeno 44 px anche se il testo è 17-18 px.
+ */
+.nov-root .nov-ix-parola {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 44px;
+  min-inline-size: 44px;
+  cursor: pointer;
+  color: var(--nov-testo);
+  text-decoration-line: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.3em;
+  transition: text-decoration-color var(--nov-ix-rapido) linear;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nov-root .nov-ix-parola:hover {
+    text-decoration-color: currentColor;
+  }
+}
+
+.nov-root .nov-ix-parola[aria-current] {
+  font-weight: var(--nov-peso-interfaccia, 500);
+  text-decoration-color: currentColor;
+  text-decoration-thickness: 2px;
+}
+
+/* ================================================================== 5. pillole */
+
+.nov-root .nov-ix-pillola {
+  border-radius: var(--nov-pillola);
+  cursor: pointer;
+  transition:
+    transform var(--nov-ix-rapido) var(--nov-ix-curva),
+    background-color var(--nov-ix-rapido) linear,
+    box-shadow var(--nov-ix-rapido) linear;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Pillola a contorno (Leggi in elenco, prima/dopo, passi, suggerimenti):
+   all'hover si riempie di albicocca scura, il testo resta petrolio pieno. */
+@media (hover: hover) and (pointer: fine) {
+  .nov-root .nov-ix-pillola:not(.nov-ix-pillola--piena):not(:disabled):not([aria-disabled='true']):hover {
+    background-color: var(--nov-pillola-hover);
+  }
+
+  /* Pillola piena (Prenota, Fissa le due visite): scurisce in petrolio profondo. */
+  .nov-root .nov-ix-pillola--piena:not(:disabled):not([aria-disabled='true']):hover {
+    background-color: var(--nov-primario-premuto);
+  }
+}
+
+/* Premuto: il bottone scende di un pixel, come un tasto. */
+.nov-root .nov-ix-pillola:not(:disabled):not([aria-disabled='true']):active {
+  transform: var(--nov-ix-premuto);
+}
+
+.nov-root .nov-ix-pillola--piena:not(:disabled):not([aria-disabled='true']):active {
+  background-color: var(--nov-primario-premuto);
+}
+
+/* Disattivato: resta focalizzabile (aria-disabled) e si legge a parole
+   il perché (aria-describedby); il cursore lo dice. */
+.nov-root .nov-ix-pillola:is(:disabled, [aria-disabled='true']) {
+  cursor: not-allowed;
+  color: var(--nov-inattivo);
+  border-color: var(--nov-inattivo);
+}
+
+/* In invio ("Fissiamo..."): niente premuto, niente hover. */
+.nov-root .nov-ix-pillola[aria-busy='true'] {
+  cursor: progress;
+  transform: none;
+}
+
+/* ================================================================== 6. link di testo */
+
+.nov-root .nov-ix-link {
+  color: var(--nov-testo);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.22em;
+  transition: text-decoration-thickness var(--nov-ix-rapido) linear;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nov-root .nov-ix-link:hover {
+    text-decoration-thickness: 3px;
+  }
+}
+
+/* ================================================================== 7. aree che scorrono */
+
+.nov-root [data-nov-ix-scorre] {
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ================================================================== 8. campi del modulo */
+
+/* Il cursore del testo e lo spessore del bordo al focus sono dell'art-director
+   (--nov-bordo-campo-attivo); qui solo il tocco: niente evidenziazione blu
+   di iOS e niente zoom automatico (corpo già ≥ 16 px nei token). */
+.nov-root :is(input, textarea, select) {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ================================================================== 9. reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+  .nov-root .nov-ix-manopola,
+  .nov-root .nov-ix-anteprima,
+  .nov-root .nov-ix-parola,
+  .nov-root .nov-ix-pillola,
+  .nov-root .nov-ix-link {
+    transition: none;
+  }
+
+  .nov-root .nov-ix-pillola:not(:disabled):not([aria-disabled='true']):active {
+    transform: none;
+  }
+}
+
+.nov-root[data-motion='reduced'] :is(.nov-ix-manopola, .nov-ix-anteprima, .nov-ix-parola, .nov-ix-pillola, .nov-ix-link) {
+  transition: none;
+}
+
+.nov-root[data-motion='reduced'] .nov-ix-pillola:not(:disabled):not([aria-disabled='true']):active {
+  transform: none;
+}
+
+/* ================================================================== 10. colori forzati */
+
+@media (forced-colors: active) {
+  .nov-root .nov-ix-fuoco {
+    stroke: Highlight;
+  }
+
+  .nov-root .nov-ix-anteprima {
+    stroke: CanvasText;
+  }
+
+  .nov-root .nov-ix-parola[aria-current] {
+    text-decoration-color: Highlight;
+  }
+}
