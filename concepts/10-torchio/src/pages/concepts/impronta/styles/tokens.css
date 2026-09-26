@@ -117,7 +117,7 @@
      Macchie scure quasi nere e chiare quasi bianche, a bassissima opacità,
      stirate in orizzontale (senso della fibra). Si adatta da sola: sulle
      carte chiare si vedono le scure, su Grafite le chiare. Statica. */
-  --imp-fibra: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='280'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8 .22' numOctaves='3' seed='7' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' values='0 0 0 0 .1 0 0 0 0 .1 0 0 0 0 .08 .5 0 0 0 -.26' result='s'/%3E%3CfeColorMatrix in='n' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 .96 -.62 0 0 0 .28' result='l'/%3E%3CfeMerge%3E%3CfeMergeNode in='s'/%3E%3CfeMergeNode in='l'/%3E%3C/feMerge%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+  --imp-fibra: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='280'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8 .22' numOctaves='3' seed='7' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' values='0 0 0 0 .1 0 0 0 0 .1 0 0 0 0 .08 .26 0 0 0 -.14' result='s'/%3E%3CfeColorMatrix in='n' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 .96 -.4 0 0 0 .17' result='l'/%3E%3CfeMerge%3E%3CfeMergeNode in='s'/%3E%3CfeMergeNode in='l'/%3E%3C/feMerge%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
 
   /* Pressione (0 → 1). Scritta dal motion-designer sugli elementi premuti.
      Qui il default: tutto già premuto (pagina statica, reduced motion). */

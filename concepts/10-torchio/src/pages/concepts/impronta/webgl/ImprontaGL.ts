@@ -122,6 +122,10 @@ const COTTURE_PER_FRAME = 1;
  * recuperare in fretta conta più del budget di draw call di quei pochi frame.
  */
 const COTTURE_PER_FRAME_RECUPERO = 2;
+/** Intervallo minimo tra due rimisure del registro per cambi di layout (ms); l'ultima arriva sempre. */
+const INTERVALLO_RIMISURA = 100;
+/** Variabile inline scritta da motion/usePressione sull'elemento premuto: urto 0..1. */
+const VAR_URTO = '--imp-press-urto';
 /** Attributo scritto sui fantasmi che il GL non sta disegnando (vedi docs/shader-engineer.md). */
 export const ATTR_FUORI_GL = 'data-imp-gl';
 /**
@@ -172,6 +176,8 @@ export interface DiagnosticaGL {
   atlante: { lato: number; halfFloat: boolean; slot: number; occupazione: number };
   qualita: { media: number; riduzione: number };
   contestiPersi: number;
+  /** Rimisure del registro per un cambio di layout delle sezioni (giro 3). */
+  rimisureLayout: number;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -239,6 +245,9 @@ export class ImprontaGL {
   private numeroFrame = 0;
   /** Dopo la comparsa: le maschere vanno ridisegnate appena il DOM mostra data-gl="on". */
   private rifaiDopoComparsa = false;
+  /** Una sezione ha cambiato misura: i rettangoli "doc" del registro vanno riletti. */
+  private layoutCambiato = false;
+  private ultimaRimisura = Number.NEGATIVE_INFINITY;
 
   private togli: Array<() => void> = [];
   /** compileAsync in corso: il contesto non si può perdere finché three la sta aspettando. */
@@ -286,6 +295,7 @@ export class ImprontaGL {
       atlante: { lato: 0, halfFloat: false, slot: 0, occupazione: 0 },
       qualita: { media: 0, riduzione: 0 },
       contestiPersi: 0,
+      rimisureLayout: 0,
     };
 
     this.canvas.addEventListener('webglcontextlost', this.suContestoPerso, false);
@@ -396,6 +406,8 @@ export class ImprontaGL {
         fonts.removeEventListener('loadingdone', this.suFont);
       });
     }
+
+    this.osservaLayout();
 
     this.pronto = true;
     this.avviaAttesa();
@@ -530,6 +542,23 @@ export class ImprontaGL {
     if (!this.pronto || this.perso || this.spento) return false;
     this.applicaViewport();
 
+    // Giro 3: una sezione sopra un blocco ha cambiato altezza (hero
+    // ricomposto a font arrivati, legatoria, banco…) → i rettangoli "doc" si
+    // rileggono, qui in fase 'read', al massimo ogni INTERVALLO_RIMISURA ms;
+    // l'ultima rimisura arriva sempre (il ticker resta sveglio fino ad allora).
+    let rimisuraInAttesa = false;
+    if (this.layoutCambiato) {
+      if (now - this.ultimaRimisura >= INTERVALLO_RIMISURA) {
+        this.layoutCambiato = false;
+        this.ultimaRimisura = now;
+        this.diagnostica.rimisureLayout += 1;
+        registry.invalidate();
+        runtime.markDirty();
+      } else {
+        rimisuraInAttesa = true;
+      }
+    }
+
     // Con data-gl="on" relief-fallback.css porta i fantasmi agli assi di
     // arrivo (wdth/wght finali): la loro scatola non cambia, quindi nessun
     // ResizeObserver se ne accorge, ma i glifi sì. Le maschere cotte durante
@@ -573,7 +602,7 @@ export class ImprontaGL {
     }
     lista.length = 0;
     // Un cambio di misura aspetta ATTESA_MISURA: il ticker resta sveglio fino ad allora.
-    return inAttesa;
+    return inAttesa || rimisuraInAttesa;
   };
 
   /* ----------------------------------------------------------------------- */
@@ -618,6 +647,21 @@ export class ImprontaGL {
       }
     }
 
+    // 3b. Urto (carta schiacciata attorno al solco, giro 3): lo scrive
+    // motion/usePressione come variabile inline sull'elemento premuto; si
+    // legge solo per i blocchi selezionati (stile inline: nessun layout).
+    let urtoCambiato = false;
+    for (const b of this.selezione) {
+      const st = this.stati.get(b.id);
+      if (st === undefined) continue;
+      const grezzo = parseFloat(b.el.style.getPropertyValue(VAR_URTO));
+      const urto = Number.isFinite(grezzo) ? Math.max(0, Math.min(1, grezzo)) : 0;
+      if (urto !== st.urto) {
+        st.urto = urto;
+        urtoCambiato = true;
+      }
+    }
+
     // 4. Serve disegnare?
     const L = runtime.light;
     const s = store.get();
@@ -625,6 +669,7 @@ export class ImprontaGL {
     const serve =
       !this.primoFrame ||
       runtime.dirty ||
+      urtoCambiato ||
       cotte > 0 ||
       this.viewportCambiato ||
       runtime.scrollY !== this.ultimoScroll ||
@@ -712,6 +757,42 @@ export class ImprontaGL {
     }
     return ancora;
   };
+
+  /* ----------------------------------------------------------------------- */
+  /* Layout delle sezioni (giro 3)                                           */
+  /* ----------------------------------------------------------------------- */
+
+  /**
+   * Il registro rimisura un blocco "doc" quando cambia la SUA misura, a
+   * resize della finestra e a font pronti. Non quando una sezione SOPRA di
+   * lui cambia altezza dopo: l'hero che si ricompone quando Anybody arriva
+   * (47 px a 1440 in prova), la legatoria, il banco, un testo che va a capo.
+   * Il blocco allora scende o sale nel DOM ma il suo `rectDoc` resta quello
+   * vecchio, e il rilievo GL finisce fuori posto (bottega a 375, colophon e
+   * Per chi a 1440 nel giro 2 della giuria).
+   *
+   * Qui un ResizeObserver guarda il contenitore del contenuto e ogni sezione
+   * (figli di `.imp-contenuto` e di `.imp-main`): qualunque cambio di misura
+   * sposta i blocchi che vengono dopo, quindi chiede una rimisura del
+   * registro (`registry.invalidate()`) nella prossima fase 'read'.
+   */
+  private osservaLayout(): void {
+    if (typeof ResizeObserver === 'undefined') return;
+    const contenuto = this.canvas.closest('.imp-root')?.querySelector<HTMLElement>('.imp-contenuto') ?? null;
+    if (contenuto === null) return;
+    const ro = new ResizeObserver(() => {
+      if (this.smontato) return;
+      this.layoutCambiato = true;
+      ticker.wake();
+    });
+    ro.observe(contenuto);
+    for (const figlio of Array.from(contenuto.children)) ro.observe(figlio);
+    const main = contenuto.querySelector<HTMLElement>(':scope > main');
+    if (main !== null) for (const sezione of Array.from(main.children)) ro.observe(sezione);
+    this.togli.push(() => {
+      ro.disconnect();
+    });
+  }
 
   /* ----------------------------------------------------------------------- */
   /* Viewport e DPR                                                          */

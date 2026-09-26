@@ -212,6 +212,11 @@
   .imp-root .imp-tecniche__zona {
     grid-row: 2;
     grid-column: 1 / 8;
+  }
+
+  /* Qui la riga è alta quanto la lastra: il contenitore misura solo la
+     larghezza (più specifico della regola generale della zona, più sotto). */
+  .imp-root .imp-tecniche__palco .imp-tecniche__zona {
     container-type: inline-size;
   }
 
@@ -478,20 +483,20 @@
   background-image:
     repeating-linear-gradient(
       90deg,
-      color-mix(in srgb, var(--imp-carta) 55%, var(--imp-carta-ombra)) 0 1px,
+      color-mix(in srgb, var(--imp-carta-ombra) 70%, var(--imp-inchiostro)) 0 1px,
       transparent 1px var(--_imp-t-foglio)
     ),
     repeating-linear-gradient(
       90deg,
       transparent 0 var(--_imp-t-foglio),
-      color-mix(in srgb, var(--imp-carta) 90%, var(--imp-carta-luce)) var(--_imp-t-foglio) calc(var(--_imp-t-foglio) * 2)
+      color-mix(in srgb, var(--imp-carta) 20%, transparent) var(--_imp-t-foglio) calc(var(--_imp-t-foglio) * 2)
     ),
     repeating-linear-gradient(
       180deg,
-      color-mix(in srgb, var(--imp-carta) 92%, var(--imp-carta-ombra)) 0 2px,
-      transparent 2px 11px
+      color-mix(in srgb, var(--imp-carta) 30%, var(--imp-carta-ombra)) 0 1px,
+      transparent 1px 13px
     ),
-    linear-gradient(90deg, color-mix(in srgb, var(--imp-carta) 45%, var(--imp-carta-ombra)), color-mix(in srgb, var(--imp-carta) 70%, var(--imp-carta-ombra)));
+    linear-gradient(90deg, color-mix(in srgb, var(--imp-carta) 25%, var(--imp-carta-ombra)), color-mix(in srgb, var(--imp-carta) 55%, var(--imp-carta-ombra)));
 }
 
 /* --------------------------------------------------------------------------

@@ -42,7 +42,7 @@
    --_imp-d: passo del bisello, 0,016 em + 1 px (mai sotto 1,5 px): a 30 px
    di corpo 1,5 px, a 60 px 2 px, a 145 px 3,3 px. La parte fissa tiene netto
    il solco dei corpi medi (tecniche, prova del banco) come quello dell'hero;
-   scalato
+   --imp-rilievo moltiplica solo la parte proporzionale; scalato
    da pressione e profondità. Sfocature mai oltre 1 px: il solco del piombo
    ha lo spigolo netto, è la luce radente a farlo leggere.
    --_imp-dx / --_imp-dy: lo stesso passo proiettato sulla direzione della luce.
@@ -51,7 +51,7 @@
    è la lettura di una lettera PREMUTA dentro il foglio, non in rilievo.
    -------------------------------------------------------------------------- */
 .imp-root :is(.imp-secco, .imp-inchiostro, .imp-caldo) {
-  --_imp-d: calc(max(1.5px, 0.016em + 1px) * var(--imp-press) * var(--imp-rilievo));
+  --_imp-d: calc(max(1.5px, 0.016em * var(--imp-rilievo) + 1px) * var(--imp-press));
   --_imp-dx: calc(var(--_imp-d) * var(--imp-luce-x));
   --_imp-dy: calc(var(--_imp-d) * var(--imp-luce-y));
   --_imp-sfuma: min(1px, var(--_imp-d));

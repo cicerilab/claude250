@@ -92,6 +92,8 @@ export interface StatoBloccoGL {
   fuori: boolean;
   /** Stile del fantasma quando la maschera è stata disegnata (vedi `firmaStile`). */
   firma: string;
+  /** Urto corrente 0..1 (`--imp-press-urto` di motion/usePressione), letto a ogni frame per i selezionati. */
+  urto: number;
 }
 
 export function nuovoStato(id: string): StatoBloccoGL {
@@ -111,6 +113,7 @@ export function nuovoStato(id: string): StatoBloccoGL {
     canvas: null,
     fuori: false,
     firma: '',
+    urto: 0,
   };
 }
 
@@ -287,6 +290,7 @@ const appoggio: DatiBloccoFrame = {
   dv: 0,
   pressione: 0,
   rotazioneGradi: 0,
+  urto: 0,
   statici: {
     profonditaBuffer: 0,
     inchiostro: 0,
@@ -336,6 +340,7 @@ export function impacchetta(
     appoggio.dv = c.altezzaTexel / latoAtlante;
     appoggio.pressione = b.pressione;
     appoggio.rotazioneGradi = b.spec.rotazione ?? 0;
+    appoggio.urto = stato.urto;
     appoggio.statici = statici;
     scriviBlocco(m, n, appoggio);
     stato.ultimoUso = frame;

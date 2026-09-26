@@ -242,3 +242,20 @@ del fallback durante la ristampa, fibra SVG).
   critica della giuria). La parola a secco resta leggibile.
 - La scheda su desktop è a destra della lastra e non sotto (già nel giro 1),
   ora col piede allineato al piede della lastra.
+
+---
+
+## Giro 3
+
+Voto di partenza: Tecniche 7,5 (`awwwards-jury.md`, "Giro 2"). Tre difetti.
+
+| Difetto | Intervento |
+|---|---|
+| "A secco" pallido in una lastra 680×450 quasi vuota (parola al 65%) | La lastra è una striscia 3:1 (679×226 a 1440, 335×112 a 375): la parola, all'85% della larghezza, ne occupa l'altezza utile. Nel ripiego CSS la parola a secco ha `--imp-rilievo: 1,6` (bisello più fondo), quindi si legge da lontano. Desktop ricomposto: colonna sinistra c1-c7 con titolo, lastra e sotto la scheda della tecnica; a destra, c9-c12, i quattro nomi all'altezza della lastra. Larghezza della lastra limitata da `(100svh - 26rem) × 3`, così titolo e scheda stanno sempre nella finestra. Correzione: da 1024 la zona è un contenitore solo in larghezza (prima la regola `size` generale la schiacciava sotto il biglietto) |
+| Su Citrino il taglio si vedeva come un bordo scuro (verde notte = inchiostro) | Il bordo prende il colore di **un'altra carta del sistema**, mai l'inchiostro e mai la carta del sito: `CARTA_BORDO` nel componente mette `data-carta` sulla faccia della pila (Cipria sul Citrino; Citrino su Cotone, Cipria e Grafite) e il CSS usa fondo e ombra di quella carta (tinta calda, rosa ruggine su Citrino, giallo pieno su Cotone), con le righe tra un foglio e l'altro. Nessun token nuovo: sono i colori già in `tokens.css` |
+| Col GL il testo restava indietro di uno stato rispetto all'indice | Un solo stato (`mostrata`) per parola, indice, titolo e righe, cambiato al fondo della ristampa con l'ultimo passo raggiunto (`ultimoPasso`). Se la platina tarda (ticker lento con lo shader in SwiftShader, scheda in secondo piano), una rete di sicurezza applica comunque l'ultimo passo alla fine della durata della ristampa (`RISTAMPA.risalita + discesa`, 690 ms). Scostamento dichiarato da motion §6.3: l'indice non cambia più all'istante del passo ma insieme al testo (170 ms dopo) |
+
+Verifica: dev server 8109 (chiuso), font veri via `page.route` + `curl`,
+screenshot `?gl=0` in `/tmp/claude-0/shots-tecniche/g2-{citrino,cotone}-{1440,375}-p{01,037,062,086,097}.png`
+(gli ultimi scatti di questo giro: p01, p062, p097 rifatti dopo la correzione della zona),
+tutti guardati. `tsc`: nessun errore nei miei file; ESLint sui miei file verde.
