@@ -213,3 +213,34 @@ nodo; le soste restano i punti di fine cucitura.
 - Nota ambiente: in Chromium con `--use-angle=swiftshader` gli screenshot a
   768 e 2560 escono con riquadri ripetuti (artefatto di composizione della
   cattura, non della pagina): rifatti senza quei flag, la pagina è pulita.
+
+---
+
+## Giro 3
+
+Giuria giro 2: Legatoria 6,5 (vuoti a 1440, filo a cornice a 375, diagrammi
+grigi da manuale tecnico). Corretto solo nei miei tre file.
+
+| Richiesta | Fatto |
+|---|---|
+| Vuoto di ~250 px prima di "Prezzi su 100 copie" | Da 600 px l'ultimo schema (punto metallico, a destra) è fuori dal flusso (`position: absolute`, `grid-area: auto`): la fermata è alta quanto il suo testo e le righe finali salgono subito sotto (`--imp-sp-7`), accanto al fascicolo. `Legatoria.tsx` misura il piede dell'ultimo schema rispetto al blocco finale e lo passa come `--fine-inizio`: il filo riparte da lì. |
+| Vuoto di ~240 px dopo "Prova la tua" | Il filo scende dal fascicolo e si chiude nel nodo accanto al link, **sotto lo schema a destra** (niente più ritorno a sinistra); il blocco finale finisce col link (`align-self: end`, righe `1fr auto`); piede della sezione a `--imp-sp-9` da 1024 (il nodo chiude la sezione). Vuoto di 300 px sopra "Brossura cucita": ingresso a `--imp-sp-6` e testa della prima fermata a `--imp-sp-5`. |
+| 375: il filo non deve chiudersi attorno al testo | Il filo scende nel **margine interno** (x −10 px, cioè 10 px dal bordo dello schermo), entra in ogni schema con un tratto corto e ne esce tornando nel margine; il testo sta alla sua destra a tutta larghezza. Niente tratto verticale a destra, niente orizzontale sotto il nome o sotto il link. Il nome è appeso al filo con un laccio di 10 px; in fondo il filo finisce nel nodo accanto a "Prova la tua". |
+| Diagrammi in inchiostro pieno, niente grigi e quote | Tolta la "guida" a matita dagli schemi e dai tratti; pieghe, dorsi e piatti in inchiostro pieno a 1,5 px a ogni scala (`vector-effect: non-scaling-stroke`); fori con anello pieno; numeri già nascosti. I piatti della giapponese, le pagine del fascicolo e le fettucce del cartonato prendono `--imp-carta-luce`: si leggono come carta e tela, un libretto e un blocco, non come quote. Schema a 375 portato a 280 px. |
+| Link | "Prova la tua" resta tipografico (Anybody titolo-3) con sottolineatura propria d'inchiostro: sotto la mano si stringe verso la parola. |
+
+Nota tecnica: un figlio in `position: absolute` di un contenitore grid con
+`grid-row/column` impostati usa la cella come riferimento (partiva dopo il
+padding e staccava il filo di 95 px): per questo `grid-area: auto`.
+
+### Verifica giro 3
+
+- `tsc -p tsconfig.app.json --noEmit` verde, ESLint della cartella zero avvisi.
+- Server mio `npx vite --port 8110 --strictPort`, chiuso alla fine. Font veri
+  via `page.route` + curl, `?gl=0`, altre sezioni sostituite da stub.
+- Screenshot in `/tmp/claude-0/shots-legatoria/g3/` (Chromium senza
+  SwiftShader): `chromium-{citrino,cotone}-{375,768,1440,2560}-00…04.png`
+  a 5%, 30%, 55%, 80%, 97% della sezione; gli `-00` di 768, 1440 e 2560 sono
+  rifatti alla fine (97%) dopo le ultime correzioni del blocco finale;
+  `chromium-cotone-375-rid-00.png` in reduced motion (tutto cucito).
+- Nessuno scroll orizzontale alle quattro larghezze.
