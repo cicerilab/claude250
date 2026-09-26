@@ -195,3 +195,30 @@ Con `data-gl="on"` l'SVG è `visibility: hidden` (lo disegna lo shader,
 
 Schermate: `/tmp/claude-0/shots-colophon/g2/` (375, 768, 1440, 2560 × Citrino,
 Cotone × GL e `?gl=0`, più la domanda aperta a 375 e reduced motion).
+
+---
+
+## Giro 3
+
+- **Marchio a 375 più grande**: sotto 600 px il sigillo va su due righe,
+  IMPR / ONTA, alla stessa scala (ONTA a tutta area viva, IMPR all'82%): da
+  335 × 36 a 335 × 65 + 276 × 65. Sono due finestre sul path del marchio
+  (`viewBox` 0-423 e 427-941, il taglio cade nel vuoto tra R e O); ogni riga è
+  registrata come rilievo SVG con il suo markup a finestra, così lo shader
+  disegna le stesse due righe. Da 600 px resta il marchio intero (l'altra
+  variante è `display: none`, misura 0 × 0).
+- **Vuoto finale ridotto**: piede a 1024+ da `clamp(64, 10vh, 96)` a
+  `clamp(48, 6vh, 64)`; 640-1023 da segnapagina + 48 a + 24; sotto 640 da
+  146 a 130 px (resta lo spazio per "Torna in Ciceri Lab" e per il
+  "Prova la tua" fisso in basso a destra: l'ultimo link finisce sopra
+  entrambi); stacco sigillo → riga dello stampatore da 64 a 48.
+- **Link di salto sopra il testo**: non è un difetto della pagina ma delle
+  catture a pagina intera (Chromium allarga la finestra e i fissi finiscono
+  dentro il ritaglio). Misurato dal vivo: senza fuoco i due `.imp-salto` hanno
+  `bottom = -36 px` (fuori dallo schermo), compaiono solo con il fuoco
+  (`base.css`, scaffold). Da questo giro le schermate sono della finestra, non
+  a pagina intera.
+- Spostamento di 30 px del marchio col GL a 1440: dello shader-engineer.
+
+Schermate: `/tmp/claude-0/shots-colophon/g3/` (375 e 1440, Citrino e Cotone,
+`?gl=0`, `-testa` e `-fondo`).

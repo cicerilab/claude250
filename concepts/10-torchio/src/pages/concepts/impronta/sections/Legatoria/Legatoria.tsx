@@ -1,22 +1,22 @@
 /**
  * IMPRONTA · sezione 5 · Legatoria, "il filo" (`#legatoria`).
- * Proprietario: section-builder-legatoria (ondata 3, giro 2).
+ * Proprietario: section-builder-legatoria (ondata 3, giro 3).
  *
  * Un solo filo d'inchiostro attraversa tutta l'area viva: da 600 px va a
  * serpentina da un lato all'altro della pagina e a ogni fermata passa nei
- * fori veri di una legatura (schemi del vector-artist, grandi, 500-600 px
- * d'altezza a 1440); su 375 corre nel margine esterno, entra nello schema e
- * sottolinea il nome della legatura. Il nome di ogni legatura è appeso al
- * filo: un laccio parte dal primo foro dello schema e arriva al nodo accanto
- * al nome (da 600 px), o il filo stesso passa sotto il nome (375). Il nodo è
+ * fori veri di una legatura (schemi del vector-artist in inchiostro pieno,
+ * 500-600 px d'altezza a 1440); su 375 scende nel margine interno, accanto
+ * al testo e mai intorno, ed entra in ogni schema. Il nome di ogni legatura
+ * è appeso al filo: un laccio parte dal primo foro dello schema (da 600 px)
+ * o dal filo nel margine (375) e arriva al nodo accanto al nome. Il nodo è
  * un radio vero: scegli la legatura toccando il suo nodo.
  *
  * Il filo si cuce con lo scroll (`useFilo` del motion-designer:
  * `--imp-filo-p` con le soste, `--imp-filo-aggancio` e `data-imp-agganciato`
  * su ogni fermata). Il testo è già lì, fermo, in inchiostro.
  *
- * In fondo il filo scende e sottolinea "Prova la tua" (un solo richiamo,
- * testuale: la lamina resta della testata) e si chiude in un nodo. Il link
+ * In fondo il filo scende e si chiude in un nodo accanto a "Prova la tua"
+ * (un solo richiamo, testuale: la lamina resta della testata). Il link
  * imposta libro + la legatura scelta sul nodo, oppure, se non l'hai scelta,
  * quella che hai letto più a lungo (brossura se nessuna). I radio non si
  * spuntano mai da soli (B6 dell'accessibility-auditor): la preselezione vale

@@ -14,7 +14,7 @@
      --_imp-t-em          larghezza media di un carattere in em a quell'asse
      --_imp-t-gradi       rotazione massima del taglio (-32° / -24°)
      --_imp-t-foglio      spessore di un biglietto della pila (9 / 6 px)
-     --_imp-t-zona        altezza massima della lastra (5/12 della sua larghezza)
+     --_imp-t-zona        altezza massima della lastra (1/3 della sua larghezza)
    Struttura (pin):
      section.imp-tecniche
        .imp-tecniche__pin              400svh (350svh sotto 768)
@@ -133,11 +133,11 @@
 }
 
 /* Telefono e tablet: titolo in alto, nomi, lastra, scheda in basso sopra il
-   segnapagina. La lastra è una striscia 12:5 (la parola la riempie): cresce
+   segnapagina. La lastra è una striscia 3:1 (la parola la riempie): cresce
    fino alla sua altezza piena e si stringe se l'altezza manca; l'aria che
    avanza va tra i blocchi, non intorno alla lastra. */
 .imp-root .imp-tecniche__gabbia {
-  --_imp-t-zona: calc(var(--imp-area-viva) * 5 / 12);
+  --_imp-t-zona: calc(var(--imp-area-viva) / 3);
   flex: 1 1 auto;
   min-block-size: 0;
   display: grid;
@@ -216,7 +216,7 @@
   }
 
   .imp-root .imp-tecniche__palco .imp-tecniche__foglio {
-    inline-size: min(100cqi, calc((100svh - 26rem) * 12 / 5));
+    inline-size: min(100cqi, calc((100svh - 26rem) * 3));
   }
 
   .imp-root .imp-tecniche__indice {
@@ -407,8 +407,8 @@
    appoggiato, così sulla stessa carta del sito il biglietto si stacca. */
 .imp-root .imp-tecniche__foglio {
   --imp-spessore-pezzo: 2.5px;
-  inline-size: min(100cqi, calc(100cqb * 12 / 5));
-  aspect-ratio: 12 / 5;
+  inline-size: min(100cqi, calc(100cqb * 3));
+  aspect-ratio: 3 / 1;
   container-type: inline-size;
   display: flex;
   align-items: center;
@@ -434,6 +434,13 @@
   line-height: var(--imp-lh-secco);
   letter-spacing: var(--imp-trk-secco);
   white-space: nowrap;
+}
+
+/* A secco la parola è il colore della carta: nel ripiego CSS il solco va
+   più fondo (ombre del bisello scalate di 1,6), così la parola riempie la
+   lastra anche senza lo shader e non annega nel campo. */
+.imp-root .imp-tecniche__parola.imp-secco {
+  --imp-rilievo: 1.6;
 }
 
 /* Con lo shader acceso il fronte del biglietto è trasparente: la parola la
