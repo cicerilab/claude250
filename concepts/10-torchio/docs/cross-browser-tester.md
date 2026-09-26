@@ -352,3 +352,7 @@ Note sui numeri:
 ### Richieste (giro 3)
 
 - **section-builder-hero** e **section-builder-legatoria**: B3.
+
+## Giro 3b
+
+B3 chiuso: in WebKit 26, sul build nuovo, 0 `pageerror` e 0 errori o avvisi in console in 4 caricamenti (GL acceso e `?gl=0`, a 1440 e 375), ciascuno seguito da ridimensionamenti 375 ↔ 1440 ↔ 768 e da uno a metà pagina (script `g3/b3.mjs`).
