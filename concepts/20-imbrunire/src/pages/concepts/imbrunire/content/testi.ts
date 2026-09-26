@@ -61,14 +61,15 @@ export function maiuscola(testo: string): string {
 /** "Il Noce" / "Il Noce e La Corte" / "Il Noce, La Corte e La Soffitta". */
 export function elenco(voci: readonly string[]): string {
   if (voci.length === 0) return '';
-  if (voci.length === 1) return voci[0];
-  return `${voci.slice(0, -1).join(', ')} e ${voci[voci.length - 1]}`;
+  const ultima = voci[voci.length - 1] ?? '';
+  if (voci.length === 1) return ultima;
+  return `${voci.slice(0, -1).join(', ')} e ${ultima}`;
 }
 
 /** Numeri piccoli in parole, per le frasi ("Mancano due cose"). Oltre il dieci, cifre. */
 export function inParole(n: number): string {
   const parole = ['zero', 'una', 'due', 'tre', 'quattro', 'cinque', 'sei', 'sette', 'otto', 'nove', 'dieci'];
-  return n >= 0 && n <= 10 ? parole[n] : String(n);
+  return parole[n] ?? String(n);
 }
 
 /** "1 notte", "3 notti". */
@@ -875,8 +876,9 @@ export const RIGA_STATO = {
     if (libere.length === ORDINE_CAMERE.length) {
       return `${quando} Tutte e sette le stanze sono libere. Da ${prezzoDa} a notte.`;
     }
-    if (libere.length === 1) {
-      return `${quando} Libera solo ${CAMERE[libere[0]].nome}. Da ${prezzoDa} a notte.`;
+    const sola = libere.length === 1 ? libere[0] : undefined;
+    if (sola) {
+      return `${quando} Libera solo ${CAMERE[sola].nome}. Da ${prezzoDa} a notte.`;
     }
     return `${quando} Libere: ${elenco(nomiCamere(libere))}. Da ${prezzoDa} a notte.`;
   },
@@ -885,9 +887,8 @@ export const RIGA_STATO = {
   /** Bottone di proposta: "Da domenica 22 a martedì 24 ottobre si liberano Il Noce e La Corte". */
   proposta: (s: ScelteTesto, libere: readonly SlugCamera[]) => {
     const quando = maiuscola(dalAl(s.primo, s.ultimo));
-    return libere.length === 1
-      ? `${quando} si libera ${CAMERE[libere[0]].nome}`
-      : `${quando} si liberano ${elenco(nomiCamere(libere))}`;
+    const sola = libere.length === 1 ? libere[0] : undefined;
+    return sola ? `${quando} si libera ${CAMERE[sola].nome}` : `${quando} si liberano ${elenco(nomiCamere(libere))}`;
   },
   propostaAria: 'Notti vicine con stanze libere',
   /** P7: oltre 14 notti. Frase + link "scrivici" (mailto di esempio). */
