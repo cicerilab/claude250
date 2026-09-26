@@ -211,7 +211,12 @@
   --imb-pelle: 3px;               /* pelle d'intonaco sul lato esterno dei muri perimetrali */
   --imb-palazzo-max: 1180px;      /* larghezza massima del palazzo (1400 se l'altezza lo consente, a 2560) */
   --imb-palazzo-max-alto: 1400px;
-  --imb-palazzo-rapporto: 1.18;   /* larghezza = min(max, --imb-palazzo-vw, altezza disponibile × 1,18) */
+  /* Larghezza del palazzo in sezione, pronta da usare (width: var(--imb-palazzo-w)).
+     Altezza del palazzo = 0,53 × larghezza + parti fisse (tre fasce, manto
+     del tetto, zoccolo): formula misurata, vedi tokens.ts geometriaPalazzo(). */
+  --imb-palazzo-k: 0.53;
+  --imb-palazzo-min: 540px;
+  --imb-palazzo-w: max(var(--imb-palazzo-min), min(var(--imb-palazzo-max), var(--imb-palazzo-vw), calc((100svh - var(--imb-sopra-palazzo) - var(--imb-marciapiede-h) - 3 * var(--imb-fascia-sezione) - var(--imb-manto) - var(--imb-zoccolo-h)) / var(--imb-palazzo-k))));
   --imb-palazzo-vw: 82vw;         /* 92vw sotto 1024 px (sotto) */
   --imb-sopra-palazzo: 222px;     /* sezione: testata 64 + nastro con riga di stato fino a ~206 + 16 */
   --imb-marciapiede-h: 36px;      /* striscia di pietra sotto lo zoccolo, con la riga "Albergo inventato" */
