@@ -231,3 +231,20 @@ Schermate: `/tmp/claude-0/shots-colophon/g3/` (375 e 1440, Citrino e Cotone,
   cambiare aspetto (la sottolineatura resta larga quanto la parola).
   Misurato a 375 con `?gl=0`: tutti i link e bottoni del colophon sono
   ≥ 44 × 44 ("Prova la tua" 146 × 52).
+
+## Giro 3c
+
+- **Marchio a 375**: al posto di IMPR / ONTA, spezzato come la parola
+  dell'hero, **IMPRON / TA**: IMPRON (finestra 0-690) a tutta area viva, TA
+  (693-941) alla stessa scala chiuso sul margine esterno, interlinea 0,16.
+  Lettere alte 49 px (contro 36 su una riga): si legge come una parola sola,
+  la stessa spezzatura della prima schermata. Da 600 px resta intero.
+- **Vuoto finale**: sotto 1024 lo spazio dei comandi fissi lo aggiunge già
+  `testata.css` (`.imp-contenuto::after`, 70 px); il mio piede lo contava una
+  seconda volta. Ora il piede del colophon sotto 1024 è 24 px d'aria: a 375
+  dall'ultimo link al fondo pagina ci sono 94 px (prima 152), e l'ultimo
+  link resta sopra "Torna in Ciceri Lab" (link fino a 718 px, bottone da 764
+  su 812).
+
+Schermate: `/tmp/claude-0/shots-colophon/g3c/` (375 e 1440, Citrino e Cotone,
+`?gl=0`).

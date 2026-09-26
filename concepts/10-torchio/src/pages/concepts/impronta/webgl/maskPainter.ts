@@ -305,7 +305,12 @@ interface Canali {
 function canaliDi(tecnica: TecnicaGL, profondita = 1): Canali {
   const p = PRESET_TECNICA[tecnica];
   const k = Math.max(0, Math.min(1, profondita));
-  return { altezza: p.altezza * k, inchiostro: p.inchiostro, lamina: p.lamina };
+  // Giro 3b: il secco e la lamina hanno solo il solco per farsi leggere, quindi
+  // una profondità ridotta (le righe d'esempio del banco, 0,45) non scende
+  // sotto il 70% del solco pieno: 0,45 → 0,84. L'inchiostro invece può
+  // restare "a bacio" (0,3), perché lo legge il colore.
+  const kk = tecnica === 'colore' ? k : 0.7 + 0.3 * k;
+  return { altezza: p.altezza * kk, inchiostro: p.inchiostro, lamina: p.lamina };
 }
 
 /** Colore da disegnare in modalità 'lighter' per scrivere i canali voluti. */

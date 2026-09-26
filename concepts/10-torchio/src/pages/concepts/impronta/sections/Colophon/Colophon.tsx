@@ -66,17 +66,17 @@ function FraseCarta({ carta }: { carta: Carta }) {
 
 /**
  * Finestre sul marchio (viewBox 0 0 941 100). Sopra i 600 px il marchio è
- * intero; sotto va su due righe, IMPR / ONTA, così a 375 è alto 65 px invece
- * di 36. Le righe hanno la stessa scala: ONTA (514 unità) riempie l'area viva,
- * IMPR ne occupa l'82%. Il taglio cade nel vuoto tra la R (fine a 415) e la
- * O (inizio a 431).
+ * intero; sotto va su due righe come la parola dell'hero, IMPRON / TA:
+ * IMPRON (690 unità) riempie l'area viva, TA alla stessa scala chiude sul
+ * margine esterno. A 375 le lettere sono alte 49 px invece di 36. Il taglio
+ * cade nel vuoto tra la N (fine a 686) e la T (inizio a 697).
  */
 const FINESTRE = {
   intero: { x: 0, w: 941 },
-  impr: { x: 0, w: 423 },
-  onta: { x: 427, w: 514 },
+  impron: { x: 0, w: 690 },
+  ta: { x: 693, w: 248 },
 } as const;
-const RIGA_MAX = FINESTRE.onta.w;
+const RIGA_MAX = FINESTRE.impron.w;
 
 type Finestra = keyof typeof FINESTRE;
 
@@ -88,8 +88,8 @@ function marchioFinestra(f: Finestra): string {
 
 const SVG_FINESTRE: Record<Finestra, string> = {
   intero: marchioFinestra('intero'),
-  impr: marchioFinestra('impr'),
-  onta: marchioFinestra('onta'),
+  impron: marchioFinestra('impron'),
+  ta: marchioFinestra('ta'),
 };
 
 /**
@@ -294,8 +294,8 @@ export default function Colophon() {
             <Sigillo finestra="intero" />
           </div>
           <div className="imp-colophon__marchio-righe">
-            <Sigillo finestra="impr" />
-            <Sigillo finestra="onta" />
+            <Sigillo finestra="impron" />
+            <Sigillo finestra="ta" />
           </div>
           <p className="imp-colophon__bottega imp-piccolo">
             <span className="imp-colophon__bottega-nome">{COMUNI.marchioSotto}</span>{' '}

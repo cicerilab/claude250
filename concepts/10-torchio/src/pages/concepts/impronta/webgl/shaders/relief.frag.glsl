@@ -143,6 +143,7 @@ void main() {
   vec2 grad = vec2(0.0);      // pendenza del solco nello spazio pagina
   vec2 venatura = vec2(1.0, 0.0);
   vec2 locale = vec2(0.0);    // px CSS nel riferimento del blocco (per la spazzolatura della lamina)
+  float piede = 0.0;          // 0..1: vicinanza al piede della lettera in lamina (giro 3b)
   float ombraPortata = 0.0;
   float fondoSolco = 0.0;
   float inkMorbido = 0.0;
@@ -278,6 +279,18 @@ void main() {
     inkMorbido = h0.g;
     inkQuota = B.x * smoothstep(0.05, 0.35, press);
     foil = h0.b * B.y * smoothstep(0.15, 0.55, press);
+
+    // Piede della lettera in lamina (giro 3b): quanta lamina manca sotto il
+    // punto a 2, 4 e 7 px CSS. Vicino al piede il metallo scurisce, come la
+    // lamina vera che alla base del carattere prende l'ombra del solco: su
+    // Cotone l'argento si stacca dal bianco anche a luce ferma.
+    piede = 0.0;
+    if (foil > 0.002) {
+      float m1 = texture2D(tAtlas, nelloSlot(uv - vec2(0.0, 2.0 * dpr / pxTex.y * tx.y), U, tx)).b;
+      float m2 = texture2D(tAtlas, nelloSlot(uv - vec2(0.0, 4.0 * dpr / pxTex.y * tx.y), U, tx)).b;
+      float m3 = texture2D(tAtlas, nelloSlot(uv - vec2(0.0, 7.0 * dpr / pxTex.y * tx.y), U, tx)).b;
+      piede = clamp(1.0 - (0.5 * m1 + 0.3 * m2 + 0.2 * m3), 0.0, 1.0);
+    }
   }
 
   // --- Copertura dell'inchiostro (serve già alla luce) ----------------------
@@ -371,6 +384,8 @@ void main() {
     // scuriscono il metallo. Tiene il contorno leggibile anche su Citrino,
     // dove argento e carta hanno la stessa luminanza.
     metallo = mix(metallo, uLamina.rgb * 0.3, max(contro, ombraPortata * 0.8) * 0.85);
+    // Piede scuro: la parte bassa della lettera va verso la lamina profonda.
+    metallo = mix(metallo, uLamina.rgb * 0.42, piede * 0.75);
     col = mix(col, min(metallo, vec3(0.97)), foil);
   }
 

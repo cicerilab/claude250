@@ -20,7 +20,10 @@
    ========================================================================== */
 
 .imp-root .imp-colophon {
-  --_imp-colophon-fondo: calc(var(--imp-segnapagina-h) + 14px + var(--imp-tocco-min) + var(--imp-sp-4) + env(safe-area-inset-bottom, 0px));
+  /* Sotto 1024 lo spazio dei comandi fissi in basso ("Torna in Ciceri Lab",
+     "Prova la tua") lo aggiunge già testata.css con un ::after di
+     .imp-contenuto (segnapagina + area sicura, 70 px): qui solo l'aria. */
+  --_imp-colophon-fondo: var(--imp-sp-5);
   /* Il fuoco da tastiera non finisce sotto la testata o il segnapagina. */
   --_imp-colophon-riparo-su: calc(var(--imp-testata-h-fissa) + var(--imp-sp-4));
   --_imp-colophon-riparo-giu: calc(var(--imp-segnapagina-h) + var(--imp-tocco-min) + var(--imp-sp-6) + env(safe-area-inset-bottom, 0px));
@@ -29,12 +32,6 @@
   padding-block: var(--imp-testa) var(--_imp-colophon-fondo);
   scroll-margin-block-start: var(--imp-sp-5);
   text-align: center;
-}
-
-@media (min-width: 640px) {
-  .imp-root .imp-colophon {
-    --_imp-colophon-fondo: calc(var(--imp-segnapagina-h) + var(--imp-sp-5) + env(safe-area-inset-bottom, 0px));
-  }
 }
 
 @media (min-width: 1024px) {
@@ -262,9 +259,9 @@
   flood-opacity: var(--imp-press);
 }
 
-/* Intero da 600 px; sotto, due righe IMPR / ONTA alla stessa scala
-   (ONTA a tutta area viva, IMPR all'82%), interlinea stretta come il
-   secco del sito (0,2 dell'altezza di una lettera). */
+/* Intero da 600 px; sotto, due righe IMPRON / TA come la parola
+   dell'hero: IMPRON a tutta area viva, TA alla stessa scala chiusa sul
+   margine esterno, interlinea stretta (0,16 dell'altezza di una lettera). */
 .imp-root .imp-colophon__marchio-righe {
   display: none;
 }
@@ -277,8 +274,12 @@
   .imp-root .imp-colophon__marchio-righe {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    row-gap: calc(var(--imp-area-viva) / 514 * 20);
+    align-items: stretch;
+    row-gap: calc(var(--imp-area-viva) / 690 * 16);
+  }
+
+  .imp-root .imp-colophon__marchio-righe > .imp-colophon__marchio--ta {
+    margin-inline: auto 0;
   }
 
   .imp-root .imp-colophon__marchio-righe > .imp-colophon__marchio {

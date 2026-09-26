@@ -186,14 +186,15 @@ const Prova = memo(forwardRef<ComandiProva, ProvaProps>(function Prova(
 
   /* ---------- registro del rilievo: il pezzo e le sue righe */
 
-  const layers: ReliefLayer[] = righe.map((r, i) => ({
+  // Giro 3c: anche l'esempio a profondità piena (era 0,45): è il primo fotogramma del banco.
+  const layers: ReliefLayer[] = righe.map((_riga, i) => ({
     kind: 'text',
     x: 0,
     y: 0,
     w: 100,
     h: 100,
     selettore: `[data-riga="${i}"]`,
-    profondita: r.esempio ? 0.45 : 1,
+    profondita: 1,
   }));
   const provaId = useRelief(
     foglioRef,
