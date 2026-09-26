@@ -88,9 +88,9 @@ Esempi:
    allinea (vista aperta o chiusa, mese). Nessun salto di scroll del browser
    (`history.scrollRestoration = "manual"` mentre il concept è montato,
    ripristinato allo smontaggio).
-6. Il `<title>` non cambia con i mesi (resta quello del prerender, deciso dal
-   seo-engineer). Cambia solo con le viste? No: resta fisso anche lì. Il
-   lettore di schermo sa dove sei dal fuoco sull'`h2` (sez. 6).
+6. Il `<title>` non cambia né con i mesi né con le viste (resta quello del
+   prerender, deciso dal seo-engineer). Il lettore di schermo sa dove sei dal
+   fuoco sull'`h2` (sez. 6).
 
 ### 1.4 Stato che sopravvive al ricaricamento
 
@@ -341,8 +341,8 @@ fondo alla colonna).
 5. Arrivano alle **CHIAVI**: +3,6% e perché, cosa si consegna. Aprono **Il
    cartello** dalla fascia: zone servite (San Quirino c'è), sabato mattina il
    magazzino è aperto. Chiara vuole anche sapere le finestre della casa nuova.
-6. Dal cartello "Misura e manda"? No: nel cartello non c'è un richiamo. Usano
-   la fascia: **Misura e manda**. Scelgono **scorrevole alzante**, 280 × 230:
+6. Nel cartello non c'è un richiamo (è già in fascia): usano la fascia,
+   **Misura e manda**. Scelgono **scorrevole alzante**, 280 × 230:
    il rettangolo battuto è più largo della porta di tre volte e mezzo; la
    forbice mostra il legno-alluminio sopra i 7.000 €. Scrivono nome, email,
    comune **San Quirino**, "pomeriggio". Mandano.
@@ -372,10 +372,9 @@ naviga soprattutto da tastiera.
    frecce per scorrerle, sulla tacca di dicembre compare la riga del gelo
    anche a schermo.
 5. Torna a febbraio con Invio sulla tacca. Tab fino a "Quanto costerebbe la
-   tua finestra?": si apre S3 con "Che cosa" su **portafinestra** (arriva dal
-   mese 12, la porta-finestra è il caso tipico dei genitori? No: nessuna
-   preselezione dal mese, solo dall'URL. Resta **finestra a un'anta**, il
-   default). Sceglie portafinestra con le frecce nel gruppo radio.
+   tua finestra?": si apre S3 con "Che cosa" sul default **un'anta** (il mese
+   non preseleziona nulla, solo `?tipo` lo fa). Sceglie portafinestra con le
+   frecce nel gruppo radio.
 6. Scrive `90` e `120`: avviso di coerenza (non errore) "Una portafinestra alta
    120 cm? Di solito è una finestra." con il bottone "Fai finestra". Si accorge
    di aver misurato male, corregge `220`.
@@ -585,10 +584,9 @@ spostarle di poco ma non cambiare l'ordine.
   sinistra del gancio**, fuori dalla scala del tempo, con "TU" a stencil e la
   finestra battuta in piccolo (rettangolo proporzionale di 16-24 px). È un
   bottone che apre S3 nello stato "già mandata". Non è un valore dello slider.
-- Linea battuta: fino alla cassetta piena (cobalto); da cassetta a `btf:visto`
-  chiara (55%); oltre, niente (solo il filo teso tra cassetta e... no: il filo
-  va solo dal gancio alla cassetta; oltre la cassetta non c'è filo, solo le
-  tacche).
+- Linea battuta: dal gancio alla cassetta piena (cobalto); dalla cassetta a
+  `btf:visto` chiara (55%); oltre, solo le tacche. Il filo teso va sempre e
+  solo dal gancio alla cassetta.
 - Buchi: nei mesi 2, 6, 10, lunghezza proporzionale ai giorni fermi (3/22,
   19/22, 4/22 di un passo, con 22 giorni lavorativi al mese; agosto circa tre
   quarti). Il buco sta nella posizione vera dei giorni (inizio agosto).
@@ -1071,10 +1069,9 @@ Lab), calce su ferro.
   a schermo quando la tacca ha il fuoco (stessa riga del passaggio col mouse).
 - Tacca TU, se c'è, è la prima del gruppo: "La tua finestra, due ante 118 per
   142, mandata il 26 settembre. Apri Misura e manda."
-- Su telefono la tacca a fuoco viene portata in vista (la linea scorre sotto
-  la cassetta? No: il fuoco si sposta tra tacche senza cambiare mese, quindi
-  la linea scorre per mostrare la tacca a fuoco e torna centrata sulla
-  cassetta quando il fuoco esce dal gruppo).
+- Su telefono, poiché il fuoco si sposta tra le tacche senza cambiare mese,
+  la linea scorre quanto basta a mostrare la tacca a fuoco e torna centrata
+  sulla cassetta quando il fuoco esce dal gruppo.
 
 ### 6.6 Foto, swipe e rotella
 

@@ -196,10 +196,9 @@ x:  0    72            456  494                 946  1000        1236      1400 
   bottone del menu (come su mobile, §2.6), l'interruttore "Suono" sta sotto il
   marchio, "Rimetti le foglie" e l'indice stanno nel menu.
 - Desktop con altezza tra 520 e 700 px (portatili a 1366 × 640): tutto come
-  sopra, la tavola resta all'86% (circa 550 px) e la colonna del banco
-  nasconde la nota del suono dietro un `title`? No: la nota va nel menu e
-  accanto all'interruttore resta solo "Suono spento". Il marchio perde la
-  seconda riga.
+  sopra, la tavola resta all'86% (circa 550 px); nella colonna del banco la
+  nota del suono passa sotto l'indice in 12 px (resta visibile, collegata con
+  `aria-describedby`) e il marchio perde la seconda riga.
 
 ### 2.5 Mobile (< 1024 px, disegnato a 375 × 667, pensato per primo)
 
