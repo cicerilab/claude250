@@ -82,9 +82,13 @@
 }
 
 .imp-root .imp-testata__voci {
-  display: flex;
+  /* Giro 3b (CLS ai font): tre caselle di larghezza fissa, testo allineato a
+     sinistra. Quando Hanken arriva al posto del ripiego cambia solo il
+     disegno delle lettere: nessuna voce si sposta. */
+  display: grid;
+  grid-template-columns: 3.5rem 5rem 4.25rem;
   align-items: center;
-  gap: var(--imp-sp-6);
+  column-gap: var(--imp-sp-5);
   margin: 0;
 }
 
@@ -164,7 +168,11 @@
   min-inline-size: var(--imp-tocco-min);
   padding-inline: var(--imp-sp-2) 0;
   color: var(--imp-inchiostro);
-  text-align: end;
+  /* Giro 3b (CLS ai font): larghezza fissa e testo allineato a sinistra, così
+     né l'arrivo di Anybody né il cambio di sezione spostano il bottone. */
+  inline-size: 11rem;
+  align-items: flex-start;
+  text-align: start;
 }
 
 .imp-root .imp-testata__indice-parola {
@@ -202,6 +210,10 @@
 @media (max-width: 359.98px) {
   .imp-root .imp-testata {
     --_imp-segno-h: 12px;
+  }
+
+  .imp-root .imp-testata__indice {
+    inline-size: 9.25rem;
   }
 
   .imp-root .imp-testata__indice-sezione {

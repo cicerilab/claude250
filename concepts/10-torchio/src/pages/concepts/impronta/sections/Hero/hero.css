@@ -44,10 +44,23 @@
 }
 
 .imp-root .imp-hero__composizione {
-  /* Larghezza in em della riga più lunga: misura del DOM, o stima prima. */
-  --_imp-em: var(--imp-hero-em-misurato, var(--imp-hero-em-s, 3.9));
-  /* Corpo: la riga più lunga riempie l'area viva; tetto al 42% della
-     finestra per tutte le righe insieme (interlinea 0,86). */
+  /*
+   * Due corpi (giro 3b, CLS all'arrivo dei font):
+   * - --_imp-fs-stima: dalla STIMA in em della riga più lunga, calcolata in
+   *   JS sulle tabelle di Anybody (tokens.ts), quindi uguale prima e dopo il
+   *   caricamento dei font. Dà TUTTE le misure verticali: altezza delle righe,
+   *   aggancio del titolo e del dial. La scatola non cambia mai col font.
+   * - --_imp-fs: dalla MISURA del DOM (solo quando Anybody è caricato, vedi
+   *   Hero.tsx), se c'è, altrimenti dalla stima. Dà solo il corpo dei glifi,
+   *   perché la riga riempia l'area viva al pixel (differenza ≤ 4%).
+   * Tetto: 42% della finestra per tutte le righe insieme (interlinea 0,86).
+   */
+  --_imp-em-stima: var(--imp-hero-em-s, 3.9);
+  --_imp-em: var(--imp-hero-em-misurato, var(--_imp-em-stima));
+  --_imp-fs-stima: min(
+    calc(var(--imp-area-viva) / var(--_imp-em-stima)),
+    calc(42svh / (var(--imp-hero-righe, 2) * 0.86))
+  );
   --_imp-fs: min(
     calc(var(--imp-area-viva) / var(--_imp-em)),
     calc(42svh / (var(--imp-hero-righe, 2) * 0.86))
@@ -60,6 +73,10 @@
 
 @supports (inline-size: 1cqi) {
   .imp-root .imp-hero__composizione {
+    --_imp-fs-stima: min(
+      calc(100cqi / var(--_imp-em-stima)),
+      calc(42svh / (var(--imp-hero-righe, 2) * 0.86))
+    );
     --_imp-fs: min(
       calc(100cqi / var(--_imp-em)),
       calc(42svh / (var(--imp-hero-righe, 2) * 0.86))
@@ -69,13 +86,13 @@
 
 @media (min-width: 600px) {
   .imp-root .imp-hero__composizione {
-    --_imp-em: var(--imp-hero-em-misurato, var(--imp-hero-em-m, 5));
+    --_imp-em-stima: var(--imp-hero-em-m, 5);
   }
 }
 
 @media (min-width: 1024px) {
   .imp-root .imp-hero__composizione {
-    --_imp-em: var(--imp-hero-em-misurato, var(--imp-hero-em-l, 6.1));
+    --_imp-em-stima: var(--imp-hero-em-l, 6.1);
   }
 }
 
@@ -87,7 +104,10 @@
   --imp-wght-arrivo: var(--imp-wght-hero);
   grid-column: 1 / -1;
   font-size: var(--_imp-fs);
-  line-height: var(--imp-lh-secco);
+  /* Altezza della riga fissata dal corpo stimato (non dal font caricato):
+     interlinea 0,86 del corpo stimato, in lunghezza assoluta. */
+  line-height: calc(var(--imp-lh-secco) * var(--_imp-fs-stima));
+  block-size: calc(var(--imp-lh-secco) * var(--_imp-fs-stima));
   letter-spacing: var(--imp-trk-secco);
   text-transform: none;
   /* Materiale, non testo da selezionare: il dito qui sposta la luce. */
@@ -100,11 +120,26 @@
   grid-row: 1;
 }
 
+/* Giro 3b (CLS ai font): finché la pressa non parte la riga non si dipinge.
+   A pressione 0 il secco ha già il colore della carta (invisibile), quindi
+   non cambia niente a vista; ma col font di ripiego le lettere, anche se
+   invisibili, contano come "spostate" al cambio font. La pressa parte solo
+   con Anybody caricato (Hero.tsx), o dopo FONT_ATTESA_MAX. */
+.imp-root .imp-hero__riga[data-imp-pressa="attesa"] {
+  visibility: hidden;
+}
+
 /* "ta" chiude sul margine esterno. Box a tutta larghezza (text-align), così
    la pressa che allarga la parola non cambia la misura del blocco. */
 .imp-root .imp-hero__riga--2 {
   grid-row: 2;
   text-align: right;
+  /* Giro 3b: la pressa allarga "ta" (asse wdth). Allineata a destra in un
+     blocco ltr, il suo punto d'inizio (a sinistra) si muoveva a ogni frame e
+     contava come spostamento (CLS). In rtl l'inizio è il bordo destro, che
+     sta fermo sul margine. Le lettere latine restano nell'ordine giusto. */
+  direction: rtl;
+  unicode-bidi: isolate;
 }
 
 /* I gemelli di misura: 100 px, assi d'arrivo, in una scatola 0 × 0. */
@@ -142,7 +177,7 @@
   z-index: 1;
   grid-column: 1 / -1;
   grid-row: 3;
-  margin-block-start: max(12px, calc(36px - 0.15 * var(--_imp-fs)));
+  margin-block-start: max(12px, calc(36px - 0.15 * var(--_imp-fs-stima)));
 }
 
 .imp-root .imp-hero__piano[data-righe="1"] .imp-hero__testo {
@@ -152,17 +187,26 @@
 .imp-root .imp-hero__titolo {
   /* Assi e interlinea della voce titolo-1 (base.css); inchiostro con il
      solco appena accennato (.imp-inchiostro, pressione 1 dal primo frame). */
-  max-inline-size: 22ch;
+  max-inline-size: 22rem; /* in rem, non in ch: la misura non cambia al cambio font (CLS) */
   text-wrap: balance;
 }
 
 .imp-root .imp-hero__sotto {
   margin-block-start: var(--imp-sp-4);
-  max-inline-size: 36ch;
+  max-inline-size: 26rem; /* in rem, non in ch: la misura non cambia al cambio font (CLS) */
   font-size: var(--imp-fs-lead);
   line-height: var(--imp-lh-lead);
   color: var(--imp-inchiostro);
   text-wrap: pretty;
+}
+
+/* Giro 3b (CLS ai font): su mobile il sottotitolo è di 4 righe in Hanken ma
+   di 3 nel ripiego (Arial), quindi all'arrivo del font tutto sotto
+   scendeva di una riga. Si riservano le 4 righe fin dal primo frame. */
+@media (max-width: 599.98px) {
+  .imp-root .imp-hero__piano:not([data-cliente]) .imp-hero__sotto {
+    min-block-size: calc(4 * var(--imp-lh-lead) * 1em);
+  }
 }
 
 /* L'unico bottone dell'hero: lamina (art-director), raggio 0.
@@ -205,7 +249,7 @@
   margin-block-start: var(--imp-sp-5);
   padding-block-start: var(--imp-sp-4);
   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--imp-carta-ombra) 45%, transparent);
-  max-inline-size: 36ch;
+  max-inline-size: 26rem;
 }
 
 .imp-root .imp-hero__invito-frase {
@@ -285,8 +329,8 @@
      (0,0875 em della parola dentro la seconda riga). */
   .imp-root .imp-hero__piano:not([data-cliente])[data-righe="2"] .imp-hero__titolo {
     margin-block-start: max(
-      calc(0.0875 * var(--_imp-fs) + 16px - 0.1225em),
-      calc(0.7075 * var(--_imp-fs) - 1.8375em)
+      calc(0.0875 * var(--_imp-fs-stima) + 16px - 0.1225em),
+      calc(0.7075 * var(--_imp-fs-stima) - 1.8375em)
     );
   }
 
@@ -313,7 +357,7 @@
     grid-row: 2;
     justify-self: end;
     align-self: start;
-    margin-block-start: calc(0.86 * var(--_imp-fs) + var(--imp-sp-3));
+    margin-block-start: calc(0.86 * var(--_imp-fs-stima) + var(--imp-sp-3));
     min-block-size: var(--imp-tocco-min);
   }
 

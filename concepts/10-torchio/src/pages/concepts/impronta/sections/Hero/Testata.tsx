@@ -51,7 +51,6 @@ import {
 } from 'react';
 import './testata.css';
 
-import marchioUrl from '../../assets/svg/marchio-impronta.svg?url';
 import {
   ANNUNCI,
   BANCO,
@@ -66,6 +65,7 @@ import {
   TESTATA,
   type SezioneId,
 } from '../../content/testi';
+import { marchioImpronta } from '../../assets/svg';
 import { getLenis } from '../../core/lenis';
 import { ticker } from '../../core/ticker';
 import { impostaLuceTelefono, useGyro } from '../../interaction/gyroPermission';
@@ -77,6 +77,14 @@ import { runtime } from '../../state/runtime';
 import { useImpronta, type Carta } from '../../state/store';
 
 /* ------------------------------------------------------------------ costanti */
+
+/**
+ * Maschera del marchio in lamina: data URL costruito dalla stessa stringa
+ * `?raw` che usa il colophon (assets/svg/index.ts), così l'SVG entra nel
+ * bundle una volta sola (performance-auditor P3.2). Solo operazioni su
+ * stringhe: nessun accesso al browser.
+ */
+const MARCHIO_MASCHERA = `url("data:image/svg+xml,${encodeURIComponent(marchioImpronta)}")`;
 
 const ID_INDICE = 'imp-indice';
 const ID_INDICE_TITOLO = 'imp-indice-titolo';
@@ -773,7 +781,7 @@ export default function Testata() {
   const ctaTestata = !altroInVista && !nelBanco;
   const richiamoVisibile = ctaTestata && !tastiera && !indiceAperto;
 
-  const stileMarchio = { '--imp-segno': `url("${marchioUrl}")` } as CSSProperties;
+  const stileMarchio = { '--imp-segno': MARCHIO_MASCHERA } as CSSProperties;
 
   return (
     <>

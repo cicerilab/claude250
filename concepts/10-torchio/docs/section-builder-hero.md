@@ -382,3 +382,73 @@ Screenshot in `/tmp/claude-0/shots-hero/giro3/`:
 Nota: durante gli scatti l'art-director stava riscrivendo
 `relief-fallback.css` e `tokens.css`. Un primo giro era caduto a metà di un
 aggiornamento (parola senza rilievo); rifatto a file stabili.
+
+---
+
+# Giro 3b
+
+Correzione alta del performance-auditor ("Giro 3", CLS all'arrivo dei font)
+e P3.2 (un solo marchio nel bundle). Solo nei miei file.
+
+## CLS all'arrivo dei font
+
+Misura: Playwright, CSS di Google Fonts ritardato di 2 s e woff2 di 0,3 s
+(`page.route` con attesa), PerformanceObserver `layout-shift` per 5 s, `?gl=0`,
+dev server 8103.
+
+| Larghezza | Prima | Dopo | Chi si spostava prima |
+|---|---|---|---|
+| 1440 × 900 | **0,0610** | **0,0000** | voci della testata; riga 2 dell'hero, blocco in inchiostro, dial e Per chi (26-52 px) |
+| 375 × 812 | **0,0598** | **0,0002** | bottone "indice"; riga 2, "Prova la tua", Per chi (+26 px) |
+
+Il residuo a 375 (0,0002) è `imp-perchi__nomi`, fuori dai miei file.
+
+Cause e correzioni:
+1. **Altezza delle righe legata al font.** Il corpo delle righe veniva dalla
+   misura del DOM, fatta anche col font di ripiego; all'arrivo di Anybody
+   cambiava il corpo e quindi l'altezza. Ora ci sono due corpi:
+   `--_imp-fs-stima`, che viene dalla stima in em sulle tabelle di Anybody
+   (tokens.ts), uguale prima e dopo i font, e dà tutte le misure verticali
+   (`line-height` e `block-size` delle righe in lunghezza assoluta, aggancio
+   del titolo e del dial); e `--_imp-fs`, che viene dalla misura e dà solo la
+   grandezza dei glifi (differenza ≤ 4%). La misura del DOM parte solo quando
+   una faccia di Anybody è `loaded`, non col ripiego.
+2. **Le lettere cambiavano forma e posto al cambio font** (anche invisibili a
+   pressione 0). La parola aspetta Anybody vero (`attendiAnybody()`: faccia
+   caricata, o `FONT_ATTESA_MAX` dello scaffold, 3 s). Lo fa con il profilo
+   dell'hero del motion-designer, cambiando solo `attesaMax`. Finché la pressa
+   non parte la riga ha `visibility: hidden` (`[data-imp-pressa="attesa"]`):
+   a vista non cambia nulla, perché a pressione 0 il secco ha già il colore
+   della carta. Con i font in cache l'attesa è circa 0. L'LCP passa all'h1,
+   che è quanto chiede la UX.
+3. **"ta" allineata a destra.** La pressa ne allarga la larghezza, quindi il
+   suo punto d'inizio si muoveva a ogni frame. Con `direction: rtl` (più
+   `text-align: right` esplicito, letto dal maskPainter) l'inizio è il bordo
+   destro, che resta fermo.
+4. **Sottotitolo a 375**: 3 righe nel ripiego, 4 in Hanken. Sotto i 600 px si
+   riservano 4 righe (`min-block-size`). Le misure del titolo e del
+   sottotitolo sono passate da `ch` a `rem`, perché `ch` cambia col font.
+5. **Testata**: voci in tre caselle di larghezza fissa, allineate a sinistra;
+   bottone "indice" largo 11rem (9,25 sotto i 360 px) con testo a sinistra.
+   Il cambio font, e anche il cambio di sezione, non spostano più niente.
+
+Non serve un ripiego con `size-adjust` diverso: niente da chiedere
+all'art-director.
+
+## P3.2 · un solo marchio
+
+`Testata.tsx` non importa più `marchio-impronta.svg?url`, che Vite metteva
+in linea come seconda copia. La maschera è un data URL costruito dalla
+stessa stringa `marchioImpronta` (`?raw`) di `assets/svg/index.ts` che usa il
+colophon (`encodeURIComponent`, costante di modulo, solo operazioni su
+stringhe). L'aspetto è identico.
+
+## Verifica
+- `npm run typecheck` e `npm run lint` verdi.
+- Server mio sulla 8103, chiuso alla fine. Controllo visivo in
+  `/tmp/claude-0/shots-hero/giro3b/` (1440 e 375, Citrino, gl0): composizione
+  invariata.
+- Script di misura nella scratchpad della sessione: `hero/cls.mjs` (esiti in
+  `cls-prima.txt` e `cls-dopo.txt`).
+- Nota: a 1440 le voci della testata ora finiscono circa 16 px prima del
+  margine (le caselle fisse sono un po' più larghe di "bottega").

@@ -41,6 +41,7 @@ import { usePressione } from '../../motion/usePressione';
 import { useRelief } from '../../relief/useRelief';
 import { useImpronta } from '../../state/store';
 import { stimaLarghezzaEm, TIPO } from '../../styles/tokens';
+import { FONT_ATTESA_MAX } from '../../core/fonts';
 
 const ID_TITOLO = 'imp-hero-titolo';
 
@@ -50,8 +51,51 @@ const PRIORITA_PAROLA = 10;
 /** Corpo (px) dei gemelli invisibili che misurano le righe (vedi hero.css). */
 const CORPO_MISURA = 100;
 
+/** true quando almeno una faccia di Anybody è caricata (non il ripiego). */
+function anybodyPronto(): boolean {
+  if (typeof document === 'undefined' || !('fonts' in document)) return false;
+  for (const faccia of document.fonts) {
+    if (faccia.family.replace(/["']/g, '') === 'Anybody' && faccia.status === 'loaded') return true;
+  }
+  return false;
+}
+
+/**
+ * Promessa che si risolve quando Anybody è davvero caricato (una sua faccia
+ * in stato "loaded"), o dopo FONT_ATTESA_MAX. Non basta `document.fonts.ready`:
+ * se il CSS di Google arriva tardi, `ready` si risolve prima che le facce
+ * esistano, e la pressa scenderebbe sul font di ripiego (poi il cambio font
+ * sposta le lettere: CLS, performance-auditor giro 3).
+ */
+function attendiAnybody(): Promise<void> {
+  if (typeof document === 'undefined' || !('fonts' in document) || anybodyPronto()) return Promise.resolve();
+  return new Promise<void>((risolvi) => {
+    let fatto = false;
+    const fine = (): void => {
+      if (fatto) return;
+      fatto = true;
+      document.fonts.removeEventListener('loadingdone', controlla);
+      window.clearTimeout(timer);
+      risolvi();
+    };
+    const controlla = (): void => {
+      if (anybodyPronto()) fine();
+    };
+    const timer = window.setTimeout(fine, FONT_ATTESA_MAX);
+    document.fonts.addEventListener('loadingdone', controlla);
+  });
+}
+
 /** Lettere che restano sulla seconda riga della parola: im·pron / ta. */
 const CODA_PAROLA = 2;
+
+/**
+ * Profilo della pressa dell'hero (motion-designer) con l'attesa dei font
+ * portata a FONT_ATTESA_MAX dello scaffold: la parola resta nascosta
+ * ("attesa", hero.css) finché Anybody non c'è, poi la pressa scende sul font
+ * vero. Con i font in cache non cambia nulla (attesa ≈ 0).
+ */
+const PROFILO_PAROLA = { ...MOTO_HERO.profilo, attesaMax: FONT_ATTESA_MAX };
 
 /**
  * Le righe della parola premuta.
@@ -123,13 +167,12 @@ function RigaPremuta({ testo, indice, cliente }: PropsRiga) {
     priorita: PRIORITA_PAROLA,
   });
 
-  const attendiFont = useCallback((): Promise<unknown> => document.fonts.ready, []);
   comandiRef.current = usePressione(ref, {
-    profilo: MOTO_HERO.profilo,
+    profilo: PROFILO_PAROLA,
     reliefId,
     indice,
     ingresso: cliente ? 'vista' : 'montaggio',
-    attendi: attendiFont,
+    attendi: attendiAnybody,
   });
 
   return (
@@ -232,7 +275,9 @@ export default function Hero() {
     if (piano === null || misure === null) return undefined;
     let vivo = true;
     const aggiorna = (): void => {
-      if (!vivo) return;
+      // Si misura solo con Anybody caricato: la misura col font di ripiego
+      // darebbe un corpo diverso e uno scatto all'arrivo del font (CLS).
+      if (!vivo || !anybodyPronto()) return;
       let massimo = 0;
       for (const figlio of Array.from(misure.children)) {
         massimo = Math.max(massimo, figlio.getBoundingClientRect().width);
@@ -243,8 +288,13 @@ export default function Hero() {
     const osservatore = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(aggiorna) : null;
     for (const figlio of Array.from(misure.children)) osservatore?.observe(figlio);
     void document.fonts.ready.then(aggiorna);
+    const suFontCaricati = (): void => {
+      aggiorna();
+    };
+    document.fonts.addEventListener('loadingdone', suFontCaricati);
     return () => {
       vivo = false;
+      document.fonts.removeEventListener('loadingdone', suFontCaricati);
       osservatore?.disconnect();
       piano.style.removeProperty('--imp-hero-em-misurato');
     };
