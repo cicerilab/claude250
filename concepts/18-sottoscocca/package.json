@@ -1,0 +1,39 @@
+{
+  "name": "concept-18-sottoscocca",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Concept 18 del Concept Lab di CiceriLab: SOTTOSCOCCA, officina e gommista a Pordenone. App standalone Vite + React, portabile in src/pages/Concept18.tsx del sito.",
+  "scripts": {
+    "dev": "vite --port 9180 --strictPort",
+    "build": "vite build",
+    "preview": "vite preview --port 9180 --strictPort",
+    "typecheck": "tsc -p tsconfig.app.json --noEmit",
+    "typecheck:node": "tsc -p tsconfig.node.json --noEmit",
+    "lint": "eslint src",
+    "check": "npm run typecheck && npm run lint && npm run build",
+    "modello": "node scripts/glb-a-bin.mjs",
+    "fermi": "node scripts/fermi-immagine.mjs"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-router-dom": "6.30.6",
+    "three": "0.160.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@types/node": "22.20.4",
+    "@types/react": "18.3.31",
+    "@types/react-dom": "18.3.7",
+    "@types/three": "0.160.0",
+    "@vitejs/plugin-react": "4.7.0",
+    "eslint": "9.39.5",
+    "eslint-plugin-react-hooks": "5.2.0",
+    "eslint-plugin-react-refresh": "0.4.26",
+    "globals": "15.15.0",
+    "typescript": "5.6.3",
+    "typescript-eslint": "8.70.1",
+    "vite": "5.4.21"
+  }
+}

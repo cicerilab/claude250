@@ -1,0 +1,328 @@
+/* ==========================================================================
+   BATTIFILO · interaction.css (interaction-designer)
+   --------------------------------------------------------------------------
+   Stati di fuoco, hover, presa e touch-action. Nessun colore nuovo: solo i
+   token di styles/tokens.css. Nessun cursore custom, nessun bottone
+   magnetico, nessun preloader (creative-director §4.8).
+
+   Gli elementi si agganciano con attributi, non con le classi delle sezioni,
+   così questo file non dipende dal markup di nessuno (contratto in
+   docs/interaction-designer.md §7):
+
+     data-btf-ix="cassetta"   la cassetta (role="slider")
+                 "striscia"   la striscia del filo (linea, tacche, gancio)
+                 "tacca"      ogni tacca (<button>), figli data-btf-ix-parte="segno|nome"
+                 "buco"       il bottone invisibile sopra un buco della linea
+                 "tasto"      bottoni quadrati 44 px sulla lastra (mese prima/dopo, meno/più)
+                 "foto"       il <figure> della foto nel palco
+                 "lastra"     la lastra della cronaca (scheda + filo)
+                 "link"       link in Chivo sulla lastra (Leggi tutti i mesi, Di più, mesi 7 e 12)
+                 "riga"       <label> di una scelta (Che cosa, materiale, quando)
+                 "voce"       voci della fascia ferro
+     data-btf-fondo="ferro"   qualunque superficie ferro (fascia, fascia bassa, cartello)
+
+   Attributi scritti dai hook di interaction/*, solo quando cambiano:
+     data-btf-ix-presa="1"        durante un trascinamento (trascina.ts)
+     data-btf-ix-verticale="…"    passo | nativo (swipe.ts)
+     data-btf-ix-zoom="1"         pagina ingrandita col pizzico (swipe.ts)
+
+   Transizioni: solo transform e opacity (tech-architect §5).
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Anello di fuoco
+   Sulla lastra: 3 px cobalto a 3 px di distanza (3,7:1 sul calcestruzzo).
+   Su ferro: calce. Sugli oggetti pieni (bottone cobalto, cassetta): calce
+   DENTRO l'oggetto, perché calce sul calcestruzzo non si vede (1,9:1) e un
+   anello cobalto attorno a un bottone cobalto si confonde col bottone.
+   -------------------------------------------------------------------------- */
+.btf-root :focus {
+  outline: none;
+}
+.btf-root :focus-visible {
+  outline: var(--btf-fuoco-spessore) solid var(--btf-fuoco-lastra);
+  outline-offset: var(--btf-fuoco-distanza);
+}
+.btf-root [data-btf-fondo="ferro"] :focus-visible,
+.btf-root .btf-cartello :focus-visible {
+  outline-color: var(--btf-fuoco-ferro);
+}
+.btf-root .btf-bottone-cobalto:focus-visible,
+.btf-root [data-btf-ix="cassetta"]:focus-visible {
+  outline-color: var(--btf-fuoco-ferro);
+  outline-offset: calc(-2 * var(--btf-fuoco-spessore));
+}
+/* I campi hanno già la riga di base: il fuoco la raddoppia e aggiunge l'anello. */
+.btf-root .btf-rasatura:focus-visible {
+  outline-offset: 0;
+}
+/* Titoli messi a fuoco da programma (h2 delle schermate, tabindex -1): niente anello. */
+.btf-root [tabindex="-1"]:focus-visible:not([data-btf-ix]) {
+  outline: none;
+}
+
+/* --------------------------------------------------------------------------
+   2. La cassetta: un oggetto che si afferra
+   Il cursore di sistema dice cosa si può fare (mano aperta, mano chiusa).
+   Hover: la maniglia si solleva di 2 px, come quando ci metti sopra le dita.
+   Presa: 3 px, e nessuna selezione di testo in giro.
+   -------------------------------------------------------------------------- */
+.btf-root [data-btf-ix="cassetta"] {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.btf-root [data-btf-ix="cassetta"] [data-btf-ix-parte="maniglia"] {
+  transition: transform 160ms var(--btf-ease-tiro, cubic-bezier(0.2, 0, 0, 1));
+}
+@media (hover: hover) and (pointer: fine) {
+  .btf-root [data-btf-ix="cassetta"]:hover [data-btf-ix-parte="maniglia"] {
+    transform: translateY(-2px);
+  }
+}
+.btf-root [data-btf-ix="cassetta"][data-btf-ix-presa="1"],
+.btf-root[data-trascina="1"] [data-btf-ix="cassetta"] {
+  cursor: grabbing;
+}
+.btf-root [data-btf-ix="cassetta"][data-btf-ix-presa="1"] [data-btf-ix-parte="maniglia"],
+.btf-root[data-trascina="1"] [data-btf-ix="cassetta"] [data-btf-ix-parte="maniglia"] {
+  transform: translateY(-3px);
+}
+
+/* Mentre si tira, niente selezione né cursori di testo in tutto il concept. */
+.btf-root[data-trascina="1"],
+.btf-root [data-btf-ix-presa="1"] {
+  cursor: grabbing;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* --------------------------------------------------------------------------
+   3. La striscia del filo e le tacche
+   Largo: un clic sulla striscia porta alla tacca più vicina (cursore mano).
+   Hover su una tacca: il suo segno si allunga, come premuto col pollice;
+   la tacca corrente ha il segno sempre lungo. Niente colore: il cobalto è
+   solo gesso battuto (trend-researcher P3).
+   -------------------------------------------------------------------------- */
+.btf-root [data-btf-ix="striscia"] {
+  cursor: pointer;
+  touch-action: none;
+  touch-action: pinch-zoom;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.btf-root [data-btf-ix="tacca"],
+.btf-root [data-btf-ix="buco"] {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.btf-root [data-btf-ix="tacca"] [data-btf-ix-parte="segno"] {
+  transform-origin: 50% 100%;
+  transition: transform 160ms var(--btf-ease-tiro, cubic-bezier(0.2, 0, 0, 1));
+}
+@media (hover: hover) and (pointer: fine) {
+  .btf-root [data-btf-ix="tacca"]:hover [data-btf-ix-parte="segno"] {
+    transform: scaleY(1.5);
+  }
+}
+.btf-root [data-btf-ix="tacca"]:focus-visible [data-btf-ix-parte="segno"],
+.btf-root [data-btf-ix="tacca"][aria-current="step"] [data-btf-ix-parte="segno"] {
+  transform: scaleY(2);
+}
+.btf-root [data-btf-ix="tacca"]:active [data-btf-ix-parte="segno"] {
+  transform: scaleY(1.2);
+}
+/* Il buco è invisibile: il fuoco disegna il suo contorno dentro la striscia. */
+.btf-root [data-btf-ix="buco"]:focus-visible {
+  outline-offset: calc(-1 * var(--btf-fuoco-spessore));
+}
+
+/* --------------------------------------------------------------------------
+   4. Tasti quadrati sulla lastra (mese prima / mese dopo, meno / più)
+   Hover: il fondo diventa rasatura (la stessa dei campi). Premuto: scende
+   di 1 px. Disattivato (a PRIMA, a CHIAVI, a 1 e a 20 pezzi): resta a
+   fuoco, l'icona sbiadisce, il cursore lo dice.
+   -------------------------------------------------------------------------- */
+.btf-root [data-btf-ix="tasto"] {
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 90ms var(--btf-ease-tiro, cubic-bezier(0.2, 0, 0, 1));
+}
+@media (hover: hover) and (pointer: fine) {
+  .btf-root [data-btf-ix="tasto"]:hover:not([aria-disabled="true"]):not(:disabled) {
+    background-color: var(--btf-rasatura);
+  }
+}
+.btf-root [data-btf-ix="tasto"]:active:not([aria-disabled="true"]):not(:disabled) {
+  background-color: var(--btf-rasatura);
+  transform: translateY(1px);
+}
+.btf-root [data-btf-ix="tasto"][aria-disabled="true"],
+.btf-root [data-btf-ix="tasto"]:disabled {
+  cursor: not-allowed;
+}
+.btf-root [data-btf-ix="tasto"][aria-disabled="true"] > *,
+.btf-root [data-btf-ix="tasto"]:disabled > * {
+  opacity: 0.45;
+}
+
+/* --------------------------------------------------------------------------
+   5. Link in Chivo sulla lastra e sul ferro
+   Sempre sottolineati (non si distinguono solo col colore); all'hover la
+   sottolineatura passa da 1 a 2 px, subito, senza animazione.
+   -------------------------------------------------------------------------- */
+.btf-root [data-btf-ix="link"] {
+  color: var(--btf-link);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+  cursor: pointer;
+}
+.btf-root [data-btf-fondo="ferro"] [data-btf-ix="link"],
+.btf-root .btf-cartello [data-btf-ix="link"] {
+  color: var(--btf-link-su-ferro);
+}
+@media (hover: hover) and (pointer: fine) {
+  .btf-root [data-btf-ix="link"]:hover {
+    text-decoration-thickness: 2px;
+  }
+}
+.btf-root [data-btf-ix="link"]:active {
+  text-decoration-thickness: 2px;
+}
+
+/* Voci della fascia: nessuna sottolineatura a riposo, 2 px calce all'hover e
+   sulla voce corrente (ux-architect §2.3: "sottolineato 2 px calce"). */
+.btf-root [data-btf-ix="voce"] {
+  color: var(--btf-testo-su-ferro);
+  text-decoration-line: none;
+  text-underline-offset: 0.3em;
+  cursor: pointer;
+}
+@media (hover: hover) and (pointer: fine) {
+  .btf-root [data-btf-ix="voce"]:hover {
+    text-decoration-line: underline;
+    text-decoration-thickness: 2px;
+  }
+}
+.btf-root [data-btf-ix="voce"][aria-current="page"] {
+  text-decoration-line: underline;
+  text-decoration-thickness: 2px;
+  cursor: default;
+}
+
+/* --------------------------------------------------------------------------
+   6. Righe di scelta (radio veri dentro un <label>, 52 px)
+   Hover: fondo rasatura. Fuoco: l'anello sta sulla riga intera, perché il
+   radio nativo può essere nascosto dal disegno della riga.
+   -------------------------------------------------------------------------- */
+.btf-root [data-btf-ix="riga"] {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (hover: hover) and (pointer: fine) {
+  .btf-root [data-btf-ix="riga"]:hover {
+    background-color: var(--btf-rasatura);
+  }
+}
+.btf-root [data-btf-ix="riga"]:has(:focus-visible) {
+  outline: var(--btf-fuoco-spessore) solid var(--btf-fuoco-lastra);
+  outline-offset: 0;
+}
+.btf-root [data-btf-ix="riga"] :focus-visible {
+  outline: none;
+}
+
+/* --------------------------------------------------------------------------
+   7. Foto e lastra del palco: chi si prende il dito
+   Solo nel palco e solo dopo il mount (data-pronto): senza JavaScript, in
+   modo documento o con la pagina ingrandita il dito fa quello che fa sempre.
+   - pinch-zoom: niente scorrimento del browser (così swipe.ts e trascina.ts
+     ricevono il gesto intero) ma lo zoom col pizzico resta. Dove pinch-zoom
+     non è capito vale la riga prima, none.
+   - lastra espansa ("Di più"): il verticale torna al browser, pan-y.
+   -------------------------------------------------------------------------- */
+.btf-root [data-btf-ix="foto"] img {
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.btf-root[data-pronto="1"][data-modo="palco"] [data-btf-ix="foto"],
+.btf-root[data-pronto="1"][data-modo="palco"] [data-btf-ix="lastra"] {
+  touch-action: none;
+  touch-action: pinch-zoom;
+  -webkit-tap-highlight-color: transparent;
+}
+.btf-root[data-pronto="1"][data-modo="palco"] [data-btf-ix="lastra"][data-btf-ix-verticale="nativo"] {
+  touch-action: pan-y pinch-zoom;
+}
+.btf-root[data-pronto="1"][data-modo="palco"] [data-btf-ix-zoom="1"],
+.btf-root[data-pronto="1"][data-modo="palco"] [data-btf-ix-zoom="1"] [data-btf-ix="striscia"] {
+  touch-action: auto;
+}
+/* Stesse soglie di core/modo.ts: in documento il palco è una pagina che scorre. */
+.btf-root[data-modo="documento"] [data-btf-ix="foto"],
+.btf-root[data-modo="documento"] [data-btf-ix="lastra"] {
+  touch-action: auto;
+}
+@media (max-height: 33.99em), (max-width: 19.99em) {
+  .btf-root[data-pronto="1"] [data-btf-ix="foto"],
+  .btf-root[data-pronto="1"] [data-btf-ix="lastra"] {
+    touch-action: auto;
+  }
+}
+
+/* Aree che scorrono (lastra espansa, schermate, Tutti i mesi): lo scorrimento
+   finisce lì, non trascina la pagina né fa "indietro" col trackpad. */
+.btf-root [data-btf-ix-scorre] {
+  overscroll-behavior: contain;
+}
+
+/* --------------------------------------------------------------------------
+   8. Movimento ridotto: stati finali, subito.
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .btf-root [data-btf-ix="cassetta"] [data-btf-ix-parte="maniglia"],
+  .btf-root [data-btf-ix="tacca"] [data-btf-ix-parte="segno"],
+  .btf-root [data-btf-ix="tasto"] {
+    transition: none;
+  }
+  .btf-root [data-btf-ix="tasto"]:active:not([aria-disabled="true"]):not(:disabled) {
+    transform: none;
+  }
+}
+.btf-root[data-motion="reduced"] [data-btf-ix="cassetta"] [data-btf-ix-parte="maniglia"],
+.btf-root[data-motion="reduced"] [data-btf-ix="tacca"] [data-btf-ix-parte="segno"],
+.btf-root[data-motion="reduced"] [data-btf-ix="tasto"] {
+  transition: none;
+}
+
+/* --------------------------------------------------------------------------
+   9. Colori forzati: il fuoco e gli oggetti restano visibili.
+   -------------------------------------------------------------------------- */
+@media (forced-colors: active) {
+  .btf-root :focus-visible,
+  .btf-root .btf-bottone-cobalto:focus-visible,
+  .btf-root [data-btf-ix="cassetta"]:focus-visible,
+  .btf-root [data-btf-ix="riga"]:has(:focus-visible) {
+    outline-color: Highlight;
+  }
+  .btf-root [data-btf-ix="cassetta"] {
+    forced-color-adjust: none;
+    background-color: ButtonText;
+    border: 2px solid ButtonText;
+  }
+  .btf-root [data-btf-ix="tasto"] {
+    border: 1px solid ButtonText;
+  }
+  .btf-root [data-btf-ix="link"],
+  .btf-root [data-btf-ix="voce"] {
+    color: LinkText;
+  }
+}

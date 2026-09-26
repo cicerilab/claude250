@@ -35,8 +35,10 @@ export interface Fermo {
   readonly meteo: boolean;
   /** la riga che compare sul buco, sulla tacca a fuoco e nella vista elenco */
   readonly riga: string;
-  /** il pezzo che entra in "chi c'era" e nell'aria-valuetext */
+  /** il pezzo che entra in "chi c'era" */
   readonly breve: string;
+  /** la frase detta dallo slider (aria-valuetext) */
+  readonly parlato: string;
 }
 
 export interface Mese {
@@ -109,6 +111,7 @@ const RIGHE: readonly RigaMese[] = [
         meteo: true,
         riga: 'Pioggia: cantiere fermo dal 14 al 18 aprile, 5 giorni.',
         breve: '5 fermi per pioggia',
+        parlato: 'Cantiere fermo 5 giorni per pioggia.',
       },
     ],
     controlla: 'Chiedi le foto dei ferri prima del getto. Dopo non si vedono più.',
@@ -162,7 +165,7 @@ const RIGHE: readonly RigaMese[] = [
     giorni: 20,
     fermi: [],
     controlla:
-      'Adesso si vedono le finestre vere nei muri: è l’ultimo momento comodo per cambiarne una.',
+      "Adesso si vedono le finestre vere nei muri: è l'ultimo momento comodo per cambiarne una.",
     finestra: false,
   },
   {
@@ -187,6 +190,7 @@ const RIGHE: readonly RigaMese[] = [
         meteo: false,
         riga: 'Ferie: cantiere chiuso dal 4 al 22 agosto.',
         breve: 'ferie dal 4 al 22',
+        parlato: 'Cantiere chiuso per ferie dal 4 al 22 agosto.',
       },
     ],
     controlla:
@@ -266,6 +270,7 @@ const RIGHE: readonly RigaMese[] = [
         meteo: true,
         riga: 'Gelo: cantiere fermo dal 16 al 23 dicembre, 6 giorni. Sotto i 5 gradi il massetto non si getta.',
         breve: '6 fermi per gelo',
+        parlato: 'Cantiere fermo 6 giorni per gelo.',
       },
       {
         id: 'natale-dicembre',
@@ -276,6 +281,7 @@ const RIGHE: readonly RigaMese[] = [
         meteo: false,
         riga: 'Natale: cantiere chiuso dal 24 dicembre a Capodanno.',
         breve: 'poi Natale',
+        parlato: 'Poi chiuso per Natale.',
       },
     ],
     controlla:
@@ -296,7 +302,7 @@ const RIGHE: readonly RigaMese[] = [
     giorni: 20,
     fermi: [],
     controlla:
-      'La pompa di calore fuori fa un po’ di rumore: controlla che non finisca sotto la finestra di una camera.',
+      "La pompa di calore fuori fa un po' di rumore: controlla che non finisca sotto la finestra di una camera.",
     finestra: false,
   },
   {
@@ -352,19 +358,21 @@ const RIGHE: readonly RigaMese[] = [
 ];
 
 /** I 14 mesi, con il progressivo calcolato una volta sola dai costi. */
-export const MESI: readonly Mese[] = RIGHE.reduce<Mese[]>((mesi, riga) => {
-  const prima = mesi.length > 0 ? mesi[mesi.length - 1]!.finora : 0;
-  mesi.push({ ...riga, finora: prima + riga.costo });
-  return mesi;
-}, []);
+let progressivo = 0;
+export const MESI: readonly Mese[] = RIGHE.map((riga) => {
+  progressivo += riga.costo;
+  return { ...riga, finora: progressivo };
+});
 
 /** Il mese n (1..14). */
 export function mese(n: NumeroMese): Mese {
-  return MESI[n - 1]!;
+  const trovato = MESI[n - 1];
+  if (!trovato) throw new Error(`cantiere: mese ${String(n)} inesistente`);
+  return trovato;
 }
 
 /** Somma dei 14 mesi: 412.500 €. */
-export const TOTALE: number = MESI[MESI.length - 1]!.finora;
+export const TOTALE: number = RIGHE.reduce((somma, riga) => somma + riga.costo, 0);
 
 /** Giorni lavorativi fermi per il meteo (pioggia + gelo): 11. */
 export const GIORNI_METEO: number = MESI.reduce(
