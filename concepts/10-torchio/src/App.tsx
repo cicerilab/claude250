@@ -7,13 +7,16 @@
  * dal creative-director). Il fondo Citrino/Grafite lo dà già index.html.
  */
 import { lazy, Suspense } from 'react';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, HashRouter, Navigate, Route, Routes } from 'react-router-dom';
+
+// Nell'anteprima privata (claude.ai) la pagina non controlla il percorso: hash.
+const Router = __ANTEPRIMA__ ? HashRouter : BrowserRouter;
 
 const Concept10 = lazy(() => import('./pages/Concept10'));
 
 export default function App() {
   return (
-    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Suspense fallback={null}>
         <Routes>
           <Route path="/concept-10" element={<Concept10 />} />
@@ -21,6 +24,6 @@ export default function App() {
           <Route path="*" element={<Navigate to="/concept-10" replace />} />
         </Routes>
       </Suspense>
-    </BrowserRouter>
+    </Router>
   );
 }

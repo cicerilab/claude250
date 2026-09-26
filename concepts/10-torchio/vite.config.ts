@@ -14,7 +14,13 @@ import { fileURLToPath, URL } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
+// `ANTEPRIMA=1 npm run build`: build per l'anteprima privata su claude.ai
+// (percorsi relativi, router con hash). Non si porta nel sito.
+const anteprima = process.env.ANTEPRIMA === '1';
+
 export default defineConfig({
+  base: anteprima ? './' : '/',
+  define: { __ANTEPRIMA__: JSON.stringify(anteprima) },
   plugins: [react()],
   resolve: {
     alias: {

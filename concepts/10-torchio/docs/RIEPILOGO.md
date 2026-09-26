@@ -91,3 +91,9 @@ sezioni rimaste a 7,5.
 Ogni agent ha il suo file in `docs/`. Si parte da `creative-director.md`
 (l'idea) e `DESIGN.md` (il design system). `awwwards-jury.md` contiene i tre
 giri di giuria.
+
+## Anteprima privata
+
+`ANTEPRIMA=1 npm run build` produce una build con percorsi relativi e router a
+hash, adatta a essere caricata come pagina privata su claude.ai (non è un
+deploy: il sito pubblico non cambia). La rotta resta `#/concept-10`.
