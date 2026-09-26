@@ -39,7 +39,13 @@ export interface PresetTecnica {
   inchiostro: boolean;
   /** La forma scrive anche il canale B (lamina). */
   lamina: boolean;
-  /** Profondità del solco a pressione 1 e `profondita` 1, in em del corpo. */
+  /**
+   * Profondità del solco a pressione 1 e `profondita` 1: una parte fissa in
+   * px CSS più una parte in em del corpo (giro 3). La parte fissa tiene netti
+   * i corpi medi (Tecniche, prova del banco) come l'hero: il piombo affonda
+   * nella carta più o meno quanto vuole la pressa, non in proporzione al corpo.
+   */
+  profonditaBasePx: number;
   profonditaEm: number;
   /** Limiti della profondità in px CSS (i corpi piccoli non spariscono, quelli enormi non diventano plastilina). */
   profonditaMinPx: number;
@@ -76,7 +82,8 @@ export const PRESET_TECNICA: Readonly<Record<TecnicaGL, PresetTecnica>> = {
     altezza: 1,
     inchiostro: false,
     lamina: false,
-    profonditaEm: 0.02,
+    profonditaBasePx: 1.6,
+    profonditaEm: 0.011,
     profonditaMinPx: 1.2,
     profonditaMaxPx: 5,
     smussoEm: [0.0028, 0.006, 0.013],
@@ -90,7 +97,8 @@ export const PRESET_TECNICA: Readonly<Record<TecnicaGL, PresetTecnica>> = {
     altezza: 0.85,
     inchiostro: true,
     lamina: false,
-    profonditaEm: 0.016,
+    profonditaBasePx: 1.3,
+    profonditaEm: 0.009,
     profonditaMinPx: 1,
     profonditaMaxPx: 4,
     smussoEm: [0.0025, 0.0055, 0.012],
@@ -104,7 +112,8 @@ export const PRESET_TECNICA: Readonly<Record<TecnicaGL, PresetTecnica>> = {
     altezza: 0.8,
     inchiostro: false,
     lamina: true,
-    profonditaEm: 0.014,
+    profonditaBasePx: 1.1,
+    profonditaEm: 0.008,
     profonditaMinPx: 1,
     profonditaMaxPx: 3.5,
     smussoEm: [0.0022, 0.005, 0.011],
@@ -118,6 +127,7 @@ export const PRESET_TECNICA: Readonly<Record<TecnicaGL, PresetTecnica>> = {
     altezza: 1,
     inchiostro: false,
     lamina: false,
+    profonditaBasePx: 0,
     profonditaEm: 0.06,
     profonditaMinPx: 1.4,
     profonditaMaxPx: 3.5,
@@ -175,7 +185,10 @@ export function margineMaschera(tecnica: TecnicaGL, corpoPx: number): number {
 export function profonditaPx(tecnica: TecnicaGL, corpoPx: number, profondita: number): number {
   const p = PRESET_TECNICA[tecnica];
   const corpo = corpoPx > 0 ? corpoPx : CORPO_DEFAULT_PX;
-  const base = Math.min(p.profonditaMaxPx, Math.max(p.profonditaMinPx, p.profonditaEm * corpo));
+  const base = Math.min(
+    p.profonditaMaxPx,
+    Math.max(p.profonditaMinPx, p.profonditaBasePx + p.profonditaEm * corpo),
+  );
   return base * clamp01(profondita);
 }
 

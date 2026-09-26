@@ -203,6 +203,10 @@
    ~72cqi: resta dentro il biglietto a ogni larghezza (shader-engineer, giro 1).
    -------------------------------------------------------------------------- */
 .imp-root .imp-perchi__pezzo--biglietto {
+  /* Cotone su Cotone sparirebbe: nel DOM il biglietto prende la superficie
+     tinta dell'art-director (#E2E3DF), non il bianco. Con il GL il fondo lo
+     spegne relief-fallback.css e la carta la disegna lo shader. */
+  background-color: var(--imp-superficie);
   justify-content: flex-end;
   padding: 9cqi 9cqi 10cqi;
 }
@@ -491,7 +495,9 @@
    ========================================================================== */
 @media (max-width: 1023.98px) {
   .imp-root .imp-perchi {
-    padding-block-end: calc(var(--imp-piede) + var(--imp-segnapagina-h));
+    /* in fondo, lo spazio dei due fissi ("Torna in Ciceri Lab" e il
+       segnapagina): 56 px + area sicura, oltre al piede della sezione */
+    padding-block-end: calc(var(--imp-piede) + var(--imp-segnapagina-h) + env(safe-area-inset-bottom, 0px));
   }
 
   .imp-root .imp-perchi__testa {

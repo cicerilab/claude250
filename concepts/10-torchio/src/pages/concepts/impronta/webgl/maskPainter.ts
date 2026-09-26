@@ -639,6 +639,19 @@ function creaCanvas(w: number, h: number, riuso?: HTMLCanvasElement | null): HTM
 /** Corpo del blocco: font-size del testo, o del blocco, o il corpo convenzionale. */
 function corpoDi(spec: ReliefSpec, el: HTMLElement | null | undefined, stile?: Partial<StileMaschera>): number {
   if (stile?.dimensione) return stile.dimensione;
+  // Pezzi (giro 3): il corpo è quello del testo più grande dei layer, non il
+  // font-size del contenitore (che nella prova del banco è il corpo del testo
+  // di lettura e faceva cuocere un solco da 1 px).
+  if (el && spec.kind === 'piece') {
+    let max = 0;
+    for (const l of (spec.layers ?? []) as readonly LayerMaschera[]) {
+      if (l.kind !== 'text') continue;
+      if (l.stile?.dimensione) max = Math.max(max, l.stile.dimensione);
+      const t = l.selettore ? el.querySelector(l.selettore) : null;
+      if (t) max = Math.max(max, leggiStile(t).dimensione);
+    }
+    if (max > 0) return max;
+  }
   if (el && (spec.kind === 'text' || spec.kind === 'piece')) {
     const fs = parseFloat(getComputedStyle(el).fontSize);
     if (Number.isFinite(fs) && fs > 0) return fs;

@@ -102,7 +102,7 @@ const COMPOSIZIONI: Record<IdPezzo, Composizione> = {
   },
   biglietto: {
     tecnica: 'lamina',
-    profondita: 0.8,
+    profondita: 1,
     strati: [
       { riga: 0, ruolo: 'nome', materiale: 'caldo', profondita: 1, riquadro: [10, 48, 80, 22] },
       { riga: 1, ruolo: 'mestiere', materiale: 'inchiostro', profondita: 0.3, riquadro: [10, 72, 80, 12] },
