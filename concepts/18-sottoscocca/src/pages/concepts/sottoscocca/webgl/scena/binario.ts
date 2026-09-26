@@ -52,13 +52,13 @@ type Quattro = readonly [ChiaveCamera, ChiaveCamera, ChiaveCamera, ChiaveCamera]
 export const CHIAVI: Record<Orientamento, Quattro> = {
   landscape: [
     // 0 cm: tre quarti anteriore sinistro, ad altezza d'uomo
-    { posizione: [5.3, 1.75, 7.4], bersaglio: [0.1, 0.62, 0.15], alto: [0, 1, 0], fov: 28, spostamento: [0.15, -0.02] },
+    { posizione: [6.6, 1.8, 7.9], bersaglio: [0.0, 0.85, -0.1], alto: [0, 1, 0], fov: 28, spostamento: [0.16, 0.0] },
     // 20 cm: un passo piu' vicino e piu' basso, le ruote staccate da terra
-    { posizione: [4.9, 1.2, 6.3], bersaglio: [0.15, 0.78, 0.25], alto: [0, 1, 0], fov: 28, spostamento: [0.15, 0.0] },
+    { posizione: [7.4, 1.25, 5.2], bersaglio: [0.0, 0.85, -0.05], alto: [0, 1, 0], fov: 28, spostamento: [0.16, 0.0] },
     // 80 cm: la ruota anteriore sinistra negli occhi
     { posizione: [3.35, 1.3, 2.95], bersaglio: [0.62, 1.12, 1.25], alto: [0, 1, 0], fov: 28, spostamento: [0.17, 0.0] },
     // 180 cm: sotto il pavimento, sguardo in su, muso a sinistra
-    { posizione: [0.02, -3.55, -0.05], bersaglio: [0.02, 1.95, -0.05], alto: [1, 0, 0], fov: 28, spostamento: [0.16, 0.0] },
+    { posizione: [0.0, -6.9, 0.0], bersaglio: [0.0, 1.95, 0.0], alto: [1, 0, 0], fov: 28, spostamento: [0.16, 0.0] },
   ],
   portrait: [
     // 0 cm: tre quarti, l'auto nella meta' alta (punti in y 10-54%)
