@@ -38,6 +38,12 @@ args `['--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blo
 
 ## Foto
 
+Fonti: la ricerca di Unsplash può essere bloccata da un controllo anti-bot (il CDN
+`images.unsplash.com` invece scarica); in alternativa usa l'API di **Openverse**
+(`api.openverse.org`) e **Wikimedia Commons**, rispettando licenza e attribuzione
+(crediti nel piede del concept e nel doc). Mai immagini generate.
+
+
 La rete è aperta. Foto da Unsplash: scaricale (`https://images.unsplash.com/photo-...?w=1600&q=70&fm=webp`),
 **guardale con Read** per verificare che il soggetto sia giusto (mai un parrucchiere
 in un barbiere, mai un medico in un salone), salvale ottimizzate negli asset del
