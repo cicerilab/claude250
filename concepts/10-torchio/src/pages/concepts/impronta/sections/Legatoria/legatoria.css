@@ -684,7 +684,7 @@
     --filo-xf: var(--filo-xrov);
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto auto;
+    grid-template-rows: 1fr auto;
     padding-block-start: var(--imp-sp-7);
   }
 
@@ -707,9 +707,12 @@
     padding-block-start: max(0px, calc(var(--fine-inizio, 0px) - var(--imp-sp-7) + var(--imp-sp-6)));
   }
 
+  /* "Prova la tua" chiude sempre il blocco (anche se le note sono più
+     lunghe): il filo che scende finisce nel suo nodo, non oltre. */
   .imp-root .imp-legatoria__azione {
     grid-row: 2;
     grid-column: 1;
+    align-self: end;
     margin-block-start: var(--imp-sp-2);
   }
 }

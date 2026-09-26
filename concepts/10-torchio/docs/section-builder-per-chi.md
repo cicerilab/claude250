@@ -182,3 +182,28 @@ DOM: il registro ha le misure giuste (`rectDoc` = posizione vera, verificato
 dal browser), quindi è il fotogramma in ritardo di SwiftShader dopo lo scroll,
 non il layout. Da ricontrollare su GPU vera (shader-engineer).
 Typecheck e lint verdi.
+
+---
+
+## Giro 3
+
+- **375, spazio per i fissi**: sotto i 1024 px la sezione finisce con piede +
+  `--imp-segnapagina-h` (56 px) + `env(safe-area-inset-bottom)`: l'ultimo
+  link non resta sotto "Torna in Ciceri Lab" né sotto il segnapagina.
+- **Biglietto Cotone "bianco"**: nel DOM il biglietto prende
+  `--imp-superficie` della sua carta (Cotone #E2E3DF), non il bianco; con il
+  GL il fondo DOM è spento da relief-fallback.css e la carta la disegna lo
+  shader. Profondità del pezzo portata a 1 (nome in lamina più presente). Se
+  col GL resta pallido, la resa della lamina su Cotone è dello
+  shader-engineer: il layer del nome è già `lamina`, profondità 1.
+- **Sovrapposizione**: controllo automatico (rettangoli dei testi della
+  partecipazione contro il biglietto) da 1024 a 2560. A 1024 il biglietto
+  copriva "Duomo di San Marco" (i corpi del pezzo toccano i 14 px minimi):
+  tra 1024 e 1279 px il biglietto scende a 0,66·p e rientra a 0,93·p, e ora
+  copre solo carta vuota a ogni larghezza provata (1024, 1100, 1200, 1280,
+  1366, 1440, 2560).
+- Link al banco: `inline-block` con la freccina in linea, così a capo resta
+  attaccata all'ultima parola (1024).
+- Screenshot: `/tmp/claude-0/shots-per-chi/giro3/{375,1440}-{citrino,cotone}-gl0(-b).png`,
+  più `1024`, `2560` Citrino e `*-verifica.png`. Server 8107 chiuso;
+  typecheck e lint verdi.

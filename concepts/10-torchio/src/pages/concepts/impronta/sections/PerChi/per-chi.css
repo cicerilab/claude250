@@ -394,22 +394,24 @@
 /* Il link al banco: riga d'inchiostro sottolineata (imp-ix-link), area di
    tocco 44 px, una freccina disegnata col bordo (niente glifi nuovi). */
 .imp-root .imp-perchi__prova {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45em;
-  min-block-size: var(--imp-tocco-min);
+  /* in linea (non flex): se la riga va a capo nelle colonne strette, la
+     freccina resta attaccata all'ultima parola */
+  display: inline-block;
+  padding-block: calc((var(--imp-tocco-min) - 1.15em) / 2);
   font-size: var(--imp-fs-corpo);
   font-weight: var(--imp-wght-corpo-forte);
   line-height: var(--imp-lh-interfaccia);
 }
 
 .imp-root .imp-perchi__freccina {
+  display: inline-block;
+  margin-inline: 0.3em 0.1em;
+  vertical-align: 0.08em;
   inline-size: 0.5em;
   block-size: 0.5em;
   border-block-start: 2px solid currentColor;
   border-inline-end: 2px solid currentColor;
   rotate: 45deg;
-  flex: none;
 }
 
 /* ==========================================================================
