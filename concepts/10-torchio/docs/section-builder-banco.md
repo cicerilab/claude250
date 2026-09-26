@@ -304,3 +304,14 @@ Restano fuori dai miei file: la lamina pallida col GL a 2560 (shader-engineer, d
 - INP a 390×844, CPU 4×, 23 tasti nel nome (Event Timing, durata > 16 ms), due passaggi: p95 72 / 56 ms, **max 112 / 64 ms** (era 160). Il massimo di 112 è il primo tasto, quando compare la striscia della tastiera.
 
 typecheck e lint verdi. Server chiuso.
+
+---
+
+## Giro 3c (ultima passata, giuria "Giro 3" interventi 2-3)
+
+| Punto | Cosa ho fatto | File |
+|---|---|---|
+| Vuoto sotto la leva (~250 px a 375, ~200 a 1440) | Sotto i 1024 px il fondo della sezione è solo lo spazio dei due bottoni fissi (`72px + safe area`, non più piede + 44 px); da 1024 px `--imp-sp-7` (48 px) invece della testa. La riga dei messaggi sotto la leva riserva una riga (1,55 em), non due | `banco.css` |
+| "Chiara Zanin" d'esempio quasi illeggibile su Citrino | Nel GL i layer delle righe hanno sempre profondità 1 (l'esempio era 0,45). Nel ripiego CSS le righe d'esempio sono premute a fondo (`--imp-press: 1`, come la parola dell'hero) e tutte le righe non scendono mai sotto 0,8 prima della pressa (erano 0,55) | `Prova.tsx`, `banco.css` |
+
+Verifica: typecheck e lint verdi; build servita con `vite preview` su 8102, poi chiusa. Screenshot guardati: `/tmp/claude-0/shots-banco/giro3c/{375,1440}-{citrino,cotone}-gl0-{1-vuoto,2-compilato,3-leva-a-meta,4-successo}.png`. A 375 la sezione dopo arriva circa 130 px sotto la leva, testa della bottega compresa, e il bottone del sito non copre nulla del banco.
