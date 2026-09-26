@@ -288,3 +288,19 @@ dopo i 900 ms. Il gesto va provato su un dispositivo vero.
 **Verifica**: typecheck e lint verdi. Le pagine sono state servite da una build stabile (`vite build` in `/tmp` + `vite preview --port 8102`), perché l'HMR di `Filo.tsx`, modificato da un altro agent in quel momento, rompeva il dev server. Screenshot guardati: `/tmp/claude-0/shots-banco/giro3/{375,768,1440}-{citrino,cotone}-gl0-{1-vuoto,2-compilato,3-leva-a-meta,4-successo}.png`. Server chiuso.
 
 Restano fuori dai miei file: la lamina pallida col GL a 2560 (shader-engineer, da vedere su un device vero).
+
+---
+
+## Giro 3b (correzioni finali)
+
+| Punto | Cosa ho fatto | File |
+|---|---|---|
+| A2 a 375 (accessibility-auditor giro 3): col fuoco all'indietro "cos'è?" e il contatto finivano dietro la lastra | Lo `scroll-margin` non basta se il controllo è già "nella finestra" dietro la lastra ferma. Sotto i 1024 px (e con finestra non bassa), mentre il fuoco è nel banco, `html:has(.imp-banco:focus-within)` ha `scroll-padding-block: calc(42svh + 56px + 16px) 76px`; con la tastiera aperta `html:has(.imp-banco[data-tastiera])` usa la striscia (28vh + testata). `mettiInVista` usa `block: 'start'` | `banco.css`, `Banco.tsx` |
+| N2: tiratura "50" larga 30 px | `min-inline-size: 44px` su `.imp-banco__voce--numero` | `banco.css` |
+| INP digitando a 375 con CPU 4× (160 ms, budget 150) | `useDeferredValue` sui campi passati a `Prova` (e sul testo alternativo), `Prova` in `memo`: il campo risponde nel render urgente, la prova si ricompone subito dopo | `Banco.tsx`, `Prova.tsx` |
+
+**Misure** (build servita con `vite preview` su 8102, Playwright):
+- Fuoco a 375×740: 23 controlli del banco percorsi con Tab e Shift+Tab (compresi i campi con la striscia della tastiera attiva): nessuno coperto da lastra, striscia o testata. Resta solo l'etichetta della carta "Citrino" (144 px d'altezza) che col fuoco all'indietro finisce 5 px oltre il bordo basso della finestra: visibile, non coperta.
+- INP a 390×844, CPU 4×, 23 tasti nel nome (Event Timing, durata > 16 ms), due passaggi: p95 72 / 56 ms, **max 112 / 64 ms** (era 160). Il massimo di 112 è il primo tasto, quando compare la striscia della tastiera.
+
+typecheck e lint verdi. Server chiuso.

@@ -244,3 +244,30 @@ padding e staccava il filo di 95 px): per questo `grid-area: auto`.
   rifatti alla fine (97%) dopo le ultime correzioni del blocco finale;
   `chromium-cotone-375-rid-00.png` in reduced motion (tutto cucito).
 - Nessuno scroll orizzontale alle quattro larghezze.
+
+---
+
+## Giro 3b
+
+B3 del cross-browser-tester: in WebKit, a ogni caricamento,
+"ResizeObserver loop completed with undelivered notifications"; una delle
+cause era il ResizeObserver della Legatoria, che nel callback rifaceva la
+misura e scriveva stili (`--filo-da/-a`, `--fine-inizio`) che cambiano
+l'altezza del corpo osservato.
+
+Correzione (`Legatoria.tsx`): il callback del ResizeObserver e `fonts.ready`
+mettono in coda **una sola** misura per il frame successivo, nel ticker del
+concept (fase `write`, restituisce `false`: gira una volta e si stacca). È il
+rAF richiesto, ma passa dal ticker perché lo scaffold (§4.1) ammette un solo
+`requestAnimationFrame` nel concept. Resta sincrona solo la prima misura nel
+`useLayoutEffect` del montaggio (prima della pittura, nessun ResizeObserver
+in gioco). Allo smontaggio la misura in coda viene tolta.
+
+Verifica:
+- WebKit (`PLAYWRIGHT_BROWSERS_PATH=/tmp/claude-0/pw-extra`), `?gl=0`, 375 e
+  1440, caricamento + ridimensionamento della finestra (+40 px e ritorno),
+  sia con le altre sezioni sostituite da stub sia con la pagina intera:
+  **0 pageerror**; `--fine-inizio` misurato (−280,7 px a 375, 197,2 px a 1440).
+- Chromium, server 8110 (chiuso alla fine): filo corretto a 375 e 1440, al
+  30% e alla fine della sezione, `/tmp/claude-0/shots-legatoria/g3b/chromium-citrino-{375,1440}-0{0,1}.png`.
+- `tsc -p tsconfig.app.json --noEmit` verde, ESLint della cartella zero avvisi.
