@@ -383,16 +383,16 @@
   background: var(--imb-foglio);
   color: var(--imb-testo);
   overscroll-behavior: contain;
-  translate: 0 calc(0px - var(--imb-ix-tastiera, 0px));
-  transform: translate3d(0, 0, 0);
+  /* Solo `transform` (la camera anima `translate` sul pannello: niente conflitti).
+     La tastiera virtuale alza il foglio della sua altezza (--imb-ix-tastiera). */
+  transform: translate3d(0, calc(0px - var(--imb-ix-tastiera, 0px)), 0);
   transition:
     transform var(--imb-dur-foglio) var(--imb-curva-foglio),
-    translate var(--imb-dur-foglio) var(--imb-curva-foglio),
     visibility 0s linear 0s;
 }
 
 .imb-root [data-imb-ix-foglio='meta'] {
-  transform: translate3d(0, calc(100% - var(--imb-ix-foglio-meta, 50dvh)), 0);
+  transform: translate3d(0, calc(100% - var(--imb-ix-foglio-meta, 50dvh) - var(--imb-ix-tastiera, 0px)), 0);
 }
 
 .imb-root [data-imb-ix-foglio='chiuso'] {
@@ -400,13 +400,12 @@
   visibility: hidden;
   transition:
     transform var(--imb-dur-foglio) var(--imb-curva-foglio),
-    translate var(--imb-dur-foglio) var(--imb-curva-foglio),
     visibility 0s linear var(--imb-dur-foglio);
 }
 
 /* Durante il trascinamento il foglio segue il pollice, senza transizione */
 .imb-root [data-imb-ix-foglio][data-imb-ix-trascina='true'] {
-  transform: translate3d(0, var(--imb-ix-foglio-y, 0px), 0);
+  transform: translate3d(0, calc(var(--imb-ix-foglio-y, 0px) - var(--imb-ix-tastiera, 0px)), 0);
   transition: none;
 }
 
