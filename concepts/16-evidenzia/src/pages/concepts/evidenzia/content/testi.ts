@@ -349,7 +349,7 @@ export const SCHEDA = {
   confronto: (a: Annuncio): string | null => {
     const c = confrontoZona(a);
     if (c === null) return null;
-    return `${euroMq(c.annuncioMq, c.affitto)}: in zona ${c.zona} la media degli ${c.cosa} è ${euroMq(c.mediaMq, c.affitto)}.`;
+    return `${euroMq(c.annuncioMq, c.affitto)}: ${c.dove} la media ${c.cosa} è ${euroMq(c.mediaMq, c.affitto)}.`;
   },
   /** Titoli dei tre blocchi della consistenza (h3 con dl). */
   blocchi: { casa: 'La casa', costi: 'I costi', fuori: 'Fuori' },
@@ -403,7 +403,7 @@ export const GIRO = {
   arrivo: (hhmm: string | number) => orario(hhmm),
   tappaAria: (posizione: number, a: Pick<Annuncio, 'attacco'>, arrivo: string | number) =>
     `Tappa ${posizione}, ${a.attacco}, arrivo alle ${orario(arrivo)}`,
-  /** Tragitto sotto la tappa: "12 minuti da Borgomeduna", "10 minuti dall'agenzia". */
+  /** Tragitto sotto la tappa: "12 minuti da Borgomeduna", "10 minuti dall’agenzia". */
   tragitto: (minuti: number, da: ZonaId | 'agenzia') =>
     da === 'agenzia' ? `${minuti} minuti dall’agenzia` : `${minuti} minuti da ${ZONE[da].nome}`,
   /** Prima tappa con "ci vediamo alla prima casa". */

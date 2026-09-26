@@ -48,7 +48,7 @@ export interface Annuncio {
   zona: ZonaId;
   tipologia: Tipologia;
   mercato: Mercato | null;
-  /** Riga d'attacco: zona e tipologia, massimo 38 caratteri (una riga a 268 px nei formati P e F). */
+  /** Riga d'attacco: zona e tipologia, massimo 38 caratteri (una riga a 268 px nei formati P e F; il riquadro R, largo 2 colonne, arriva a 39). */
   attacco: string;
   /** Novità o prezzo rivisto, scritti come frase in grassetto all'inizio del testo. Mai etichetta sulla foto. */
   novita?: string;
@@ -345,7 +345,7 @@ export const ANNUNCI = [
     attacco: 'Rorai Grande, trilocale nuovo',
     titoloScheda: 'In una palazzina nuova di sei famiglie, consegna a marzo 2027.',
     testo:
-      'In una palazzina nuova di sei famiglie, consegna a marzo 2027. Pompa di calore, pannelli fotovoltaici, giardino condominiale.',
+      'Palazzina nuova di sei famiglie, consegna a marzo 2027. Pompa di calore, fotovoltaico, giardino condominiale.',
     testoCorto: 'Palazzina nuova di sei famiglie, consegna a marzo 2027. Classe A2.',
     dati: '90 m², tre locali, due bagni, primo piano, 2027.',
     energia: 'Classe A2, pompa di calore a pavimento.',
@@ -772,7 +772,7 @@ export const ANNUNCI = [
     titoloScheda: 'Rustico in sasso e mattoni con portico e fienile, da ristrutturare.',
     testo:
       'Casa di campagna in sasso e mattoni con portico e fienile, su un terreno di 1.500 m². Da ristrutturare tutta. Il progetto di massima di un architetto è già in agenzia.',
-    testoCorto: 'Rustico in sasso con portico e fienile, terreno di 1.500 m². Da ristrutturare.',
+    testoCorto: 'Rustico in sasso con portico e fienile, 1.500 m² di terreno. Da rifare.',
     dati: '210 m² tra casa e fienile, due piani, primi del Novecento.',
     energia: 'Classe G, nessun impianto di riscaldamento.',
     prezzo: 128000,

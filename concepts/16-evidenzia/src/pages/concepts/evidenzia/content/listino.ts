@@ -59,22 +59,22 @@ export const MEDIE: Record<Mercato, Partial<Record<ZonaId, number>>> = {
 };
 
 export interface Confronto {
-  /** Prezzo al m² dell'annuncio (arrotondato: 10 € in vendita, 0,10 € in affitto). */
+  /** Prezzo al m² dell'annuncio (arrotondato: 10 € in vendita, 1 € sotto i 500 €/m², 0,10 € in affitto). */
   annuncioMq: number;
   mediaMq: number;
   affitto: boolean;
-  /** Nome della zona come nella frase: "Torre", "Porcia". */
-  zona: string;
-  /** Tipo di bene nella frase: "appartamenti", "case", "rustici", "terreni edificabili", "affitti". */
+  /** Luogo con la preposizione: "in zona Torre" per i quartieri, "a Porcia" per i comuni. */
+  dove: string;
+  /** Tipo di bene con l'articolo: "degli appartamenti usati", "delle case usate"... */
   cosa: string;
 }
 
 const COSA: Record<Mercato, string> = {
-  appartamenti: 'appartamenti usati',
-  case: 'case usate',
-  rustici: 'rustici da ristrutturare',
-  terreni: 'terreni edificabili',
-  affitti: 'affitti',
+  appartamenti: 'degli appartamenti usati',
+  case: 'delle case usate',
+  rustici: 'dei rustici da ristrutturare',
+  terreni: 'dei terreni edificabili',
+  affitti: 'degli affitti',
 };
 
 /**
@@ -86,8 +86,14 @@ export function confrontoZona(a: Annuncio): Confronto | null {
   const media = MEDIE[a.mercato][a.zona];
   if (media === undefined) return null;
   const grezzo = a.prezzo / a.mq;
-  const annuncioMq = a.affitto ? Math.round(grezzo * 10) / 10 : Math.round(grezzo / 10) * 10;
-  return { annuncioMq, mediaMq: media, affitto: a.affitto, zona: ZONE[a.zona].nome, cosa: COSA[a.mercato] };
+  const annuncioMq = a.affitto
+    ? Math.round(grezzo * 10) / 10
+    : grezzo >= 500
+      ? Math.round(grezzo / 10) * 10
+      : Math.round(grezzo);
+  const zona = ZONE[a.zona];
+  const dove = zona.quartiere ? `in zona ${zona.nome}` : `a ${zona.nome}`;
+  return { annuncioMq, mediaMq: media, affitto: a.affitto, dove, cosa: COSA[a.mercato] };
 }
 
 /** Testi del box "Quanto costa al metro quadro" (i numeri sono in LISTINO_APPARTAMENTI). */
