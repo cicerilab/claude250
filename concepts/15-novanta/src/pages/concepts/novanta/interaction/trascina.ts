@@ -32,6 +32,7 @@
 
 import { useEffect, useRef } from 'react';
 import type { RefObject } from 'react';
+import { SOGLIA_PRESA } from '../motion/choreography';
 import { segnaInput } from './attivita';
 
 export interface OpzioniTrascina {
@@ -66,7 +67,7 @@ export interface OpzioniTrascina {
 }
 
 /** Tolleranza in px tra tocco e trascinamento. */
-export const SOGLIA_TOCCO_PX = { dito: 6, mouse: 3 } as const;
+export const SOGLIA_TOCCO_PX = { dito: SOGLIA_PRESA, mouse: 3 } as const;
 /** Raggio attorno al perno in cui l'angolo non si aggiorna. */
 export const ZONA_MORTA_PX = 14;
 /** Finestra di stima della velocità al rilascio. */

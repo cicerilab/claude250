@@ -43,6 +43,7 @@
 
 import { useEffect, useRef } from 'react';
 import type { RefObject } from 'react';
+import { QUIETE_ROTELLA } from '../motion/choreography';
 import { segnaInput } from './attivita';
 
 export interface EsitoGesto {
@@ -81,7 +82,7 @@ export interface OpzioniRotella {
 /** Costanti di taratura (documentate in docs/interaction-designer.md §3). */
 export const ROTELLA = {
   /** Quiete che chiude un gesto continuo. */
-  fineGestoMs: 140,
+  fineGestoMs: QUIETE_ROTELLA,
   /** Blocco dopo un gesto continuo, rinnovato dalla coda d'inerzia. */
   bloccoMs: 350,
   /** Pausa che separa lo scorrimento interno dalla rotazione. */
