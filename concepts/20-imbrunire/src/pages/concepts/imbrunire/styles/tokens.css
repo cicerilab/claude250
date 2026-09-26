@@ -226,7 +226,9 @@
   --imb-gradino-alzata: 7px;      /* scala: scatole di poché, pianta a gradini veri */
   --imb-gradino-pedata: 11px;
   --imb-binario-scala: 6px;       /* torre: binario verticale a destra */
-  --imb-fascia-nome-min: 48px;    /* il solaio sotto ogni piano È la fascia del nome: poché, cresce col testo */
+  --imb-fascia-nome-min: 48px;    /* il solaio sotto ogni piano È la fascia del nome (poché) */
+  --imb-fascia-sezione: 46px;     /* sezione: altezza FISSA, una riga di nome + una riga piccola, mai a capo */
+  --imb-nome-adatta: 8.6cqi;      /* sezione: nome = min(--imb-t-nome-cella, 8,6% della cella), nowrap */
   --imb-modulo: 7.2;              /* u = larghezza del palazzo / 7,2: altezza di riferimento di un piano */
   --imb-h-sottotetto: 0.95;       /* altezze delle scatole in u (ux-architect §2.2) */
   --imb-h-nobile: 1.2;
@@ -349,6 +351,19 @@
 @media (max-width: 1023px) {
   .imb-root {
     --imb-palazzo-vw: 92vw;
+  }
+}
+
+/* Sezione su schermi bassi (1366 × 768, 1280 × 720): nastro compatto,
+   il palazzo guadagna altezza. Solo puntatore fine: le lune restano ≥ 24 px
+   di bersaglio (WCAG 2.5.8) e il tocco usa comunque la torre o il foglio. */
+@media (min-width: 720px) and (min-height: 560px) and (max-height: 820px) {
+  .imb-root {
+    --imb-luna-d: 28px;
+    --imb-luna-passo: 38px;
+    --imb-sopra-palazzo: 188px;
+    --imb-fascia-sezione: 40px;
+    --imb-testata-h: 56px;
   }
 }
 

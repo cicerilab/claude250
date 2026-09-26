@@ -57,7 +57,7 @@ export const ICONE = {
   /**
    * Disegnata a mano. Interruttore "Specchio pulito" con aria-pressed="false":
    * lo specchio (quadrato a spigolo vivo) con tre righe di vapore spezzate nella
-   * metà bassa, dove il vapore e' più fitto (CD §6.2).
+   * metà bassa, dove il vapore è più fitto (CD §6.2).
    */
   vapore: {
     modo: 'tratto',

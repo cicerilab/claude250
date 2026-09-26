@@ -38,9 +38,10 @@ function formatta(gradi: number): string {
 }
 
 export function useParallasse(ref: RefObject<HTMLElement>, o: OpzioniParallasse = {}): void {
-  const abilitata = useImbrunire(
-    (s) => s.layout === 'sezione' && !s.reducedMotion && s.camera.fase === 'ferma',
-  );
+  const consentita = useImbrunire((s) => s.layout === 'sezione' && !s.reducedMotion);
+  // Con la camera in viaggio o dentro una stanza il tetto torna diritto
+  // scivolando (nessun salto), poi il ticker dorme.
+  const ferma = useImbrunire((s) => s.camera.fase === 'ferma');
   const gradiMax = clamp(o.gradiMax ?? PARALLASSE.gradiMax, 0, PARALLASSE.gradiMax);
   const verso = o.verso ?? 1;
 
@@ -50,9 +51,11 @@ export function useParallasse(ref: RefObject<HTMLElement>, o: OpzioniParallasse 
 
     const fine =
       typeof window.matchMedia === 'function' && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-    const attiva = abilitata && fine && gradiMax > 0;
+    const attiva = consentita && fine && gradiMax > 0;
 
-    let corrente = 0;
+    // Riparte dal valore già scritto (cambio di `ferma`): nessun salto.
+    const letto = Number.parseFloat(el.style.getPropertyValue('--imb-parallasse'));
+    let corrente = Number.isFinite(letto) ? letto : 0;
     let scritto = '';
 
     const scrivi = (gradi: number): void => {
@@ -72,7 +75,7 @@ export function useParallasse(ref: RefObject<HTMLElement>, o: OpzioniParallasse 
 
     const obiettivo = (): number => {
       const p = runtime.puntatore;
-      if (!p.attivo || p.tipo !== 'mouse') return 0;
+      if (!ferma || !p.attivo || p.tipo !== 'mouse') return 0;
       return clamp(p.x, -1, 1) * gradiMax * verso;
     };
 
@@ -91,6 +94,7 @@ export function useParallasse(ref: RefObject<HTMLElement>, o: OpzioniParallasse 
       return false;
     };
 
+    if (corrente !== 0) scrivi(corrente);
     const togliAggiorna = ticker.add(aggiorna, 'update');
     const togliScrivi = ticker.add(scriviFase, 'write');
 
@@ -105,7 +109,7 @@ export function useParallasse(ref: RefObject<HTMLElement>, o: OpzioniParallasse 
       document.documentElement.removeEventListener('pointerleave', sveglia);
       togliAggiorna();
       togliScrivi();
-      el.style.removeProperty('--imb-parallasse');
+      // Il valore resta sull'elemento: l'effetto successivo riparte da lì.
     };
-  }, [ref, abilitata, gradiMax, verso]);
+  }, [ref, consentita, ferma, gradiMax, verso]);
 }
