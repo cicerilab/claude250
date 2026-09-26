@@ -1,0 +1,51 @@
+{
+  "domain": "igloo.inc",
+  "source": "https://www.igloo.inc",
+  "ruolo": "Awwwards sito dell'anno 2024: un solo oggetto 3D con camera guidata dallo scroll",
+  "design_map": {
+    "colori": {
+      "fondo": "#A0A5B1 (100% area, grigio azzurro freddo)",
+      "linee": "bianco pieno, spessore 1px, con numeri minuscoli ai vertici",
+      "oggetto": "igloo grigio chiaro con giunti bianchi"
+    },
+    "tipografia": {
+      "dom": "nessun testo nel DOM (solo 'Times New Roman' di default): tutto il testo vive nel canvas"
+    },
+    "spaziatura": {
+      "altezza_documento": "900px: lo scroll è intercettato, non nativo"
+    },
+    "raggi": [],
+    "ombre": [],
+    "movimento": "loader ASCII '==---==+==' circa 20s in headless; poi la rotella fa scendere la camera verso l'oggetto mentre il reticolo si infittisce"
+  },
+  "taste": [
+    {
+      "nome": "Un oggetto, una camera, un asse",
+      "trigger": "Scena 3D al centro di tutto",
+      "decisione": "L'igloo resta fermo al centro; si muove solo la camera, avvicinandosi",
+      "ragione": "L'occhio non deve cercare: il racconto è la distanza",
+      "evidenza": "s2 e s4: stesso oggetto nella stessa posizione, cambia scala e densità del reticolo"
+    },
+    {
+      "nome": "Struttura come ornamento",
+      "trigger": "Oggetto low-poly che da solo sarebbe povero",
+      "decisione": "Reticolo di linee bianche 1px e numeri ai nodi",
+      "ragione": "Il wireframe dichiara 'questo è costruito', trasforma il low-poly in scelta",
+      "evidenza": "s2: igloo in contorno bianco, numeri 2 cifre ai vertici"
+    },
+    {
+      "nome": "Monocromia fredda",
+      "trigger": "Scena con tanti segni",
+      "decisione": "Solo #A0A5B1 e bianco",
+      "ragione": "Con zero colori la gerarchia la fa la luminosità",
+      "evidenza": "backgroundColors 100% un solo valore"
+    },
+    {
+      "nome": "Prezzo pagato (restrizione rovesciata)",
+      "trigger": "Esperienza tutta nel canvas",
+      "decisione": "Nessun testo DOM, loader lungo, scroll intercettato",
+      "ragione": "Sito-vetrina di uno studio: il pubblico è disposto ad aspettare",
+      "evidenza": "DOM vuoto, scrollHeight 900, 20s di loader: tutto ciò che SOTTOSCOCCA NON può fare"
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "domain": "cal.com",
+  "source": "https://cal.com",
+  "ruolo": "strumento di prenotazione reale: come si rende leggibile uno slot di tempo",
+  "design_map": {
+    "colori": {
+      "fondo": "#F4F4F4 (65,2%)",
+      "schede": "#FFFFFF (33,4%)",
+      "inchiostro": "#111111 / #242424",
+      "testo_secondario": "#898989",
+      "giorni_liberi": "#E0E0E0 caselle piene"
+    },
+    "tipografia": {
+      "display": "Cal Sans 600, h1 64px / 70,4px, h2 48px",
+      "corpo": "Cal Sans UI Light 300, 14px / 19,6px",
+      "numeri_calendario": "16px, grigio per giorni non prenotabili, nero su casella piena per i prenotabili"
+    },
+    "spaziatura": {
+      "contenitore": "1152px",
+      "griglia": "2 colonne da 518px, gap 12px"
+    },
+    "raggi": [
+      "pillola 100px (61)",
+      "12px (53, schede)",
+      "4px",
+      "2px"
+    ],
+    "ombre": [
+      "inset 0 1px 1.9px rgba(0,0,0,.16) sui controlli"
+    ],
+    "movimento": "nessuna transizione rilevante oltre 'all'"
+  },
+  "taste": [
+    {
+      "nome": "Il libero si vede pieno",
+      "trigger": "Calendario mensile con giorni disponibili e no",
+      "decisione": "Giorni prenotabili dentro una casella #E0E0E0 piena, gli altri numeri nudi",
+      "ragione": "Il visitatore trova i buchi senza leggere legenda",
+      "evidenza": "viewport: 15-30 maggio in caselle piene, 1-14 senza"
+    },
+    {
+      "nome": "La durata si sceglie prima dell'ora",
+      "trigger": "Evento con durate diverse",
+      "decisione": "Selettore segmentato 15m / 30m / 45m / 1h sopra al calendario",
+      "ragione": "Lo slot dipende dalla durata: chiederla prima evita slot impossibili",
+      "evidenza": "scheda 'Partnerships Meeting': selettore sotto la descrizione"
+    },
+    {
+      "nome": "Il prodotto è il visual",
+      "trigger": "Hero di un software",
+      "decisione": "Il widget vero di prenotazione a destra al posto dell'illustrazione",
+      "ragione": "Mostrare l'interfaccia è la prova",
+      "evidenza": "viewport: widget a 2 colonne dentro scheda bianca"
+    },
+    {
+      "nome": "Restrizione cromatica",
+      "trigger": "SaaS con molte funzioni",
+      "decisione": "Nessun colore di marca: nero, bianco, 3 grigi",
+      "ragione": "Il calendario del cliente deve restare neutro dentro altri siti",
+      "evidenza": "accentCandidates: #111111; solo le stelle recensioni sono colorate"
+    }
+  ]
+}
