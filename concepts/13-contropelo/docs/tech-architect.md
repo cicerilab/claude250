@@ -856,5 +856,5 @@ Svuotare la memoria del concept:
   licenza MIT annotata; in `tratti.ts` la sottolineatura del nome, 3 varianti
   del trattino libero e il cerchio a pennarello del fuoco sul posto libero.
 - **copywriter**: oltre a `testi.ts`, i dati `listino.ts`, `orari.ts` (forma in
-  §6.4), `nomi.ts` (almeno 40 nomi + iniziale, maschili e femminili, di Pordenone
+  §6.4), `nomi.ts` (almeno 40 nomi maschili + iniziale, clienti di Pordenone
   e dintorni); `title`/`description` con "Concept di Ciceri Lab".
