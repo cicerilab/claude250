@@ -230,6 +230,11 @@
   box-shadow: 0 1px 0 var(--imp-carta-luce);
 }
 
+/* Bersaglio minimo 44 px anche per "50" (N2). */
+.imp-root .imp-banco .imp-banco__voce--numero {
+  min-inline-size: 44px;
+}
+
 .imp-root .imp-banco .imp-banco__voce:active:not(:has(.imp-ix-scelta__input:disabled)) {
   transform: translateY(1px);
 }
@@ -1594,4 +1599,22 @@
   visibility: hidden;
   pointer-events: none;
   font-variation-settings: 'wdth' 100, 'wght' 750;
+}
+
+/*
+ * Giro 3b (A2 a 375): lo scroll-margin non basta quando il controllo è già
+ * "nella finestra" ma dietro la lastra ferma: il browser non scorre. Mentre il
+ * fuoco è nel banco, il documento sa che la parte alta della finestra è
+ * coperta (scroll-padding), e il fuoco, avanti o indietro, finisce sotto la
+ * lastra. Con la tastiera aperta conta la striscia al 28%.
+ * Selettori su `html` perché lo scroll-padding vale sul contenitore che scorre.
+ */
+@media (max-width: 1023.98px) and (min-height: 34.001rem) {
+  html:has(.imp-banco:focus-within) {
+    scroll-padding-block: calc(42svh + 56px + 16px) calc(52px + 24px);
+  }
+
+  html:has(.imp-banco[data-tastiera]) {
+    scroll-padding-block: calc(28vh + 56px + 16px) 16px;
+  }
 }

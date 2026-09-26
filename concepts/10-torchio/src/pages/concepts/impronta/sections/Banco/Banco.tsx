@@ -27,7 +27,7 @@
  * Nessun accesso a window/document a livello di modulo.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type FocusEvent } from 'react';
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, useSyncExternalStore, type FocusEvent } from 'react';
 import { track } from '@/lib/analytics';
 import { BANCO as MOTION_BANCO } from '../../motion/choreography';
 import { ANNUNCI, BANCO, COMUNI, HERO, PRODOTTI, euro } from '../../content/testi';
@@ -115,6 +115,10 @@ export default function Banco() {
   );
 
   const righe = useMemo(() => righeDellaProva(prova.prodotto, prova.campi), [prova.prodotto, prova.campi]);
+  // Giro 3b (INP): il campo risponde subito, la prova (e il suo testo alternativo)
+  // si ricompone in un render differito subito dopo il tasto.
+  const campiProva = useDeferredValue(prova.campi);
+  const righeProva = useMemo(() => righeDellaProva(prova.prodotto, campiProva), [prova.prodotto, campiProva]);
 
   const riepilogo = BANCO.prezzo.riepilogo({
     prodotto: prova.prodotto,
@@ -133,7 +137,7 @@ export default function Banco() {
     prodotto: prova.prodotto,
     carta,
     tecnica: prova.tecnica,
-    righe: righe.map((r) => r.testo),
+    righe: righeProva.map((r) => r.testo),
     taglio: prezzo.taglioApplicato,
   });
 
@@ -389,7 +393,7 @@ export default function Banco() {
     };
     const mettiInVista = (): void => {
       const attivo = document.activeElement;
-      if (attivo instanceof HTMLElement && sezione.contains(attivo)) attivo.scrollIntoView({ block: 'nearest' });
+      if (attivo instanceof HTMLElement && sezione.contains(attivo)) attivo.scrollIntoView({ block: 'start' });
     };
     misura();
     const timer = window.setTimeout(mettiInVista, 80);
@@ -524,7 +528,7 @@ export default function Banco() {
             tecnica={prova.tecnica}
             taglio={prezzo.taglioApplicato}
             legatura={prova.legatura}
-            campi={prova.campi}
+            campi={campiProva}
             totale={prezzo.totale}
             riepilogo={stretto ? null : riepilogo}
             alt={alt}

@@ -219,6 +219,9 @@ function ritardoScambio(ridotta: boolean): number {
   return ridotta ? 0 : CARTA.onda.scambio * CARTA.onda.durata;
 }
 
+/** Margine per i frame: lo scambio cade nel primo frame dopo l'istante previsto. */
+const MARGINE_FRAME_MS = 60;
+
 /** Istante dell'ultimo scambio di carta avvenuto (o previsto per l'onda in corso). */
 let ultimoScambio = Number.NEGATIVE_INFINITY;
 
@@ -302,7 +305,7 @@ export function startPaperWave(x: number, y: number, carta: Carta, opzioni: Opzi
   // l'ultimo (anche se quello è ancora previsto, per l'onda in corso).
   const avvioMinimo = Math.max(
     ultimoAvvio + INTERVALLO_MINIMO_MS,
-    ultimoScambio + INTERVALLO_MINIMO_MS - ritardoScambio(store.get().reducedMotion),
+    ultimoScambio + INTERVALLO_MINIMO_MS + MARGINE_FRAME_MS - ritardoScambio(store.get().reducedMotion),
   );
   const attesa = avvioMinimo - ora;
   if (attesa > 0 || timerCoda !== null) {
@@ -364,6 +367,7 @@ function avviaOnda(x: number, y: number, carta: Carta, opzioni: OpzioniOnda): Pr
 
       if (!o.scambiata && st.invertita) {
         o.scambiata = true;
+        ultimoScambio = now;
         scegliCarta(o.to);
         if (o.veloDom?.foglio) {
           o.veloDom.foglio.dataset.carta = o.from;

@@ -579,3 +579,16 @@ senza `:has()` lo stato "scelta" resta detto dal testo della sezione.
 Typecheck: `npm run typecheck` dà un solo errore, in
 `sections/Carta/Carta.tsx:282`, che non è un mio file; i miei sono puliti.
 `eslint` su `interaction/` è pulito. Nessun commit.
+
+## Giro 3b (N3 dell'accessibility-auditor)
+
+- `paperWave.ts`: `INTERVALLO_MINIMO_MS` (nome invariato) passa a **500 ms**
+  ed è misurato tra gli **scambi** di carta (il momento in cui `data-carta`
+  cambia, al 45% dell'onda o subito con reduced motion), non solo tra gli
+  avvii. Il primo cambio della raffica conta già: il successivo parte solo se
+  il suo scambio cade almeno 500 ms (+60 ms di margine per i frame) dopo
+  l'ultimo, anche se questo era solo previsto. Resta la coda con l'ultima richiesta.
+- Verifica Playwright (1440, `?gl=0`, ArrowRight tenuta 3 s a ~30 Hz sui radio
+  del banco): movimento pieno 6 cambi, **massimo 2 in qualsiasi finestra di
+  1 s**; reduced motion 7 cambi, massimo 2 in 1 s, intervallo minimo 529 ms.
+  eslint pulito, nessun errore di tsc nei miei file. Nessun commit.

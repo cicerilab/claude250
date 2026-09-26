@@ -36,6 +36,7 @@ import './legatoria.css';
 import { FILI, type Legatura as LegaturaSvg } from '../../assets/svg';
 import { BANCO, BOTTEGA, COMUNI, LEGATORIA, LEGATURE_NOMI, PRODOTTI, euro } from '../../content/testi';
 import { LEGATORIA_A_COPIA, LEGATURA_DEFAULT, type Legatura } from '../../content/prezzi';
+import { ticker } from '../../core/ticker';
 import { LEGATORIA as MOTION_LEGATORIA } from '../../motion/choreography';
 import { useFilo } from '../../motion/useScrollProgress';
 import { aggiornaProva } from '../../state/store';
@@ -178,17 +179,35 @@ export default function Legatoria() {
     misura();
     const corpo = corpoRef.current;
     if (corpo === null) return undefined;
-    const ro = new ResizeObserver(() => {
-      misura();
-    });
+    /*
+     * Giro 3b (B3 del cross-browser-tester): la misura scrive stili che
+     * cambiano l'altezza del corpo; farla dentro il callback del
+     * ResizeObserver dava in WebKit "ResizeObserver loop completed with
+     * undelivered notifications". Il callback ora mette in coda UNA sola
+     * misura per il frame successivo, nel ticker del concept (l'unico
+     * requestAnimationFrame ammesso, scaffold §4.1).
+     */
+    let inCoda: (() => void) | null = null;
+    const misuraAlProssimoFrame = (): void => {
+      if (inCoda !== null) return;
+      inCoda = ticker.add(() => {
+        inCoda?.();
+        inCoda = null;
+        misura();
+        return false;
+      }, 'write');
+    };
+    const ro = new ResizeObserver(misuraAlProssimoFrame);
     ro.observe(corpo);
     let vivo = true;
     void document.fonts.ready.then(() => {
-      if (vivo) misura();
+      if (vivo) misuraAlProssimoFrame();
     });
     return () => {
       vivo = false;
       ro.disconnect();
+      inCoda?.();
+      inCoda = null;
     };
   }, [misura]);
 

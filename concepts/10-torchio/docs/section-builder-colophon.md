@@ -222,3 +222,12 @@ Cotone × GL e `?gl=0`, più la domanda aperta a 375 e reduced motion).
 
 Schermate: `/tmp/claude-0/shots-colophon/g3/` (375 e 1440, Citrino e Cotone,
 `?gl=0`, `-testa` e `-fondo`).
+
+## Giro 3b
+
+- Accessibility-auditor giro 3, N2: le voci dell'indice hanno ora
+  `min-inline-size: 44px` con il testo centrato (`justify-content: center`),
+  oltre ai 44 px di altezza: "il filo" passa da 35 × 44 a 44 × 44 senza
+  cambiare aspetto (la sottolineatura resta larga quanto la parola).
+  Misurato a 375 con `?gl=0`: tutti i link e bottoni del colophon sono
+  ≥ 44 × 44 ("Prova la tua" 146 × 52).

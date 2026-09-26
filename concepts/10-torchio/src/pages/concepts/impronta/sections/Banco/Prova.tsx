@@ -24,6 +24,7 @@
 
 import {
   forwardRef,
+  memo,
   useEffect,
   useImperativeHandle,
   useMemo,
@@ -156,7 +157,7 @@ function TestoRiga({ testo, caduta }: { testo: string; caduta: boolean }) {
   );
 }
 
-const Prova = forwardRef<ComandiProva, ProvaProps>(function Prova(
+const Prova = memo(forwardRef<ComandiProva, ProvaProps>(function Prova(
   {
     prodotto,
     carta,
@@ -443,6 +444,6 @@ const Prova = forwardRef<ComandiProva, ProvaProps>(function Prova(
       </p>
     </figure>
   );
-});
+}));
 
 export default Prova;
