@@ -90,6 +90,13 @@ export interface StatoBloccoGL {
   canvas: HTMLCanvasElement | null;
   /** Sul fantasma c'è l'attributo "fuori dal GL" (vedi ImprontaGL). */
   fuori: boolean;
+  /**
+   * Giro 3b: il blocco è stato disegnato dal GL almeno una volta con la sua
+   * maschera cotta. Finché è false il fantasma resta `fuori` (rilievo CSS
+   * visibile), ovunque sia; torna false se la maschera si perde (sfratto,
+   * compattazione, contesto perso).
+   */
+  disegnatoUnaVolta: boolean;
   /** Stile del fantasma quando la maschera è stata disegnata (vedi `firmaStile`). */
   firma: string;
   /**
@@ -122,6 +129,7 @@ export function nuovoStato(id: string): StatoBloccoGL {
     ultimoUso: 0,
     canvas: null,
     fuori: false,
+    disegnatoUnaVolta: false,
     firma: '',
     firmaControllata: false,
     pressioneVista: Number.NaN,

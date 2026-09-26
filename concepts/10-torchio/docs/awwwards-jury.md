@@ -609,3 +609,95 @@ Creatività (8,5) e contenuto (8) sono a 8 o sopra: nessun intervento obbligator
 Per il giro 3 servono gli scatti GL su un device vero (o almeno una GPU
 non-SwiftShader) per hero, banco e colophon, e un fotogramma della pressa a
 metà discesa sulla prova.
+
+---
+
+# Giro 3
+
+Stesso metro (Site of the Day), stesso metodo. Guardati davvero in
+`qa/shots-g3/`: a 1440 hero, per chi (con GL e con `attesa15s`), tecniche
+(inizio/metà/fine, GL e `gl0`), carta, legatoria (inizio/fine), banco (vuoto,
+compilato, leva a metà `gl0`, successo `gl0`), bottega, colophon, su Citrino e
+Cotone; a 375 tutte le sezioni sulle due carte (leva e successo in `gl0`);
+pagine intere `full-1440-citrino-a/b`; 768 banco successo e legatoria fine;
+2560 hero Citrino e per chi Cotone. Letti il "Giro 3" del responsive-tester e i
+"Giro 3/3b" di accessibility (axe 0, A1-A4 risolti, N1; A2 a 375 chiuso dal
+banco nel 3b secondo l'orchestratore), performance (Lighthouse 95/100, CLS 0,
+scroll ~50 fps, INP banco desktop risolto) e cross-browser (tre motori verdi,
+B3 WebKit chiuso nel 3b).
+
+## Verdetto in una riga
+
+Il sito ora regge il confronto con MERIDIANA e STUDIO FORMA: un'identità che
+non somiglia a nessun altro concept del Lab, un primo schermo da poster, la
+sezione carta da SOTD, un preventivo che è un gesto di mestiere. Le quattro
+categorie arrivano a 8. Restano tre sezioni a 7,5 (banco, per chi col GL,
+colophon a 375): rifiniture, non più difetti di concept.
+
+| Categoria | G1 | G2 | **G3** |
+|---|---|---|---|
+| DESIGN | 6 | 7,5 | **8** |
+| USABILITÀ | 5,5 | 7 | **8** |
+| CREATIVITÀ | 7,5 | 8,5 | **8,5** |
+| CONTENUTO | 7 | 8 | **8,5** |
+
+### Perché ora 8
+
+- **Design 8**: sparito l'ultimo stile doppio (il "Prova la tua" della
+  testata è in lamina come nell'hero e nel colophon); tecniche con lastra più
+  compatta e secco netto in fallback; legatoria con i disegni campiti di carta
+  chiara e tratto inchiostro, il filo non chiude più il testo in una cornice;
+  bottega con l'indirizzo a secco attaccato all'intro. Il ritmo della seconda
+  metà adesso tiene (vuoto residuo solo sotto la leva). Non 9: il banco su
+  Citrino apre ancora con una prova quasi invisibile e il colophon mobile
+  chiude debole.
+- **Usabilità 8**: per la prima volta i fatti sono verificati dagli auditor,
+  non dichiarati: axe 0 su 4 carte, lampeggio sotto 3/s, fuoco mai coperto a
+  1440, reflow 400% ok, Lighthouse 95 mobile / 100 desktop, CLS 0, scroll da
+  6 a ~50 fps, console pulita su Chromium, Firefox e WebKit. Non 9: il pezzo
+  del per chi col GL può restare vuoto finché la maschera non è cotta (M, in
+  correzione), TBT mobile al limite (166 ms), chunk 0,5 KB fuori budget.
+- **Creatività 8,5**: invariata; la leva a metà corsa (`gl0/*/06d`) e il nome
+  del visitatore che diventa il titolo dell'hero (`full-1440-citrino-a`:
+  "Stefano Brun") sono i due fotogrammi da giuria.
+- **Contenuto 8,5**: placeholder dichiarati in chiaro, orari veri da bottega
+  ("sabato, oggi"), prezzi coerenti fra per chi, tecniche, legatoria e banco,
+  successo firmato "Mandi, Marta".
+
+## Voti per sezione
+
+| Sezione | G1 | G2 | **G3** | Note |
+|---|---|---|---|---|
+| Testata | 6 | 7 | **8** | "Prova la tua" in lamina e compare solo dove non ce n'è un altro in vista; voce corrente giusta. Resta "indice ▾" piccolo a 375 (rifinitura). |
+| Hero | 5 | 8,5 | **9** | A 2560 ora sta nella gabbia come le altre sezioni; dial "luce" agganciato al piede di "ta". |
+| Per chi | 6,5 | 8 | **7,5** | In `gl0` e con `attesa15s` è la composizione migliore dopo la carta. Ma nello scatto di giro col GL a 1440 Citrino la copertina è un **rettangolo nero vuoto** e "Chiara Zanin" quasi non si vede: il fantasma si spegne prima che il blocco sia disegnato. Correzione in corso (shader-engineer): con la correzione verificata la sezione torna a 8,5. |
+| Tecniche | 7,5 | 7,5 | **8** | Lastra ridotta, parola all'80%, "a secco" netto in `gl0`, taglio con bordo rosa visibile a 375. Col GL "a secco" resta più tenue del fallback: accettabile, il secco è così. |
+| Carta | 7 | 9 | **9** | Invariata, sempre il picco del sito. |
+| Legatoria | 6 | 6,5 | **8** | Disegni campiti e leggibili; filo che collega i nomi ai punti; a 375 niente più cornice (il filo corre sul margine e finisce nel nodo di "Prova la tua"); "Prova la tua" accanto ai prezzi a 1440. Restano ~100 px vuoti in fondo: normali. |
+| Banco | 5 | 7,5 | **7,5** | Leva, scelte, campi e successo sono a livello (a 375 dopo l'invio: frase, "Prova un'altra cosa", poi la prova intera col prezzo: giusto). Cosa lo tiene sotto: **(1)** il primo fotogramma su Citrino (`1440/06a`, `375/06a`) è ancora un rettangolo giallo con "Chiara Zanin" a secco appena percettibile, mentre hero e tecniche in `gl0` hanno un secco netto: la prova usa un preset più tenue; **(2)** sotto la leva a 375 restano ~250 px di carta vuota prima della bottega (`gl0/375/06d`), a 1440 ~200 px (`gl0/1440/06d`); **(3)** a 768 Cotone col GL la lamina del nome dopo l'invio è chiarissima (segnalato dal tester). |
+| Bottega | 6 | 7 | **8,5** | Frontespizio vero: indirizzo a secco subito sotto l'intro, gemello in inchiostro, link in riga, stato orario in una frase. Col GL a 375 l'indirizzo è ora al suo posto. |
+| Colophon | 4 | 7 | **7,5** | A 1440 corretto (marchio sopra la riga, con spazio). A 375 il marchio va su due righe spezzato **"IMPR / ONTA"**: taglio arbitrario, diverso da "impron / ta" dell'hero, e sotto restano ~150 px vuoti con il bottone fisso "Prova la tua" in basso. |
+
+## Cosa è migliorato rispetto al giro 2
+
+1. Tutti gli interventi del giro 2 sono visibili negli scatti: blocchi GL al
+   loro posto (bottega 375, colophon 1440), legatoria senza vuoti e senza
+   cornice, testata con un solo stile di bottone, hero nella gabbia a 2560,
+   tecniche compatte.
+2. Gli auditor hanno chiuso il giro: nessuna voce alta aperta in
+   accessibilità, performance e cross-browser.
+3. Ricetta vietata e AI tells: nessuna occorrenza residua su nessuna carta e
+   nessuna larghezza.
+
+## Interventi rimasti (solo sezioni sotto 8)
+
+| # | Agent | File | Intervento | Sezione |
+|---|---|---|---|---|
+| 1 | **shader-engineer** (in corso) | `webgl/ImprontaGL.ts`, `webgl/blocks.ts` | Il fantasma DOM del pezzo resta visibile finché il blocco non è davvero disegnato (maschera cotta + primo frame), stesso contratto di `data-imp-gl="fuori"`. Verifica: scatto GL a 1440 Citrino senza attesa extra, copertina con titolo e autrice. | Per chi |
+| 2 | **webgl-artist** + **art-director** | `webgl/presets.ts`, `styles/relief-fallback.css` | La prova del banco a secco usa lo stesso preset (profondità, ombra piena, labbro di luce) di hero e tecniche: "Chiara Zanin" su Citrino deve leggersi al primo sguardo. Lamina della prova su Cotone col GL più scura al piede (`--imp-lamina-profonda`). | Banco |
+| 3 | **section-builder-banco** | `banco.css` | Piede della sezione dalla fine della colonna più lunga: niente ~250 px (375) / ~200 px (1440) vuoti sotto la leva. | Banco |
+| 4 | **section-builder-colophon** | `colophon.css`, `Colophon.tsx` | A 375 il marchio su una riga a tutta area (wdth più stretto) oppure spezzato "IMPRON / TA" come l'hero; vuoto finale ridotto al piede. | Colophon |
+
+Con 1 verificato e 2-4 fatti, per chi, banco e colophon salgono a 8 o più.
+**Condizione del loop soddisfatta** (almeno 8 in ogni categoria): il concept
+può andare a Luca con questi quattro ritocchi come ultima passata.

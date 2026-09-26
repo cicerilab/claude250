@@ -523,12 +523,13 @@ export class ImprontaGL {
     // three ha già rifatto il suo stato GL (programmi e texture si ricaricano
     // al primo uso); il contenuto dei render target invece è perso.
     this.atlante?.azzera();
-    for (const s of this.stati.values()) {
+    for (const [id, s] of this.stati) {
       s.slot = null;
       s.cotta = null;
       s.versioneCotta = 0;
       s.statici = null;
       s.chiaveStatici = '';
+      this.mascheraPersa(id, s);
     }
     if (this.fibra !== null) this.fibra.needsUpdate = true;
     this.vpW = -1;
@@ -883,8 +884,34 @@ export class ImprontaGL {
 
   private aggiungiStato(b: ReliefBlock): void {
     if (this.stati.has(b.id)) return;
-    this.stati.set(b.id, nuovoStato(b.id));
+    const st = nuovoStato(b.id);
+    this.stati.set(b.id, st);
     this.fantasmi.set(b.id, b.el);
+    // Giro 3b: `fuori` dalla nascita, finché il GL non l'ha disegnato davvero.
+    this.impostaFuori(b.el, st, true);
+  }
+
+  /** Scrive o toglie `data-imp-gl="fuori"` sul fantasma, solo se cambia. */
+  private impostaFuori(el: HTMLElement, st: StatoBloccoGL, fuori: boolean): void {
+    if (st.fuori === fuori && (el.getAttribute(ATTR_FUORI_GL) !== null) === fuori) return;
+    // Con `fuori` relief-fallback.css tiene gli assi del fantasma sulla
+    // pressa; togliendolo tornano quelli di arrivo. Una maschera cotta mentre
+    // il blocco era fuori può quindi essere più stretta: la firma si
+    // ricontrolla nella prossima fase 'read' (giro 3).
+    if (st.fuori && !fuori) {
+      st.firmaControllata = false;
+      ticker.wake();
+    }
+    st.fuori = fuori;
+    if (fuori) el.setAttribute(ATTR_FUORI_GL, 'fuori');
+    else el.removeAttribute(ATTR_FUORI_GL);
+  }
+
+  /** La maschera del blocco non c'è più: torna `fuori` subito, senza aspettare un render. */
+  private mascheraPersa(id: string, st: StatoBloccoGL): void {
+    st.disegnatoUnaVolta = false;
+    const el = this.fantasmi.get(id);
+    if (el !== undefined) this.impostaFuori(el, st, true);
   }
 
   private togliStato(id: string): void {
@@ -1117,6 +1144,7 @@ export class ImprontaGL {
       vittima.slot = null;
       vittima.cotta = null;
       vittima.versioneCotta = 0;
+      this.mascheraPersa(vittima.id, vittima);
       slot = atlante.alloca(w, h);
     }
     return slot;
@@ -1135,6 +1163,7 @@ export class ImprontaGL {
       s.slot = null;
       s.cotta = null;
       s.versioneCotta = 0;
+      this.mascheraPersa(id, s);
     }
     this.diagnostica.compattazioni += 1;
     return atlante.alloca(w, h);
@@ -1145,31 +1174,30 @@ export class ImprontaGL {
   /* ----------------------------------------------------------------------- */
 
   /**
-   * `data-imp-gl="fuori"` sui fantasmi sullo schermo che il GL non disegna in
-   * questo frame (oltre gli 8, o maschera non ancora cotta), così il CSS può
-   * ridare loro il rilievo di ripiego invece di lasciarli trasparenti.
-   * Scrive solo quando cambia.
+   * `data-imp-gl="fuori"` (il CSS ridà al fantasma il rilievo di ripiego):
+   * - dalla registrazione finché il GL non ha disegnato il blocco almeno una
+   *   volta con la sua maschera cotta (giro 3b: niente pezzi vuoti mentre le
+   *   maschere cuociono);
+   * - poi solo se è sullo schermo e in questo frame il GL non lo disegna
+   *   (oltre gli 8, maschera persa).
+   * Si toglie nello stesso frame in cui il GL lo disegna. Scrive solo quando
+   * cambia.
    */
   private scriviFantasmi(): void {
     let mancano = false;
     for (const b of registry.all()) {
       const stato = this.stati.get(b.id);
       if (stato === undefined) continue;
-      const fuori = b.visibile && sulloSchermo(b, this.cssW, this.cssH) && !this.disegnati.has(b.id);
-      if (fuori && b.versione !== stato.versioneFallita) mancano = true;
-      if (fuori === stato.fuori) continue;
-      // Giro 3: con `fuori` relief-fallback.css tiene gli assi del fantasma
-      // sulla pressa; togliendolo tornano quelli di arrivo. Una maschera
-      // cotta mentre il blocco era fuori può quindi essere più stretta: la
-      // firma si ricontrolla nella prossima fase 'read' (e si ricuoce una
-      // volta sola, perché da lì il blocco resta disegnato).
-      if (stato.fuori && !fuori) {
-        stato.firmaControllata = false;
-        ticker.wake();
-      }
-      stato.fuori = fuori;
-      if (fuori) b.el.setAttribute(ATTR_FUORI_GL, 'fuori');
-      else b.el.removeAttribute(ATTR_FUORI_GL);
+      const disegnato = this.disegnati.has(b.id);
+      if (disegnato) stato.disegnatoUnaVolta = true;
+      const inVista = b.visibile && sulloSchermo(b, this.cssW, this.cssH);
+      // Giro 3b: fuori finché non è stato disegnato almeno una volta; dopo,
+      // fuori solo se è sullo schermo e in questo frame il GL non lo disegna
+      // (oltre gli 8, maschera persa). Fuori dallo schermo resta com'è, così
+      // lo stile del fantasma non cambia a ogni entrata e uscita.
+      const fuori = !stato.disegnatoUnaVolta || (inVista && !disegnato);
+      if (fuori && inVista && b.versione !== stato.versioneFallita) mancano = true;
+      this.impostaFuori(b.el, stato, fuori);
     }
     this.mancanoInVista = mancano;
   }
