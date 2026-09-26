@@ -192,16 +192,16 @@ export function Arco({
       ? lista
           .filter((t) => t.numero)
           .map((t) => {
+            // 0 e 180 stanno sul diametro, dove si ferma la lente: il diametro si interrompe prima
             const p = polare(cx, cy, m.distanzaLente, t.g, geoVera);
-            // 0 e 180 stanno sul diametro: si spostano verso l'interno del disco
-            const dentro = versore(90, geoVera);
-            const sposta = t.g === 0 || t.g === 180 ? m.corpoNumeri * 0.8 : 0;
-            return { g: t.g, x: p.x + dentro.x * sposta, y: p.y + dentro.y * sposta };
+            return { g: t.g, x: p.x, y: p.y };
           })
       : [];
 
-  const p0 = polare(cx, cy, raggio, 0, geoVera);
-  const p180 = polare(cx, cy, raggio, 180, geoVera);
+  // diametro: da bordo a bordo; sul quadrante si ferma prima dei numeri 0 e 180
+  const rDiametro = numeri.length > 0 ? m.distanzaLente - m.lente / 2 - 2 : raggio;
+  const p0 = polare(cx, cy, rDiametro, 0, geoVera);
+  const p180 = polare(cx, cy, rDiametro, 180, geoVera);
 
   const contenuto = (
     <>

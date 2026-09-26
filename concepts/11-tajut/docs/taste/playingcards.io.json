@@ -1,0 +1,46 @@
+{
+  "source": "https://playingcards.io/",
+  "captured": "2026-09-26, 1440x900 e 375x812, metodo curl; solo la home pubblica (le stanze richiedono un codice)",
+  "designMap": {
+    "colors": {
+      "canvas": "#83D8FF (71%) azzurro",
+      "surface": "#FFFFFF (29%) fascia del codice stanza",
+      "ink": "#333333 testo, #79399C link Premium"
+    },
+    "typography": {
+      "display": "wigwag-bold bianco 38 px ('Game Night is Online!')",
+      "body": "Noto Sans Variable 18/27 px"
+    },
+    "shape": {
+      "hero": "illustrazione a raggiera con due ragazzi, carte, fiches, pedine",
+      "cta": "campo 'Enter Room Code' + JOIN, raggio 6 px, maiuscolo 15 px",
+      "radius": "5-8 px, 200 px sulle pillole"
+    }
+  },
+  "tasteDNA": [
+    {
+      "name": "L'azione principale subito sotto l'immagine",
+      "decision": "Il campo del codice stanza sta in una fascia bianca tra hero e testo",
+      "reason": "Chi arriva col codice di un amico deve entrare in un gesto",
+      "evidence": "viewport: fascia 60 px a y 680"
+    },
+    {
+      "name": "Oggetti sparsi come promessa",
+      "decision": "Carte, fiches e pedine volano nell'illustrazione",
+      "reason": "Promette 'tavolo libero' dove si può spostare tutto",
+      "evidence": "hero"
+    },
+    {
+      "name": "Restrizione (da non imitare): figure disegnate e raggiera",
+      "decision": "Personaggi cartoon, sole a raggi, fiches da casinò",
+      "reason": "È esattamente il repertorio vietato a TAJUT: figure umane, casinò, fumetto",
+      "evidence": "viewport 1440"
+    },
+    {
+      "name": "Scarso focus visibile",
+      "decision": "focusVisible non rilevato dall'estrattore",
+      "reason": "TAJUT deve avere contorno prugna 2 px con 3 px di distanza anche sulle carte ruotate",
+      "evidence": "DOM: focusVisible false"
+    }
+  ]
+}

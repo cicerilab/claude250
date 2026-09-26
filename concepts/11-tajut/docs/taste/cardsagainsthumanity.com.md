@@ -1,0 +1,49 @@
+# cardsagainsthumanity.com
+
+Fonte: https://www.cardsagainsthumanity.com/  
+Cattura: 2026-09-26, 1440x900 e 375x812, Playwright con richieste servite da curl (TLS verificato); cookie rifiutati; prova di trascinamento di una carta dell'apertura. Screenshot e dati DOM in `concepts/11-tajut/qa/taste-curl/` (file `cardsagainsthumanity.com-*`).
+
+## Design Map
+
+### Colori
+
+- **canvas**: #000000 (61% della superficie)
+- **card**: #FFFFFF (22%): facce delle carte bianche
+- **ink**: #000000 su carta, #FFFFFF su fondo
+- **ticker**: #FADF0E striscia gialla in cima (0,5%)
+- **accents**: #FE2F2F, #7333F1 solo nelle schede dei prodotti più in basso
+
+### Tipografia
+
+- **display**: Helvetica Neue LT 80 px (h2), marchio in tre righe a sinistra
+- **card-text**: Helvetica Neue grassetto circa 26 px sulle carte, allineato in alto a sinistra
+- **body**: 16/20 px peso 400
+
+### Forme e movimento
+
+- **card**: 314x440 px (1:1,40), raggio 13 px, nessuna ombra, filo 2 px inset sulle carte nere
+- **transform**: matrix3d con scala X e Z a -1 (carte girate di 180° su Y) e rotazione nel piano tra 8° e 14°
+- **motion**: transizioni 0,3 s cubic-bezier(0,0,.25,1); altezze 0,4 s cubic-bezier(.12,.67,.53,1)
+- **cursor**: pointer su tutte le carte, touch-action auto
+
+## Taste DNA
+
+### Le carte sono il layout
+- Decisione: Nessuna griglia nell'apertura: 10-12 carte ruotate e tagliate dai bordi, il testo è stampato sulle carte stesse
+- Perché: Il prodotto è una carta: la pagina lo mostra invece di descriverlo
+- Prova: screenshot viewport e 375: carte a -14°/+8°, metà fuori schermo
+
+### Due colori e basta
+- Decisione: Bianco e nero per tutto l'hero, un giallo solo nella striscia promozionale
+- Perché: Il gioco vero è stampato in due colori: il sito ne eredita la povertà di mezzi
+- Prova: DOM: nero 61%, bianco 22%, giallo 0,5%
+
+### Il giro è vero 3D ma piatto
+- Decisione: Le carte si girano con rotateY 180° senza prospettiva sul genitore e senza ombre: restano fogli, non oggetti che fluttuano
+- Perché: Una carta sottile non ha spessore né ombra lunga: la piattezza la rende credibile
+- Prova: matrix3d(-0.97,-0.24,0,0,...,-1,...) con perspective: none; box-shadow none
+
+### Restrizione: contenuto a caso
+- Decisione: Le frasi delle carte cambiano a ogni caricamento e al tocco
+- Perché: Funziona per un gioco di battute; per un'osteria no: chi torna deve trovare orari e piatti nello stesso posto (TAJUT vieta il mescolamento)
+- Prova: due caricamenti: carte e frasi diverse (viewport contro cah-drag-250)

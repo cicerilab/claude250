@@ -1,0 +1,46 @@
+{
+  "source": "https://www.playbalatro.com/",
+  "captured": "2026-09-26, 1440x900 e 375x812, metodo curl; full page 2763 px",
+  "designMap": {
+    "colors": {
+      "canvas": "#121017 (84%) con righe orizzontali da schermo e fumo rosso/blu",
+      "links": "#00D5A9 verde acqua per la nav",
+      "accents": "rosso #900204 e blu #0E62A5 solo nel fumo del marchio"
+    },
+    "typography": {
+      "all": "m6x11 (font a pixel) 30/48,75 px per il testo, anche in nav",
+      "display": "marchio disegnato, carta dell'asso incastrata tra le lettere"
+    },
+    "shape": {
+      "card": "jolly grande ruotato circa -3°, bordo bianco, ombra rgba(0,0,0,.85) 0 12px 20px",
+      "radius": "6 px sulle carte, 9999 px sui badge",
+      "motion": "opacity 0,15 s cubic-bezier(.4,0,.2,1); entrata lenta 1,3 s; prefers-reduced-motion gestito"
+    }
+  },
+  "tasteDNA": [
+    {
+      "name": "La carta dentro il nome",
+      "decision": "L'asso di picche prende il posto di una lettera nel marchio",
+      "reason": "Il logo dice il gioco senza sottotitolo",
+      "evidence": "viewport: 'BAL[A]TRO'"
+    },
+    {
+      "name": "Un solo font, anche per leggere",
+      "decision": "Il font a pixel regge tutto il sito a 30 px",
+      "reason": "Coerenza assoluta col gioco; si paga in leggibilità di frasi lunghe (per noi Bagel resta sotto le 4 parole)",
+      "evidence": "DOM: una sola famiglia, body 30 px"
+    },
+    {
+      "name": "Ombra grande e scura per staccare la carta",
+      "decision": "Sulla carta del jolly ombra 0 12px 20px all'85%",
+      "reason": "Su fondo scuro serve un'ombra piena; su formica chiara TAJUT usa ombre prugna al 14-22%, corte",
+      "evidence": "DOM shadows"
+    },
+    {
+      "name": "Restrizione: tutto il resto in secondo piano",
+      "decision": "Una carta, una frase, i badge dei premi: niente spiegazione delle regole",
+      "reason": "Chi arriva sa già di cosa si tratta; il sito serve a far scaricare il gioco",
+      "evidence": "full page: 3 blocchi di contenuto"
+    }
+  ]
+}
