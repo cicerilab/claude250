@@ -494,3 +494,118 @@ umane, cartolina/scontrino finale, em-dash visibili, cursore custom, glow.
 Condizione per il prossimo giro: rifare gli screenshot a 375/768/1440/2560
 su **Citrino e su Cotone** (il sito cambia carattere con la carta e il banco
 va giudicato su entrambe), più il fotogramma della leva a metà corsa.
+
+---
+
+# Giro 2
+
+Stesso metro (Site of the Day), stesso metodo. Materiale guardato davvero in
+`qa/shots-g2/`:
+- **1440**, tutte le sezioni su Citrino e Cotone, con il GL e in fallback
+  (`gl0`): leva a metà corsa, successo, tecniche, per chi e colophon;
+- **375**, tutte le sezioni sulle due carte (col GL, più `gl0` per leva,
+  successo e bottega);
+- **pagine intere** `full-1440-citrino-a/b/c` e `full-375-cotone-a/b`;
+- **768**: hero e banco; **2560**: hero Cotone, carta, banco.
+
+Letti il "Giro 2" di `docs/responsive-tester.md` e le sezioni "Giro 2" dei
+builder. Come chiede l'orchestratore, la leva e il rilievo pieno li ho giudicati
+sugli scatti `gl0`: col GL in SwiftShader alcune presse non arrivano in tempo.
+Nota: accessibility, performance, cross-browser e SEO **non** hanno rifatto il
+giro. Le correzioni A1-A4, P1-P3, B1 e M2-M5 sono dichiarate dai proprietari ma
+nessun auditor le ha ancora verificate.
+
+## Verdetto in una riga
+
+Salto netto. Adesso il sito ha un primo schermo da poster e la sezione carta
+è da SOTD. Il banco ha smesso di essere un modulo a schede: formati disegnati
+in scala, campioni "st" per la tecnica, numeri in riga, leva con manico tondo
+nel solco. La ricetta vietata è sparita anche su Cotone. Restano sotto 8 due
+cose: il **ritmo** (legatoria e banco finiscono ancora in grandi vuoti) e un
+paio di **disallineamenti del GL** visibili (bottega a 375, colophon a 1440).
+E il rilievo a secco resta pallido proprio dove si guarda la prova (tecniche
+"a secco", banco su Citrino).
+
+| Categoria | Giro 1 | **Giro 2** |
+|---|---|---|
+| DESIGN | 6 | **7,5** |
+| USABILITÀ | 5,5 | **7** |
+| CREATIVITÀ | 7,5 | **8,5** |
+| CONTENUTO | 7 | **8** |
+
+## Voti per sezione
+
+| Sezione | G1 | **G2** | Cosa è cambiato / cosa manca |
+|---|---|---|---|
+| Testata | 6 | **7** | Marchio centrato più grande, voce corrente giusta ("legatoria", "bottega"), "la pressa / il banco" a 375 funziona. Però il "Prova la tua" della testata è ora un **blocco verde notte pieno**, mentre nell'hero e nel colophon è in lamina: stessa azione, due bottoni diversi. A 375 "indice ▾" (13 px) resta minuscolo accanto a "la pressa" (22 px). |
+| Hero | 5 | **8,5** | *impronta* su due righe ("impron / ta") che riempie il primo schermo, rilievo netto con parete scura e labbro chiaro; su Cotone sembra carta di cotone premuta davvero. A 375 e 768 non ci sono più vuoti. Lamina del bottone con banda di riflesso: credibile. Resta: il dial "luce ◐" galleggia da solo a destra, all'altezza del bottone, senza relazione con la parola. A 2560 l'hero va a vivo (x 79) mentre tutto il resto sta nella gabbia da 1680 (x 423): due allineamenti sinistri nello stesso schermo. |
+| Per chi | 6,5 | **8** | Biglietto sovrapposto alla partecipazione come su un bancone, copertina con collana, titolo e autrice, un link "Prova la tua partecipazione ›" al posto dei tre bottoni. A 375 la fila con le linguette "partecipazione / biglietto / copertina" è chiara. Col GL il biglietto Cotone ha il nome a secco quasi invisibile (è corretto per la tecnica, ma il pezzo così sembra bianco): meglio un nome in lamina, come dice la didascalia. |
+| Tecniche | 6 | **7,5** | Titolo e indice sulla stessa colonna: niente più titolo a sinistra con paragrafo fluttuante a destra. Il taglio colorato ora è un **cartoncino in prospettiva con il bordo dipinto** (giallo su Cotone). "A un colore" è bellissimo. Restano due difetti. Primo: "a secco" (lo stato con cui si entra) è una scritta pallida al centro di una lastra 680×450 quasi vuota; la lastra è ancora troppo grande per la parola (65% della larghezza). Secondo: su Citrino il taglio si vede come un bordo **scuro** (verde notte), non come un colore: perché si legga come "taglio colorato" il bordo deve essere di una tinta diversa dall'inchiostro. Il pin mostra anche lo stato "a un colore" mentre l'indice è già su "taglio" (`1440/03c-citrino`, GL): il testo è in ritardo di uno stato. |
+| Carta | 7 | **9** | Nomi orizzontali giganti tagliati dal bordo del campione, strisce a vivo anche a 2560, intro allineata. A 375 le fasce orizzontali con "Citrino / Cotone" a secco sono il momento mobile migliore del sito. Resta solo un dettaglio: metà superiore delle strisce vuota a 1440 (i dati stanno tutti in fondo); ci starebbe il gemello in inchiostro della grammatura in grande. |
+| Legatoria | 6 | **6,5** | Il filo ora attraversa la pagina e i nomi si agganciano ai punti con un tratteggio, le scelte a schede sono sparite, il richiamo finale è "Prova la tua" composto sul filo. Ma a 1440: ~250 px vuoti prima di "Prezzi su 100 copie" e ~240 dopo, con in mezzo solo il filo che scende; in `05a` la metà destra sopra "Brossura cucita" è vuota per 300 px. Il filo diventa un **riquadro**: parte in alto, gira a destra e chiude sotto "Prova la tua". A 375 (`05b-cotone`) racchiude il testo in una **cornice rettangolare con bordo di 2 px**: è di nuovo una scheda con bordino, fatta col filo. I 4 diagrammi (dorso, cartonato, giapponese, punto metallico) sono disegni al tratto sottile in grigio, con quote: sembrano un manuale tecnico, non un libro cucito. |
+| Banco | 5 | **7,5** | Formati disegnati in scala; campioni "st / st / st" nelle tre tecniche; tiratura "50 100 150 250 500 1.000" in numeri Anybody in riga; campi con tinta propria (giallo chiaro su Citrino, grigio caldo su Cotone). Leva con solco e manico tondo in lamina: a metà corsa (`gl0/1440/06d-citrino`, `gl0/375/06d-cotone`) si capisce cosa succede. Successo pulito, nome non più sdoppiato, "Mandi, Marta". Cosa manca: **(1)** su Citrino la prova col testo di esempio a secco resta un rettangolo giallo con "Chiara Zanin" appena percettibile (`1440/06a`, `375/06a`): è il primo fotogramma del banco. **(2)** Sotto la leva e dopo il successo restano 300-400 px di carta vuota a 1440 (`06c`, `06e`). **(3)** A 375 dopo il successo resta il dial "luce" orfano in basso, senza la prova (`gl0/375/06e`). **(4)** A 2560 col GL la prova in lamina viene fuori pallida come un secco (`2560/06b-citrino`): va verificato su un device vero. **(5)** Il cursore della leva è un cerchio grigio a gradiente: è credibile, ma meno bello della lamina del bottone. |
+| Bottega | 6 | **7** | Frontespizio vero: indirizzo a secco su due righe a tutta area, riga in inchiostro con i tre link, "Telefono ed email sono di esempio", stato orario in una riga di testo, "Chi c'è" come frase. Il numero finto gigante è sparito. Ma **bug nuovo**: a 375 col GL (`375/07-citrino`, `375/07-cotone`) l'indirizzo a secco è disegnato ~90 px più in basso del suo posto e **finisce sopra** "Chiama la bottega / Scrivi alla bottega"; in fallback (`gl0/375/07`) è giusto. Poi: 150 px vuoti tra l'intro e l'indirizzo, a 375 e a 1440. |
+| Colophon | 4 | **7** | Marchio IMPRONTA premuto a tutta larghezza anche in fallback, indice in una riga, disclaimer chiaro, un solo bottone. Col GL a 1440 (`1440/08-citrino`) il marchio sta ~30 px più in basso e "tipografia e legatoria · Pordenone" **ci finisce sopra**. Dopo i recapiti restano 100-150 px di vuoto (`full-1440-citrino-c`). Il marchio del colophon (maiuscolo, Anybody largo) è bello, ma a 375 è alto solo 40 px: è la fine del sito, deve pesare di più. |
+
+## Cosa è migliorato (confronto con il giro 1)
+
+1. **Hero**: da "sito giallo" a poster. È il miglioramento più grande: ora il primo schermo vende il concept.
+2. **Ricetta vietata**: sparite le schede bianche con bordino del banco su Cotone, le tile della legatoria e il testo verticale della carta.
+3. **Lamina**: il bottone argento a gradiente piatto è diventato una lamina con banda di riflesso e grana: si legge come metallo.
+4. **CTA**: da 8 bottoni uguali a un bottone per contesto (link nel per chi, filo nella legatoria).
+5. **Bug del giro 1 risolti**: sigillo grigio, copertina vuota, "Noncellc", nome sdoppiato, lastra sopra la leva, intro della carta rientrata.
+6. **Contenuto**: placeholder dichiarati ("Telefono ed email sono di esempio: la bottega non esiste"), title con "Concept 10", stato orario ridimensionato, micro-frasi tagliate.
+7. **Tecniche**: via lo split-header, taglio colorato come oggetto.
+
+## Cosa impedisce ancora 8
+
+**DESIGN 7,5**
+1. **Ritmo**. Legatoria (250 + 240 px vuoti), banco dopo la leva e dopo il
+   successo (300-400 px), bottega tra intro e indirizzo (150 px). Il vuoto non
+   ha tensione: nessun elemento lo tiene. Nella pagina intera la seconda metà
+   si "sfilaccia".
+2. **Legatoria come cornice**: il filo che gira intorno al testo è un
+   rettangolo con bordino (375) e i diagrammi al tratto grigio sottile sembrano
+   quote tecniche.
+3. **Rilievo a secco pallido** nel primo stato delle Tecniche e nel banco su
+   Citrino: il prodotto del sito è più debole proprio dove il cliente lo guarda.
+4. **Due stili per "Prova la tua"**: lamina nell'hero e nel colophon, blocco
+   verde notte pieno nella testata. Il `DESIGN.md` vuole la lamina solo lì: la
+   testata deve usare la lamina (in piccolo) o un link, non un terzo stile.
+5. **Due allineamenti a 2560**: hero a vivo, resto nella gabbia.
+
+**USABILITÀ 7**
+1. **Il GL disegna blocchi fuori posto**: indirizzo della bottega sopra i link
+   (375) e marchio del colophon sotto la sua riga (1440). Lo shader è il
+   percorso principale su desktop e mobile veri: questi sono i primi bug che un
+   giurato vede.
+2. **Tecniche col GL**: il testo resta in ritardo di uno stato rispetto
+   all'indice (`1440/03c-citrino`: indice su "taglio", testo "A un colore").
+3. **Nessun auditor ha verificato le correzioni** di accessibilità (A1-A4:
+   lampeggio, fuoco coperto, reflow), performance (P1-P3) e Firefox (B1). Finché
+   non passano il giro, la categoria non va oltre 7.
+4. A 375 i due fissi in basso ("Torna in Ciceri Lab" + "Prova la tua")
+   occupano tutta l'ultima riga e il testo che scorre ci passa sotto; dopo il
+   successo il dial "luce" resta orfano.
+
+## Interventi per agent (solo ciò che resta sotto 8)
+
+In ordine di impatto.
+
+| # | Agent | File | Intervento | Categoria |
+|---|---|---|---|---|
+| 1 | **shader-engineer** | `webgl/blocks.ts`, `webgl/ImprontaGL.ts` | Allineare i piani GL ai rettangoli DOM dopo cambi di layout/font: indirizzo della bottega a 375 (+90 px, sopra i link) e marchio del colophon a 1440 (+30 px). Rimisurare i blocchi su `ResizeObserver` dei fantasmi e dopo `document.fonts.ready`, non solo allo scroll. Verificare anche la lamina pallida della prova a 2560. | Usabilità |
+| 2 | **section-builder-legatoria** | `legatoria.css`, `Filo.tsx`, `Legatoria.tsx` | Togliere i due vuoti a 1440/2560 (margine prima di "Prezzi su 100 copie" ≤ 96 px, dopo "Prova la tua" = piede di sezione). Il filo non deve chiudersi intorno al testo: a 375 niente tratto verticale a destra né orizzontale sotto, deve finire nel nodo di "Prova la tua". Diagrammi con tratto inchiostro 1,5-2 px e senza le quote grigie, oppure uno solo grande. | Design |
+| 3 | **webgl-artist** + **art-director** | `webgl/presets.ts` (preset "a secco" della prova e delle tecniche), `styles/relief-fallback.css` | Secco più leggibile nel primo stato delle Tecniche e nel banco su Citrino. Parete d'ombra `--imp-carta-ombra` piena, labbro di luce più chiaro (`--imp-carta-luce` al 100%), profondità della prova a secco almeno pari a quella dell'hero. Oggi l'hero è netto e la prova no: devono avere lo stesso preset. | Design |
+| 4 | **section-builder-banco** | `banco.css`, `Banco.tsx` | Chiudere il vuoto sotto la leva e dopo il successo a 1440/2560: il piede della sezione parte dalla fine della colonna più lunga, niente altezza minima. A 375 dopo il successo spostare il dial "luce" accanto alla prova o nasconderlo. Testo di esempio della prova vuota su Citrino in "a un colore" invece che a secco, così il primo fotogramma del banco non è un rettangolo giallo vuoto (oppure la tecnica di partenza resta "a secco" ma con il preset del punto 3). | Design, Usabilità |
+| 5 | **section-builder-tecniche** | `Tecniche.tsx`, `tecniche.css` | Lastra più piccola (larghezza 520-560 a 1440) e parola all'80-85%. Taglio colorato su Citrino: il bordo in una tinta che non sia l'inchiostro (Cipria o Grafite chiaro), altrimenti sembra un filetto. Testo della tecnica sincronizzato con l'indice anche col GL (lo stato deve venire da un'unica fonte). | Design, Usabilità |
+| 6 | **section-builder-hero** | `Testata.tsx`, `testata.css`, `hero.css` | "Prova la tua" della testata nello stesso stile dell'hero (lamina, altezza 44 px) invece del blocco verde notte. Dial "luce" agganciato alla parola (sotto il piede di "ta", a destra, allineato al margine esterno) invece che isolato all'altezza del bottone. A 2560 hero nella stessa gabbia delle altre sezioni (o tutte a vivo: una sola regola). A 375 "indice" a 15 px. | Design |
+| 7 | **section-builder-bottega** | `bottega.css` | Vuoto tra intro e indirizzo a secco ≤ 64 px (375) / 96 px (1440). | Design |
+| 8 | **section-builder-colophon** | `colophon.css` | Marchio a 375 almeno 64 px di corpo (su due righe "IMPRON / TA" se serve, come nell'hero); vuoto finale ridotto al piede. Controllare la distanza tra marchio e riga "tipografia e legatoria" dopo la correzione del punto 1. | Design |
+| 9 | **section-builder-hero** + **section-builder-per-chi** | `testata.css`, `per-chi.css` | A 375: spazio in fondo alle sezioni pari all'altezza dei fissi (56 px + safe area), così nessun testo resta sotto "Torna in Ciceri Lab" e "Prova la tua". | Usabilità |
+| 10 | **accessibility-auditor**, **performance-auditor**, **cross-browser-tester** | i loro doc | Rifare il giro sulle correzioni dichiarate (A1-A4, M2-M5, B2-B8; P1-P3; B1 Firefox). Senza questa verifica l'usabilità non può salire sopra 7. | Usabilità |
+
+Creatività (8,5) e contenuto (8) sono a 8 o sopra: nessun intervento obbligatorio.
+Per il giro 3 servono gli scatti GL su un device vero (o almeno una GPU
+non-SwiftShader) per hero, banco e colophon, e un fotogramma della pressa a
+metà discesa sulla prova.

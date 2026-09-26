@@ -26,7 +26,8 @@
 }
 
 .imp-root .imp-bottega__gabbia {
-  row-gap: var(--imp-sp-8);
+  --_imp-bottega-riga: var(--imp-sp-8);
+  row-gap: var(--_imp-bottega-riga);
 }
 
 /* ------------------------------------------------------------------ testa */
@@ -56,26 +57,21 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   min-inline-size: 0;
-  margin-block-start: var(--imp-sp-5);
+  /* Giro 3: l'indirizzo sta vicino all'intro (32 px, non una riga di
+     sezione): intro e frontespizio si leggono come un blocco solo. */
+  margin-block-start: calc(var(--imp-sp-6) - var(--_imp-bottega-riga));
 }
 
 .imp-root .imp-bottega__rilievo {
   /* Blocco largo quanto l'area viva: .imp-pressa cambia gli assi dentro un
      box fisso (niente CLS). Nessun overflow nascosto: le discendenti
-     scendono sotto l'interlinea 0,86. Rilievo un po' più profondo del
-     default nel fallback, perché su Cotone il secco chiaro non sparisca. */
+     scendono sotto l'interlinea 0,86. Profondità del rilievo: quella
+     globale della carta (art-director, giro 3), nessun override locale. */
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   min-inline-size: 0;
   --imp-wdth-arrivo: var(--imp-wdth-secco-grande);
   --imp-wght-arrivo: var(--imp-wght-secco-grande);
-  --imp-rilievo: 1.6;
-}
-
-/* Cotone è la carta più chiara: il labbro bianco quasi non si stacca. Più
-   profondità solo lì (vale per la carta del sito, non per i pezzi interni). */
-.imp-root[data-carta="cotone"] .imp-bottega__rilievo {
-  --imp-rilievo: 2.4;
 }
 
 .imp-root .imp-bottega__premuto {
@@ -275,7 +271,7 @@
 
 @media (min-width: 1024px) {
   .imp-root .imp-bottega__gabbia {
-    row-gap: var(--imp-sp-9);
+    --_imp-bottega-riga: var(--imp-sp-9);
   }
 
   .imp-root .imp-bottega__testa {
