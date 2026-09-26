@@ -500,3 +500,39 @@ Impacchettamento dell'urto senza nuovi uniform (restano 57 vec4):
   dell'interazione). Per lo stesso carattere radente, le ombre del fallback
   possono allungarsi del 40% circa, cioè il rapporto tra tan(22°) e
   tan(15,4°).
+
+---
+
+## Giro 3 (giuria "Giro 2", punto 3: il secco di Tecniche e banco è pallido)
+
+Cause trovate, entrambe nei miei file:
+
+1. **La profondità scalava con il corpo.** Con 0,02 em la parola delle
+   Tecniche (circa 66 px a 1440) affondava 1,3 px contro i 3,4 px dell'hero.
+   Ora la profondità è una parte fissa più una parte in em
+   (`profonditaBasePx` in `PresetTecnica`): secco 1,6 px + 0,011 em (66 px →
+   2,3 px, 170 px → 3,5 px, come l'hero di prima), colore 1,3 + 0,009 em,
+   lamina 1,1 + 0,008 em; limiti invariati (secco 1,2-5 px).
+2. **La prova del banco è un pezzo, e il suo corpo era quello del
+   contenitore** (il testo di lettura, circa 16 px): solco e smusso al minimo.
+   Ora `corpoDi` per `kind: 'piece'` prende il corpo più grande tra i layer di
+   testo (dal `selettore` o dallo `stile` del layer).
+
+Nessun cambio di contratto: stesse funzioni, stessi uniform.
+
+Verifica (vite 8105, chiuso; Chromium SwiftShader, `?gl=1&carta=citrino`,
+`data-gl="on"` controllato prima di ogni screenshot):
+- hero a 1440 e 375: invariato, rilievo netto;
+- Tecniche "a secco" a 1440 e 375: a pressione 1 (letta da `--imp-press`
+  sulla parola) "Pordenone" ha lo stesso solco netto dell'hero: parete in
+  ombra piena, labbro di luce. Con SwiftShader la ristampa impiega circa
+  10 s ad arrivare a 1: uno screenshot preso prima mostra la parola ancora
+  piatta, non è il materiale;
+- prova del banco a 1440 e 375: "Chiara Zanin" e "Restauratrice" hanno
+  solco e ombra; il prezzo in lamina si legge con il filo scuro;
+- `tsc -p tsconfig.app.json` ed `eslint` su `webgl/`: verdi.
+
+Richiesta a **section-builder-banco**: le righe d'esempio della prova hanno
+`profondita: 0.45` e restano volutamente più leggere; se la giuria le vuole
+nette come l'hero, 0,7 le tiene distinguibili dal testo del cliente senza
+farle pallide.
