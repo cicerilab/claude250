@@ -452,3 +452,37 @@ stringhe). L'aspetto è identico.
   `cls-prima.txt` e `cls-dopo.txt`).
 - Nota: a 1440 le voci della testata ora finiscono circa 16 px prima del
   margine (le caselle fisse sono un po' più larghe di "bottega").
+
+## Giro 3b, seconda parte
+
+### N1 (accessibility-auditor giro 3, WCAG 2.4.3): fuoco dopo una voce dell'indice
+Con reduced motion (e a volte anche senza) il `close` del dialog arrivava
+dopo l'arrivo all'ancora: il fuoco nativo tornava su "indice" e cancellava
+quello dato al titolo d'arrivo. Ora la voce scelta viene ricordata
+(`voceScelta`) e il gestore di `close` porta il fuoco sull'h2 della sezione
+(`tabindex="-1"`, `preventScroll`). Se il viaggio è ancora in corso,
+all'arrivo `arrivaAllAncora` lo rimette sullo stesso h2: vale in tutti e due
+gli ordini.
+
+Verifica (Playwright, 375 × 812, `?gl=0`, 5 prove per ognuna delle 8 voci):
+- **40/40** con reduced motion;
+- **40/40** senza.
+
+Il fuoco finisce sempre sull'h2 (o h1) d'arrivo, e il dialog è chiuso.
+
+### B3 (cross-browser-tester giro 3): "ResizeObserver loop" in WebKit
+Il ResizeObserver dei gemelli di misura ora legge nel callback e scrive
+`--imp-hero-em-misurato` nella fase `write` del ticker (una sola scrittura in
+coda, nessun rAF proprio: il ticker è l'unico ciclo del concept). Gli eventi
+dei font (`fonts.ready`, `loadingdone`) e il primo montaggio scrivono
+subito: non sono callback del ResizeObserver, e rimandarli faceva vedere un
+frame la parola al corpo stimato (CLS 0,0012).
+
+CLS con i font in ritardo, ricontrollato:
+- **0,0000** a 1440;
+- **0,0002** a 375 (il residuo è `imp-perchi__nomi`, non mio).
+
+WebKit non è installato in questo contenitore (`/opt/pw-browsers` ha solo
+Chromium): la sparizione dell'avviso va confermata dal cross-browser-tester.
+
+typecheck e lint verdi, server 8103 chiuso.

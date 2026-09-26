@@ -42,6 +42,7 @@ import { useRelief } from '../../relief/useRelief';
 import { useImpronta } from '../../state/store';
 import { stimaLarghezzaEm, TIPO } from '../../styles/tokens';
 import { FONT_ATTESA_MAX } from '../../core/fonts';
+import { ticker } from '../../core/ticker';
 
 const ID_TITOLO = 'imp-hero-titolo';
 
@@ -274,26 +275,63 @@ export default function Hero() {
     const misure = misureRef.current;
     if (piano === null || misure === null) return undefined;
     let vivo = true;
-    const aggiorna = (): void => {
+    let inAttesa: string | null = null;
+    let togliScrittura: (() => void) | null = null;
+    const scriviOra = (valore: string): void => {
+      piano.style.setProperty('--imp-hero-em-misurato', valore);
+    };
+    /*
+     * Lettura subito, scrittura rimandata alla fase 'write' del ticker (una
+     * sola in coda): scrivere uno stile dentro il callback del ResizeObserver
+     * rifà il layout nello stesso giro e WebKit segnala "ResizeObserver loop
+     * completed with undelivered notifications" (cross-browser-tester B3).
+     * Niente rAF proprio: il ticker è l'unico ciclo del concept.
+     */
+    const scriviDopo = (valore: string): void => {
+      inAttesa = valore;
+      if (togliScrittura !== null) return;
+      togliScrittura = ticker.add(() => {
+        togliScrittura?.();
+        togliScrittura = null;
+        if (vivo && inAttesa !== null) scriviOra(inAttesa);
+        inAttesa = null;
+      }, 'write');
+    };
+    const misura = (): string | null => {
       // Si misura solo con Anybody caricato: la misura col font di ripiego
       // darebbe un corpo diverso e uno scatto all'arrivo del font (CLS).
-      if (!vivo || !anybodyPronto()) return;
+      if (!vivo || !anybodyPronto()) return null;
       let massimo = 0;
       for (const figlio of Array.from(misure.children)) {
         massimo = Math.max(massimo, figlio.getBoundingClientRect().width);
       }
-      if (massimo > 0) piano.style.setProperty('--imp-hero-em-misurato', (massimo / CORPO_MISURA).toFixed(4));
+      return massimo > 0 ? (massimo / CORPO_MISURA).toFixed(4) : null;
     };
-    aggiorna();
+    // Dal ResizeObserver: scrittura rimandata. Dagli eventi dei font: subito,
+    // nello stesso giro in cui la pressa riparte (altrimenti per un frame la
+    // parola si vedrebbe al corpo stimato e poi scatterebbe: CLS).
+    const aggiorna = (): void => {
+      const valore = misura();
+      if (valore !== null) scriviDopo(valore);
+    };
+    const aggiornaSubito = (): void => {
+      const valore = misura();
+      if (valore !== null) scriviOra(valore);
+    };
+    // Al montaggio (layout effect, prima della pittura) si scrive subito.
+    const primo = misura();
+    if (primo !== null) scriviOra(primo);
     const osservatore = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(aggiorna) : null;
     for (const figlio of Array.from(misure.children)) osservatore?.observe(figlio);
-    void document.fonts.ready.then(aggiorna);
+    void document.fonts.ready.then(aggiornaSubito);
     const suFontCaricati = (): void => {
-      aggiorna();
+      aggiornaSubito();
     };
     document.fonts.addEventListener('loadingdone', suFontCaricati);
     return () => {
       vivo = false;
+      togliScrittura?.();
+      togliScrittura = null;
       document.fonts.removeEventListener('loadingdone', suFontCaricati);
       osservatore?.disconnect();
       piano.style.removeProperty('--imp-hero-em-misurato');
