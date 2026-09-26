@@ -934,8 +934,7 @@ Per ogni voce: **tastiera**, **lettore di schermo (LS)**, **reduced motion
 - **LS**: "Evidenzia per il giro, Rif. 214, pulsante interruttore, non
   premuto"; esito in live region (testi in 5.7 A). Il tratto è `aria-hidden`.
 - **Vibrazione**: 10 ms solo all'aggiunta, solo se `navigator.vibrate` esiste,
-  mai in RM? No: la vibrazione non è movimento visivo; resta, ma non si ripete
-  mai.
+  mai ripetuta. Resta anche in RM (non è movimento visivo).
 - **RM**: il tratto compare intero al rilascio o al bottone, niente
   disegno progressivo né ritiro animato; il "tratto scarico" è un tratto
   pallido fermo a metà per 600 ms, poi sparisce senza animazione.
@@ -1224,8 +1223,7 @@ testi solo da `content/testi.ts` e legge/scrive il giro solo dallo store.
    (troppo vicino, chiusura, passato), stato vuoto con i due annunci da cui
    partire, modulo "Chi sei" con validazione, invio simulato, successo con
    **Aggiungi al calendario** (`.ics`), invio fallito, "cambiato dopo l'invio",
-   `track("demo_prenotazione")`, history `#giro`, e il piede del foglio non
-   c'entra (va con `testata`? no: vedi sotto).
+   `track("demo_prenotazione")`, history `#giro`.
 
 Nota sul **piede** del foglio (riga del piede, crediti foto, "Attività
 inventata", "Un concept di CiceriLab"): è piccolo e va al builder di
