@@ -1,0 +1,337 @@
+/* ==========================================================================
+   IMBRUNIRE · design tokens (art-director)
+   --------------------------------------------------------------------------
+   Unico file in cui vivono colori, misure, tipografia e materiali del
+   concept. Le sezioni usano solo queste variabili: nessun hex fuori da
+   styles/tokens.* (eccezione: il colore del pavimento campionato da ogni
+   foto, che è un dato di assets/foto/index.ts).
+
+   Un solo tema, scuro per identità: è sempre l'imbrunire.
+   Contrasti WCAG calcolati con script: tabella in docs/art-director.md §2.
+
+   Soglia sezione/torre (non si può scrivere come variabile in una media
+   query): @media (min-width: 720px) and (min-height: 560px) = sezione.
+   Lo stato vero lo scrive Imbrunire.tsx in data-imb-layout sulla radice:
+   i token della torre stanno su [data-imb-layout="torre"].
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Font di ripiego con metriche tarate (niente salto al cambio font, CLS).
+   Misure prese con fontTools dai woff2 latin serviti da Google Fonts il
+   26/09/2026 (Commissioner v24 variabile, Marcellus v14) contro Liberation
+   Sans / Liberation Serif (stesse metriche di Arial / Times New Roman).
+   - Commissioner 400 contro Arial, testo italiano di prova: larghezza
+     99,04%; ascent 1,017, descent 0,206, interlinea 0 (unità della font).
+   - Marcellus contro Times, maiuscolo (è quasi sempre maiuscolo): larghezza
+     94,94%; ascent 0,974, descent 0,280.
+   Gli override sono divisi per size-adjust, come vuole la specifica.
+   -------------------------------------------------------------------------- */
+@font-face {
+  font-family: "Imbrunire Commissioner Ripiego";
+  src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("Arimo"), local("Helvetica Neue"), local("Helvetica");
+  font-weight: 100 900;
+  font-style: normal;
+  size-adjust: 99.04%;
+  ascent-override: 102.69%;
+  descent-override: 20.8%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Imbrunire Marcellus Ripiego";
+  src: local("Times New Roman"), local("TimesNewRomanPSMT"), local("Liberation Serif"), local("Tinos"), local("Times");
+  font-weight: 400;
+  font-style: normal;
+  size-adjust: 94.94%;
+  ascent-override: 102.6%;
+  descent-override: 29.47%;
+  line-gap-override: 0%;
+}
+
+/* --------------------------------------------------------------------------
+   1. Colori di base (i sette del creative-director §5.1 più i derivati).
+   Ogni colore ha anche la terna RGB per le trasparenze:
+   rgb(var(--imb-luce-rgb) / .4).
+   -------------------------------------------------------------------------- */
+.imb-root {
+  color-scheme: dark;
+
+  /* Notte: cielo, fondo di tutto, pannelli di testo */
+  --imb-notte: #1F2638;
+  --imb-notte-rgb: 31 38 56;
+  /* Notte profonda: interno delle stanze spente, ombre dentro le scatole */
+  --imb-notte-profonda: #171C2A;
+  --imb-notte-profonda-rgb: 23 28 42;
+  /* Cielo basso: lo stesso blu schiarito di 3-4 punti vicino ai tetti (mai virato) */
+  --imb-cielo-basso: #262E44;
+  /* Pietra: marciapiede e strada sotto il portico (blu della notte, più chiaro) */
+  --imb-pietra: #2B3247;
+
+  /* Intonaco: muri visti di fronte, facciata, comignoli, portico. Mai fondo di testo piccolo */
+  --imb-intonaco: #BE7359;
+  --imb-intonaco-rgb: 190 115 89;
+  --imb-intonaco-luce: #D08A6E;   /* intonaco toccato dalla luce di una stanza */
+  --imb-intonaco-ombra: #9C5A45;  /* pareti laterali della scatola, lato in ombra */
+  /* Poché: spessore di muri e solai tagliati, gradini, fasce dei nomi */
+  --imb-poche: #8A4A38;
+  --imb-poche-rgb: 138 74 56;
+  --imb-poche-scuro: #5E2F23;     /* fregio sotto il cornicione, taglio del tetto */
+  --imb-inciso: #4E261C;          /* lettere incise nell'intonaco (solo ≥ 24 px) */
+
+  /* Interni delle scatole (superfici, mai testo) */
+  --imb-soffitto: #D7B59A;        /* intonaco chiaro del soffitto, scaldato dalla lampada */
+  --imb-trave: #4B2F24;           /* travi di noce del sottotetto e del piano nobile */
+  --imb-pavimento-base: #7A5540;  /* pavimento quando la foto non dà il suo colore */
+
+  /* Luna: testo principale su notte e poché, disco della luna */
+  --imb-luna: #F2E8D0;
+  --imb-luna-rgb: 242 232 208;
+  /* Luna velata: testo secondario sulle fasce di poché (luna spenta lì non passa) */
+  --imb-luna-velata: #E6D7BC;
+  /* Luna spenta: testo secondario su notte, parte in ombra della luna */
+  --imb-luna-spenta: #9AA0B4;
+  --imb-luna-spenta-rgb: 154 160 180;
+
+  /* Luce: l'unico accento. Acceso, scelto, toccabile. Nient'altro. */
+  --imb-luce: #F2C77C;
+  --imb-luce-rgb: 242 199 124;
+
+  /* ------------------------------------------------------------------------
+     2. Ruoli (le sezioni usano questi, non i colori di base)
+     ------------------------------------------------------------------------ */
+  --imb-fondo: var(--imb-notte);
+  --imb-testo: var(--imb-luna);
+  --imb-testo-2: var(--imb-luna-spenta);
+  --imb-testo-su-poche: var(--imb-luna);
+  --imb-testo-2-su-poche: var(--imb-luna-velata);
+  --imb-azione: var(--imb-luce);
+  --imb-su-azione: var(--imb-notte);
+  /* Pannello della stanza e fogli: notte al 92% sopra la foto (caso peggiore
+     su foto bianca: luna 9,73:1, luna spenta 4,55:1) */
+  --imb-pannello: rgb(var(--imb-notte-rgb) / 0.92);
+  /* Foglio mobile e fascia del nastro dentro la stanza: notte piena */
+  --imb-foglio: var(--imb-notte);
+  /* Riga d'errore: niente rosso. Filo di luce a sinistra, testo in luna */
+  --imb-errore-filo: var(--imb-luce);
+  --imb-errore-testo: var(--imb-luna);
+  /* Separazione di un campo dal pannello (bordo dei campi, non decorazione) */
+  --imb-campo-fondo: var(--imb-notte-profonda);
+  --imb-campo-bordo: var(--imb-luna-spenta);
+  --imb-campo-bordo-fuoco: var(--imb-luce);
+
+  /* Fuoco: anello a due toni che si legge su qualsiasi fondo, intonaco
+     compreso (luce su intonaco da sola è 2,29:1). Lo applica
+     interaction/interaction.css:
+       outline: var(--imb-fuoco-spessore) solid var(--imb-fuoco);
+       outline-offset: var(--imb-fuoco-distanza);
+       box-shadow: 0 0 0 var(--imb-fuoco-distanza) var(--imb-fuoco-alone);  */
+  --imb-fuoco: var(--imb-luce);
+  --imb-fuoco-alone: var(--imb-notte);
+  --imb-fuoco-spessore: 2px;
+  --imb-fuoco-distanza: 3px;
+
+  /* ------------------------------------------------------------------------
+     3. Tipografia. Scala fluida da 375 a 1440 px:
+        clamp(min, min − pendenza·375 + pendenza·100vw, max)
+     Marcellus: sempre maiuscolo (iscrizione), +0,04em, mai corsivo.
+     Commissioner: sempre in tondo, cifre tabellari per prezzi, date, ore.
+     ------------------------------------------------------------------------ */
+  --imb-font-display: "Marcellus", "Imbrunire Marcellus Ripiego", "Times New Roman", Georgia, serif;
+  --imb-font-testo: "Commissioner", "Imbrunire Commissioner Ripiego", Arial, "Helvetica Neue", sans-serif;
+  --imb-spaziatura-display: 0.04em;
+
+  /* Marcellus */
+  --imb-t-iscrizione: clamp(32px, 20.73px + 3.005vw, 64px);  /* ALBERGO IMBRUNIRE sulla parete dell'androne */
+  --imb-t-titolo: clamp(28px, 23.77px + 1.127vw, 40px);      /* titolo della stanza aperta (h2) */
+  --imb-t-nome-cella: clamp(17px, 15.94px + 0.282vw, 20px);  /* nome della stanza sulla fascia di poché */
+  --imb-t-marchio: clamp(16px, 14.94px + 0.282vw, 19px);     /* nome dell'albergo nella testata (h1) */
+  --imb-t-mese: clamp(15px, 14.3px + 0.188vw, 17px);         /* mese sul nastro delle lune */
+  --imb-t-fregio: clamp(14px, 12.94px + 0.282vw, 17px);      /* frase sotto il cornicione */
+  --imb-lh-display: 1.1;
+
+  /* Commissioner */
+  --imb-t-successo: clamp(22px, 19.18px + 0.751vw, 30px);    /* la frase unica del successo */
+  --imb-t-totale: clamp(28px, 25.18px + 0.751vw, 36px);      /* totale del soggiorno */
+  --imb-t-corpo: clamp(16px, 15.65px + 0.094vw, 17px);
+  --imb-t-piccolo: clamp(14px, 13.65px + 0.094vw, 15px);     /* prezzo "da", occupata, dati della stanza */
+  --imb-t-micro: 13px;                                        /* giorno sotto le lune, ore nelle finestre (tabellare) */
+  --imb-t-bottone: clamp(16px, 15.65px + 0.094vw, 17px);
+  --imb-lh-corpo: 1.55;
+  --imb-lh-piccolo: 1.45;
+  --imb-lh-successo: 1.35;
+  --imb-peso-testo: 400;
+  --imb-peso-medio: 500;
+  --imb-peso-forte: 600;
+  --imb-riga-max: 60ch;           /* riga di lettura, sezione */
+  --imb-riga-max-torre: 42ch;     /* riga di lettura a 375 */
+
+  /* ------------------------------------------------------------------------
+     4. Spazi e misure dell'interfaccia
+     ------------------------------------------------------------------------ */
+  --imb-s-1: 4px;
+  --imb-s-2: 8px;
+  --imb-s-3: 12px;
+  --imb-s-4: 16px;
+  --imb-s-5: 24px;
+  --imb-s-6: 32px;
+  --imb-s-7: 48px;
+  --imb-s-8: 64px;
+  --imb-s-9: 96px;
+  --imb-margine: clamp(16px, 5.44px + 2.817vw, 48px);        /* bordo pagina: 16 a 375, 46 a 1440 */
+  --imb-raggio: 0px;              /* tutto il palazzo e l'interfaccia: spigoli vivi */
+  --imb-raggio-disco: 50%;        /* solo lune e dischi di "Quanti siete" */
+  --imb-tocco: 44px;              /* area di tocco minima */
+  --imb-bottone-h: 48px;
+  --imb-bottone-primario-h: 52px; /* "Tienimi la stanza" */
+  --imb-pannello-w: 360px;        /* pannello della stanza in sezione */
+  --imb-testata-h: 64px;
+  --imb-testata-h-torre: 56px;
+  --imb-riserva-back: 244px;      /* larghezza riservata al ConceptBackButton (≥ 640 px, in alto a sinistra) */
+  --imb-riserva-back-torre: 224px;/* sotto 640 px, in basso a sinistra */
+  --imb-riserva-fondo: 72px;      /* fascia di riserva in fondo ai fogli mobili */
+
+  /* Finestre delle ore d'arrivo: "facciata" di 3 piani × 5 finestre */
+  --imb-finestra-w: 60px;
+  --imb-finestra-h: 48px;
+  --imb-finestra-spazio: 8px;
+  --imb-finestra-spenta: var(--imb-notte-profonda);
+  --imb-finestra-telaio: var(--imb-poche);
+  --imb-finestra-accesa: var(--imb-luce);
+
+  /* ------------------------------------------------------------------------
+     5. Il palazzo: poché, piani, scala, tetto (sezione)
+     Il poché non si assottiglia mai "per fare spazio": è quello che rende
+     credibile la sezione.
+     ------------------------------------------------------------------------ */
+  --imb-muro: clamp(14px, 1.25vw, 24px);      /* 768: 14 · 1440: 18 · 2560: 24 */
+  --imb-solaio: clamp(18px, 1.55vw, 28px);    /* 768: 18 · 1440: 22 · 2560: 28 */
+  --imb-pelle: 3px;               /* pelle d'intonaco sul lato esterno dei muri perimetrali */
+  --imb-palazzo-max: 1180px;      /* larghezza massima del palazzo (1400 se l'altezza lo consente, a 2560) */
+  --imb-palazzo-max-alto: 1400px;
+  --imb-palazzo-rapporto: 1.18;   /* larghezza = min(max, 82vw, altezza disponibile × 1,18) */
+  --imb-tetto-pendenza: 0.33;     /* falde basse da coppi veneti: altezza = metà larghezza × 0,33 */
+  --imb-comignolo-w: 3.2%;        /* della larghezza del palazzo */
+  --imb-comignolo-h: 5.5%;
+  --imb-cornicione-h: 10px;       /* aggetto del cornicione, intonaco-luce */
+  --imb-fregio-h: clamp(28px, 2.4vw, 40px); /* fascia di poché scuro con la frase */
+  --imb-gradino-alzata: 7px;      /* scala: scatole di poché, pianta a gradini veri */
+  --imb-gradino-pedata: 11px;
+  --imb-binario-scala: 6px;       /* torre: binario verticale a destra */
+  --imb-fascia-nome-min: 44px;    /* fascia di poché sotto ogni cella (cresce col testo) */
+
+  /* Scatola della stanza (CSS 3D). Decisione misurata a schermo, vedi
+     docs/art-director.md §1.4: la prospettiva è proporzionale all'altezza
+     della cella, non un numero fisso, così la foto di fondo occupa il
+     55-60% della cella in ogni piano e ad ogni larghezza.
+       perspective = altezza cella × --imb-prospettiva
+       profondità  = altezza cella × --imb-profondita
+       perspective-origin: 50% var(--imb-occhio-y)  (occhio al 58% dell'altezza
+       dal pavimento: si vede più pavimento che soffitto)                    */
+  --imb-prospettiva: 1.05;
+  --imb-profondita: 0.7;
+  --imb-occhio-y: 42%;
+  --imb-prospettiva-dentro: 1.1;  /* strato Dentro: rispetto all'altezza della finestra */
+  --imb-trave-w: 7%;              /* larghezza di una trave rispetto al soffitto */
+  --imb-trave-passo: 22%;         /* interasse delle travi */
+
+  /* ------------------------------------------------------------------------
+     6. Materiali (valori pronti per background / box-shadow)
+     ------------------------------------------------------------------------ */
+  /* Grana dell'intonaco: rumore frattale fermo, tono su tono, 160 px. Solo
+     sulle superfici di intonaco, mai sotto il testo. */
+  --imb-grana: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .22 0 0 0 0 .11 0 0 0 0 .07 0 0 0 .9 -.28'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
+  --imb-sfondo-intonaco: var(--imb-grana) 0 0 / 160px 160px, var(--imb-intonaco);
+  --imb-sfondo-intonaco-luce: var(--imb-grana) 0 0 / 160px 160px, var(--imb-intonaco-luce);
+  --imb-sfondo-poche: var(--imb-poche);        /* pieno, come nei disegni d'architetto */
+  --imb-sfondo-cielo: linear-gradient(to bottom, var(--imb-notte) 0%, var(--imb-notte) 55%, var(--imb-cielo-basso) 100%);
+
+  /* Interno della scatola, stanza accesa: la luce viene dalla lampada in
+     fondo, quindi le superfici sono più chiare verso la foto e più scure
+     verso il fronte aperto. Da usare come background delle facce. */
+  --imb-parete-sx: linear-gradient(to right, rgb(var(--imb-notte-profonda-rgb) / 0.55), rgb(var(--imb-notte-profonda-rgb) / 0) 70%), var(--imb-sfondo-intonaco);
+  --imb-parete-dx: linear-gradient(to left, rgb(var(--imb-notte-profonda-rgb) / 0.55), rgb(var(--imb-notte-profonda-rgb) / 0) 70%), var(--imb-sfondo-intonaco);
+  --imb-soffitto-sfondo: linear-gradient(to top, rgb(var(--imb-notte-profonda-rgb) / 0.5), rgb(var(--imb-notte-profonda-rgb) / 0) 75%), var(--imb-soffitto);
+  /* Pavimento: il colore della foto (--imb-pavimento sulla scatola) con la
+     stessa caduta di luce verso il fronte */
+  --imb-pavimento-velo: linear-gradient(to bottom, rgb(var(--imb-notte-profonda-rgb) / 0.6), rgb(var(--imb-notte-profonda-rgb) / 0) 80%);
+  /* Ombra calda negli angoli tra fondo e pareti (sulla faccia di fondo, sopra la foto) */
+  --imb-angoli-fondo: inset 0 0 0 1px rgb(var(--imb-notte-profonda-rgb) / 0.35), inset 0 -18px 28px -18px rgb(var(--imb-notte-profonda-rgb) / 0.55), inset 0 14px 22px -16px rgb(var(--imb-notte-profonda-rgb) / 0.45);
+
+  /* ------------------------------------------------------------------------
+     7. Luci: solo opacità di veli (tech-architect §5.2)
+     Stanza accesa  → velo-luce 1, velo-spenta 0, desatura 0
+     Stanza spenta  → velo-luce 0, velo-spenta 1, desatura 1
+     Durate e ritardi sono del motion-designer (motion/variabili.ts).
+     ------------------------------------------------------------------------ */
+  /* Velo di luce sulla foto (mix-blend-mode: soft-light sulla faccia di fondo) */
+  --imb-velo-luce: radial-gradient(ellipse 75% 70% at 50% 38%, rgb(var(--imb-luce-rgb) / 0.55), rgb(var(--imb-luce-rgb) / 0.18) 55%, rgb(var(--imb-luce-rgb) / 0) 85%);
+  --imb-velo-luce-blend: soft-light;
+  /* Alone di luce sul pavimento, davanti al letto (normale, sopra il pavimento) */
+  --imb-alone-pavimento: radial-gradient(ellipse 60% 90% at 50% 0%, rgb(var(--imb-luce-rgb) / 0.32), rgb(var(--imb-luce-rgb) / 0) 70%);
+  /* Stanza spenta: velo notte profonda (≈ brightness .38) ... */
+  --imb-velo-spenta: rgb(var(--imb-notte-profonda-rgb) / 0.64);
+  /* ... più un velo grigio in mix-blend-mode: saturation che toglie colore
+     (a opacità 1 del velo, saturazione ≈ 0,6 della foto) */
+  --imb-velo-desatura: rgb(128 128 128 / 0.4);
+  --imb-velo-desatura-blend: saturation;
+  /* Calore al passaggio del puntatore o al fuoco: +8% di velo luce */
+  --imb-calore: 0.08;
+  /* Riflesso della stanza accesa sul poché sotto il nome (luce che esce dal fronte) */
+  --imb-riverbero: linear-gradient(to bottom, rgb(var(--imb-luce-rgb) / 0.14), rgb(var(--imb-luce-rgb) / 0) 70%);
+
+  /* ------------------------------------------------------------------------
+     8. Lune (nastro, cielo, successo). Misure anche in tokens.ts (LUNE).
+     ------------------------------------------------------------------------ */
+  --imb-luna-d: 34px;             /* disco sul nastro, sezione */
+  --imb-luna-passo: 44px;         /* distanza tra i centri (34 + 10) */
+  --imb-luna-cielo: 48px;         /* luna di stasera sopra il tetto */
+  --imb-luna-successo: 96px;      /* luna della prima notte */
+  --imb-luna-bottone: 24px;       /* disco nel bottone "Lune" mobile */
+  --imb-luna-ombra-opacita: 0.22; /* disco in ombra (luce cinerea) */
+  --imb-luna-alone-scelta: radial-gradient(circle, rgb(var(--imb-luce-rgb) / 0.42) 0%, rgb(var(--imb-luce-rgb) / 0.12) 55%, rgb(var(--imb-luce-rgb) / 0) 72%);
+  --imb-luna-base-h: 3px;         /* base di luce sotto la luna scelta */
+  --imb-luna-base-w: 22px;        /* prima e ultima notte: tutta la larghezza del passo */
+  --imb-alone-cielo: radial-gradient(circle, rgb(var(--imb-luna-rgb) / 0.10) 0%, rgb(var(--imb-luna-rgb) / 0.04) 45%, rgb(var(--imb-luna-rgb) / 0) 70%);
+
+  /* ------------------------------------------------------------------------
+     9. Livelli (tech-architect §5.1). Il ConceptBackButton del sito sta
+     sopra tutto (2147483000): nessun livello del concept lo supera.
+     ------------------------------------------------------------------------ */
+  --imb-z-cielo: 0;
+  --imb-z-palazzo: 1;
+  --imb-z-testata: 20;
+  --imb-z-nastro: 25;
+  --imb-z-dentro: 30;
+  --imb-z-pannello: 35;
+  --imb-z-foglio: 40;
+  --imb-z-successo: 45;
+}
+
+/* --------------------------------------------------------------------------
+   Torre (sotto la soglia): poché fisso, lune più grandi, prospettiva più
+   corta per scatole larghe e basse.
+   -------------------------------------------------------------------------- */
+.imb-root[data-imb-layout="torre"] {
+  --imb-muro: 16px;
+  --imb-solaio: 20px;
+  --imb-fregio-h: 32px;
+  --imb-luna-d: 40px;
+  --imb-luna-passo: 48px;
+  --imb-luna-cielo: 40px;
+  --imb-luna-successo: 72px;
+  --imb-prospettiva: 1.25;
+  --imb-occhio-y: 40%;
+  --imb-testata-h: var(--imb-testata-h-torre);
+  --imb-riga-max: var(--imb-riga-max-torre);
+}
+
+/* Contrasto forzato (Windows): le luci non si vedono, restano le parole.
+   I veli si tolgono, i bordi diventano visibili. */
+@media (forced-colors: active) {
+  .imb-root {
+    --imb-velo-luce: none;
+    --imb-velo-spenta: transparent;
+    --imb-velo-desatura: transparent;
+    --imb-grana: none;
+  }
+}

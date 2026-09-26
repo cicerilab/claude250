@@ -131,7 +131,11 @@ export interface MisureStrumento {
   readonly contornoDisco: number;
   /** Distanza dal bordo dell'arco al centro dei numeri 0-30-...-180, verso il perno. */
   readonly rientroNumeri: number;
-  /** Distanza dal bordo dell'arco alla parola dell'angolo, verso l'esterno. */
+  /**
+   * Distanza dal bordo dell'arco alla parola dell'angolo, verso l'esterno.
+   * Deve superare sporgenza + manopola/2 + 12: altrimenti, sull'angolo
+   * attivo, la manopola si posa sopra la parola (visto a schermo).
+   */
   readonly distanzaParole: number;
   readonly spessoreBraccio: number;
   /** Quanto il braccio va oltre l'arco prima della manopola. */
@@ -155,7 +159,7 @@ export const STRUMENTO: { readonly bordo: MisureStrumento; readonly fondo: Misur
     spessoreTaccaLunga: 2.5,
     contornoDisco: 1.5,
     rientroNumeri: 44,
-    distanzaParole: 28,
+    distanzaParole: 66,
     spessoreBraccio: 10,
     sporgenzaBraccio: 40,
     manopola: 28,

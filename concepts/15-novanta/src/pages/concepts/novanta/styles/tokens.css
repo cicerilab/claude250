@@ -181,6 +181,8 @@
   --nov-manopola-tocco: 48px;     /* area toccabile */
   --nov-perno: 16px;              /* rivetto petrolio */
   --nov-perno-anello: 3px;        /* anello gesso dentro il rivetto */
+  --nov-distanza-parole: 22px;    /* dal bordo dell'arco alla parola: > sporgenza + manopola/2 + 8 */
+  --nov-rientro-numeri: 32px;     /* dal bordo dell'arco al centro dei numeri 0-30-...-180 */
   --nov-finestrella: 26px;        /* oblò tondo sul braccio con il numero intero, controruotato */
   --nov-basamento-linea: 2px;     /* il diametro: riga petrolio sul bordo alto del basamento */
   --nov-ombra-braccio: drop-shadow(0 3px 3px rgb(14 61 73 / 0.12));  /* unica ombra del sito */
@@ -219,6 +221,8 @@
     --nov-tacca-spessore-lunga: 2.5px;
     --nov-braccio-spessore: 10px;
     --nov-braccio-sporgenza: 40px;
+    --nov-distanza-parole: 66px;
+    --nov-rientro-numeri: 44px;
     --nov-manopola: 28px;
     --nov-perno: 20px;
     --nov-finestrella: 30px;
@@ -235,6 +239,8 @@
   --nov-tacca-spessore-lunga: 2px;
   --nov-braccio-spessore: 8px;
   --nov-braccio-sporgenza: 0px;
+  --nov-distanza-parole: 22px;
+  --nov-rientro-numeri: 32px;
   --nov-manopola: 26px;
   --nov-perno: 16px;
   --nov-finestrella: 26px;
@@ -250,6 +256,8 @@
   --nov-tacca-spessore-lunga: 2.5px;
   --nov-braccio-spessore: 10px;
   --nov-braccio-sporgenza: 40px;
+  --nov-distanza-parole: 66px;
+  --nov-rientro-numeri: 44px;
   --nov-manopola: 28px;
   --nov-perno: 20px;
   --nov-finestrella: 30px;

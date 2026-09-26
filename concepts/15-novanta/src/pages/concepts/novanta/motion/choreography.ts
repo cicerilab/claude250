@@ -192,3 +192,50 @@ export function durataDissolvenza(ridotto: boolean): number {
 export function durataCicloChiude(ridotto: boolean): number {
   return ridotto ? 0 : clamp(DUR_CICLO_CHIUDE, DUR_ARCO_CICLO[0], DUR_ARCO_CICLO[1]);
 }
+
+/* ------------------------------------------------------------------ */
+/* Cambi di misura accompagnati (FLIP)                                 */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Accompagna un cambio di impaginazione (quadrante → fascia a 90° su mobile,
+ * anello → 140 px entrando nei campi) senza animare larghezze o altezze:
+ * 1. legge il rettangolo prima del cambio;
+ * 2. `applica()` cambia classi o attributi (il layout salta subito);
+ * 3. legge il rettangolo dopo, mette l'elemento dove era con un `transform`
+ *    inverso e al frame successivo lo toglie: la transizione di `.nov-m-fascia`
+ *    / `.nov-m-riduci` (motion.css) lo porta al posto nuovo con la frenata.
+ * Con `ridotto` applica e basta. Due letture di layout per cambio, mai nel
+ * ticker. Lo chiamano i section-builder (quadrante, prenota) in un handler o
+ * in un effetto, mai durante il render.
+ */
+export function accompagnaCambio(el: HTMLElement | SVGElement, applica: () => void, ridotto: boolean): void {
+  if (ridotto) {
+    applica();
+    return;
+  }
+  const prima = el.getBoundingClientRect();
+  applica();
+  const dopo = el.getBoundingClientRect();
+  if (dopo.width < 1 || dopo.height < 1) return;
+  const dx = prima.left - dopo.left;
+  const dy = prima.top - dopo.top;
+  const sx = prima.width / dopo.width;
+  const sy = prima.height / dopo.height;
+  if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5 && Math.abs(sx - 1) < 0.005 && Math.abs(sy - 1) < 0.005) return;
+  const stile = el.style;
+  const transizione = stile.transition;
+  stile.transition = 'none';
+  stile.transformOrigin = '0 0';
+  stile.transform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`;
+  // Forza il calcolo dello stato di partenza, poi lascia fare alla transizione CSS.
+  void el.getBoundingClientRect();
+  stile.transition = transizione;
+  stile.transform = '';
+  const pulisci = (e: Event): void => {
+    if (e.target !== el) return;
+    stile.transformOrigin = '';
+    el.removeEventListener('transitionend', pulisci);
+  };
+  el.addEventListener('transitionend', pulisci);
+}
