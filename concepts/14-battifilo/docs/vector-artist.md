@@ -98,7 +98,7 @@ volta.
   stessi; se il section-builder vuole che la grana continui identica attraverso un buco, può
   usare `mask-position: calc(-1 * var(--btf-x-inizio)) 50%` (x del tratto sulla linea). Non
   è necessario: la grana è casuale e il salto non si nota.
-- **Favicon della linea in "Misura e manda"** (rettangolo della finestra, tratti della
+- **La linea in "Misura e manda"** (rettangolo della finestra, tratti della
   forbice): stessa tessera. Per i lati verticali del rettangolo si ruota l'elemento
   (`rotate: 90deg` su uno span orizzontale), non serve una tessera verticale.
 - Reduced motion: non cambia niente, la tessera è statica.
