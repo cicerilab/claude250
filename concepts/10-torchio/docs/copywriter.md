@@ -389,3 +389,11 @@ typecheck` verde.
 - **banco, tecniche**: non rendere `<p>` con `intro` vuota. Nel banco
   `dipende` e `ristampa` sono resi due volte (in `Prova.tsx` e in
   `Compositoio.tsx`): una basta.
+
+---
+
+## Giro 3b
+
+- `BOTTEGA.maps.aria` (segnalazione B1 dell'accessibility-auditor, giro 3):
+  ora inizia con il testo visibile, "Apri in Maps: Via Cavallotti 18,
+  Pordenone (si apre in una nuova scheda)". Chiave invariata.

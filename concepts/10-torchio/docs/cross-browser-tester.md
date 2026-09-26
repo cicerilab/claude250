@@ -261,3 +261,94 @@ parola usare `*-hero-fine-*`.
 - **art-director**: O1 (peso del rilievo CSS in WebKit), O6.
 - **performance-auditor**: O1 su Safari/iPhone; usare Chromium senza
   argomenti SwiftShader per le misure DOM (§5).
+
+---
+
+## Giro 3
+
+Build nuova (`npm run build`, commit fino a `3df16f3`), preview su 8204
+(chiusa alla fine), stessi motori: Chromium 141 headless, Firefox 142 e
+WebKit 26 da `/tmp/claude-0/pw-extra`. Screenshot in `qa/cross-browser-g3/`
+(78 file, stessi nomi del giro 1). Script in
+`…/scratchpad/g3/` (`test.mjs` con la prova dei 450 ms in più, `onda.mjs`,
+`ro.mjs`, `ro2.mjs`). Leva tenuta 1,3 s (non più 2,6 s).
+
+### Matrice
+
+| Funzione | CR | CR-noGL | FF (senza WebGL) | WK (GL) | WK `?gl=0` |
+|---|---|---|---|---|---|
+| Console senza errori (1440, 375) | ✅ | ✅ | ✅ | ❌ **B3** | ❌ **B3** |
+| Scroll hero → colophon, niente scroll orizzontale | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Pin Tecniche (`sticky`, top 0 in 4 punti, 100svh) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Filo Legatoria che si cuce (1440, 375) | ✅ | ✅ | ✅ **B1 chiuso** | ✅ | ✅ |
+| Onda carta, un cambio | ✅ velo | ✅ velo | ✅ velo | ✅ | ✅ velo |
+| Onda carta, limite 450 ms (3 clic a 100 ms e a 300 ms) | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Banco: leva col mouse → "Ricevuto…" | ✅ | ✅ | ✅ | ✅ ¹ | ✅ ¹ |
+| Banco: leva con Spazio → "Ricevuto…" | ✅ | ✅ | ✅ | ✅ ¹ | ✅ ¹ |
+| Banco: `?invio=ko` → "Non siamo riusciti…", fuoco sull'esito | ✅ | ✅ | ✅ | ✅ ¹ | ✅ ¹ |
+| Leva con frame lenti (SwiftShader, tenuta 1,4 s, 5 prove) | ✅ 5/5 **B2 chiuso** | — | — | — | — |
+| Dialog indice a 375 (`:modal`, fuoco, Esc, voce → `#banco` a 24 px) | ✅ | ✅ | ✅ | ✅ ¹ | ✅ ¹ |
+| Rilievo CSS senza GL | ✅ | ✅ | ✅ | spento (GL) | ✅ |
+| WebGL: acceso, 1 draw call, contesto perso `off` → ripristinato `on` | n/a | n/a (off) | n/a (off) | ✅ | n/a |
+| Frame in 2 s (hero / tecniche / carta / legatoria / banco) | 87/123/114/121/111 | 121/122/122/122/122 | 97/122/122/122/122 | 46/78/70/123/117 | 7/56/88/120/101 |
+
+1. La funzione va; la prova risulta rossa nello script solo per il
+   `pageerror` di B3 che compare a ogni caricamento.
+
+Note sui numeri:
+- **Limite 450 ms**: con clic ogni 100 ms (Cotone, Cipria, Grafite) partono
+  2 onde, la richiesta di mezzo viene scartata e alla fine vince Grafite
+  (Chromium: avvii a 3 e 488 ms; Firefox: 4 e 453; WebKit: 5 e 706). Con clic
+  ogni 300 ms partono 3 onde distanziate 445-700 ms. Il 445 ms di WebKit è
+  il ritardo del `MutationObserver` rispetto al timer interno, non una
+  violazione.
+- **B1**: `CSS.supports('stroke-dashoffset','calc(1 - 0.5)')` resta falso in
+  Firefox, ma ora le regole hanno l'unità: `stroke-dashoffset` passa da
+  0,084 a 0,578 a 0,094 px durante lo scroll, come in Chromium e WebKit
+  (`firefox-filo-{10,18,30}-1440.png`).
+- **B2**: nell'ambiente SwiftShader (frame da 0,4-1 s), che al giro 1 dava
+  "Hai lasciato presto" 2 volte su 5, ora 5 prove su 5 arrivano all'esito.
+- WebKit con GL: atlante a 8 bit anche a 1440 (`halfFloat: false`, prima era
+  `true`: scelta del giro 3 sulle prestazioni). Il cambio carta ora passa
+  anche dal velo DOM.
+- Firefox a 375: la parola dell'hero va su due righe ("impron / ta") a 1440:
+  è il layout nuovo del giro 3, uguale nei tre motori.
+
+### B3 · WebKit: `ResizeObserver loop completed with undelivered notifications` a ogni caricamento
+
+- **Gravità**: media per il requisito "zero errori in console" (in WebKit è
+  un evento `error` su `window`, quindi finisce anche nei tracciatori di
+  errori); nessun effetto visibile, nessuna funzione rotta. Chromium e
+  Firefox non lo segnalano.
+- **Proprietari**: section-builder-hero (`sections/Hero/Hero.tsx`, RO della
+  misura, riga ~254) e section-builder-legatoria
+  (`sections/Legatoria/Legatoria.tsx`, RO del corpo, riga ~181).
+- **Passi**: WebKit, `/concept-10` oppure `?gl=0`, a 1440 o 375, attendere
+  l'arrivo dei font (~2 s): un `pageerror` a ogni caricamento.
+- **Causa** (misurata avvolgendo `ResizeObserver` nel solo browser di prova):
+  all'arrivo di Anybody, nello stesso giro di notifiche, il RO dell'Hero
+  scrive `--imp-hero-em-misurato` (le righe dell'hero cambiano misura) e il
+  RO della Legatoria rimisura e riscrive gli intervalli del filo (il corpo
+  passa da 2841 a 2843 px). Il contenuto di Lenis, osservato più in alto
+  nell'albero, cambia di nuovo e resta con una notifica non consegnata.
+  Rinviando a `requestAnimationFrame` solo il callback dell'Hero l'errore
+  resta a 1440; rinviando **Hero e Legatoria** sparisce a 1440 e a 375
+  (0 errori su 4 caricamenti).
+- **Correzione proposta**: nei due callback, rimandare il lavoro al frame
+  dopo (`requestAnimationFrame(aggiorna)` / `requestAnimationFrame(misura)`,
+  con un flag per non accodarne più di uno) invece di scrivere stili dentro
+  il callback del ResizeObserver.
+
+### Stato dei punti aperti
+
+- B1 chiuso, B2 chiuso, B3 nuovo.
+- O1 (rilievo CSS lento in WebKit): migliorato. Con `?gl=0` Tecniche e Carta
+  passano da 7-9 a 56-88 frame in 2 s; l'hero resta a 7 (la pressa
+  d'ingresso con i `text-shadow`). Da misurare su Safari vero.
+- O2 (`ctx.fontStretch` assente in WebKit 26): invariato, la correzione
+  regge.
+- O3-O6: non rivisti in questo giro.
+
+### Richieste (giro 3)
+
+- **section-builder-hero** e **section-builder-legatoria**: B3.

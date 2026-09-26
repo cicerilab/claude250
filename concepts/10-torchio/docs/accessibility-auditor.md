@@ -304,3 +304,125 @@ Gravità: **bloccante** (qualcuno non può completare un compito), **alta**
 - Lampeggio con WebGL acceso non misurato (SwiftShader troppo lento per i
   fotogrammi). La logica di scambio è la stessa del DOM, quindi A4 vale anche lì.
 - Solo Chromium; Firefox e Safari li copre il cross-browser-tester.
+
+---
+
+# Giro 3
+
+Riverifica dal vivo sul build nuovo (`npm run build` verde, preview sulla
+porta 8202 chiusa a fine giro). Ho rifatto tutte le prove del giro 1 con gli
+stessi script (`/tmp/claude-0/a11y/`): axe, contrasti calcolati su 4 carte a
+1440 e 375, anche in movimento ridotto, Tab e Shift+Tab completi a 1440 e 375,
+indice mobile, leva, radiogroup, reduced motion, 640×400 e 320×256, bersagli a
+375, registro delle regioni live. Il lampeggio l'ho misurato tenendo premuta
+una freccia (una pressione ogni circa 60 ms per 3 s) sui radio carta del banco,
+di `#carta` e dell'indice mobile, contando i cambi di `data-carta`.
+
+## Esito generale
+
+- axe: 0 violazioni (4 carte × 1440/375). Contrasti: 0 testi leggibili sotto
+  soglia su 4 carte, a 1440, a 375 e con reduced motion.
+- Titoli h1-h3 in ordine, landmark corretti, nessun id duplicato.
+- Reduced motion: 0 animazioni e 0 scritture di `transform` nello scorrimento completo.
+- Nessuno scroll orizzontale a 320, 640, 720 px.
+
+## Risolti
+
+| # | Verifica dal vivo |
+|---|---|
+| A1 | "cos'è?" ora sta sopra le scelte, cliccabile a 1440, 768 e 375 (`elementFromPoint` = il link, `click` va a `#tecniche`) |
+| A2 (desktop) | 1440: 0 elementi coperti in avanti e all'indietro (`base.css:266-273` `scroll-padding-block`, `banco.css:1321-1323` `scroll-margin` sugli input) |
+| A3 | 320×256 e 640×400: lastra del banco non più ferma (`position: relative`, 174/312 px), Tecniche in resa statica: tutto il testo si raggiunge |
+| A4 | Banco: 7-8 cambi in 3 s (uno ogni ~450 ms, 2,2-2,7/s). Indice mobile: 6-8 in 3 s (1,9-2,7/s). `#carta`: 0 cambi a freccia tenuta, 1 al rilascio. Uguale con reduced motion. Soglia < 3/s rispettata in media. Il picco è 3 cambi in una finestra di 898 ms (vedi N3) |
+| M1 | "Prova la tua" di Per chi: un solo annuncio, con la carta giusta ("…su carta Cipria", poi il prezzo) |
+| M2 | Invio riuscito o fallito: il fuoco va sull'esito e la regione live non ripete il testo |
+| M3 | Fuoco sul dial per 14 s: il valore resta fermo (135), cambia solo con le frecce |
+| M4 | Le frecce spostano il fuoco e `aria-checked`, la carta del sito segue quando ci si ferma. Spazio e Invio confermano |
+| M5 | La leva armata non ha più `aria-label`: nome = testo visibile ("Premi di nuovo per confermare") |
+| B2 | I salti delle Tecniche a 375 sono tutti ≥ 44 px |
+| B3 | Carta cambiata da `#carta` col fuoco lì: annuncia solo la sezione Carta, il banco tace |
+| B4 | Nessun id duplicato |
+| B5 | Aprire e chiudere l'indice non produce annunci live |
+| B6 | Nessuna legatura preselezionata nel filo |
+| B7 | Recapiti in bottega: `<ul aria-label>`, niente più `<nav>` |
+| B8 | Errore del contatto con `role="status"` |
+| B1 (in parte) | Telefono: nome "Chiama la bottega (numero di esempio)" = testo visibile |
+
+## Non risolti
+
+### A2 · alta (resta a 375) · fuoco coperto dalla lastra del banco tornando indietro
+
+- `sections/Banco/banco.css:1311-1323`. Lo `scroll-margin` c'è, ma il browser
+  non scorre se l'elemento è già "nella finestra": un controllo che sta
+  **dietro** la lastra ferma non viene spostato. Lo `scroll-padding` del
+  documento (`base.css:266-273`) conta solo la testata.
+- Dal vivo a 375 con Shift+Tab: "Cosa sono le tecniche" coperto 9/9 dalla
+  lastra, campo contatto 9/9 dalla striscia della tastiera, radio "a secco" e
+  "oltre un mese" 6/9.
+- WCAG 2.4.11 (AA).
+- Correzione (section-builder-banco, banco.css, dentro `@media (max-width: 1023.98px)`):
+  `html:has(.imp-banco:focus-within) { scroll-padding-block-start: calc(42svh + var(--imp-testata-h-fissa) + var(--imp-sp-4)); }`
+  e, con la tastiera aperta,
+  `html:has(.imp-banco[data-tastiera]) { scroll-padding-block-start: calc(var(--imp-banco-striscia, 28vh) + var(--imp-sp-4)); }`.
+  In più, in Banco.tsx `mettiInVista`, usare `block: 'start'` al posto di
+  `'nearest'`.
+- Proprietario: section-builder-banco.
+
+### B1 · bassa (in parte) · "Apri in Maps" ha ancora un nome diverso dal testo
+
+- `content/testi.ts:803` (`maps.aria = 'Apri Via Cavallotti 18, Pordenone in Maps, …'`),
+  usato in `sections/Bottega/Bottega.tsx:281`. Visibile: "Apri in Maps".
+- WCAG 2.5.3.
+- Correzione: `'Apri in Maps: Via Cavallotti 18, Pordenone, in una nuova scheda'`.
+- Proprietario: copywriter.
+
+## Nuovi
+
+### N1 · alta · con reduced motion, una voce dell'indice mobile lascia il fuoco sul bottone "indice"
+
+- `sections/Hero/Testata.tsx:609-613` (`suVoce` chiama `chiudi()`) e
+  `:400-409`: con reduced motion la durata è 0 e `dialog.close()` gira in un
+  `setTimeout(0)`, **dopo** che `arrivaAllAncora` ha già messo il fuoco sul
+  titolo d'arrivo. Chiudendo, il `<dialog>` nativo rimette il fuoco su chi
+  l'ha aperto.
+- Dal vivo a 375, `reducedMotion: 'reduce'`: con Invio e con tocco su "il
+  banco di prova" la pagina scorre al banco (scrollY 7526), ma il fuoco resta
+  su `.imp-testata__indice`. Il Tab successivo riparte dalla testata, e chi usa
+  un lettore di schermo non sente il titolo d'arrivo. A movimento pieno va
+  bene (fuoco su `#imp-banco-titolo`), ma una volta su due prove, con "la
+  carta", il fuoco è tornato al bottone.
+- WCAG 2.4.3 Ordine del fuoco (A).
+- Correzione: in `suVoce`, chiudere **subito e in modo sincrono**
+  (`dialog.close()` dentro `chiudi(true)` senza timer, prima che il clic
+  arrivi al delegato di Impronta.tsx). Oppure salvare l'id d'arrivo e, nel
+  gestore `close` (`:450`), rimettere il fuoco sul titolo con
+  `document.getElementById(id)?.focus({ preventScroll: true })`.
+- Proprietario: section-builder-hero.
+
+### N2 · bassa · bersagli stretti a 375 (≥ 24 px, sotto i 44 del progetto)
+
+- Tiratura "50" del banco: 30×61 (`sections/Banco/banco.css:182-206`,
+  `.imp-banco__voce-numero`). "il filo" nell'indice del colophon: 35×44
+  (`sections/Colophon/colophon.css:112`).
+- WCAG 2.5.8 rispettato. È il minimo di progetto a non esserlo.
+- Correzione: `min-inline-size: 44px` sulle due classi (per il colophon con
+  `text-align: start`, così la voce non si sposta).
+- Proprietari: section-builder-banco, section-builder-colophon.
+
+### N3 · bassa · limite del cambio carta al bordo della soglia
+
+- `interaction/paperWave.ts` (`INTERVALLO_MINIMO_MS` 450): in media 2,2 cambi
+  al secondo, ma nei primi istanti della raffica ne ho contati 3 in 898 ms
+  (il primo cambio parte subito, il secondo dopo 450 ms, il terzo dopo altri
+  450 ms). Il criterio 2.3.1 (3 lampeggi al secondo, cioè 6 transizioni) è
+  rispettato con ampio margine. La soglia interna < 3/s va stretta solo
+  sulla prima finestra.
+- Correzione: `INTERVALLO_MINIMO_MS = 500`, così ci sono al massimo 2 cambi in
+  qualsiasi secondo.
+- Proprietario: interaction-designer.
+
+## Non verificabile qui
+
+- Lettori di schermo reali e WebGL in movimento: stessi limiti del giro 1.
+- Il bottone del sito `cl-backbtn` (194×36, fisso in basso a sinistra) resta
+  fuori perimetro. A 320×256 copre ancora una riga di testo.

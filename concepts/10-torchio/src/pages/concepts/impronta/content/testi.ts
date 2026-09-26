@@ -800,7 +800,8 @@ export const BOTTEGA = {
   },
   maps: {
     testo: 'Apri in Maps ↗',
-    aria: `Apri ${RECAPITI.via}, ${RECAPITI.citta} in Maps, in una nuova scheda`,
+    /** Giro 3b: l'etichetta accessibile inizia con il testo visibile (WCAG 2.5.3). */
+    aria: `Apri in Maps: ${RECAPITI.via}, ${RECAPITI.citta} (si apre in una nuova scheda)`,
     query: RECAPITI.mapsQuery,
   },
   parcheggio: 'Parcheggi in zona piazza XX Settembre, poi due minuti a piedi.',
