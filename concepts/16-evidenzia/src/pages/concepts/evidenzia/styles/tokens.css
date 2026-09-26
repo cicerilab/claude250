@@ -233,7 +233,7 @@
   --evd-foto-f-h: 168px;
   --evd-foto-r-l: 258px;
   --evd-foto-r-h: 160px;
-  --evd-retino-passo: 4px;              /* passo del punto in CSS px (8 px nel file 2×), 45° */
+  --evd-retino-passo: 3px;              /* passo in CSS px (6 px nel file 2×): retino 45°, nero 15° */
 
   /* ---------- Molo (comandi fissi, desktop e tablet) ---------- */
   --evd-molo-l: 320px;
@@ -242,7 +242,7 @@
   --evd-minipagina-l: 150px;
   --evd-minipagina-h: 168px;
   --evd-posto-tratto-l: 36px;           /* tratto dentro un posto da 44 × 44 */
-  --evd-posto-tratto-h: 14px;
+  --evd-posto-tratto-h: 18px;           /* ci sta il numero di tappa in Franklin 800 14 px */
 
   /* ---------- Pannelli ---------- */
   --evd-scheda-l: 720px;

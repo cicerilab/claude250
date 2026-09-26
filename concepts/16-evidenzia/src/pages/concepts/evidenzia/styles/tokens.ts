@@ -174,7 +174,7 @@ export const GRIGLIA = {
   bordoRiquadro: 2,
   annunciStacco: 12,
   barra: 36,
-  retinoPasso: 4,
+  retinoPasso: 3,
 } as const;
 
 /** x sinistra della colonna n (1-6) nel foglio: c1 = 66, c6 = 1506. */
@@ -232,7 +232,7 @@ export const MOLO = {
   distanza: 24,
   altezzaRidotto: 52,
   minipagina: { l: 150, h: 168 },
-  posto: { l: 44, h: 44, trattoL: 36, trattoH: 14 },
+  posto: { l: 44, h: 44, trattoL: 36, trattoH: 18 },
   postoColonna: { trattoL: 24, trattoH: 10 },
 } as const;
 
