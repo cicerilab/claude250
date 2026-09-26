@@ -112,6 +112,10 @@
 .imp-root .imp-colophon__voce {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  /* Area di tocco 44 × 44 anche per le voci corte ("il filo", 35 px): il
+     testo resta centrato, la sottolineatura resta larga quanto la parola. */
+  min-inline-size: var(--imp-tocco-min);
   min-block-size: var(--imp-tocco-min);
   font-size: var(--imp-fs-corpo);
   line-height: var(--imp-lh-interfaccia);

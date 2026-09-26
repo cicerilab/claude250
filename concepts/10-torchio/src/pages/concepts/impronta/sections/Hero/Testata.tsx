@@ -384,6 +384,8 @@ function Indice({ aperto, sezione, onChiuso, annuncia }: PropsIndice) {
   const gyro = useGyro();
   const sbloccaRef = useRef<(() => void) | null>(null);
   const timerRef = useRef(0);
+  /** Sezione scelta dall'indice: alla chiusura il fuoco va sul suo titolo. */
+  const voceScelta = useRef<string | null>(null);
   const ridottoRef = useRef(ridotto);
   const onChiusoRef = useRef(onChiuso);
   useEffect(() => {
@@ -452,6 +454,21 @@ function Indice({ aperto, sezione, onChiuso, annuncia }: PropsIndice) {
       window.clearTimeout(timerRef.current);
       setStato('chiuso');
       if (foglioRef.current !== null) foglioRef.current.style.transform = '';
+      // Chiusura causata da una voce (accessibility-auditor giro 3, N1): il
+      // dialog, chiudendosi, rimette il fuoco su "indice". Se il viaggio verso
+      // l'ancora è già arrivato (reduced motion: subito) quel fuoco
+      // vincerebbe; qui lo si porta sul titolo d'arrivo. Se il viaggio è
+      // ancora in corso, all'arrivo arrivaAllAncora lo rimette sullo stesso h2.
+      const voce = voceScelta.current;
+      voceScelta.current = null;
+      if (voce !== null) {
+        const sezione = document.getElementById(voce);
+        const titolo = sezione?.querySelector<HTMLElement>('h2, h1') ?? sezione ?? null;
+        if (titolo !== null) {
+          if (!titolo.hasAttribute('tabindex')) titolo.setAttribute('tabindex', '-1');
+          titolo.focus({ preventScroll: true });
+        }
+      }
       onChiusoRef.current();
     };
     dialog.addEventListener('cancel', suCancel);
@@ -606,9 +623,11 @@ function Indice({ aperto, sezione, onChiuso, annuncia }: PropsIndice) {
   };
 
   /* ---------- scelte */
-  const suVoce = (): void => {
+  const suVoce = (id: string) => (): void => {
     // Il viaggio verso l'ancora lo fa Impronta.tsx (clic delegato sui link #):
-    // qui si chiude il foglio e si sblocca lo scroll PRIMA che il viaggio parta.
+    // qui si chiude il foglio e si sblocca lo scroll PRIMA che il viaggio parta,
+    // e si ricorda la voce per dare il fuoco al titolo d'arrivo alla chiusura.
+    voceScelta.current = id;
     chiudi();
   };
 
@@ -666,7 +685,7 @@ function Indice({ aperto, sezione, onChiuso, annuncia }: PropsIndice) {
                       href={`#${id}`}
                       className="imp-indice__voce"
                       aria-current={corrente ? 'location' : undefined}
-                      onClick={suVoce}
+                      onClick={suVoce(id)}
                     >
                       <span className="imp-indice__nome">{SEZIONI[id].indice}</span>
                       {corrente ? (

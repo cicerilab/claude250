@@ -311,8 +311,8 @@ Note sui numeri:
 - WebKit con GL: atlante a 8 bit anche a 1440 (`halfFloat: false`, prima era
   `true`: scelta del giro 3 sulle prestazioni). Il cambio carta ora passa
   anche dal velo DOM.
-- Firefox a 375: la parola dell'hero va su due righe ("impron / ta") a 1440:
-  è il layout nuovo del giro 3, uguale nei tre motori.
+- Hero: a 1440 la parola va su due righe ("impron / ta"). È il layout nuovo
+  del giro 3 ed è uguale nei tre motori.
 
 ### B3 · WebKit: `ResizeObserver loop completed with undelivered notifications` a ogni caricamento
 

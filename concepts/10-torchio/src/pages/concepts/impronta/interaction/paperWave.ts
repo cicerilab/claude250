@@ -208,9 +208,19 @@ function chiudi(o: OndaAttivaDom): void {
  * carte chiede un cambio a ogni ripetizione del tasto (fino a ~30 al secondo).
  * Si applica al massimo un cambio ogni INTERVALLO_MINIMO_MS; le richieste nel
  * frattempo si accodano e resta solo l'ultima. Vale anche con reduced motion.
- * 450 ms → al massimo 2,2 cambi di colore al secondo.
+ * Giro 3b (N3): 500 ms, misurati tra gli SCAMBI di carta (il momento in cui
+ * `data-carta` cambia), non solo tra gli avvii: il primo cambio della raffica
+ * conta già, e in nessuna finestra di 1 s cadono 3 cambi.
  */
-export const INTERVALLO_MINIMO_MS = 450;
+export const INTERVALLO_MINIMO_MS = 500;
+
+/** Ritardo tra l'avvio di un'onda e il suo scambio di carta. */
+function ritardoScambio(ridotta: boolean): number {
+  return ridotta ? 0 : CARTA.onda.scambio * CARTA.onda.durata;
+}
+
+/** Istante dell'ultimo scambio di carta avvenuto (o previsto per l'onda in corso). */
+let ultimoScambio = Number.NEGATIVE_INFINITY;
 
 interface Richiesta {
   x: number;
@@ -288,7 +298,13 @@ export function startPaperWave(x: number, y: number, carta: Carta, opzioni: Opzi
     return Promise.resolve();
   }
   const ora = performance.now();
-  const attesa = INTERVALLO_MINIMO_MS - (ora - ultimoAvvio);
+  // Lo scambio della nuova onda deve cadere almeno INTERVALLO_MINIMO_MS dopo
+  // l'ultimo (anche se quello è ancora previsto, per l'onda in corso).
+  const avvioMinimo = Math.max(
+    ultimoAvvio + INTERVALLO_MINIMO_MS,
+    ultimoScambio + INTERVALLO_MINIMO_MS - ritardoScambio(store.get().reducedMotion),
+  );
+  const attesa = avvioMinimo - ora;
   if (attesa > 0 || timerCoda !== null) {
     inCoda = { x, y, carta, opzioni };
     if (timerCoda === null) timerCoda = window.setTimeout(svuotaCoda, Math.max(0, attesa));
@@ -307,6 +323,7 @@ function avviaOnda(x: number, y: number, carta: Carta, opzioni: OpzioniOnda): Pr
   ultimoAvvio = performance.now();
 
   const ridotta = s.reducedMotion;
+  ultimoScambio = ultimoAvvio + ritardoScambio(ridotta);
   const root = opzioni.root ?? document.querySelector<HTMLElement>('.imp-root');
   const { w, h } = dimensioniViewport();
   const cx = limita(x, 0, w);
