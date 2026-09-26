@@ -339,3 +339,46 @@ applicati, solo nei miei file (Hero.tsx, hero.css, Testata.tsx, testata.css):
 - **per-chi, legatoria, colophon**: il richiamo della testata e quello in
   basso si nascondono da soli quando i loro link al banco sono in vista.
   Nessun obbligo di toglierli per causa mia.
+
+---
+
+# Giro 3
+
+Voti del giro 2: Testata 7, Hero 8,5 (docs/awwwards-jury.md "Giro 2", riga 6
+e 9). Tutto nei miei file.
+
+- **"Prova la tua" della testata in lamina.** Stessa classe `.imp-lamina`
+  dell'hero e del colophon, alta 44 px. Via il blocco verde pieno: una sola
+  azione, un solo aspetto. Anche il richiamo in basso a destra è in lamina,
+  con i bordi `--imp-lamina-bordi` più un'ombra corta tinta. Le mie regole
+  danno solo misura e tipografia; colore, fondo e bordi sono dell'art-director.
+- **Dial "luce" agganciato alla parola.** Pende dal piede di "ta"
+  (`margin-top: 0,86 em` della parola + 12 px), chiuso sul margine esterno
+  come la parola. Non sta più alla linea del bottone. Con il testo del
+  cliente su una riga pende da quella.
+- **Una sola regola di allineamento a 2560: la gabbia.** Hero e testata
+  stanno nella gabbia da 1680 px come tutte le altre sezioni (`max-inline-size:
+  var(--imp-pagina-max)`, centrati, margini da libro). Il sito è una pagina
+  di libro: la forma di stampa resta ferma e oltre c'è solo carta (DESIGN.md
+  §5). Andare a vivo con tutte le sezioni avrebbe voluto dire cambiare i file
+  degli altri sette builder e rompere la misura di lettura dei testi. La
+  parola resta comunque l'oggetto: circa 390 px di altezza a 2560.
+- **"indice" più grande a 375**: 16 px, peso 600, in inchiostro pieno (prima
+  13-15 px, velato).
+- **Spazio per i fissi in basso a 375**: sotto i 1024 px `.imp-contenuto`
+  finisce con un `::after` alto quanto i comandi fissi (`--imp-segnapagina-h`
+  più l'area sicura, minimo 14 px). L'ultima riga del colophon ("← Torna in
+  Ciceri Lab") resta sopra "Torna in Ciceri Lab" del sito e sopra "Prova la
+  tua". Per le altre sezioni il testo passa sotto i fissi solo mentre scorre.
+
+Verifica: `npm run typecheck` e `npm run lint` verdi. Server mio sulla 8103,
+chiuso alla fine; font veri serviti con `page.route`.
+
+Screenshot in `/tmp/claude-0/shots-hero/giro3/`:
+- `hero-{375,1440,2560}-gl0-{citrino,cotone}.png`
+- `scroll-{375,1440,2560}-{900,2600}.png` (testata attaccata con la lamina)
+- `fondo-375.png` (fine pagina con i fissi)
+
+Nota: durante gli scatti l'art-director stava riscrivendo
+`relief-fallback.css` e `tokens.css`. Un primo giro era caduto a metà di un
+aggiornamento (parola senza rilievo); rifatto a file stabili.
