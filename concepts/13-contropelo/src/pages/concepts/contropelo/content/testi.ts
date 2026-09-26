@@ -112,9 +112,9 @@ export const LINK = {
 /* ================================================================== meta */
 
 export const META = {
-  /** <title>: 57 caratteri. Dice "Concept" e "Ciceri Lab" come il pilota. */
+  /** <title>: 58 caratteri (max 60). Dice "Concept" e "Ciceri Lab" come il pilota. */
   title: 'Concept 13 · CONTROPELO, barberia a Pordenone | Ciceri Lab',
-  /** meta description: 151 caratteri. Dice subito che la barberia è inventata. */
+  /** meta description: 153 caratteri (max 155). Dice subito che la barberia è inventata. */
   description:
     'Concept di Ciceri Lab: il sito di una barberia di Pordenone, inventata. Pulisci lo specchio appannato, leggi il listino e scrivi il tuo nome nella lista.',
   ogTitle: 'CONTROPELO, barberia. Un concept di Ciceri Lab',

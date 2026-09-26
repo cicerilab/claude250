@@ -147,6 +147,7 @@
   --imb-t-marchio: clamp(16px, 14.94px + 0.282vw, 19px);     /* nome dell'albergo nella testata (h1) */
   --imb-t-mese: clamp(15px, 14.3px + 0.188vw, 17px);         /* mese sul nastro delle lune */
   --imb-t-fregio: clamp(14px, 12.94px + 0.282vw, 17px);      /* frase incisa nello zoccolo */
+  --imb-fregio-adatta: 2.3cqi;    /* nello zoccolo (contenitore = palazzo): clamp(12px, 2.3cqi, --imb-t-fregio); sotto 600 px di palazzo due righe (testi.chiSiamoRighe) */
   --imb-t-iscrizione-cella: 11cqi;                            /* ALBERGO IMBRUNIRE dentro la cella piccola (la cella è un contenitore) */
   --imb-lh-display: 1.1;
 
@@ -311,8 +312,11 @@
   --imb-velo-desatura-blend: saturation;
   /* Calore al passaggio del puntatore o al fuoco: +8% di velo luce */
   --imb-calore: 0.08;
-  /* Riflesso della stanza accesa sul poché sotto il nome (luce che esce dal fronte) */
-  --imb-riverbero: linear-gradient(to bottom, rgb(var(--imb-luce-rgb) / 0.14), rgb(var(--imb-luce-rgb) / 0) 70%);
+  /* Riflesso della stanza accesa: un filo di luce di 2 px sul bordo del
+     solaio, sopra la fascia del nome. Mai sotto il testo (una velatura di
+     luce sul poché porterebbe il nome a 4,35:1, sotto AA). La fascia deve
+     avere padding-top ≥ 4 px. */
+  --imb-riverbero: linear-gradient(to bottom, rgb(var(--imb-luce-rgb) / 0.55) 0 2px, rgb(var(--imb-luce-rgb) / 0) 2px);
 
   /* ------------------------------------------------------------------------
      8. Lune (nastro, cielo, successo). Misure anche in tokens.ts (LUNE).

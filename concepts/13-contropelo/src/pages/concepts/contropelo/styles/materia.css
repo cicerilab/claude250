@@ -1,0 +1,418 @@
+/*
+ * CONTROPELO · materia (art-director)
+ *
+ * Come sono fatte le cose, non dove stanno: la parete, il bisello dello
+ * specchio, il riflesso velato, il pennarello sul vetro, i segni turchesi,
+ * l'alone fermo, il bottone turchese, i campi a linea di base. Posizioni e
+ * misure: layout.css (scaffold) e CSS delle sezioni. Hover, fuoco, active:
+ * interaction/interaction.css. Tempi: motion/motion.css.
+ *
+ * Ogni valore viene da tokens.css. Ogni selettore comincia con .ctp-root.
+ */
+
+/* ------------------------------------------------------------------------ */
+/* La parete: grafite verdastra con una grana ferma, appena percettibile    */
+/* (intonaco dipinto, non cemento). Statica: nessun rumore animato.         */
+/* ------------------------------------------------------------------------ */
+
+.ctp-root {
+  background-color: var(--ctp-parete);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='13' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0.055 0 0 0 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  color: var(--ctp-pennarello);
+  font-family: var(--ctp-font-ui);
+  font-size: var(--ctp-t-ui);
+  line-height: var(--ctp-lh-ui);
+  font-weight: var(--ctp-peso-ui);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+.ctp-root ::selection {
+  background-color: var(--ctp-turchese-vetro);
+  color: var(--ctp-su-turchese);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Lo specchio: vetro a spigolo vivo con bisello di 2 px.                    */
+/* Il bisello sta su un ::after sopra riflesso, pennarello e vapore (stessa  */
+/* quota del vapore, dopo di lui nell'ordine), così resta nitido anche a     */
+/* vapore pieno. Il filo scuro esterno è il bordo del vetro sulla parete,    */
+/* non un'ombra portata.                                                     */
+/* Uso: sull'elemento del vetro (position: relative, overflow: hidden).      */
+/* ------------------------------------------------------------------------ */
+
+.ctp-root .ctp-bisello {
+  background-color: var(--ctp-specchio);
+  border-radius: var(--ctp-raggio);
+  box-shadow: 0 0 0 1px var(--ctp-bisello-ombra);
+}
+
+.ctp-root .ctp-bisello::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: var(--ctp-z-vapore);
+  pointer-events: none;
+  box-shadow:
+    inset var(--ctp-bisello-spessore) var(--ctp-bisello-spessore) 0 0 var(--ctp-bisello),
+    inset calc(var(--ctp-bisello-spessore) * -1) calc(var(--ctp-bisello-spessore) * -1) 0 0 var(--ctp-bisello-ombra);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Il riflesso: foto già trattata dal photo-editor (specchiata, desaturata,  */
+/* raffreddata, sfocata, alte luci tagliate a #A7AFAE), più la velatura      */
+/* specchio al 66% in CSS. Nessun filter a runtime.                          */
+/* ------------------------------------------------------------------------ */
+
+.ctp-root .ctp-riflesso {
+  position: absolute;
+  inset: 0;
+  z-index: var(--ctp-z-riflesso);
+  overflow: hidden;
+  background-color: var(--ctp-specchio);
+}
+
+.ctp-root .ctp-riflesso__foto {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--ctp-riflesso-posizione);
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.ctp-root .ctp-riflesso::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: var(--ctp-velatura);
+}
+
+/* Piano C (nessuna foto giusta): il vetro riflette solo la finestra alle
+   spalle, una banda verticale più chiara e morbida, fuori centro. */
+.ctp-root .ctp-riflesso--vuoto {
+  background-image:
+    linear-gradient(90deg,
+      transparent 0%,
+      transparent 58%,
+      var(--ctp-riflesso-luce) 70%,
+      var(--ctp-riflesso-luce) 78%,
+      transparent 92%),
+    linear-gradient(180deg, var(--ctp-riflesso-luce) 0%, transparent 55%);
+  background-blend-mode: normal;
+}
+
+.ctp-root .ctp-riflesso--vuoto::after {
+  background-color: transparent;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Il pennarello: tutto ciò che è scritto sul vetro, e solo quello.          */
+/* Bianco caldo appena velato ai bordi (il pennarello su vetro non è mai     */
+/* nitido come uno schermo), niente ombra portata, niente maiuscole.         */
+/* ------------------------------------------------------------------------ */
+
+.ctp-root .ctp-pennarello {
+  position: relative;
+  z-index: var(--ctp-z-pennarello);
+  color: var(--ctp-pennarello);
+  font-family: var(--ctp-font-pennarello);
+  font-weight: 400;
+  font-size: var(--ctp-t-riga);
+  line-height: var(--ctp-lh-pennarello);
+  letter-spacing: var(--ctp-ls-pennarello);
+  font-kerning: normal;
+  font-feature-settings: 'calt' 1, 'liga' 1;
+  font-variant-numeric: normal;
+  text-transform: none;
+  text-shadow: 0 0 0.6px var(--ctp-inchiostro-velo);
+  overflow-wrap: break-word;
+  hyphens: manual;
+}
+
+/* Le scritte sono inclinate come le fa una mano, dal punto d'attacco. Si usa
+   rotate (proprietà singola) per non litigare con i transform del motion. */
+.ctp-root .ctp-scritta--vetro {
+  rotate: var(--ctp-rot-vetro);
+  transform-origin: 0 0;
+}
+
+.ctp-root .ctp-scritta--lista {
+  rotate: var(--ctp-rot-lista);
+  transform-origin: 0 0;
+}
+
+/* Corpi a pennarello, per ruolo */
+.ctp-root .ctp-pennarello--nome {
+  font-size: var(--ctp-t-nome);
+  line-height: var(--ctp-lh-nome);
+}
+
+.ctp-root .ctp-pennarello--titolo {
+  font-size: var(--ctp-t-titolo);
+}
+
+.ctp-root .ctp-pennarello--ora {
+  font-size: var(--ctp-t-ora);
+}
+
+.ctp-root .ctp-pennarello--nota {
+  font-size: var(--ctp-t-nota);
+}
+
+.ctp-root .ctp-pennarello--link {
+  font-size: var(--ctp-t-link);
+}
+
+.ctp-root .ctp-pennarello--chiuso {
+  font-size: var(--ctp-t-chiuso);
+  line-height: var(--ctp-lh-chiuso);
+}
+
+/* Link scritti sul vetro (Apri in Maps, Chiama, la lista, domani):
+   sottolineati a pennarello, non in turchese (il turchese è "qui c'è posto"). */
+.ctp-root .ctp-pennarello-link {
+  color: var(--ctp-pennarello);
+  text-decoration-line: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.2em;
+  text-decoration-skip-ink: auto;
+}
+
+/* Prezzi: Mansalva non ha cifre tabellari, quindi ogni prezzo sta nella sua
+   colonna di larghezza fissa e si allinea a destra da solo. */
+.ctp-root .ctp-colonna-prezzi {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--ctp-prezzo-col);
+  column-gap: var(--ctp-sp-4);
+  align-items: baseline;
+}
+
+.ctp-root .ctp-prezzo {
+  justify-self: end;
+  text-align: end;
+  white-space: nowrap;
+}
+
+/* Stati della scrittura */
+.ctp-root .ctp-pennarello--passata {
+  opacity: var(--ctp-opacita-passata);
+}
+
+.ctp-root .ctp-pennarello--fallito {
+  opacity: var(--ctp-opacita-fallito);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Segni turchesi sul vetro: trattino del posto libero, sottolineatura del   */
+/* tuo nome, cerchio del fuoco. Sempre turchese-vetro (più chiaro della      */
+/* bottiglia: 3,46:1 anche sul punto più chiaro del riflesso). Gli SVG dei   */
+/* tratti (vector-artist) usano currentColor.                               */
+/* ------------------------------------------------------------------------ */
+
+.ctp-root .ctp-segno {
+  color: var(--ctp-turchese-vetro);
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ctp-root .ctp-segno--trattino {
+  stroke-width: var(--ctp-trattino-spessore);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Campi della riga di scrittura: nessuna scatola, una linea di base a       */
+/* pennarello; quello che scrivi è già in Mansalva. Dritti, mai ruotati.     */
+/* ------------------------------------------------------------------------ */
+
+.ctp-root .ctp-campo {
+  display: block;
+  width: 100%;
+  min-height: var(--ctp-bottone-h);
+  margin: 0;
+  padding: var(--ctp-sp-1) 0 var(--ctp-sp-1);
+  border: 0;
+  border-bottom: var(--ctp-tratto-campo) solid var(--ctp-pennarello);
+  border-radius: var(--ctp-raggio);
+  background: transparent;
+  color: var(--ctp-pennarello);
+  font-family: var(--ctp-font-pennarello);
+  font-size: var(--ctp-t-campo);
+  line-height: 1.2;
+  letter-spacing: normal;
+  caret-color: var(--ctp-turchese-vetro);
+  rotate: 0deg;
+  appearance: none;
+}
+
+.ctp-root .ctp-campo[aria-invalid='true'] {
+  border-bottom-width: var(--ctp-tratto-campo-errore);
+  border-bottom-style: dashed;
+}
+
+.ctp-root .ctp-campo::placeholder {
+  color: transparent;
+}
+
+.ctp-root .ctp-etichetta {
+  display: block;
+  font-family: var(--ctp-font-ui);
+  font-size: var(--ctp-t-ui);
+  font-weight: var(--ctp-peso-ui-medio);
+  line-height: var(--ctp-lh-ui);
+  color: var(--ctp-pennarello);
+}
+
+/* Messaggi di errore e di servizio sul vetro: Figtree, pennarello, mai
+   Mansalva, mai colore da solo (icona Phosphor + testo). */
+.ctp-root .ctp-messaggio {
+  font-family: var(--ctp-font-ui);
+  font-size: var(--ctp-t-ui);
+  line-height: var(--ctp-lh-ui);
+  color: var(--ctp-pennarello);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Il bottone turchese: un solo tipo, per "Scrivi il tuo nome" e "Segna".    */
+/* Spigolo vivo, nessuna ombra, testo parete (5,21:1).                       */
+/* ------------------------------------------------------------------------ */
+
+.ctp-root .ctp-bottone-turchese {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--ctp-bottone-h);
+  min-width: var(--ctp-tocco-min);
+  padding: 0 var(--ctp-sp-5);
+  border: 0;
+  border-radius: var(--ctp-raggio);
+  background-color: var(--ctp-turchese);
+  color: var(--ctp-su-turchese);
+  font-family: var(--ctp-font-ui);
+  font-size: var(--ctp-t-bottone);
+  font-weight: var(--ctp-peso-bottone);
+  line-height: var(--ctp-lh-bottone);
+  letter-spacing: 0;
+  text-align: center;
+  text-transform: none;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Testi della parete                                                        */
+/* ------------------------------------------------------------------------ */
+
+.ctp-root .ctp-insegna {
+  font-family: var(--ctp-font-insegna);
+  font-weight: 400;
+  font-size: var(--ctp-t-insegna);
+  line-height: var(--ctp-lh-insegna);
+  letter-spacing: var(--ctp-ls-insegna);
+  color: var(--ctp-pennarello);
+  text-transform: none;
+}
+
+.ctp-root .ctp-insegna--barbiere {
+  font-size: var(--ctp-t-barbiere);
+}
+
+.ctp-root .ctp-ui-piccolo {
+  font-family: var(--ctp-font-ui);
+  font-size: var(--ctp-t-ui-piccolo);
+  line-height: var(--ctp-lh-ui);
+  color: var(--ctp-pennarello);
+}
+
+/* ------------------------------------------------------------------------ */
+/* L'alone fermo: il vapore che resta sui bordi del vetro quando lo          */
+/* specchio è pulito. Il canvas lo disegna da sé in modo "fermo" (stessi     */
+/* valori in tokens.ts: ALONE). Questa è la versione CSS per quando il       */
+/* canvas non c'è (data-canvas="off"): il vetro resta vetro.                 */
+/* Più spesso in basso (l'asciugamano caldo sta sotto lo specchio).          */
+/* A 20 px dal bordo, dove può iniziare il testo, vale al massimo 16%.       */
+/* ------------------------------------------------------------------------ */
+
+.ctp-root .ctp-alone::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: var(--ctp-z-vapore);
+  pointer-events: none;
+  display: none;
+  background-image:
+    linear-gradient(0deg, var(--ctp-alone-bordo) 0, var(--ctp-alone-interno) 18px, transparent 64px),
+    linear-gradient(90deg, var(--ctp-alone-bordo) 0, var(--ctp-alone-interno) 14px, transparent 36px),
+    linear-gradient(270deg, var(--ctp-alone-bordo) 0, var(--ctp-alone-interno) 14px, transparent 36px),
+    linear-gradient(180deg, var(--ctp-alone-bordo) 0, var(--ctp-alone-interno) 10px, transparent 28px);
+}
+
+.ctp-root[data-canvas='off'] .ctp-alone::before {
+  display: block;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Pannello Informazioni e striscia di stato: il barbiere ha passato lo      */
+/* straccio e il vetro lì è pulito e scuro. Niente card, niente bordo.       */
+/* ------------------------------------------------------------------------ */
+
+.ctp-root .ctp-pannello-vetro {
+  background-color: var(--ctp-pannello-fondo);
+  border-radius: var(--ctp-raggio);
+}
+
+.ctp-root .ctp-striscia-parete {
+  background-color: var(--ctp-striscia-fondo);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Colori forzati (Windows contrasto elevato): via foto e vapore, restano    */
+/* testo e bordi di sistema.                                                 */
+/* ------------------------------------------------------------------------ */
+
+@media (forced-colors: active) {
+  .ctp-root {
+    background-image: none;
+  }
+
+  .ctp-root .ctp-riflesso,
+  .ctp-root .ctp-vapore,
+  .ctp-root .ctp-alone::before {
+    display: none;
+  }
+
+  .ctp-root .ctp-bisello {
+    outline: 1px solid CanvasText;
+  }
+
+  .ctp-root .ctp-bisello::after {
+    box-shadow: none;
+  }
+
+  .ctp-root .ctp-pennarello {
+    text-shadow: none;
+  }
+
+  .ctp-root .ctp-pennarello--passata,
+  .ctp-root .ctp-pennarello--fallito {
+    opacity: 1;
+  }
+
+  .ctp-root .ctp-segno {
+    color: Highlight;
+  }
+
+  .ctp-root .ctp-bottone-turchese {
+    border: 2px solid ButtonText;
+  }
+
+  .ctp-root .ctp-campo {
+    border-bottom-color: CanvasText;
+  }
+}

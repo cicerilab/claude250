@@ -37,11 +37,11 @@
 
 /* Parte illuminata. Entra in dissolvenza quando le fasi sono calcolate
    (300 ms, CD §7.4); con reduced motion la durata la azzera il
-   motion-designer tramite --imb-dur-fase. */
+   motion-designer tramite --imb-dur-fasi-luna (motion/variabili.ts). */
 .imb-root .imb-luna__luce {
   fill: var(--imb-luna);
   opacity: 1;
-  transition: opacity var(--imb-dur-fase, 300ms) linear;
+  transition: opacity var(--imb-dur-fasi-luna, 300ms) linear;
 }
 
 .imb-root .imb-luna--vuota .imb-luna__luce {
