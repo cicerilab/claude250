@@ -775,8 +775,8 @@ maniglia `aria-hidden`; la stessa azione da tastiera è il meno).
   bottone "metti qui" (compare solo con un pane in mano; senza, la riga dice
   "qui il tuo pane" in inchiostro normale) e i pani messi.
 - Con un pane in mano, i giorni validi hanno fondo carta da zucchero e "si fa";
-  quelli non validi restano farina con la riga di motivo in piccolo. La fila
-  dei pani resta visibile? No, a 375 la settimana è più alta della finestra:
+  quelli non validi restano farina con la riga di motivo in piccolo. A 375 la
+  settimana è più alta della finestra e la fila dei pani esce di vista:
   quando il pane è in mano compare **in cima**, sotto la testata, una striscia
   fissa da 48 px "In mano: segale · ◆ posala" (così si sa sempre cosa si sta
   mettendo, anche scorrendo fino alla domenica).
@@ -1028,9 +1028,8 @@ Nessun contenuto aspetta un'animazione per essere leggibile o cliccabile.
   validi restano focalizzabili e, premuti, danno il messaggio del motivo
   (meglio che saltarli in silenzio). Senza un pane in mano il bottone dice
   "Prendi prima un pane" e porta il focus alla fila.
-- Scorciatoia: con un pane in mano, i tasti 2-7 mettono il pane nei giorni da
-  martedì (2) a domenica (7)? **No**: niente scorciatoie nascoste. Tab fino al
-  giorno.
+- Niente scorciatoie nascoste (per esempio tasti numerici per i giorni): si
+  arriva al giorno con Tab.
 - Righe dei pani nei giorni: gruppo con nome ("Segale, martedì"), radio della
   pezzatura (`fieldset` + `legend` visivamente nascosta), meno e più con
   `aria-label` completo e il numero come testo tra i due (`aria-live` sulla
@@ -1057,10 +1056,9 @@ Nessun contenuto aspetta un'animazione per essere leggibile o cliccabile.
 ### 6.8 Zoom 400% e testo grande
 - A 1440 con zoom 400%: modo in colonna (0.3), testata non fissa, nessun
   contenuto tagliato, nessuno scroll orizzontale della pagina.
-- Con testo al 200% (solo testo): i blocchi prodotto crescono in altezza; se
-  un blocco supera l'area viva della striscia, il blocco scorre? No: il
-  blocco usa unità in em per la larghezza, e se l'altezza del testo supera
-  l'area viva la vetrina passa al modo in colonna (lo stato controlla
+- Con testo al 200% (solo testo): i blocchi prodotto crescono in altezza
+  (larghezze in em) e non scorrono mai al loro interno; se l'altezza del
+  blocco più alto supera l'area viva, la vetrina passa al modo in colonna (lo stato controlla
   l'altezza del blocco più alto a ogni resize e al cambio di font).
 
 ---

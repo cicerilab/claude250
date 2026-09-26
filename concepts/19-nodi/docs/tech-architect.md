@@ -985,11 +985,11 @@ l'ha aggiunto lei.
   Chromium di `/opt/pw-browsers` con SwiftShader
   (`--use-angle=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist`),
   carica `/concept-19?gl=1&fermo=<stato>&foglie=<n>`, aspetta
-  `data-fermo="pronto"` sul canvas, e cattura **solo il canvas** con fondo
-  trasparente sopra il colore abete (`omitBackground: false`, fondo della
-  pagina = abete) in PNG; poi converte in WebP **nel browser stesso**
-  (`canvas.toBlob('image/webp', 0.82)`), perché nella sandbox non ci sono
-  `cwebp` né `sharp`.
+  `data-fermo="pronto"` sul canvas, e cattura **solo il riquadro del
+  canvas** sul fondo abete della pagina (screenshot dell'elemento in PNG,
+  così l'immagine combacia col fondo); poi converte la PNG in WebP **nel
+  browser stesso** (disegno su un canvas 2D e `toBlob('image/webp', 0.82)`),
+  perché nella sandbox non ci sono `cwebp` né `sharp`.
 - Stati: `vuota`, `riposo`, `modo1`, `modo2`, `modo5`. Misure: `l` alta
   1.200 px (largo, circa DPR 1,5 a 800 px di tavola), `p` alta 760 px
   (stretto, circa DPR 2 a 360 px), con 2.600 e 1.400 foglie rispettivamente.
