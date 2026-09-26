@@ -589,6 +589,9 @@
   /* L'ultimo schema non tiene spazio sotto il suo testo: le righe finali
      salgono accanto a lui (niente vuoto prima di "Prezzi su 100 copie"). */
   .imp-root .imp-legatoria__fermata:last-child .imp-legatoria__schema {
+    /* grid-area auto: il contenitore è il riquadro della fermata, non la
+       cella della griglia (che partirebbe dopo il padding). */
+    grid-area: auto;
     position: absolute;
     inset-block-start: var(--filo-testa);
     inset-inline-end: 0;
