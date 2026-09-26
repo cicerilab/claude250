@@ -125,13 +125,10 @@
     display: none;
   }
 
-  .evd-root .evd-tratto__riga::before {
-    content: none;
-  }
-
+  /* la barra sta sotto la riga: l'altezza inline del tratto è 1,15 × corpo, la barra scende di quanto basta */
   .evd-root .evd-tratto__riga {
     height: 4px !important;
-    transform: translateY(calc(var(--evd-riga-h-forzato, 1.1em))) !important;
+    transform: translateY(1.05em) !important;
     background: Highlight;
   }
 }

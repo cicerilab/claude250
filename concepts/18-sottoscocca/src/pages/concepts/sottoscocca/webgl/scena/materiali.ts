@@ -87,7 +87,6 @@ export interface Materiali {
   // officina
   pavimento: MeshBasicMaterial;
   ombra: MeshBasicMaterial;
-  neon: MeshBasicMaterial;
   // pezzi del sottoscocca (uno per pezzo evidenziabile)
   coppa: MaterialeEvidenza;
   filtro: MaterialeEvidenza;
@@ -161,7 +160,6 @@ export function creaMateriali(tex: TextureScena): Materiali {
     targhetta,
     pavimento,
     ombra,
-    neon: new MeshBasicMaterial({ color: coloreRuolo('neon') }),
     coppa: evidenziabile(pezzi),
     filtro: evidenziabile(pezzi),
     tubo: evidenziabile(pezzi),

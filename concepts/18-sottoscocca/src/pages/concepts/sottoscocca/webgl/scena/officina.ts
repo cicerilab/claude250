@@ -8,16 +8,17 @@
  *   pavimento sparisce da solo (CD 4.3, "vista dal basso quasi zenitale").
  * - Nebbia verso il nero grasso: le postazioni vicine si perdono nel fondo.
  * - Macchia di contatto sotto l'auto, che si schiarisce mentre l'auto sale.
- * - Due neon a soffitto (tubi bianchi, accesi fissi: niente sfarfallio) e la
- *   luce: una principale dall'alto, un emisfero tenue e una luce di lavoro da
- *   sotto che rende leggibile il pianale. Tutte ferme, nessuna segue niente.
+ * - La luce dei neon a soffitto (fissa: niente sfarfallio): una principale
+ *   dall'alto, un emisfero tenue e una luce di lavoro da sotto che rende
+ *   leggibile il pianale. Tutte ferme, nessuna segue niente. I tubi dei neon
+ *   non si disegnano: provati, da sotto sembravano un contorno bianco
+ *   dell'auto e nella vista lontana due trattini sospesi nel nero.
  */
 
 import { Color, DirectionalLight, Fog, Group, HemisphereLight, Mesh, PlaneGeometry } from 'three';
 import type { BufferGeometry, Scene } from 'three';
 import { PALETTE, SCENA } from '../../styles/tokens';
 import type { MisureAuto } from './auto';
-import { scatola, unisci } from './geometria';
 import type { Materiali } from './materiali';
 import { LATO_PAVIMENTO } from './texture';
 
@@ -69,12 +70,6 @@ export function costruisciOfficina(m: MisureAuto, mat: Materiali): Officina {
   ombra.name = 'ombra';
   ombra.renderOrder = 1;
   gruppo.add(ombra);
-
-  const gn = unisci([scatola([0.95, 4.3, 0.2], [0.07, 0.05, 2.6]), scatola([-0.95, 4.3, 0.2], [0.07, 0.05, 2.6])]);
-  geometrie.push(gn);
-  const neon = new Mesh(gn, mat.neon);
-  neon.name = 'neon';
-  gruppo.add(neon);
 
   const bianco = new Color(PALETTE.bianco.hex);
   const zincato = new Color(PALETTE.zincato.hex);
