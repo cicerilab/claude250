@@ -273,3 +273,18 @@ dopo i 900 ms. Il gesto va provato su un dispositivo vero.
 **Da girare**:
 - **shader-engineer**: col GL acceso su SwiftShader, dopo lo scroll verso la frase di successo il pezzo resta disegnato per un momento nel punto vecchio (`1440-cotone-gl-4-successo`): probabilmente è la lentezza del frame in headless, ma va visto su GPU vera. Il prezzo in lamina su Citrino nel GL resta quasi invisibile (già segnalato al giro 1).
 - In headless a 2560 una ristampa (170 + 520 ms) può superare il secondo, perché i frame sono lenti: su una macchina vera va bene.
+
+---
+
+## Giro 3 (giuria giro 2: Banco 7,5)
+
+| Punto della giuria | Cosa ho fatto | File |
+|---|---|---|
+| (1) Su Citrino il primo fotogramma è un rettangolo senza testo | Le righe della prova non partono più da pressione 0: `--imp-press` delle righe = `0,55 + 0,45 × pressione del pezzo` (`--imp-banco-pp`). Prima che la pressa scenda il testo d'esempio di `CAMPI_TESTO` ("Chiara Zanin / Restauratrice") è già premuto a metà, poi segue la pressa fino a 1; la leva continua ad approfondirlo | `banco.css` |
+| (2) 300-400 px vuoti sotto la leva e dopo il successo (1440) | Da 1024 px la sezione chiude con `--imp-testa` invece del piede da 240 px: dopo la leva o la frase arriva subito la bottega | `banco.css` |
+| (3) A 375 dopo l'invio il dial "luce" resta orfano in basso | Lo `scroll-margin` generico dei controlli (42svh + testata) vinceva su quello della frase di successo, che finiva sotto la lastra lasciando vedere solo l'angolo con il dial. Regola più specifica: la frase va in cima (sotto la testata) e la prova con il suo dial le sta subito sotto, tutta intera | `banco.css` |
+| Spazio per i due bottoni fissi a 375 | Sotto i 1024 px il fondo della sezione è piede + 44 px + safe area | `banco.css` |
+
+**Verifica**: typecheck e lint verdi. Le pagine sono state servite da una build stabile (`vite build` in `/tmp` + `vite preview --port 8102`), perché l'HMR di `Filo.tsx`, modificato da un altro agent in quel momento, rompeva il dev server. Screenshot guardati: `/tmp/claude-0/shots-banco/giro3/{375,768,1440}-{citrino,cotone}-gl0-{1-vuoto,2-compilato,3-leva-a-meta,4-successo}.png`. Server chiuso.
+
+Restano fuori dai miei file: la lamina pallida col GL a 2560 (shader-engineer, da vedere su un device vero).

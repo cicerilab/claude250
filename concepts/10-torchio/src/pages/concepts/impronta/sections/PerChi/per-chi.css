@@ -487,6 +487,16 @@
   }
 }
 
+/* Desktop stretto: i corpi del pezzo toccano il minimo di 14 px e l'annuncio
+   si allunga; il biglietto scende un poco, così copre solo carta vuota e mai
+   una riga della partecipazione (giro 3). */
+@media (min-width: 1024px) and (max-width: 1279.98px) {
+  .imp-root .imp-perchi__posto--biglietto {
+    margin-block-start: calc(var(--_p) * 0.66);
+    margin-inline-start: calc(var(--_p) * 0.93);
+  }
+}
+
 /* ==========================================================================
    Mazzo (< 1024 px): si sfoglia con lo swipe
    Nomi e frecce stanno SOPRA la fila: con la sezione in vista non finiscono

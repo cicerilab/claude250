@@ -28,7 +28,7 @@
 
 .imp-root .imp-legatoria {
   /* Larghezza dello schema (viewBox 240 × 300). Tutto il resto ne deriva. */
-  --filo-w: 250px;
+  --filo-w: 280px;
   --filo-h: calc(var(--filo-w) * 1.25);
   /* Spessore del filo: 2,4 unità su 240. */
   --filo-sp: max(2px, calc(var(--filo-w) * 0.01));

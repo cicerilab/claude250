@@ -16,7 +16,7 @@ Ho letto anche `webgl/presets.ts`, `webgl/materials.ts` e
 | `DESIGN.md` (root del concept) | design system in formato Stitch: tema, palette con ruoli, tipografia, componenti, layout, profondità, do/don't, responsive, prompt guide |
 | `src/pages/concepts/impronta/styles/tokens.css` | `@font-face` di ripiego tarati, token comuni su `.imp-root`, quattro carte su `[data-carta]`, token derivati, breakpoint |
 | `src/pages/concepts/impronta/styles/tokens.ts` | `CARTE` (hex + vec3 sRGB + vec3 lineari), `LAMINA`, `FONT_CSS_URL`, stop del canvas, metriche e larghezze misurate di Anybody, scala `TIPO`, `GRIGLIA`, funzioni pure (margini, corpo dell'hero, assi di pressione, vettore luce, contrasto) |
-| `src/pages/concepts/impronta/styles/relief-fallback.css` | classi materiali `.imp-secco`, `.imp-inchiostro`, `.imp-caldo`, `.imp-segno-caldo`, `.imp-lamina`, `.imp-foglio`, `.imp-taglio`, `.imp-costa`, `.imp-fibra`, `.imp-superficie`, `.imp-pressa`, spegnimento (con eccezione `fuori`) con GL acceso, contrasto forzato |
+| `src/pages/concepts/impronta/styles/relief-fallback.css` | classi materiali `.imp-secco`, `.imp-inchiostro`, `.imp-caldo`, `.imp-segno-caldo`, `.imp-lamina`, `.imp-foglio`, `.imp-taglio`, `.imp-costa`, `.imp-fibra`, `.imp-pressa`, spegnimento (con eccezione `fuori`) con GL acceso, contrasto forzato |
 
 Verifiche fatte: `tsc --strict --noUncheckedIndexedAccess` su `tokens.ts`
 verde; pagina di prova (scratch, fuori dal repo) renderizzata con Chromium di
@@ -209,18 +209,18 @@ import './styles/relief-fallback.css';
 | Gruppo | Variabili |
 |---|---|
 | Carta attiva (cambiano con `data-carta`) | `--imp-carta`, `--imp-carta-luce`, `--imp-carta-ombra`, `--imp-carta-costa`, `--imp-secco-fondo`, `--imp-inchiostro`, `--imp-inchiostro-velato`, `--imp-lamina-bordo`, `--imp-taglio`, `--imp-spessore`, `--imp-spessore-pezzo`, `--imp-fibra` |
-| Carta del sito (anche dentro un pezzo) | `--imp-sito-carta`, `--imp-sito-ombra`, `--imp-sito-costa`, `--imp-sito-inchiostro` |
+| Carta del sito (anche dentro un pezzo) | `--imp-sito-ombra`, `--imp-sito-inchiostro` |
 | Lamina | `--imp-lamina`, `-chiara`, `-scura`, `-riflesso`, `-profonda`, `--imp-su-lamina`, `--imp-lamina-sfumatura`, `--imp-lamina-sfumatura-premuta`, `--imp-lamina-sfumatura-testo` |
 | Font | `--imp-font-display`, `--imp-font-testo` |
-| Corpi | `--imp-fs-secco-hero`, `-secco-grande`, `-titolo-1/2/3`, `-nome`, `-prezzo`, `-marchio`, `-lead`, `-corpo`, `-piccolo`, `-nota`, `-bottone`, `-leva`, `-campo` |
+| Corpi | `--imp-fs-titolo-1/2/3`, `-nome`, `-prezzo`, `-lead`, `-corpo`, `-piccolo`, `-nota`, `-bottone`, `-leva`, `-campo` |
 | Interlinea / tracking | `--imp-lh-*`, `--imp-trk-*` |
-| Assi | `--imp-wdth-*`, `--imp-wght-*` (valori di arrivo per voce), `--imp-hero-em` |
+| Assi | `--imp-wdth-*`, `--imp-wght-*` (valori di arrivo per voce) |
 | Griglia | `--imp-margine-interno`, `--imp-margine-esterno`, `--imp-testa`, `--imp-piede`, `--imp-colonne`, `--imp-canalino`, `--imp-colonna`, `--imp-area-viva`, `--imp-giustezza`, `--imp-giustezza-stretta`, `--imp-pagina-max` |
 | Spazi | `--imp-sp-1` … `--imp-sp-10` (4 → 128 px) |
 | Misure UI | `--imp-tocco-min`, `--imp-bottone-h`, `--imp-bottone-h-grande`, `--imp-leva-h`, `--imp-campo-h`, `--imp-testata-h`, `--imp-testata-h-fissa`, `--imp-segnapagina-h`, `--imp-raggio`, `--imp-raggio-leva` |
 | Stati | `--imp-focus-colore`, `--imp-focus-spessore`, `--imp-focus-distanza`, `--imp-sottolineatura(-hover, -distanza)`, `--imp-bordo-scelto`, `--imp-bordo-errore`, `--imp-opacita-disabilitato`, `--imp-selezione-fondo`, `--imp-selezione-testo` |
-| Profondità | `--imp-ombra-costa`, `--imp-ombra-testata`, `--imp-ombra-segnapagina`, `--imp-ombra-indice`, `--imp-ombra-premuto` |
-| Livelli | `--imp-z-canvas` 0, `--imp-z-contenuto` 1, `--imp-z-testata` 10, `--imp-z-onda` 20 |
+| Profondità | `--imp-ombra-testata`, `--imp-ombra-premuto`, `--imp-ombra-superficie` |
+| Livelli | `--imp-z-canvas` 0, `--imp-z-contenuto` 1, `--imp-z-testata` 10 |
 | Pilotate da altri | `--imp-press` (motion), `--imp-rilievo` (profondità del blocco), `--imp-luce-x/y` (interaction) |
 
 ### 3.3 Esempi
@@ -234,7 +234,7 @@ Parola dell'hero (fantasma dello scaffold + classi mie):
 .imp-root .imp-hero__parola {
   --imp-wdth-arrivo: var(--imp-wdth-hero);
   --imp-wght-arrivo: var(--imp-wght-hero);
-  font-size: var(--imp-fs-secco-hero);
+  font-size: calc(var(--imp-area-viva) / 8.158); /* corpoHero() in tokens.ts */
   line-height: var(--imp-lh-secco);
   letter-spacing: var(--imp-trk-secco);
 }
@@ -484,6 +484,99 @@ inchiostri non cambiano).
   classe `.imp-lamina`: così leva e bottoni hanno lo stesso metallo.
 - **webgl-artist**: `CARTE[id].superficie` e `LAMINA.riflesso` sono nuovi o
   cambiati in `tokens.ts` se servono allo shader.
+
+---
+
+## 7. Giro 3 (giuria "Giro 2" punto 3; budget CSS)
+
+### 7.1 Secco pallido nei corpi medi (Tecniche, prova del banco)
+
+Il passo del bisello era `max(1 px, 0,02 em) × rilievo`: a 40-60 px di corpo
+valeva 1 px e il solco spariva; i builder avevano provato a compensare con
+`--imp-rilievo` 1,6-3,2, che però ingrandiva anche l'hero. Ora
+`--_imp-d = max(1,5 px, 0,016 em × rilievo + 1 px) × pressione`:
+- la parte fissa (1 px) tiene netto il solco dei corpi medi: 1,6 px a 40 px,
+  2 px a 60 px, 3,3 px a 145 px (hero, invariato a occhio);
+- `--imp-rilievo` moltiplica solo la parte proporzionale, così i valori alti
+  dei builder non raddoppiano più l'ombra.
+Screenshot guardati con `?gl=0` (tecniche e banco, 1440 e 375, Citrino,
+Cotone, Grafite): "Pordenone" e "Chiara Zanin" ora si leggono come solchi
+netti, uguali per carattere a quello dell'hero. Col GL il preset della prova
+resta del webgl-artist (giuria, riga 3).
+
+### 7.2 Budget CSS
+
+Misura: `npx vite build` → `dist/assets/Concept10-*.css`. Per file: ogni
+sorgente minificato con esbuild (come Vite), gzip 9; "marginale" = quanto
+cala il totale togliendo quel file (la cifra giusta per decidere i tagli,
+perché gzip condivide le ripetizioni tra file).
+
+| File | Proprietario | Marginale gz prima | Marginale gz dopo | Min. |
+|---|---|---|---|---|
+| `sections/Banco/banco.css` | section-builder-banco | 4803 | 4896 | 32,8 KB |
+| `sections/Legatoria/legatoria.css` | section-builder-legatoria | 2434 | 2463 | 15,7 KB |
+| `styles/tokens.css` | **art-director** | **2544** | **2286** | 8,0 KB |
+| `interaction/interaction.css` | interaction-designer | 1968 | 1964 | 11,7 KB |
+| `sections/Hero/testata.css` | section-builder-hero | 1757 | 1774 | 12,9 KB |
+| `sections/Tecniche/tecniche.css` | section-builder-tecniche | 1621 | 1611 | 10,5 KB |
+| `sections/PerChi/per-chi.css` | section-builder-per-chi | 1578 | 1588 | 9,7 KB |
+| `styles/relief-fallback.css` | **art-director** | **1139** | **1093** | 6,3 KB |
+| `sections/Colophon/colophon.css` | section-builder-colophon | 878 | 954 | 7,1 KB |
+| `styles/base.css` | scaffold-engineer | 921 | 941 | 4,3 KB |
+| `sections/Carta/carta.css` | section-builder-carta | 932 | 924 | 7,5 KB |
+| `sections/Hero/hero.css` | section-builder-hero | 732 | 758 | 5,3 KB |
+| `sections/Bottega/bottega.css` | section-builder-bottega | 611 | 618 | 4,7 KB |
+| `styles/layout.css` | scaffold-engineer | 200 | 195 | 1,1 KB |
+| **Bundle** (`Concept10-*.css`) | | **23,28 KB gz** | **23,12 KB gz** | |
+
+Nei miei file: **−310 B gz** (tokens.css 2655 → 2397 da solo, relief-fallback
+1505 → 1453). Il totale del bundle è sceso meno perché nello stesso momento
+banco e colophon sono cresciuti.
+
+**Tagli fatti nei miei file**
+- 13 variabili dichiarate e mai lette da nessun file (trovate con uno script
+  che confronta le dichiarazioni di `tokens.css` con tutto `src/`, ripetuto
+  finché non ne resta nessuna): `--imp-fs-secco-hero`, `--imp-hero-em` (anche
+  nei due media query), `--imp-fs-secco-grande`, `--imp-fs-marchio`,
+  `--imp-trk-marchio`, `--imp-wdth-marchio`, `--imp-wght-marchio`,
+  `--imp-z-onda`, `--imp-ombra-costa`, `--imp-ombra-segnapagina`,
+  `--imp-ombra-indice`, `--imp-sito-carta`, `--imp-sito-costa`. I valori
+  restano in `tokens.ts` (`TIPO`, `corpoHero`, `Z`) per chi li calcola in JS.
+- Fibra: da quattro SVG (uno per carta) a **uno** per tutte, −0,1 KB gz
+  netti; resa rivista a schermo e alleggerita (macchie scure 0,26, chiare
+  0,4) perché non faccia "sporco" su Citrino e Grafite.
+- Classe `.imp-superficie` tolta: nessuno la usa (banco, per-chi e testata
+  usano direttamente `--imp-superficie` + `--imp-ombra-superficie`, che
+  restano).
+- Blocco `@supports not (background-clip: text)` tolto: tutti i browser
+  supportati hanno il ritaglio sul testo.
+Restano (non tagliabili senza perdere qualità o accessibilità): i due
+`@font-face` di ripiego (180 B, evitano il salto delle righe), la scala
+fluida, le quattro carte, i blocchi `forced-colors` / `prefers-contrast`.
+
+**Tagli chiesti agli altri** (servono ancora ~3,1 KB gz per arrivare a 20):
+
+| Proprietario | File | Taglio | Stima gz |
+|---|---|---|---|
+| section-builder-banco | `banco.css` (4,9 KB marginali, il 21% del totale) | (1) la lamina di leva e bottoni è ricostruita a mano in più punti (`background-color: var(--imp-lamina)` + filo + gradienti): usare la classe `.imp-lamina` sul markup e togliere quelle regole; (2) 18 `color-mix()` quasi tutti sulle stesse coppie: dichiararli una volta come variabili locali `--imp-banco-*` in cima; (3) 12 `@media` sparsi: raggruppare per breakpoint (600, 1024) in fondo al file; (4) `.imp-banco__riga--secondaria` non compare in nessun componente; (5) `--imp-rilievo` 2,2-3,2 sulle righe della prova: con il giro 3 non servono più, basta 1-1,4 | −1,3 / −1,6 KB |
+| section-builder-legatoria | `legatoria.css` (2,5 KB) | dieci varianti `imp-legatoria__tratto--*` e la stessa `inset-inline-start: calc(var(--filo-xs) - var(--filo-sp) / 2)` ripetuta 5 volte: posizioni del tracciato come variabili inline sul singolo tratto (o attributi SVG), una sola regola `.imp-legatoria__tratto` | −0,6 KB |
+| interaction-designer | `interaction.css` (2,0 KB) | tre stati della lamina riscrivono per intero `background-image: var(--imp-lamina-grana), var(--imp-lamina-sfumatura-premuta)` e il filo: basta cambiare una variabile locale (`--imp-ix-lamina: var(--imp-lamina-sfumatura-premuta)`) letta da una regola sola; anello di focus dichiarato tre volte con le stesse tre proprietà | −0,4 KB |
+| section-builder-hero | `testata.css` (1,8 KB) | 14 `@media`: raggruppare per breakpoint; indice mobile e segnapagina hanno ombre e costa scritte a mano uguali (una variabile locale) | −0,4 KB |
+| section-builder-tecniche | `tecniche.css` (1,6 KB) | 14 `@media` da raggruppare; il taglio colorato ha tre sfumature `color-mix` quasi uguali | −0,3 KB |
+| section-builder-per-chi | `per-chi.css` (1,6 KB) | 18 modificatori `__lavoro--*`, `__pezzo--*`, `__riga--*`, `__posto--*` (costruiti nel JSX): quelli che cambiano solo posizione/rotazione/corpo possono diventare variabili inline sul pezzo (`--imp-pc-x`, `--imp-pc-r`), una regola sola | −0,4 KB |
+| scaffold-engineer | `base.css`, `layout.css` | `.imp-display`, `.imp-giustezza`, `.imp-giustezza--stretta`, `.imp-a-vivo` non compaiono in nessun componente (verificato con grep su `src/`); `padding-inline: var(--imp-margine-interno) var(--imp-margine-esterno)` e `grid-template-columns: repeat(var(--imp-colonne), minmax(0, 1fr))` sono riscritti anche in hero, testata, banco, legatoria: le sezioni usino `.imp-page` / la griglia di `layout.css` | −0,3 KB |
+| tech-architect | budget | se dopo i tagli restiamo tra 20 e 21 KB: 9 sezioni con layout mobile e desktop distinti e tutti gli stati di accessibilità, proposta di portare il budget a 21 KB gz | |
+
+Somma delle stime: 3,7-4,0 KB gz, abbastanza per stare sotto 20 con margine.
+
+### 7.3 Verifiche
+
+- `npx tsc -p tsconfig.app.json --noEmit`: verde.
+- `npx vite build`: verde (bundle CSS sopra).
+- Contrasti ricalcolati con lo script (Cotone con l'ombra `#A2A39B`): 48
+  coppie con soglia, tutte passano, nessuna variazione di colore in questo
+  giro.
+- Dev server 8104 chiuso. Nessun commit.
 
 ---
 

@@ -292,7 +292,8 @@ Le tre colonne di wdth sono: sotto 600 px, da 600 a 1023, da 1024.
 
 ### La parola dell'hero
 
-Il corpo è calcolato, non scelto: `--imp-fs-secco-hero = area viva / larghezza
+Il corpo è calcolato, non scelto (`corpoHero()` in `tokens.ts`; il CSS lo
+fa l'hero builder): `corpo = area viva / larghezza
 della parola in em`. Misure su Anybody wght 900 (tracking incluso): 5,479 em a
 wdth 100, 6,819 a 125, 8,158 a 150. Risultato verificato nel browser: a 1440
 la parola è larga 1181 px (area viva esatta, 145 px di corpo); a 375 è larga
@@ -373,7 +374,8 @@ Lo scambio al caricamento non sposta le righe del testo.
 ### Scelte (carta, tecnica, tiratura, cosa stampi)
 
 - Radio veri resi come rettangoli di carta a raggio 0, altezza minima 48 px,
-  su `.imp-superficie` (mai schede bianche con bordino e ombra).
+  su `--imp-superficie` + `--imp-ombra-superficie` (mai schede bianche con
+  bordino e ombra).
 - Scelta attiva: bordo interno inchiostro 3 px + parola scritta.
 - Le quattro carte nel banco: quadrati 64 × 64 (72 su mobile) del colore
   della carta, con costa, nome sotto in Hanken.
@@ -381,7 +383,7 @@ Lo scambio al caricamento non sposta le righe del testo.
 ### Campi
 
 - Etichetta sopra (Hanken 15-16 / 600, inchiostro), campo alto 56 px, fondo
-  `--imp-superficie` (classe `.imp-superficie`: tinta, mai bianco puro;
+  `--imp-superficie` con `--imp-ombra-superficie` (tinta, mai bianco puro;
   labbro di luce in alto e costa sotto, niente bordino intorno), filo
   inchiostro 1 px sotto, 2 px al focus più anello.
 - Testo 17 px. Placeholder mai come etichetta; se c'è, in
@@ -394,7 +396,8 @@ Lo scambio al caricamento non sposta le righe del testo.
   barra di altro colore. Da fissa: `--imp-ombra-testata` (costa 1 px + ombra
   tinta cortissima), cioè un foglio sopra l'altro.
 - Voci Hanken 15 / 500 in minuscolo; voce corrente sottolineata 2 px.
-- Segnapagina mobile: stessa carta, `--imp-ombra-segnapagina`.
+- Segnapagina mobile: stessa carta, costa 1 px e ombra tinta (nel CSS
+  della testata).
 
 ### Link
 
@@ -461,7 +464,7 @@ solco), non sopra.
 | 0,5 | superficie sollevata (tasti, campi) | `--imp-superficie` + `--imp-ombra-superficie`: labbro di luce, costa 1 px, ombra corta |
 | 1 | pezzo appoggiato | costa di 1-1,8 px + ombra di appoggio corta tinta (`.imp-foglio`) |
 | 2 | testata fissa, segnapagina | costa 1 px + ombra tinta cortissima (`--imp-ombra-testata`) |
-| 3 | indice mobile | foglio che sale: costa + ombra verso l'alto (`--imp-ombra-indice`) |
+| 3 | indice mobile | foglio che sale: costa + ombra verso l'alto (nel CSS della testata) |
 
 Compressione al contatto: `--imp-press-urto` (0..1, un solo picco per pressa, lo scrive il motion) aggiunge al secco e all'inchiostro un alone d'ombra corto attorno al solco; a riposo non esiste.
 
@@ -481,7 +484,9 @@ di `<dialog>`).
 
 ### Texture
 
-`--imp-fibra`: due strati SVG `feTurbulence` statici, tinti con l'ombra e la
+`--imp-fibra`: un solo SVG `feTurbulence` statico per tutte le carte (giro 3),
+macchie quasi nere e quasi bianche a bassissima opacità, che si adattano da
+sole alla carta (sulle chiare le scure, su Grafite le chiare); in origine era
 luce della carta, stirati in orizzontale (il senso della fibra). Si vedono
 solo da vicino. Con WebGL acceso la fibra la fa lo shader e lo strato CSS
 sparisce.
