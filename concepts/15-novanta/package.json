@@ -1,0 +1,36 @@
+{
+  "name": "concept-15-novanta",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Concept 15 del Concept Lab di CiceriLab: NOVANTA, fisioterapia e osteopatia a Pordenone. App standalone Vite + React, portabile in src/pages/Concept15.tsx del sito.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.app.json --noEmit",
+    "typecheck:node": "tsc -p tsconfig.node.json --noEmit",
+    "lint": "eslint src",
+    "check": "npm run typecheck && npm run lint && npm run build",
+    "size": "node scripts/size.mjs"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-router-dom": "6.30.6"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@types/node": "22.20.4",
+    "@types/react": "18.3.31",
+    "@types/react-dom": "18.3.7",
+    "@vitejs/plugin-react": "4.7.0",
+    "eslint": "9.39.5",
+    "eslint-plugin-react-hooks": "5.2.0",
+    "eslint-plugin-react-refresh": "0.4.26",
+    "globals": "15.15.0",
+    "typescript": "5.6.3",
+    "typescript-eslint": "8.70.1",
+    "vite": "5.4.21"
+  }
+}

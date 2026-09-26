@@ -1,0 +1,283 @@
+/*
+ * CONTROPELO · design tokens (art-director)
+ *
+ * Solo variabili --ctp-* su .ctp-root e i @font-face di ripiego. Nessuna regola
+ * di componente: la resa dei materiali (pennarello, bisello, velatura, alone,
+ * grana della parete) sta in materia.css, la geometria in layout.css (scaffold),
+ * i tempi in motion/motion.css. Specchio numerico per il canvas: tokens.ts.
+ * Contrasti misurati con script: docs/art-director.md §2.
+ *
+ * Tema unico scuro (lo specchio del salone), bloccato: nessuna variante chiara,
+ * nessun prefers-color-scheme.
+ */
+
+/* ------------------------------------------------------------------------ */
+/* Ripieghi metrici dei font                                                 */
+/* Tarati con fontTools sui woff2 latin di Google Fonts (Mansalva v16,       */
+/* Figtree v9, Limelight v21) contro Liberation Sans (metriche di Arial).    */
+/* Larghezza media misurata su testi veri del concept (listino, lista,       */
+/* mensola). Nessun salto quando arrivano i woff2 (CLS <= 0,02).             */
+/* ------------------------------------------------------------------------ */
+
+@font-face {
+  font-family: 'Ctp Mansalva Ripiego';
+  src: local('Arial'), local('ArialMT'), local('Liberation Sans'), local('Helvetica');
+  font-weight: 400;
+  size-adjust: 96.69%;
+  ascent-override: 115.01%;
+  descent-override: 48.2%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Ctp Figtree Ripiego';
+  src: local('Arial'), local('ArialMT'), local('Liberation Sans'), local('Helvetica');
+  font-weight: 400 500;
+  size-adjust: 101.35%;
+  ascent-override: 93.74%;
+  descent-override: 24.67%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Ctp Figtree Ripiego';
+  src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'), local('Helvetica Bold');
+  font-weight: 600;
+  size-adjust: 94.6%;
+  ascent-override: 100.42%;
+  descent-override: 26.43%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Ctp Limelight Ripiego';
+  src: local('Arial'), local('ArialMT'), local('Liberation Sans'), local('Helvetica');
+  font-weight: 400;
+  size-adjust: 121.3%;
+  ascent-override: 75.03%;
+  descent-override: 25.32%;
+  line-gap-override: 0%;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Token                                                                     */
+/* ------------------------------------------------------------------------ */
+
+.ctp-root {
+  color-scheme: dark;
+
+  /* Palette della matrice ---------------------------------------------- */
+  --ctp-specchio: #232A2C;        /* vetro pulito, velatura sopra la foto */
+  --ctp-vapore: #CDD5D4;          /* solo il vapore e l'alone fermo */
+  --ctp-turchese: #2A9D96;        /* il disinfettante: bottone, barbiere attivo */
+  --ctp-pennarello: #FAFAF6;      /* tutto ciò che è scritto; testo di interfaccia */
+
+  /* Derivati ------------------------------------------------------------ */
+  --ctp-parete: #171C1D;          /* parete tra gli specchi, fascia, mensola */
+  --ctp-bisello: #48555A;         /* luce del bisello (alto e sinistra) */
+  --ctp-bisello-ombra: #0E1213;   /* ombra del bisello (basso e destra) */
+  --ctp-turchese-vetro: #4BC3BC;  /* lo stesso turchese quando è scritto sul vetro: trattini, sottolineatura, fuoco */
+  --ctp-su-turchese: #171C1D;     /* testo sul bottone turchese (5,21:1) */
+  --ctp-vapore-luce: #E4EAE9;     /* filo d'acqua sul bordo della traccia, testa delle gocce (canvas) */
+  --ctp-vapore-ombra: #B9C2C1;    /* grana scura del vapore (canvas) */
+  --ctp-riflesso-luce: #343E41;   /* piano C: la finestra alle spalle, senza foto */
+
+  /* Trasparenze con ruolo ---------------------------------------------- */
+  --ctp-velatura: rgb(35 42 44 / 0.66);        /* specchio sopra la foto trattata */
+  --ctp-velatura-lunga: rgb(35 42 44 / 0.8);   /* vetrina lunga, contrasto forte */
+  --ctp-pannello-fondo: rgb(35 42 44 / 0.94);  /* pannello Informazioni sul vetro */
+  --ctp-striscia-fondo: rgb(23 28 29 / 0.96);  /* riga di stato su S, appoggiata al vetro */
+  --ctp-alone-bordo: rgb(205 213 212 / 0.34);  /* alone fermo: filo esterno, mai sotto il testo */
+  --ctp-alone-interno: rgb(205 213 212 / 0.16);/* alone fermo a 14 px dal bordo */
+  --ctp-inchiostro-velo: rgb(250 250 246 / 0.35); /* sbavatura del pennarello sul vetro */
+
+  --ctp-opacita-passata: 0.62;   /* mezz'ore passate: 3,85:1 sul pixel più chiaro */
+  --ctp-opacita-fallito: 0.55;   /* nome non arrivato: 3,41:1 (Mansalva 30 px) */
+  --ctp-opacita-raccolta: 0;     /* righe lontane quando si apre la riga di scrittura */
+
+  /* Famiglie -------------------------------------------------------------- */
+  --ctp-font-pennarello: 'Mansalva', 'Ctp Mansalva Ripiego', 'Comic Sans MS', cursive;
+  --ctp-font-ui: 'Figtree', 'Ctp Figtree Ripiego', system-ui, sans-serif;
+  --ctp-font-insegna: 'Limelight', 'Ctp Limelight Ripiego', Georgia, serif;
+
+  /* Scala: pennarello (Mansalva), fluida 375 → 1440 ---------------------- */
+  --ctp-t-nome: clamp(1.75rem, 1.4859rem + 1.1268vw, 2.5rem);      /* 28 → 40 barbiere in testa al vetro (h2) */
+  --ctp-t-titolo: clamp(1.5rem, 1.368rem + 0.5634vw, 1.875rem);     /* 24 → 30 "Il listino", giorno della lista (h3) */
+  --ctp-t-riga: clamp(1.5rem, 1.3239rem + 0.7512vw, 2rem);          /* 24 → 32 voci e prezzi, righe della barba, orari */
+  --ctp-t-ora: clamp(1.5rem, 1.434rem + 0.2817vw, 1.6875rem);       /* 24 → 27 righe della lista (ora + nome) */
+  --ctp-t-nota: clamp(1.375rem, 1.331rem + 0.1878vw, 1.5rem);       /* 22 → 24 la riga sul barbiere */
+  --ctp-t-link: clamp(1.5rem, 1.456rem + 0.1878vw, 1.625rem);       /* 24 → 26 "la lista", "domani", "Apri in Maps" */
+  --ctp-t-scelta: 1.5rem;                                           /* 24 parole del servizio */
+  --ctp-t-campo: clamp(1.625rem, 1.537rem + 0.3756vw, 1.875rem);    /* 26 → 30 quello che scrivi nei campi */
+  --ctp-t-chiuso: clamp(4rem, 3.2958rem + 3.0047vw, 6rem);          /* 64 → 96 "chiuso" */
+
+  --ctp-lh-pennarello: 1.12;
+  --ctp-lh-nome: 1.02;
+  --ctp-lh-chiuso: 0.9;
+  --ctp-ls-pennarello: 0.004em;
+  --ctp-prezzo-col: 2.4em;       /* colonna dei prezzi allineati a destra (Mansalva non ha cifre tabellari) */
+
+  /* Scala: insegna (Limelight) ----------------------------------------- */
+  --ctp-t-insegna: clamp(1.375rem, 1.243rem + 0.5634vw, 1.75rem);   /* 22 → 28 */
+  --ctp-t-barbiere: 1.25rem;                                        /* 20 nomi sulla mensola */
+  --ctp-lh-insegna: 1;
+  --ctp-ls-insegna: 0.015em;
+
+  /* Scala: interfaccia (Figtree), tre corpi e basta ---------------------- */
+  --ctp-t-ui-piccolo: 0.875rem;                                     /* 14 "barberia, Pordenone", suggerimento */
+  --ctp-t-ui: clamp(0.9375rem, 0.9155rem + 0.0939vw, 1rem);         /* 15 → 16 etichette, errori, riga di stato, interruttore */
+  --ctp-t-bottone: clamp(0.9375rem, 0.8935rem + 0.1878vw, 1.0625rem); /* 15 → 17 "Scrivi il tuo nome", "Segna" */
+  --ctp-lh-ui: 1.45;
+  --ctp-lh-bottone: 1.15;
+  --ctp-peso-ui: 400;
+  --ctp-peso-ui-medio: 500;
+  --ctp-peso-bottone: 600;
+
+  /* Spazi (base 4) -------------------------------------------------------- */
+  --ctp-sp-1: 0.25rem;
+  --ctp-sp-2: 0.5rem;
+  --ctp-sp-3: 0.75rem;
+  --ctp-sp-4: 1rem;
+  --ctp-sp-5: 1.5rem;
+  --ctp-sp-6: 2rem;
+  --ctp-sp-7: 3rem;
+  --ctp-sp-8: 4rem;
+
+  /* Misure della parete (consumate da layout.css) ------------------------- */
+  --ctp-fascia-h: 48px;           /* S; 60 px sopra i 640 (sotto) */
+  --ctp-mensola-riga1-h: 48px;    /* S: i tre barbieri */
+  --ctp-mensola-riga2-h: 56px;    /* S: nicchia del bottone Lab + richiamo */
+  --ctp-mensola-h: calc(var(--ctp-mensola-riga1-h) + var(--ctp-mensola-riga2-h));
+  --ctp-bordo-vicino: 12px;       /* quanto si vede dello specchio accanto */
+  --ctp-parete-gutter: 12px;      /* parete tra due specchi */
+  --ctp-vetro-pad: 20px;          /* margine interno del vetro: nessun testo più vicino al bordo */
+  --ctp-nicchia-lab-w: 212px;     /* S: in basso a sinistra; L/M: in alto a sinistra (sotto) */
+  --ctp-riga-lista-h: 44px;       /* 40 con mouse (sotto) */
+  --ctp-bottone-h: 48px;
+  --ctp-tocco-min: 44px;
+
+  /* Materia --------------------------------------------------------------- */
+  --ctp-raggio: 0;
+  --ctp-bisello-spessore: 1px;    /* x2: luce + ombra = 2 px */
+  --ctp-tratto-attivo: 3px;       /* sotto il barbiere attivo */
+  --ctp-tratto-campo: 2px;        /* linea di base dei campi */
+  --ctp-tratto-campo-errore: 3px; /* tratteggiata */
+  --ctp-trattino-spessore: 4px;   /* posto libero */
+  --ctp-fuoco-colore: var(--ctp-turchese-vetro);
+  --ctp-fuoco-spessore: 2px;
+  --ctp-fuoco-stacco: 2px;
+
+  /* Scritte a mano: rotazioni e posizioni (L, facce affiancate) ------------
+     Per specchio sotto (#ctp-specchio-N). Mai oltre ±2°, mai sui campi. */
+  --ctp-rot-vetro: -1.5deg;
+  --ctp-rot-lista: 0.8deg;
+  --ctp-vetro-x: 6%;
+  --ctp-vetro-y: 56px;
+  --ctp-vetro-w: 50%;
+  --ctp-lista-x: 62%;
+  --ctp-lista-y: 48px;
+  --ctp-lista-w: 32%;
+
+  /* Livelli ---------------------------------------------------------------- */
+  --ctp-z-riflesso: 0;
+  --ctp-z-pennarello: 1;
+  --ctp-z-vapore: 2;
+  --ctp-z-scrittura: 3;
+  --ctp-z-pannello: 3;
+  --ctp-z-parete: 4;
+
+  /* Foto dietro al vetro ------------------------------------------------- */
+  --ctp-riflesso-posizione: 50% 50%;  /* il photo-editor lo scrive per specchio via style */
+}
+
+/* Sopra i 640 px il bottone Lab sale in alto a sinistra: fascia di 60 px
+   (il bottone arriva a y 49; 56 non bastano), mensola a una riga. */
+@media (min-width: 640px) {
+  .ctp-root {
+    --ctp-fascia-h: 60px;
+    --ctp-mensola-riga1-h: 88px;
+    --ctp-mensola-riga2-h: 0px;
+    --ctp-bordo-vicino: 32px;
+    --ctp-parete-gutter: 16px;
+    --ctp-vetro-pad: 40px;
+    --ctp-nicchia-lab-w: 260px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .ctp-root {
+    --ctp-bordo-vicino: 86px;
+    --ctp-parete-gutter: 24px;
+    --ctp-vetro-pad: 56px;
+  }
+}
+
+@media (pointer: fine) {
+  .ctp-root {
+    --ctp-riga-lista-h: 40px;
+  }
+}
+
+/* Schermi grandi: il vetro a 2560 è largo 2200 px, le scritte crescono ancora */
+@media (min-width: 1920px) {
+  .ctp-root {
+    --ctp-t-nome: clamp(2.5rem, 1.8571rem + 0.7143vw, 3rem);
+    --ctp-t-riga: clamp(2rem, 1.6786rem + 0.3571vw, 2.25rem);
+    --ctp-t-ora: clamp(1.6875rem, 1.4464rem + 0.2679vw, 1.875rem);
+    --ctp-lista-w: 28%;
+    --ctp-lista-x: 64%;
+  }
+}
+
+/* Una faccia alla volta (S, M, L stretto): la scritta prende il vetro */
+.ctp-root[data-facce='alternate'] {
+  --ctp-rot-vetro: -1deg;
+  --ctp-rot-lista: 0.6deg;
+  --ctp-vetro-x: 0%;
+  --ctp-vetro-y: 0px;
+  --ctp-vetro-w: 100%;
+  --ctp-lista-x: 0%;
+  --ctp-lista-y: 0px;
+  --ctp-lista-w: 100%;
+}
+
+@media (max-width: 639.98px) {
+  .ctp-root[data-facce='alternate'] {
+    --ctp-rot-vetro: -0.8deg;
+    --ctp-rot-lista: 0.5deg;
+  }
+}
+
+/* Ogni specchio è stato scritto in un momento diverso: inclinazioni e
+   attacchi diversi (solo facce affiancate; su una faccia sola vale il comune) */
+.ctp-root[data-facce='affiancate'] #ctp-specchio-1 {
+  --ctp-rot-vetro: -0.9deg;
+  --ctp-rot-lista: 1.2deg;
+  --ctp-vetro-y: 72px;
+  --ctp-lista-y: 40px;
+}
+
+.ctp-root[data-facce='affiancate'] #ctp-specchio-2 {
+  --ctp-rot-vetro: -1.8deg;
+  --ctp-rot-lista: 0.6deg;
+  --ctp-vetro-y: 48px;
+  --ctp-lista-y: 60px;
+}
+
+/* Vetrina lunga: niente rotazioni (testo ingrandito, zoom 400%) */
+.ctp-root[data-layout='scorre'] {
+  --ctp-rot-vetro: 0deg;
+  --ctp-rot-lista: 0deg;
+  --ctp-velatura: var(--ctp-velatura-lunga);
+}
+
+/* Riduzione del movimento non cambia i token visivi: cambia solo i tempi
+   (motion.css). Il contrasto alto sì. */
+@media (prefers-contrast: more) {
+  .ctp-root {
+    --ctp-velatura: rgb(35 42 44 / 0.86);
+    --ctp-inchiostro-velo: transparent;
+    --ctp-opacita-passata: 0.78;
+    --ctp-opacita-fallito: 0.7;
+  }
+}
