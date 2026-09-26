@@ -1,0 +1,415 @@
+/*
+ * CONTROPELO · stati di interazione (interaction-designer)
+ *
+ * Solo stati: :hover, :focus-visible, :active, aria-pressed/-selected/
+ * -invalid/-disabled, e le regole del gesto (touch-action, selezione).
+ * Geometria, colori di base e tipografia sono delle sezioni e dei token.
+ *
+ * Principi:
+ * - il pennarello non sfuma: ogni stato cambia di colpo, nessuna transizione
+ *   (MOTION_INTENSITY 4: si muovono solo vapore, pan, straccio, scrittura,
+ *   sottolineatura);
+ * - sul vetro gli stati sono segni a mano: sottolineatura, cerchio, ovale;
+ *   sulla parete (fascia, mensola) sono tipografici e a spigolo vivo;
+ * - il turchese ha un solo significato ("qui c'è posto / qui tocca a te"):
+ *   fuoco, fascia scelta, cursore del campo in cui scrivi il tuo nome;
+ * - nessun cursore custom: il puntatore di sistema dice cosa si può fare
+ *   (freccia sul vetro, mano sui comandi, barra nei campi);
+ * - hover solo con mouse vero (hover: hover + pointer: fine).
+ *
+ * Tutti i selettori partono da .ctp-root. Nessun hex: solo token
+ * (styles/tokens.css).
+ */
+
+/* ------------------------------------------------------------------------ */
+/* Fuoco: turchese del vetro, 2 px, 2 px di stacco, ovunque                   */
+/* ------------------------------------------------------------------------ */
+
+.ctp-root :focus-visible {
+  outline: var(--ctp-fuoco-spessore) solid var(--ctp-fuoco-colore);
+  outline-offset: var(--ctp-fuoco-stacco);
+}
+
+.ctp-root :focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Titoli raggiunti col fuoco programmatico (faccia nuova, giorno, pannello):
+   il segno sta più largo, non tocca le lettere a pennarello. */
+.ctp-root [tabindex='-1']:focus-visible {
+  outline-offset: 6px;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Il vetro: superficie del gesto                                             */
+/* ------------------------------------------------------------------------ */
+
+.ctp-root .ctp-ix-vetro {
+  /* Il pennarello non è testo da selezionare col mouse: freccia, non barra. */
+  cursor: default;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ctp-root .ctp-ix-vetro :is(input, textarea) {
+  cursor: text;
+}
+
+/* Solo quando il vapore è vivo il dito pulisce e basta. Con "Specchio
+   pulito", senza canvas o in vetrina lunga, il vetro torna una superficie
+   normale: zoom e scorrimento del browser. */
+.ctp-root[data-layout='fisso'][data-canvas='on'][data-vapore='vivo'] .ctp-ix-vetro {
+  touch-action: none;
+  -webkit-touch-callout: none;
+}
+
+@media (pointer: coarse) {
+  /* Pressione lunga del dito = pulire, non selezionare. Campi e indirizzo
+     restano selezionabili (si copia la via). */
+  .ctp-root[data-layout='fisso'][data-canvas='on'][data-vapore='vivo'] .ctp-ix-vetro {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .ctp-root[data-layout='fisso'][data-canvas='on'][data-vapore='vivo'] .ctp-ix-vetro :is(input, textarea, address) {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+}
+
+/* ------------------------------------------------------------------------ */
+/* La mensola: swipe orizzontale per girare la testa                          */
+/* ------------------------------------------------------------------------ */
+
+.ctp-root[data-layout='fisso'] .ctp-ix-mensola {
+  touch-action: pan-y pinch-zoom;
+}
+
+/* I tre barbieri (tab). Il tratto turchese dell'attivo è della mensola. */
+.ctp-root .ctp-ix-tab {
+  cursor: pointer;
+  min-block-size: var(--ctp-tocco-min);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ctp-root .ctp-ix-tab[aria-selected='true'] {
+  cursor: default;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Bordo dello specchio vicino (bottone fuori dal Tab)                        */
+/* ------------------------------------------------------------------------ */
+
+.ctp-root .ctp-ix-bordo {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Parole scritte sul vetro che si toccano                                    */
+/* "la lista", "← il listino", "domani", fasce, "Apri in Maps", "Chiama",     */
+/* "cancella", "lascia stare", "Riprova", "Rimettilo", link del "pieno"       */
+/* ------------------------------------------------------------------------ */
+
+.ctp-root .ctp-ix-parola {
+  cursor: pointer;
+  min-block-size: var(--ctp-tocco-min);
+  /* L'ovale del fuoco: il segno che il barbiere fa attorno a una parola.
+     È l'unico raggio del concept (creative-director §4.3). */
+  border-radius: 48% 52% 46% 54% / 56% 44% 56% 44%;
+  text-decoration-color: currentColor;
+  text-decoration-skip-ink: none;
+  text-underline-offset: 0.18em;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ctp-root .ctp-ix-parola:focus-visible {
+  outline-offset: calc(var(--ctp-fuoco-stacco) + 2px);
+}
+
+/* Fascia oraria scelta (aria-pressed): sottolineata in turchese, sempre. */
+.ctp-root .ctp-ix-parola[aria-pressed='true'] {
+  cursor: default;
+  text-decoration-line: underline;
+  text-decoration-color: var(--ctp-turchese-vetro);
+  text-decoration-thickness: var(--ctp-tratto-attivo);
+}
+
+.ctp-root .ctp-ix-parola[aria-disabled='true'] {
+  cursor: default;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Posto libero: il trattino turchese                                         */
+/* Il cerchio a pennarello del fuoco (<Tratto tipo="cerchio" />, vector-artist)*/
+/* sta dentro il bottone ed è visibile solo col fuoco da tastiera.            */
+/* ------------------------------------------------------------------------ */
+
+.ctp-root .ctp-ix-libero {
+  position: relative;
+  cursor: pointer;
+  min-block-size: var(--ctp-riga-lista-h);
+  min-inline-size: var(--ctp-tocco-min);
+  border-radius: 48% 52% 46% 54% / 56% 44% 56% 44%;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ctp-root .ctp-ix-libero .ctp-tratto--trattino {
+  transform-origin: 50% 50%;
+}
+
+.ctp-root .ctp-ix-libero > .ctp-tratto--cerchio {
+  color: var(--ctp-fuoco-colore);
+  opacity: 0;
+}
+
+.ctp-root .ctp-ix-libero:focus-visible > .ctp-tratto--cerchio {
+  opacity: 1;
+}
+
+/* Se il cerchio c'è, sostituisce l'anello; dove :has() manca restano entrambi. */
+.ctp-root .ctp-ix-libero:focus-visible:has(> .ctp-tratto--cerchio) {
+  outline: none;
+}
+
+/* ------------------------------------------------------------------------ */
+/* "Cosa ti facciamo?": radio veri, resi come parole a pennarello             */
+/* <label class="ctp-ix-scelta">                                              */
+/*   <input class="ctp-ix-scelta__input" type="radio" …>                      */
+/*   <span class="ctp-ix-scelta__parola">taglio</span>                        */
+/* </label>                                                                   */
+/* ------------------------------------------------------------------------ */
+
+.ctp-root .ctp-ix-scelta {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--ctp-tocco-min);
+  min-inline-size: var(--ctp-tocco-min);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* L'input copre la parola: tocco, clic e lettori di schermo lo prendono. */
+.ctp-root .ctp-ix-scelta__input {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.ctp-root .ctp-ix-scelta__parola {
+  /* Il bordo è sempre riservato: scegliere non sposta nulla. */
+  border: var(--ctp-fuoco-spessore) solid transparent;
+  border-radius: 48% 52% 46% 54% / 56% 44% 56% 44%;
+  padding: 0.02em 0.45em 0.08em;
+}
+
+/* Scelta: il barbiere cerchia la parola a pennarello (non in turchese:
+   il turchese resta il fuoco, così scelta e fuoco si distinguono). */
+.ctp-root .ctp-ix-scelta__input:checked + .ctp-ix-scelta__parola {
+  border-color: var(--ctp-pennarello);
+}
+
+.ctp-root .ctp-ix-scelta__input:focus-visible {
+  outline: none;
+}
+
+.ctp-root .ctp-ix-scelta__input:focus-visible + .ctp-ix-scelta__parola {
+  outline: var(--ctp-fuoco-spessore) solid var(--ctp-fuoco-colore);
+  outline-offset: calc(var(--ctp-fuoco-stacco) + 1px);
+}
+
+.ctp-root .ctp-ix-scelta__input:disabled,
+.ctp-root .ctp-ix-scelta__input[aria-disabled='true'] {
+  cursor: default;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Campi della riga di scrittura (nome, telefono)                             */
+/* La linea di base (border-bottom) è della lista; qui solo gli stati.        */
+/* ------------------------------------------------------------------------ */
+
+.ctp-root .ctp-ix-campo {
+  /* Il cursore che scrive il tuo nome è turchese: qui tocca a te. */
+  caret-color: var(--ctp-turchese-vetro);
+  border-radius: var(--ctp-raggio);
+}
+
+.ctp-root .ctp-ix-campo::selection {
+  background-color: color-mix(in srgb, var(--ctp-turchese-vetro) 38%, transparent);
+  color: var(--ctp-pennarello);
+}
+
+.ctp-root .ctp-ix-campo:focus-visible {
+  outline-offset: 4px;
+}
+
+/* Errore: mai solo colore. La linea di base si fa più spessa e tratteggiata
+   (ux-architect L8), sotto c'è il testo con l'icona. */
+.ctp-root .ctp-ix-campo[aria-invalid='true'] {
+  border-bottom-style: dashed;
+  border-bottom-width: var(--ctp-tratto-campo-errore);
+}
+
+/* Invio in corso: i campi sono in sola lettura, niente barra lampeggiante. */
+.ctp-root .ctp-ix-campo[readonly],
+.ctp-root .ctp-ix-campo[aria-readonly='true'] {
+  cursor: default;
+  caret-color: transparent;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Bottone turchese ("Scrivi il tuo nome", "Segna")                           */
+/* ------------------------------------------------------------------------ */
+
+.ctp-root .ctp-ix-bottone {
+  cursor: pointer;
+  min-block-size: var(--ctp-bottone-h);
+  border-radius: var(--ctp-raggio);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ctp-root .ctp-ix-bottone[aria-disabled='true'] {
+  cursor: default;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Comandi di testo sulla parete: "Informazioni", "Specchio pulito",          */
+/* "chiudi", "Sì, ricomincia", "No"                                           */
+/* ------------------------------------------------------------------------ */
+
+.ctp-root .ctp-ix-testo {
+  cursor: pointer;
+  min-block-size: var(--ctp-tocco-min);
+  min-inline-size: var(--ctp-tocco-min);
+  text-decoration-color: currentColor;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.3em;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Area di tocco minima per qualunque comando che non ha una classe sopra. */
+.ctp-root .ctp-ix-tocco {
+  min-block-size: var(--ctp-tocco-min);
+  min-inline-size: var(--ctp-tocco-min);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Hover: solo col mouse                                                      */
+/* ------------------------------------------------------------------------ */
+
+@media (hover: hover) and (pointer: fine) {
+  /* Barbiere non attivo: un filo sotto il nome, l'annuncio del tratto turchese. */
+  .ctp-root .ctp-ix-tab:not([aria-selected='true']):hover {
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.35em;
+    text-decoration-color: var(--ctp-inchiostro-velo);
+  }
+
+  /* Il bordo del vicino: il bisello si accende, come quando lo guardi. */
+  .ctp-root .ctp-ix-bordo:hover {
+    outline: 1px solid var(--ctp-inchiostro-velo);
+    outline-offset: -1px;
+  }
+
+  /* Parola sul vetro: il pennarello ci passa sotto. */
+  .ctp-root .ctp-ix-parola:not([aria-pressed='true']):not([aria-disabled='true']):hover {
+    text-decoration-line: underline;
+    text-decoration-thickness: 2px;
+  }
+
+  /* Trattino libero: il segno si fa più grosso, come ripassato. */
+  .ctp-root .ctp-ix-libero:hover .ctp-tratto--trattino {
+    transform: scaleY(1.4);
+  }
+
+  .ctp-root .ctp-ix-scelta:hover .ctp-ix-scelta__input:not(:checked) + .ctp-ix-scelta__parola {
+    text-decoration-line: underline;
+    text-decoration-thickness: 2px;
+    text-decoration-skip-ink: none;
+    text-underline-offset: 0.18em;
+  }
+
+  /* Bottone: il turchese si schiarisce in quello del vetro (5,21:1 → più alto). */
+  .ctp-root .ctp-ix-bottone:not([aria-disabled='true']):hover {
+    background-color: var(--ctp-turchese-vetro);
+  }
+
+  .ctp-root .ctp-ix-testo:not([aria-disabled='true']):hover {
+    text-decoration-line: underline;
+  }
+}
+
+/* ------------------------------------------------------------------------ */
+/* Premuto                                                                    */
+/* ------------------------------------------------------------------------ */
+
+/* Sul vetro nulla si sposta: la parola premuta ha il segno più calcato. */
+.ctp-root .ctp-ix-parola:not([aria-pressed='true']):not([aria-disabled='true']):active {
+  text-decoration-line: underline;
+  text-decoration-thickness: 3px;
+}
+
+.ctp-root .ctp-ix-libero:active .ctp-tratto--trattino {
+  transform: scaleY(1.7);
+}
+
+/* Sulla parete i comandi scendono di 1 px, come un tasto. Con riduzione del
+   movimento restano fermi. */
+.ctp-root[data-motion='full'] .ctp-ix-bottone:not([aria-disabled='true']):active,
+.ctp-root[data-motion='full'] .ctp-ix-tab:not([aria-selected='true']):active,
+.ctp-root[data-motion='full'] .ctp-ix-testo:not([aria-disabled='true']):active {
+  transform: translateY(1px);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Colori forzati (Windows contrasto elevato)                                 */
+/* ------------------------------------------------------------------------ */
+
+@media (forced-colors: active) {
+  .ctp-root :focus-visible {
+    outline-color: Highlight;
+  }
+
+  .ctp-root .ctp-ix-libero > .ctp-tratto--cerchio {
+    display: none;
+  }
+
+  .ctp-root .ctp-ix-libero:focus-visible,
+  .ctp-root .ctp-ix-libero:focus-visible:has(> .ctp-tratto--cerchio) {
+    outline: var(--ctp-fuoco-spessore) solid Highlight;
+  }
+
+  .ctp-root .ctp-ix-scelta__input:checked + .ctp-ix-scelta__parola {
+    border-color: CanvasText;
+  }
+
+  .ctp-root .ctp-ix-scelta__input:focus-visible + .ctp-ix-scelta__parola {
+    outline-color: Highlight;
+  }
+
+  .ctp-root .ctp-ix-parola[aria-pressed='true'] {
+    text-decoration-color: CanvasText;
+  }
+
+  .ctp-root .ctp-ix-bottone,
+  .ctp-root .ctp-ix-tab {
+    border: 1px solid ButtonText;
+  }
+
+  .ctp-root .ctp-ix-campo {
+    caret-color: CanvasText;
+  }
+}

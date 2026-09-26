@@ -1,0 +1,278 @@
+/* ==========================================================================
+   BATTIFILO · design tokens (art-director)
+   --------------------------------------------------------------------------
+   Unico file in cui vivono colori, famiglie, scala tipografica, misure e
+   livelli del concept. Tutte le sezioni usano queste variabili, mai hex
+   diretti. Gli stessi hex sono in tokens.ts (COLORI): scripts/contrasti.mjs
+   controlla che coincidano e ricalcola la tabella WCAG di
+   docs/art-director.md.
+
+   Sei colori (creative-director §4.1) e tre derivati, nient'altro:
+   calcestruzzo, calcestruzzo ombra, cobalto, cobalto fondo, ferro, calce;
+   derivati: rasatura (campi), gesso vecchio (linea già vista), velo ferro
+   (ombra del cartello sui 2 px della fascetta, vedi lastra.css).
+   Nessun giallo, nessun rosso, nessun verde in tutto il sito.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Font di ripiego con metriche tarate (niente salto al cambio font).
+   Misure prese con fontTools dai woff2 latin serviti oggi da Google Fonts:
+   - Big Shoulders Stencil v4 (variabile wght 100-900, opsz 10-72), upm 2000,
+     ascent 0,9855, descent 0,2145, altezza delle maiuscole 0,80.
+     Larghezza media a 900 / opsz 72 su testo di marcatura del sito:
+     72,5% di Arial Bold, 88,4% di Arial Narrow Bold.
+   - Chivo v21 (variabile wght 100-900), upm 1000, ascent 0,94,
+     descent 0,25. Larghezza media a 400: 105,7% di Arial; a 700: 100,7% di
+     Arial Bold (tarato sul 400, il peso del testo di lettura).
+   Il ripiego stretto (Arial Narrow, Roboto Condensed) viene prima: se il
+   sistema non l'ha, @font-face fallisce e si passa al ripiego largo.
+   -------------------------------------------------------------------------- */
+@font-face {
+  font-family: "Battifilo Stencil Ripiego Stretto";
+  src: local("Arial Narrow Bold"), local("ArialNarrow-Bold"), local("Liberation Sans Narrow Bold"), local("Roboto Condensed Bold"), local("RobotoCondensed-Bold");
+  font-weight: 100 900;
+  font-style: normal;
+  size-adjust: 88.4%;
+  ascent-override: 111.5%;
+  descent-override: 24.3%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Battifilo Stencil Ripiego";
+  src: local("Arial Bold"), local("Arial-BoldMT"), local("Liberation Sans Bold"), local("Arimo Bold"), local("Helvetica Neue Bold"), local("Helvetica Bold");
+  font-weight: 100 900;
+  font-style: normal;
+  size-adjust: 72.5%;
+  ascent-override: 135.9%;
+  descent-override: 29.6%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Battifilo Chivo Ripiego";
+  src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("Arimo"), local("Helvetica Neue"), local("Helvetica");
+  font-weight: 100 900;
+  font-style: normal;
+  size-adjust: 105.7%;
+  ascent-override: 88.9%;
+  descent-override: 23.65%;
+  line-gap-override: 0%;
+}
+
+/* --------------------------------------------------------------------------
+   1. Token del concept (sulla radice, ereditati da tutto)
+   -------------------------------------------------------------------------- */
+.btf-root {
+  /* ---- Colori: i sei della direzione ---------------------------------- */
+  --btf-calcestruzzo: #B8B4AB;          /* la lastra: fondo di tutte le zone di lettura */
+  --btf-calcestruzzo-ombra: #9F9B92;    /* segnaposto della foto, tratti vuoti della forbice: mai testo, mai bordo che serve */
+  --btf-cobalto: #1C4CB4;               /* gesso del battifilo: linea, cifre a stencil da 24 px, bottone */
+  --btf-cobalto-fondo: #143A8C;         /* cobalto per testo piccolo su lastra (link, prezzi in riga), hover del bottone */
+  --btf-ferro: #23272B;                 /* testo su lastra, fascia, cartello, filo teso */
+  --btf-calce: #F1F2EE;                 /* testo su ferro e su cobalto, bordo del cartello */
+
+  /* ---- Derivati (mescole dei sei, calcolate) -------------------------- */
+  --btf-rasatura: #D2D0C9;              /* 55% calcestruzzo + 45% calce: il fondo dei campi, una rasatura liscia sulla lastra */
+  --btf-gesso-vecchio: #627BB0;         /* cobalto al 55% sul calcestruzzo, già composto: la linea già vista */
+  --btf-gesso-vecchio-opacita: 0.55;    /* stesso effetto se il tratto è dipinto in cobalto con opacità */
+
+  /* ---- Ruoli (usare questi nei CSS di sezione) ------------------------ */
+  --btf-fondo-lastra: var(--btf-calcestruzzo);
+  --btf-fondo-fascia: var(--btf-ferro);
+  --btf-fondo-campo: var(--btf-rasatura);
+  --btf-testo: var(--btf-ferro);                 /* ogni testo di lettura sulla lastra */
+  --btf-testo-su-ferro: var(--btf-calce);
+  --btf-testo-su-cobalto: var(--btf-calce);
+  --btf-link: var(--btf-cobalto-fondo);          /* link in testo corrente sulla lastra */
+  --btf-link-su-ferro: var(--btf-calce);         /* link sul cartello e sulla fascia: calce, sottolineati */
+  --btf-marcatura: var(--btf-ferro);             /* stencil di fase, mesi, tacche, quote della porta */
+  --btf-marcatura-gesso: var(--btf-cobalto);     /* stencil dei costi e delle quote della finestra (solo da 24 px) */
+  --btf-gesso: var(--btf-cobalto);               /* la linea battuta e ogni tratto battuto */
+  --btf-filo: var(--btf-ferro);                  /* il filo teso, non battuto, e il tratteggio del vuoto */
+  --btf-bordo-campo: var(--btf-ferro);           /* riga di base dei campi, 2 px */
+  --btf-errore: var(--btf-ferro);                /* l'errore non ha colore: testo, icona, forma */
+  --btf-segnaposto: var(--btf-calcestruzzo-ombra);
+  --btf-bottone: var(--btf-cobalto);
+  --btf-bottone-sopra: var(--btf-cobalto-fondo); /* hover e premuto */
+  --btf-bottone-testo: var(--btf-calce);
+  --btf-fuoco-lastra: var(--btf-cobalto);        /* anello di fuoco su lastra e campi */
+  --btf-fuoco-ferro: var(--btf-calce);           /* anello di fuoco su fascia, cartello, cassetta, bottone cobalto */
+  --btf-selezione-fondo: var(--btf-cobalto);
+  --btf-selezione-testo: var(--btf-calce);
+
+  /* ---- Famiglie -------------------------------------------------------- */
+  --btf-font-stencil: "Big Shoulders Stencil", "Battifilo Stencil Ripiego Stretto", "Battifilo Stencil Ripiego", "Arial Narrow", sans-serif;
+  --btf-font-testo: "Chivo", "Battifilo Chivo Ripiego", Arial, sans-serif;
+
+  /* ---- Scala tipografica ---------------------------------------------
+     Formula dei fluidi: clamp(min, min - p*375 + p*100vw, max), p =
+     (max - min) / (1440 - 375). Tutto in rem sul valore fisso: lo zoom del
+     browser e il testo ingrandito funzionano. Le marcature più grandi
+     guardano anche l'altezza (vh): la lastra è alta al massimo 40vh, un
+     titolo largo non deve spingerla.
+     Stencil: MAI sotto 20 px (tacche), MAI sopra una foto.
+     ------------------------------------------------------------------- */
+  /* stencil */
+  --btf-fs-titolo: clamp(2.25rem, min(1.458rem + 3.380vw, 8vh), 4.5rem);        /* h1 S0: 36 → 72 (e mai più di 8vh) */
+  --btf-fs-fase: clamp(2.25rem, min(1.722rem + 2.254vw, 6.7vh), 3.75rem);      /* h2 del mese, LE CHIAVI: 36 → 60 (e mai più di 6,7vh) */
+  --btf-fs-costo: clamp(2.25rem, min(1.898rem + 1.502vw, 5.8vh), 3.25rem);      /* costo del mese, totale: 36 → 52, cobalto (e mai più di 5,8vh) */
+  --btf-fs-schermata: clamp(2.25rem, 1.810rem + 1.878vw, 3.5rem);               /* h2 di Misura, Cartello, Mesi: 36 → 56 */
+  --btf-fs-enorme: clamp(4rem, 2.063rem + 8.263vw, 9.5rem);                     /* mese senza foto: 64 → 152 */
+  --btf-fs-marchio: clamp(1.5rem, 1.412rem + 0.376vw, 1.75rem);                 /* BATTIFILO nella fascia: 24 → 28 */
+  --btf-fs-quota: 1.5rem;                                                       /* quote della finestra e della porta: 24, minimo per il cobalto */
+  --btf-fs-data: clamp(2rem, 1.648rem + 1.502vw, 3rem);                         /* data marcata a spruzzo al successo: 32 → 48 */
+  --btf-fs-tacca: 1.25rem;                                                      /* nomi dei mesi sotto la linea: 20, il minimo */
+  /* Chivo */
+  --btf-fs-lead: clamp(1.0625rem, 1.018rem + 0.188vw, 1.1875rem);               /* frase di S0, intro di Misura: 17 → 19 */
+  --btf-fs-mese: clamp(1rem, 0.934rem + 0.282vw, 1.1875rem);                    /* "ottobre, mese 8": 16 → 19 */
+  --btf-fs-corpo: clamp(1rem, 0.978rem + 0.094vw, 1.0625rem);                   /* testo di lettura: 16 → 17 */
+  --btf-fs-voce: 1rem;                                                          /* voci della fascia: 16 */
+  --btf-fs-bottone: 1rem;                                                       /* bottoni: 16 */
+  --btf-fs-bottone-fascia-bassa: 0.9375rem;                                     /* 15: "Misura e manda" accanto al bottone del Lab in 375 e 360 px (ux §2.5) */
+  --btf-fs-campo: 1.0625rem;                                                    /* campi: 17, niente zoom automatico di iOS */
+  --btf-fs-piccolo: 0.9375rem;                                                  /* aiuti, istruzione "Tira il filo": 15 */
+  --btf-fs-nota: 0.875rem;                                                      /* didascalie, riga del fermo, note: 14, minimo assoluto */
+
+  /* Interlinea */
+  --btf-lh-stencil: 0.9;        /* maiuscolo, nessun discendente: righe strette come una marcatura */
+  --btf-lh-cifra: 1;
+  --btf-lh-testo: 1.5;
+  --btf-lh-piccolo: 1.45;
+  --btf-lh-voce: 1.2;
+
+  /* Spaziatura delle lettere (solo stencil; Chivo resta a 0) */
+  --btf-ls-stencil: 0.005em;    /* grande: lo stencil è già spaziato dai ponti */
+  --btf-ls-tacca: 0.03em;       /* 20 px: aria tra i ponti delle lettere piccole. Non è un'etichetta spaziata: è una sigla di tre lettere */
+
+  /* Pesi */
+  --btf-wght-stencil: 850;      /* marcature grandi */
+  --btf-wght-stencil-piccolo: 800; /* tacche e quote: il 900 a 20-24 px chiude i ponti */
+  --btf-wght-testo: 400;
+  --btf-wght-medio: 500;        /* "ottobre, mese 8", voci della fascia */
+  --btf-wght-forte: 700;        /* etichette in linea ("Fatto", "Chi c'era"), bottoni, termini del cartello */
+
+  /* Larghezze fisse delle cifre a stencil (niente salti tra un mese e
+     l'altro: le cifre a stencil sono proporzionali, l'1 è stretto).
+     Misurate a 900 / opsz 72 e 24: la più larga dei 14 costi è 3,59 em,
+     il caso peggiore a cinque cifre 3,69 em; "412.500 €" 3,86 em. */
+  --btf-costo-larghezza: 3.8em;
+  --btf-totale-larghezza: 4.3em;
+
+  /* ---- Spaziatura: passo di 4 px ------------------------------------- */
+  --btf-sp-1: 0.25rem;  /*  4 */
+  --btf-sp-2: 0.5rem;   /*  8 */
+  --btf-sp-3: 0.75rem;  /* 12 */
+  --btf-sp-4: 1rem;     /* 16 */
+  --btf-sp-5: 1.5rem;   /* 24 */
+  --btf-sp-6: 2rem;     /* 32 */
+  --btf-sp-7: 3rem;     /* 48 */
+  --btf-sp-8: 4rem;     /* 64 */
+  --btf-sp-9: 6rem;     /* 96 */
+
+  /* ---- Griglia del filo ----------------------------------------------
+     Sulla lastra larga non c'è una griglia a 12 colonne: le colonne sono i
+     passi della linea del tempo. Un gancio a sinistra, poi 16 passi uguali
+     (0 PRIMA, 1-14 i mesi, 15 CHIAVI). Ogni blocco di testo della scheda
+     comincia esattamente sopra una tacca: la scheda e la linea sono lo
+     stesso righello. Posizioni in DESIGN.md §5.
+     ------------------------------------------------------------------- */
+  --btf-margine: clamp(1rem, 0.472rem + 2.254vw, 2.5rem);   /* bordo della lastra: 16 → 40 (a 2560 resta 40) */
+  --btf-gancio-w: 3rem;                                     /* colonna del gancio: 48 */
+  --btf-passi: 16;
+  --btf-griglia-filo: var(--btf-gancio-w) repeat(16, minmax(0, 1fr));
+  --btf-griglia-gap: 0px;                                   /* niente gap: le colonne devono cadere sulle tacche */
+  --btf-colonna-pad: clamp(0.75rem, 1vw, 1.25rem);          /* aria a destra di ogni blocco, dentro la sua campata */
+  --btf-lastra-max: 105rem;                                 /* 1680: oltre, il contenuto della lastra è centrato e la lastra continua ai lati */
+  --btf-foto-max: 120rem;                                   /* 1920: oltre, la foto è centrata e la lastra le sta ai lati */
+  --btf-misura-colonna: 34rem;                              /* colonna dei campi di Misura: al massimo 544 */
+  --btf-lettura-max: 45rem;                                 /* colonna di Tutti i mesi: 720 */
+  --btf-passo-stretto: 4rem;                                /* passo della linea su telefono: 64, la cassetta ferma al centro */
+
+  /* ---- Geometria del palco ------------------------------------------- */
+  --btf-fascia-h: 3.5rem;                                   /* 56 largo */
+  --btf-fascia-h-stretto: 3rem;                             /* 48 stretto (+ area sicura) */
+  --btf-fascia-bassa-h: 4rem;                               /* 64 + area sicura, solo stretto */
+  --btf-lastra-h: clamp(20rem, 40vh, 27.5rem);              /* largo: 320 → 440, la foto prende il resto */
+  --btf-lastra-h-medio: clamp(21.25rem, 46vh, 30rem);       /* 641-959 (stretto con linea intera): 340 → 480 */
+  --btf-foto-h-stretto: 42svh;                              /* telefono */
+  --btf-foto-h-stretto-basso: 38svh;                        /* telefono con altezza < 700 */
+  --btf-foto-h-espansa: 20svh;                              /* striscia di foto che resta con "Di più" aperto */
+  --btf-filo-h: 7rem;                                       /* striscia del filo, largo: 112 */
+  --btf-filo-h-medio: 6.5rem;                               /* 104 */
+  --btf-filo-h-stretto: 5.5rem;                             /* 88 */
+  --btf-marchio-da: 16.25rem;                               /* 260: il marchio parte dopo la zona del bottone del Lab (largo) */
+  --btf-marchio-da-medio: 15rem;                            /* 240 tra 641 e 959 */
+  --btf-lab-zona-w: 15rem;                                  /* 240 × 56 in alto a sinistra sopra 640 px */
+  --btf-lab-zona-w-stretto: 13.5rem;                        /* 216 × 64 in basso a sinistra fino a 640 px */
+  --btf-piano-quota: 55%;                                   /* Misura, largo: piano di tracciamento */
+  --btf-piano-h-stretto: 38svh;                             /* Misura, telefono: piano in alto */
+  --btf-piano-h-tastiera: 30%;                              /* Misura, telefono con tastiera aperta (min 150 px) */
+
+  /* ---- Oggetti ------------------------------------------------------- */
+  --btf-cassetta-w: 2.75rem;          /* 44 */
+  --btf-cassetta-h: 3.5rem;           /* 56 */
+  --btf-maniglia-raggio: 6px;         /* l'UNICO raggio del sito */
+  --btf-raggio: 0;                    /* tutto il resto: spigolo vivo, come un cassero */
+  --btf-filo-spessore: 1.5px;
+  --btf-gesso-spessore: 6px;          /* altezza utile della linea battuta (la tessera è alta 24, il pieno sta nei 6 centrali) */
+  --btf-gesso-spessore-piccolo: 3px;  /* finestra della tacca TU, tratti della forbice sotto 60em */
+  --btf-bordo-cartello: 4px;
+  --btf-bordo-campo: 2px;             /* riga di base dei campi */
+  --btf-bordo-campo-errore: 2px;      /* in errore il campo ha il bordo pieno su 4 lati, 2 px ferro: cambia la forma, non il colore */
+  --btf-bersaglio: 2.75rem;           /* 44: ogni bersaglio di tocco */
+  --btf-campo-h: 3.5rem;              /* 56 */
+  --btf-bottone-h: 3rem;              /* 48 (44 nella fascia) */
+  --btf-bottone-h-fascia: 2.75rem;
+  --btf-fascetta-w: 0.5rem;           /* 8 × 26: le due fascette del cartello */
+  --btf-fascetta-h: 1.625rem;
+
+  /* ---- Fuoco ---------------------------------------------------------- */
+  --btf-fuoco-spessore: 3px;
+  --btf-fuoco-distanza: 3px;
+
+  /* ---- Livelli (nomi fissi del tech-architect §5) -------------------- */
+  --btf-z-foto: 0;
+  --btf-z-lastra: 1;
+  --btf-z-filo: 2;
+  --btf-z-fascia: 10;
+  --btf-z-schermata: 20;
+  --btf-z-fascia-bassa: 25;
+  /* il bottone del sito sta a 2147483000: nessuno lo supera */
+
+  /* ---- Materiale della lastra (lastra.css) ----------------------------
+     La texture è una MAPPA DI LUMINANZA in grigio (media 128, valori
+     compresi tra 116 e 146) fusa sulla tinta con soft-light: scurisce al
+     massimo del 5,8% e schiarisce al massimo del 6,2% la luminanza. Da
+     questi estremi escono i contrasti "caso peggiore" della tabella.
+     ------------------------------------------------------------------- */
+  --btf-lastra-fusione: soft-light;
+  --btf-lastra-tessera: 50rem;        /* la texture 1600 px ripetuta a 800 px CSS (2x) */
+  --btf-lastra-tessera-stretto: 25rem;/* la texture 800 px ripetuta a 400 px CSS (2x) */
+
+  /* ---- Marcatura a spruzzo (lastra.css) ------------------------------ */
+  --btf-spruzzo-tessera: 160px;       /* maschera polvere-bordo.svg del vector-artist */
+  --btf-spruzzo-alone: 0.6px;         /* text-shadow dello stesso colore: il bordo appena sfumato della vernice */
+
+  /* ---- Media query (ripetute a mano nei CSS: le variabili non vanno nelle media query)
+     largo      (min-width: 60em)                         960
+     medio      (min-width: 40.0625em) and (max-width: 59.99em)   641-959
+     stretto    (max-width: 40em)                         ≤ 640 (bottone del Lab in basso)
+     palco      (min-height: 34em)                        544
+     documento  (max-height: 33.99em) o (max-width: 19.99em)
+     2560       (min-width: 120em)                        1920: foto al massimo
+     ------------------------------------------------------------------- */
+}
+
+@media (max-width: 59.99em) {
+  .btf-root {
+    --btf-lastra-tessera: var(--btf-lastra-tessera-stretto);
+  }
+}
+
+/* Contrasto forzato: nessuna texture, colori di sistema (lastra.css). */
+@media (forced-colors: active) {
+  .btf-root {
+    --btf-lastra-fusione: normal;
+  }
+}

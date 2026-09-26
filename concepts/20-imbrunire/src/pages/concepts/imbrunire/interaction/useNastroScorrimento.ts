@@ -29,6 +29,7 @@ import type { DataISO } from '../state/store';
 import { useImbrunire } from '../state/store';
 import { runtime } from '../state/runtime';
 import { ticker } from '../core/ticker';
+import { NASTRO } from '../motion/choreography';
 
 /* ------------------------------------------------------------------ costanti */
 
@@ -41,14 +42,14 @@ const NON_SPAZIO_VUOTO = '[role="option"], button, a[href], input, select, texta
 /** Spostamento oltre il quale un premuto diventa trascinamento (mouse, penna). */
 const SOGLIA_TRASCINA_PX = 4;
 
-/** Velocità dello scorrimento automatico al bordo durante la selezione. */
-export const VELOCITA_BORDO_PX_S = 560;
-
-/** Attrito dell'inerzia: v(t) = v0 · e^(−ATTRITO · t). Circa 0,5 s per fermarsi. */
-const ATTRITO = 5.2;
-
-/** Sotto questa velocità l'inerzia si ferma. */
-const V_MIN_PX_S = 24;
+/*
+ * Attrito, velocità minima e velocità al bordo sono del motion-designer
+ * (motion/choreography.ts, NASTRO): v(t) = v0 · e^(−attrito · t); al bordo
+ * la velocità cresce col quadrato di quanto il puntatore è dentro la zona
+ * (runtime.nastro.spinta, 0..1).
+ */
+const ATTRITO = NASTRO.attrito;
+const V_MIN_PX_S = NASTRO.velocitaMinima;
 
 /** Massima velocità d'inerzia (un lancio forte non attraversa l'orizzonte in un colpo). */
 const V_MAX_PX_S = 3200;
@@ -269,7 +270,8 @@ export function useNastroScorrimento(nastro: RefObject<HTMLElement>, o: OpzioniS
         if (p.mosso) daScrivere.current = p.sl0 - (p.x - p.x0);
       } else if (runtime.nastro.trascina && runtime.nastro.bordo !== 0) {
         inerzia.current = 0;
-        daScrivere.current = letto.current + runtime.nastro.bordo * VELOCITA_BORDO_PX_S * dt;
+        const spinta = Math.max(0, Math.min(1, runtime.nastro.spinta));
+        daScrivere.current = letto.current + runtime.nastro.bordo * NASTRO.velocitaBordo * spinta * spinta * dt;
         ancora = true;
       } else if (inerzia.current !== 0) {
         const v = inerzia.current;

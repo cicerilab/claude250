@@ -104,7 +104,14 @@ let corrente: Viaggio | null = null;
 /** animazioni finite che tengono lo stato finale finché useCamera non rilascia */
 let trattenute: Trattenute | null = null;
 
+/**
+ * `will-change` di uno strato 2D. Su una scatola `preserve-3d` si toglie
+ * `opacity`: annunciarla crea un gruppo e appiattisce il 3D (verificato in
+ * Chromium: con `will-change: opacity` la scatola Dentro perde la profondità
+ * e il fondo si vede 2,5 volte più grande).
+ */
 const WILL_CHANGE = 'translate, scale, rotate, opacity';
+const WILL_CHANGE_3D = 'translate, scale, rotate';
 
 /* ------------------------------------------------------------------ */
 /* Geometria                                                           */
@@ -302,7 +309,9 @@ function fotogrammi(G: Geometria, da: number, a: number): Fotogrammi {
 /* ------------------------------------------------------------------ */
 
 function metteWillChange(elementi: readonly HTMLElement[]): void {
-  for (const el of elementi) el.style.willChange = WILL_CHANGE;
+  for (const el of elementi) {
+    el.style.willChange = getComputedStyle(el).transformStyle === 'preserve-3d' ? WILL_CHANGE_3D : WILL_CHANGE;
+  }
 }
 
 function togliWillChange(elementi: readonly HTMLElement[]): void {

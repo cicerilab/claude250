@@ -1,10 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="160" height="160">
-  <defs>
-    <filter id="btf-spruzzo-filtro" filterUnits="userSpaceOnUse" x="0" y="0" width="160" height="160" color-interpolation-filters="sRGB">
-      <feTurbulence type="fractalNoise" baseFrequency=".42" numOctaves="3" seed="7" stitchTiles="stitch" result="grana"/>
-      <feColorMatrix in="grana" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -16 0 0 0 11.4"/>
-      <feComponentTransfer><feFuncA type="discrete" tableValues="0 .55 1 1 1"/></feComponentTransfer>
-    </filter>
-  </defs>
-  <rect width="160" height="160" fill="#fff" filter="url(#btf-spruzzo-filtro)"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160"><defs><filter id="btf-spruzzo-filtro" width="160" height="160" x="0" y="0" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feTurbulence baseFrequency=".42" numOctaves="3" result="grana" seed="7" stitchTiles="stitch" type="fractalNoise"/><feColorMatrix in="grana" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 -16 0 0 0 11.4"/><feComponentTransfer><feFuncA tableValues="0 .55 1 1 1" type="discrete"/></feComponentTransfer></filter></defs><rect width="160" height="160" fill="#fff" filter="url(#btf-spruzzo-filtro)"/></svg>

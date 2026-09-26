@@ -49,23 +49,25 @@ import { runtime } from '../state/runtime';
 import { ticker } from '../core/ticker';
 import { NOTTI_MAX, chiuso, differenzaGiorni } from '../core/date';
 import { occupata } from '../dati/disponibilita';
+import { NASTRO } from '../motion/choreography';
 import { ATTRIBUTO_INDICE, inizioMesi, scorriAIndice } from './useNastroScorrimento';
 
 /* ------------------------------------------------------------------ costanti */
 
+/* Tempi e soglie condivisi col motion-designer (motion/choreography.ts, NASTRO). */
 /** Tenuta del dito su una luna prima che il gesto diventi selezione (ux 5.4). */
-const TENUTA_DITO_MS = 120;
+const TENUTA_DITO_MS = NASTRO.tenuta;
 /** Spostamento orizzontale che trasforma il premuto in trascinamento. */
-const SOGLIA_DITO_PX = 8;
+const SOGLIA_DITO_PX = NASTRO.sogliaSelezione;
 const SOGLIA_MOUSE_PX = 4;
 /** Spostamento verticale del dito che restituisce il gesto al browser. */
 const SOGLIA_VERTICALE_DITO_PX = 10;
 /** Zona ai bordi del nastro in cui parte lo scorrimento automatico. */
-const ZONA_BORDO_PX = 40;
+const ZONA_BORDO_PX = NASTRO.zonaBordo;
 /** Oltre questa distanza sopra o sotto il nastro, il rilascio annulla. */
 const FUORI_PX = 36;
 /** Pausa dopo cui una selezione in corso si può annunciare. */
-const PAUSA_ANNUNCIO_MS = 500;
+const PAUSA_ANNUNCIO_MS = NASTRO.annuncio;
 /** Un clic che arriva così presto dopo un puntatore è lo stesso gesto: si ignora. */
 const CLIC_GEMELLO_MS = 600;
 
@@ -356,6 +358,7 @@ export function useSelezioneLune(nastro: RefObject<HTMLElement>, o: OpzioniSelez
   const azzeraRuntime = useCallback(() => {
     runtime.nastro.trascina = false;
     runtime.nastro.bordo = 0;
+    runtime.nastro.spinta = 0;
     runtime.nastro.indice = null;
   }, []);
 
@@ -567,8 +570,12 @@ export function useSelezioneLune(nastro: RefObject<HTMLElement>, o: OpzioniSelez
         const passo0 = passoRef.current;
         const grezzo = Math.round((p.x - r.left + scroll.current - p.base - p.diametro / 2) / passo0);
         const i = Math.max(0, Math.min(totale - 1, grezzo));
-        const bordo: -1 | 0 | 1 = p.x < r.left + ZONA_BORDO_PX ? -1 : p.x > r.right - ZONA_BORDO_PX ? 1 : 0;
+        const zona = Math.min(ZONA_BORDO_PX, (r.right - r.left) / 4);
+        const dentroSx = r.left + zona - p.x;
+        const dentroDx = p.x - (r.right - zona);
+        const bordo: -1 | 0 | 1 = dentroSx > 0 ? -1 : dentroDx > 0 ? 1 : 0;
         runtime.nastro.bordo = bordo;
+        runtime.nastro.spinta = bordo === 0 ? 0 : Math.min(1, Math.max(dentroSx, dentroDx) / zona);
         runtime.nastro.indice = i;
         impostaFuori(p.y < r.top - FUORI_PX || p.y > r.bottom + FUORI_PX);
         if (i !== ultimoIndice.current) {
