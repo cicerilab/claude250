@@ -72,12 +72,13 @@ function num(v: number): string {
   return Object.is(x, -0) ? '0' : String(x)
 }
 
-function percorso(punti: readonly Punto[]): string {
+/** Sottotracciato chiuso; `dx` sposta i punti dalle coordinate del corpo a quelle del viewBox. */
+function percorso(punti: readonly Punto[], dx = 0): string {
   if (punti.length === 0) return ''
   const [primo, ...resto] = punti
   if (!primo) return ''
-  let s = `M${num(primo[0])} ${num(primo[1])}`
-  if (resto.length > 0) s += 'L' + resto.map(([x, y]) => `${num(x)} ${num(y)}`).join(' ')
+  let s = `M${num(primo[0] + dx)} ${num(primo[1])}`
+  if (resto.length > 0) s += 'L' + resto.map(([x, y]) => `${num(x + dx)} ${num(y)}`).join(' ')
   return s + 'Z'
 }
 
@@ -145,7 +146,8 @@ function estremita(
   tipo: Punta,
   r: Casuale,
   H: number,
-  L: number,
+  xMin: number,
+  xMax: number,
 ): Punto[] {
   const { passi, f } = profilo(tipo, r)
   const out: Punto[] = []
@@ -154,7 +156,7 @@ function estremita(
     const o = f(t) * H
     const x = P[0] + (Q[0] - P[0]) * t + n[0] * o
     const y = P[1] + (Q[1] - P[1]) * t + n[1] * o
-    out.push([limita(x, 0, L), limita(y, 0, H)])
+    out.push([limita(x, xMin, xMax), limita(y, 0, H)])
   }
   return out
 }
@@ -182,15 +184,19 @@ export function ingombroTratto(
   corpo: number,
 ): { larghezza: number; altezza: number; sbordo: number } {
   const altezza = Math.round(misura(corpo, 16) * RAPPORTO_ALTEZZA * 10) / 10
-  const sbordo = Math.round(altezza * 0.3 * 10) / 10
+  const sbordo = Math.round(altezza * 0.32 * 10) / 10
   return { larghezza: Math.round((misura(larghezzaRiga, 1) + sbordo * 2) * 10) / 10, altezza, sbordo }
 }
 
 /** Il tratto: corpo a scalpello, striature, pozze d'inchiostro. */
 export function formaTratto(o: OpzioniForma): FormaTratto {
-  const L = misura(o.larghezza, 1)
+  const larghezza = misura(o.larghezza, 1)
   const H = misura(o.altezza, 1)
   const r = generatore(o.seme)
+  // il corpo sta dentro un margine orizzontale: le punte "pressata" e "sfrangiata"
+  // sporgono in fuori senza essere tagliate dal bordo del viewBox
+  const mh = Math.min(H * 0.14, larghezza * 0.08)
+  const L = Math.max(larghezza - mh * 2, 1)
 
   // punta a scalpello: sbieco da un angolo di 14-24 gradi, mai oltre un quinto del tratto
   const angolo = (tra(r, 14, 24) * Math.PI) / 180
@@ -208,7 +214,7 @@ export function formaTratto(o: OpzioniForma): FormaTratto {
   const inizio: Punta = PUNTE[Math.floor(r() * PUNTE.length)] ?? 'netta'
   const fine: Punta = PUNTE[Math.floor(r() * PUNTE.length)] ?? 'netta'
   const passo = limita(H * 0.6, 6, 14)
-  const viewBox = `0 0 ${num(L)} ${num(H)}`
+  const viewBox = `0 0 ${num(larghezza)} ${num(H)}`
 
   // normali esterne delle due estremità (entrambe inclinate come "/")
   const hMed = H - 2 * margine
@@ -223,7 +229,7 @@ export function formaTratto(o: OpzioniForma): FormaTratto {
 
   if (o.scarico) {
     return {
-      d: strisceScariche(L, H, s, su, giu, r),
+      d: strisceScariche(L, H, s, su, giu, r, mh),
       striature: [],
       inchiostro: '',
       viewBox,
@@ -232,8 +238,8 @@ export function formaTratto(o: OpzioniForma): FormaTratto {
     }
   }
 
-  const bordoInizio = estremita(pInizio, qInizio, nInizio, inizio, r, H, L)
-  const bordoFine = estremita(pFine, qFine, nFine, fine, r, H, L)
+  const bordoInizio = estremita(pInizio, qInizio, nInizio, inizio, r, H, -mh, L + mh)
+  const bordoFine = estremita(pFine, qFine, nFine, fine, r, H, -mh, L + mh)
 
   const corpo: Punto[] = []
   for (const x of campioni(s, L, passo)) corpo.push([x, su(x)])
@@ -311,14 +317,14 @@ export function formaTratto(o: OpzioniForma): FormaTratto {
         sopra.push([x, c - (spessore / 2) * affina])
         sotto.push([x, c + (spessore / 2) * affina])
       }
-      striature.push(percorso([...sopra, ...sotto.reverse()]))
+      striature.push(percorso([...sopra, ...sotto.reverse()], mh))
     }
   }
 
   return {
-    d: percorso(corpo),
+    d: percorso(corpo, mh),
     striature,
-    inchiostro: pozze.map(percorso).join(''),
+    inchiostro: pozze.map((p) => percorso(p, mh)).join(''),
     viewBox,
     punte: { inizio, fine },
     sbieco: Math.round(s * 10) / 10,
@@ -333,6 +339,7 @@ function strisceScariche(
   su: (x: number) => number,
   giu: (x: number) => number,
   r: Casuale,
+  dx: number,
 ): string {
   const k = 4 + Math.floor(r() * 3)
   const passo = limita(H * 0.6, 6, 14)
@@ -358,7 +365,7 @@ function strisceScariche(
       sopra.push([x, centro - semi])
       sotto.push([x, centro + semi])
     }
-    parti.push(percorso([...sopra, ...sotto.reverse()]))
+    parti.push(percorso([...sopra, ...sotto.reverse()], dx))
   }
   return parti.join('')
 }

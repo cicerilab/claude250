@@ -1,0 +1,555 @@
+/*
+ * SOTTOSCOCCA · stati di interazione (interaction-designer).
+ *
+ * Principio: ogni stato è un gesto di officina, non un effetto di interfaccia.
+ * - il fuoco è la LINEA A TERRA: bianco segnaletica 2 px a 3 px di distanza,
+ *   spigolo vivo (cerchio solo sui punti, che sono tamponi di gomma);
+ * - premere un bottone lo fa scendere di 1 px, come un pulsante di una
+ *   pulsantiera; il passaggio del mouse sul bottone pieno fa comparire il
+ *   bordo della targhetta (filo nero grasso rientrato), non cambia colore;
+ * - il tampone (punto toccabile) si schiaccia quando lo premi e diventa
+ *   bianco pieno quando la sua scheda è aperta;
+ * - il blocco sul planning si stacca da terra quando lo afferri (sale del 3%),
+ *   e sul telefono una barra bianca sale lungo il suo fianco mentre lo tieni
+ *   premuto: è il ponte che si alza, poi il blocco è tuo;
+ * - nessun colore nuovo, nessuna ombra sfumata, nessun bagliore, nessun
+ *   cursore custom. Cambi di colore di grandi superfici: al massimo uno ogni
+ *   500 ms (le corsie si attenuano una volta per trascinamento, i pezzi della
+ *   scena passano da interaction/evidenza.ts che li limita).
+ *
+ * Colori: solo token dell'art-director (styles/tokens.css), qui rinominati una
+ * volta in --ssc-ix-* così un cambio di nome si corregge in un punto solo.
+ * Nessun hex in questo file. Ogni selettore comincia con .ssc-root.
+ *
+ * Classi da applicare (le sezioni le aggiungono accanto alle proprie):
+ *   .ssc-ix-premibile (+ --pieno, --contorno, --pannello)   bottoni
+ *   .ssc-ix-link                                              link di testo
+ *   .ssc-ix-tocco                                             area minima 44×44
+ *   .ssc-ix-su-bianco                                         fuoco su superficie bianca
+ *   .ssc-ix-punto, .ssc-ix-punto__etichetta                   punti toccabili
+ *   .ssc-ix-planning, .ssc-ix-corsia, .ssc-ix-corsia__perche  planning durante il trascinamento
+ *   .ssc-ix-blocco, .ssc-ix-ombra, .ssc-ix-buco               blocco, ombra di aggancio, buchi toccabili
+ *   .ssc-ix-scheda, .ssc-ix-maniglia                          scheda del punto e foglio su telefono
+ *   .ssc-ix-popover                                           "Modifica" della barra
+ *   .ssc-ix-annuncio                                          regione di messaggi a altezza riservata
+ * Attributi scritti da interaction/*.ts (mai nel JSX delle sezioni):
+ *   [data-ssc-presa]           sul blocco: in-attesa | afferrato | aggancio-inizio | aggancio
+ *   [data-ssc-ix-trascina]     sulla scheda mentre il foglio segue il dito
+ *   --ssc-ix-dx, --ssc-ix-dy   sul blocco;  --ssc-ix-scheda-dy sulla scheda
+ * Attributi che scrive la sezione:
+ *   [data-ssc-trascina="si"]   sul contenitore .ssc-ix-planning mentre stato === 'afferrato'
+ *   [data-ssc-adatta="si|no"]  su ogni .ssc-ix-corsia per il lavoro corrente
+ *   [data-ssc-esito="ci-sta|non-ci-sta"] sull'ombra di aggancio
+ *   [data-ssc-etichette="sempre|al-focus"] sul gruppo dei punti di una quota
+ *   [data-ssc-ix-trascinabile="si"] sul blocco quando il trascinamento è abilitato
+ *   [data-ssc-ix-barra="visibile"] sulla barra "Il tuo lavoro" quando è in vista
+ */
+
+/* ------------------------------------------------------------------ alias e tempi */
+
+.ssc-root {
+  --ssc-ix-bianco: var(--ssc-bianco);
+  --ssc-ix-nero: var(--ssc-nero);
+  --ssc-ix-verde: var(--ssc-verde);
+  --ssc-ix-verde-ombra: var(--ssc-verde-ombra);
+  --ssc-ix-zincato: var(--ssc-zincato);
+
+  /* Tempi e curve: i nomi --ssc-curva-* li espone il motion-designer; qui il ripiego. */
+  --ssc-ix-rapido: 90ms;
+  --ssc-ix-medio: 150ms;
+  --ssc-ix-evidenza: 250ms;
+  --ssc-ix-aggancio-ms: 220ms;
+  --ssc-ix-presa-ms: 250ms; /* PRESA_TOUCH_MS (400) − ATTESA_VISIBILE_MS (150) */
+  --ssc-ix-curva: var(--ssc-curva-aggancio, cubic-bezier(0.25, 0, 0.1, 1));
+  --ssc-ix-curva-foglio: var(--ssc-curva-foglio, cubic-bezier(0.2, 0, 0, 1));
+
+  /* Zone da non coprire con il fuoco (ux-architect 2.2, 7.6). */
+  --ssc-ix-margine-alto: 88px;
+  --ssc-ix-margine-basso: 24px;
+  --ssc-ix-barra-altezza: 64px;
+
+  /* Tampone. */
+  --ssc-ix-punto-area: 44px;
+  --ssc-ix-punto-d: 30px;
+}
+
+@media (max-width: 639.98px) {
+  .ssc-root {
+    --ssc-ix-margine-alto: 72px;
+    --ssc-ix-margine-basso: 88px;
+    --ssc-ix-barra-altezza: 56px;
+  }
+}
+
+/* ------------------------------------------------------------------ fuoco: la linea a terra */
+
+.ssc-root :focus-visible {
+  outline: 2px solid var(--ssc-ix-bianco);
+  outline-offset: 3px;
+}
+
+.ssc-root :focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Titoli raggiunti con i salti (tabindex="-1"): la linea sta più lontana dal testo. */
+.ssc-root :is(h1, h2, h3)[tabindex='-1']:focus-visible {
+  outline-offset: 8px;
+}
+
+/* Superfici bianche (bottone principale, blocco pieno): filo nero dentro, alone bianco fuori. */
+.ssc-root .ssc-ix-su-bianco:focus-visible,
+.ssc-root .ssc-ix-premibile--pieno:focus-visible,
+.ssc-root .ssc-ix-blocco[data-ssc-ix-pieno='si']:focus-visible {
+  outline: 2px solid var(--ssc-ix-nero);
+  outline-offset: -6px;
+  box-shadow:
+    0 0 0 3px var(--ssc-ix-nero),
+    0 0 0 5px var(--ssc-ix-bianco);
+}
+
+/* Il fuoco non finisce mai sotto il bottone di ritorno, la testata o la barra. */
+.ssc-root :is(a[href], button, input, select, textarea, summary, [tabindex]) {
+  scroll-margin-top: var(--ssc-ix-margine-alto);
+  scroll-margin-bottom: var(--ssc-ix-margine-basso);
+}
+
+.ssc-root:has([data-ssc-ix-barra='visibile']) :is(a[href], button, input, select, textarea, summary, [tabindex]) {
+  scroll-margin-bottom: calc(var(--ssc-ix-margine-basso) + var(--ssc-ix-barra-altezza) + 16px);
+}
+
+/* ------------------------------------------------------------------ area di tocco */
+
+.ssc-root .ssc-ix-tocco {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* ------------------------------------------------------------------ bottoni: la pulsantiera */
+
+.ssc-root .ssc-ix-premibile {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+  transition:
+    translate var(--ssc-ix-rapido) var(--ssc-ix-curva),
+    box-shadow var(--ssc-ix-medio) linear;
+}
+
+.ssc-root .ssc-ix-premibile:active:not(:disabled):not([aria-disabled='true']) {
+  translate: 0 1px;
+}
+
+.ssc-root .ssc-ix-premibile:is(:disabled, [aria-disabled='true']) {
+  cursor: default;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  /* Bottone pieno bianco: compare il bordo della targhetta rivettata. */
+  .ssc-root .ssc-ix-premibile--pieno:hover:not(:disabled):not([aria-disabled='true']) {
+    box-shadow:
+      inset 0 0 0 4px var(--ssc-ix-bianco),
+      inset 0 0 0 6px var(--ssc-ix-nero);
+  }
+
+  .ssc-root .ssc-ix-premibile--pieno:hover:focus-visible:not(:disabled):not([aria-disabled='true']) {
+    box-shadow:
+      inset 0 0 0 4px var(--ssc-ix-bianco),
+      inset 0 0 0 6px var(--ssc-ix-nero),
+      0 0 0 3px var(--ssc-ix-nero),
+      0 0 0 5px var(--ssc-ix-bianco);
+  }
+
+  /* Bottone a contorno (bordo 2 px della sezione): il contorno si ispessisce a 3 px. */
+  .ssc-root .ssc-ix-premibile--contorno:hover:not(:disabled):not([aria-disabled='true']) {
+    box-shadow: inset 0 0 0 1px var(--ssc-ix-bianco);
+  }
+
+  /* Voci su pannello verde ombra (elenco "Da qui si vede", lavori del parcheggio): linea a terra sotto. */
+  .ssc-root .ssc-ix-premibile--pannello:hover:not(:disabled):not([aria-disabled='true']) {
+    box-shadow: inset 0 -3px 0 0 var(--ssc-ix-bianco);
+  }
+}
+
+/* ------------------------------------------------------------------ link di testo */
+
+.ssc-root .ssc-ix-link {
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.28em;
+  transition: text-decoration-thickness var(--ssc-ix-rapido) linear;
+}
+
+.ssc-root .ssc-ix-link[aria-current] {
+  text-decoration-thickness: 2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ssc-root .ssc-ix-link:hover {
+    text-decoration-thickness: 2px;
+  }
+}
+
+/* ------------------------------------------------------------------ punti toccabili: i tamponi */
+
+.ssc-root .ssc-ix-punto {
+  width: var(--ssc-ix-punto-area);
+  height: var(--ssc-ix-punto-area);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ssc-ix-bianco);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ssc-root .ssc-ix-punto::before {
+  content: '';
+  width: var(--ssc-ix-punto-d);
+  height: var(--ssc-ix-punto-d);
+  border-radius: 50%;
+  background: var(--ssc-ix-verde);
+  box-shadow:
+    0 0 0 2px var(--ssc-ix-bianco),
+    0 0 0 4px color-mix(in srgb, var(--ssc-ix-nero) 55%, transparent);
+  transition:
+    box-shadow var(--ssc-ix-rapido) linear,
+    background-color var(--ssc-ix-evidenza) linear,
+    scale var(--ssc-ix-rapido) var(--ssc-ix-curva);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ssc-root .ssc-ix-punto:hover::before {
+    box-shadow:
+      0 0 0 3px var(--ssc-ix-bianco),
+      0 0 0 5px color-mix(in srgb, var(--ssc-ix-nero) 55%, transparent);
+  }
+}
+
+/* Il tampone si schiaccia sotto il dito. */
+.ssc-root .ssc-ix-punto:active::before {
+  scale: 0.9;
+}
+
+/* Scheda aperta: tampone bianco pieno, con il centro nero grasso (non solo colore: c'è anche aria-expanded e la scheda). */
+.ssc-root .ssc-ix-punto[aria-expanded='true']::before {
+  background: var(--ssc-ix-bianco);
+  box-shadow:
+    inset 0 0 0 calc(var(--ssc-ix-punto-d) / 2 - 4px) var(--ssc-ix-bianco),
+    inset 0 0 0 calc(var(--ssc-ix-punto-d) / 2) var(--ssc-ix-nero),
+    0 0 0 2px var(--ssc-ix-bianco);
+}
+
+.ssc-root .ssc-ix-punto:focus-visible {
+  outline-offset: 2px;
+}
+
+/* Etichetta accanto al tampone: sempre a 180 cm, al passaggio o al fuoco alle quote basse. */
+.ssc-root .ssc-ix-punto__etichetta {
+  position: absolute;
+  left: calc(100% + 6px);
+  top: 50%;
+  translate: 0 -50%;
+  white-space: nowrap;
+  padding: 4px 8px;
+  background: var(--ssc-ix-nero);
+  color: var(--ssc-ix-bianco);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--ssc-ix-medio) linear;
+}
+
+.ssc-root .ssc-ix-punto {
+  position: relative;
+}
+
+.ssc-root [data-ssc-etichette='sempre'] .ssc-ix-punto__etichetta,
+.ssc-root .ssc-ix-punto:focus-visible .ssc-ix-punto__etichetta,
+.ssc-root .ssc-ix-punto[aria-expanded='true'] .ssc-ix-punto__etichetta {
+  opacity: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ssc-root .ssc-ix-punto:hover .ssc-ix-punto__etichetta {
+    opacity: 1;
+  }
+}
+
+/* Punto vicino al bordo destro della sua zona: l'etichetta passa a sinistra (lo decide la sezione). */
+.ssc-root .ssc-ix-punto[data-ssc-ix-etichetta='sinistra'] .ssc-ix-punto__etichetta {
+  left: auto;
+  right: calc(100% + 6px);
+}
+
+/* ------------------------------------------------------------------ planning durante il trascinamento */
+
+.ssc-root .ssc-ix-corsia {
+  transition: opacity var(--ssc-ix-medio) linear;
+}
+
+.ssc-root .ssc-ix-planning[data-ssc-trascina='si'] .ssc-ix-corsia[data-ssc-adatta='no'] {
+  opacity: 0.4;
+}
+
+/* Il perché della corsia non adatta si legge solo mentre si trascina ("Il ponte 3 fa solo gomme"). */
+.ssc-root .ssc-ix-corsia__perche {
+  display: none;
+}
+
+.ssc-root .ssc-ix-planning[data-ssc-trascina='si'] .ssc-ix-corsia[data-ssc-adatta='no'] .ssc-ix-corsia__perche {
+  display: block;
+}
+
+/* Buchi liberi toccabili: la linea tratteggiata a terra diventa piena sotto il puntatore. */
+.ssc-root .ssc-ix-buco {
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  outline: 2px dashed var(--ssc-ix-bianco);
+  outline-offset: -2px;
+  transition: outline-style 0s;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ssc-root .ssc-ix-buco:hover {
+    outline-style: solid;
+  }
+}
+
+.ssc-root .ssc-ix-buco:focus-visible {
+  outline: 2px solid var(--ssc-ix-bianco);
+  outline-offset: -2px;
+  box-shadow: 0 0 0 3px var(--ssc-ix-nero), 0 0 0 5px var(--ssc-ix-bianco);
+}
+
+/* Ombra di aggancio: dove cadrebbe il blocco. Il "non ci sta" è tratteggio fitto, non rosso. */
+.ssc-root .ssc-ix-ombra {
+  pointer-events: none;
+  outline: 2px dashed var(--ssc-ix-bianco);
+  outline-offset: -2px;
+}
+
+.ssc-root .ssc-ix-ombra[data-ssc-esito='non-ci-sta'] {
+  outline-color: var(--ssc-ix-zincato);
+  background: repeating-linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--ssc-ix-zincato) 28%, transparent) 0 5px,
+    transparent 5px 11px
+  );
+}
+
+/* ------------------------------------------------------------------ il blocco "il tuo lavoro" */
+
+.ssc-root .ssc-ix-blocco {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  translate: var(--ssc-ix-dx, 0px) var(--ssc-ix-dy, 0px);
+  transition: scale var(--ssc-ix-rapido) var(--ssc-ix-curva);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ssc-root .ssc-ix-blocco[data-ssc-ix-trascinabile='si'] {
+    cursor: grab;
+  }
+}
+
+/* Dito fermo sul blocco: una barra bianca sale lungo il fianco sinistro (il ponte che si alza). */
+.ssc-root .ssc-ix-blocco::after {
+  content: '';
+  position: absolute;
+  left: -6px;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--ssc-ix-bianco);
+  transform-origin: 50% 100%;
+  scale: 1 0;
+  pointer-events: none;
+}
+
+.ssc-root .ssc-ix-blocco[data-ssc-presa='in-attesa']::after {
+  animation: ssc-ix-presa var(--ssc-ix-presa-ms) linear forwards;
+}
+
+.ssc-root .ssc-ix-blocco[data-ssc-presa='afferrato']::after {
+  scale: 1 1;
+}
+
+@keyframes ssc-ix-presa {
+  from {
+    scale: 1 0;
+  }
+  to {
+    scale: 1 1;
+  }
+}
+
+/* Afferrato: si stacca da terra, segue il puntatore 1:1, lo scroll col dito è fermo solo qui. */
+.ssc-root .ssc-ix-blocco[data-ssc-presa='afferrato'] {
+  cursor: grabbing;
+  touch-action: none;
+  z-index: 3;
+  scale: 1.03;
+  box-shadow: 0 0 0 2px var(--ssc-ix-nero);
+}
+
+/* Aggancio: prima nessuna transizione (misura), poi lo scivolamento sul solo translate. */
+.ssc-root .ssc-ix-blocco[data-ssc-presa='aggancio-inizio'] {
+  transition: none;
+  z-index: 3;
+}
+
+.ssc-root .ssc-ix-blocco[data-ssc-presa='aggancio'] {
+  z-index: 3;
+  transition:
+    translate var(--ssc-ix-aggancio-ms) var(--ssc-ix-curva),
+    scale var(--ssc-ix-rapido) var(--ssc-ix-curva);
+}
+
+/* ------------------------------------------------------------------ scheda del punto e foglio su telefono */
+
+.ssc-root .ssc-ix-scheda {
+  translate: 0 var(--ssc-ix-scheda-dy, 0px);
+  transition: translate 240ms var(--ssc-ix-curva-foglio);
+  overscroll-behavior: contain;
+}
+
+.ssc-root .ssc-ix-scheda[data-ssc-ix-trascina='si'] {
+  transition: none;
+}
+
+.ssc-root .ssc-ix-maniglia {
+  display: grid;
+  place-items: center;
+  height: 44px;
+  margin-inline: auto;
+  width: 100%;
+  touch-action: none;
+  cursor: grab;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ssc-root .ssc-ix-maniglia::before {
+  content: '';
+  width: 40px;
+  height: 4px;
+  background: var(--ssc-ix-zincato);
+}
+
+.ssc-root .ssc-ix-scheda[data-ssc-ix-trascina='si'] .ssc-ix-maniglia {
+  cursor: grabbing;
+}
+
+@media (min-width: 640px) {
+  .ssc-root .ssc-ix-maniglia {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------------ popover "Modifica" */
+
+.ssc-root .ssc-ix-popover[hidden] {
+  display: none;
+}
+
+.ssc-root .ssc-ix-popover:focus-visible {
+  outline-offset: -2px;
+}
+
+/* ------------------------------------------------------------------ regione di messaggi */
+
+/* Altezza riservata per due righe: un messaggio che compare non sposta niente (CLS). */
+.ssc-root .ssc-ix-annuncio {
+  min-height: calc(2 * 1.55em);
+}
+
+/* ------------------------------------------------------------------ reduced motion */
+
+.ssc-root[data-motion='reduced'] :is(
+    .ssc-ix-premibile,
+    .ssc-ix-link,
+    .ssc-ix-punto,
+    .ssc-ix-punto::before,
+    .ssc-ix-punto__etichetta,
+    .ssc-ix-corsia,
+    .ssc-ix-blocco,
+    .ssc-ix-scheda
+  ) {
+  transition: none;
+}
+
+.ssc-root[data-motion='reduced'] .ssc-ix-premibile:active:not(:disabled):not([aria-disabled='true']) {
+  translate: none;
+}
+
+.ssc-root[data-motion='reduced'] .ssc-ix-punto:active::before {
+  scale: none;
+}
+
+.ssc-root[data-motion='reduced'] .ssc-ix-blocco[data-ssc-presa] {
+  transition: none;
+  scale: none;
+}
+
+.ssc-root[data-motion='reduced'] .ssc-ix-blocco[data-ssc-presa='in-attesa']::after {
+  animation: none;
+  scale: 1 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ssc-root :is(
+      .ssc-ix-premibile,
+      .ssc-ix-link,
+      .ssc-ix-punto,
+      .ssc-ix-punto::before,
+      .ssc-ix-punto__etichetta,
+      .ssc-ix-corsia,
+      .ssc-ix-blocco,
+      .ssc-ix-scheda
+    ) {
+    transition: none;
+  }
+
+  .ssc-root .ssc-ix-blocco[data-ssc-presa='in-attesa']::after {
+    animation: none;
+    scale: 1 1;
+  }
+
+  .ssc-root .ssc-ix-blocco[data-ssc-presa] {
+    scale: none;
+  }
+}
+
+/* ------------------------------------------------------------------ colori forzati (Windows) */
+
+@media (forced-colors: active) {
+  .ssc-root :focus-visible {
+    outline-color: Highlight;
+  }
+
+  .ssc-root .ssc-ix-punto::before {
+    forced-color-adjust: none;
+    background: Canvas;
+    box-shadow: 0 0 0 2px ButtonText;
+  }
+
+  .ssc-root .ssc-ix-punto[aria-expanded='true']::before {
+    background: Highlight;
+  }
+
+  .ssc-root .ssc-ix-blocco[data-ssc-presa='afferrato'] {
+    outline: 2px solid Highlight;
+  }
+
+  .ssc-root .ssc-ix-ombra,
+  .ssc-root .ssc-ix-buco {
+    outline-color: ButtonText;
+  }
+}

@@ -176,6 +176,21 @@ export function segmentoBinario(binario: number): { k: 0 | 1 | 2; f: number } {
   return { k: 0, f: b };
 }
 
+/**
+ * Quanto è "aperto" il cerchio della ruota anteriore (0 = opaco, 1 = al 35%
+ * di opacità, CD 4.2 punto 3), in funzione del binario: si apre mentre la
+ * camera scende all'altezza del mozzo (binario 1,4 → 1,9), resta aperto
+ * intorno agli 80 cm, si richiude mentre la camera va sotto (2,3 → 2,7).
+ * Il GL usa `opacita = lerp(1, OPACITA.cerchioAperto, apertura)`; con la
+ * scheda dei freni aperta a 180 cm usa `max(apertura, evidenza.disco)`.
+ */
+export function aperturaCerchio(binario: number): number {
+  if (binario <= 1.4 || binario >= 2.7) return 0;
+  if (binario < 1.9) return CURVE.colonna(progressoTra(1.4, 1.9, binario));
+  if (binario <= 2.3) return 1;
+  return 1 - CURVE.colonna(progressoTra(2.3, 2.7, binario));
+}
+
 /** Il plateau più vicino a una quota (utile per chi riceve una quota qualunque). */
 export function plateauPiuVicino(cm: number): Quota {
   let migliore: Quota = 0;

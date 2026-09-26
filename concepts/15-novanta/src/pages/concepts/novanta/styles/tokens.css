@@ -1,0 +1,297 @@
+/* ==========================================================================
+   NOVANTA · design tokens (art-director)
+   --------------------------------------------------------------------------
+   Unico file in cui vivono colori, famiglie, scala tipografica e misure
+   visive del concept. Tutte le sezioni usano queste variabili, mai hex
+   diretti (regola del tech-architect §5). Specchio numerico in `tokens.ts`:
+   se cambi un valore qui, cambialo anche là.
+
+   Tre colori, nessun altro: albicocca (il campo), petrolio (lo strumento e
+   il testo), gesso (la faccia del goniometro e le superfici di lettura).
+   Tutto il resto è un derivato composto su uno dei tre (tabella dei
+   contrasti in docs/art-director.md, calcolata con uno script).
+
+   Un solo tema, chiaro: il campo albicocca è l'identità (DESIGN.md §2.6).
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Font di ripiego con metriche tarate (prima difesa del CLS).
+   Misure prese dai woff2 di Google Fonts (Epilogue v20, Lexend v26, latin)
+   contro Liberation Sans (metrica di Arial), su testo italiano del sito.
+   - Lexend 400 vs Arial: larghezza 110,3%; ascent 1,000 e descent 0,250
+     riportati alla nuova scala.
+   - Epilogue 700 vs Arial Bold: larghezza 105,6%; ascent 0,790,
+     descent 0,235 (hhea 1580/470 su 2000).
+   I nomi sono prefissati: nessun conflitto con altre pagine del sito.
+   -------------------------------------------------------------------------- */
+@font-face {
+  font-family: "Novanta Lexend Ripiego";
+  src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("Arimo"), local("Helvetica Neue"), local("Helvetica");
+  font-weight: 100 900;
+  font-style: normal;
+  size-adjust: 110.3%;
+  ascent-override: 90.69%;
+  descent-override: 22.67%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Novanta Epilogue Ripiego";
+  src: local("Arial Bold"), local("Arial-BoldMT"), local("Liberation Sans Bold"), local("Arimo Bold"), local("Helvetica Neue Bold"), local("Helvetica Bold");
+  font-weight: 100 900;
+  font-style: normal;
+  size-adjust: 105.6%;
+  ascent-override: 74.84%;
+  descent-override: 22.26%;
+  line-gap-override: 0%;
+}
+
+/* --------------------------------------------------------------------------
+   1. Token comuni (mobile per primo: valori della geometria "fondo")
+   -------------------------------------------------------------------------- */
+.nov-root {
+  color-scheme: light;
+
+  /* ---- 1.1 I tre colori ---- */
+  --nov-albicocca: #F4D5C0;          /* il campo: fondo di tutto, sempre, pieno */
+  --nov-petrolio: #0E3D49;           /* lo strumento, il testo, il bottone pieno */
+  --nov-gesso: #FCF8F3;              /* faccia del goniometro, campi, listino: mai fondo pagina */
+
+  /* ---- 1.2 Derivati (composti, non colori nuovi) ---- */
+  --nov-petrolio-quieto: #415E63;    /* petrolio 78% su albicocca: testo secondario. 5,03:1 su albicocca, 6,61:1 su gesso */
+  --nov-petrolio-profondo: #0A2C35;  /* petrolio x0,72: bottone pieno in hover e premuto (gesso sopra 13,94:1) */
+  --nov-albicocca-scura: #E9BFA3;    /* spicchio "chiuso", fondo delle pillole in hover, selezione. Sopra: solo petrolio pieno */
+  --nov-tacca-spenta: #ABB8B9;       /* petrolio 34% su gesso: tacche non percorse, ore occupate (decorativo) */
+  --nov-filetto: #C1B4A6;            /* petrolio 22% su albicocca: filo tra le voci di un elenco (decorativo) */
+  --nov-inattivo: #8D918A;           /* petrolio 45% su albicocca: solo controlli disabilitati */
+
+  /* ---- 1.3 Ruoli (le sezioni usano questi, non i nomi dei colori) ---- */
+  --nov-fondo: var(--nov-albicocca);
+  --nov-testo: var(--nov-petrolio);
+  --nov-testo-quieto: var(--nov-petrolio-quieto);
+  --nov-superficie: var(--nov-gesso);             /* disco, basamento, campi, listino */
+  --nov-strumento: var(--nov-petrolio);           /* braccio, tacche percorse, perno, contorni */
+  --nov-primario: var(--nov-petrolio);            /* bottone pieno (Prenota, Fissa le due visite) */
+  --nov-primario-premuto: var(--nov-petrolio-profondo);
+  --nov-su-primario: var(--nov-gesso);
+  --nov-pillola-hover: var(--nov-albicocca-scura);
+  --nov-bordo-campo: var(--nov-petrolio-quieto);
+  --nov-bordo-campo-attivo: var(--nov-petrolio);
+  --nov-focus: var(--nov-petrolio);
+  --nov-selezione-fondo: var(--nov-albicocca-scura);
+  --nov-selezione-testo: var(--nov-petrolio);
+  --nov-chiuso: var(--nov-albicocca-scura);       /* spicchio della domenica */
+
+  /* ---- 1.4 Famiglie ---- */
+  --nov-font-misura: "Epilogue", "Novanta Epilogue Ripiego", Arial, sans-serif;  /* gradi, titoli, marchio, numeri */
+  --nov-font-testo: "Lexend", "Novanta Lexend Ripiego", Arial, sans-serif;       /* tutto ciò che si legge */
+
+  /* ---- 1.5 Scala tipografica: cinque taglie per raddoppio (+ marchio) ----
+     Formula fluida tra 375 e 1440 px:
+     clamp(min, min - pendenza*375 + pendenza*100vw, max), in rem sul fisso
+     così lo zoom del browser sposta davvero il testo. */
+  --nov-fs-nota: 0.875rem;                                                  /* 14: didascalie, numeri del quadrante, riga "di esempio" */
+  --nov-fs-corpo: clamp(1.0625rem, calc(1.0405rem + 0.0939vw), 1.125rem);   /* 17 -> 18: testo, parole del quadrante, bottoni, campi */
+  --nov-fs-titolo: clamp(1.75rem, calc(1.5739rem + 0.7512vw), 2.25rem);     /* 28 -> 36: h2 dell'angolo, lettura dell'anello */
+  --nov-fs-misura: clamp(3.5rem, calc(3.1479rem + 1.5023vw), 4.5rem);       /* 56 -> 72: gradi in elenco e a 90° su mobile, prezzo della prima visita */
+  --nov-fs-marchio: clamp(1.375rem, calc(1.243rem + 0.5634vw), 1.75rem);    /* 22 -> 28: NOVANTA, logotipo (fuori scala) */
+
+  /* Il numero dei gradi: taglia per geometria (sotto, nelle media query).
+     Mobile: 104 px, limitato dall'altezza sugli schermi bassi. */
+  --nov-fs-gradi: clamp(5rem, 15.6svh, 6.5rem);
+  --nov-fs-gradi-prenota: var(--nov-fs-misura);   /* a 90° l'anello è il protagonista */
+  --nov-fs-gradi-elenco: var(--nov-fs-misura);
+
+  /* Interlinea */
+  --nov-lh-gradi: 0.84;
+  --nov-lh-misura: 0.9;
+  --nov-lh-titolo: 1.08;
+  --nov-lh-marchio: 1;
+  --nov-lh-corpo: 1.6;
+  --nov-lh-nota: 1.45;
+  --nov-lh-interfaccia: 1.25;     /* bottoni, parole del quadrante, etichette dei campi */
+
+  /* Spaziatura tra le lettere */
+  --nov-trk-gradi: -0.03em;
+  --nov-trk-misura: -0.02em;
+  --nov-trk-titolo: -0.015em;
+  --nov-trk-marchio: 0.04em;      /* NOVANTA è maiuscolo: unico testo maiuscolo del sito */
+  --nov-trk-corpo: 0em;
+  --nov-trk-nota: 0.01em;
+
+  /* Pesi (cinque in tutto: il salto 800/400 è la firma, niente 600) */
+  --nov-peso-gradi: 800;          /* cifre dei gradi, marchio */
+  --nov-peso-simbolo: 300;        /* il "°" accanto alle cifre */
+  --nov-peso-titolo: 700;         /* h2, h3, lettura dell'anello, prezzi */
+  --nov-peso-scala: 500;          /* numeri 0-30-...-180 sul disco (Epilogue) */
+  --nov-peso-testo: 400;          /* Lexend */
+  --nov-peso-interfaccia: 500;    /* Lexend: parole del quadrante, bottoni, etichette, dt */
+
+  /* Cifre dei gradi: Epilogue ha `tnum` (verificato sul file). Ogni cifra
+     a 800 avanza 0,6095 em, il "°" a 300 avanza 0,3345 em: la scatola
+     dei gradi è larga 3 cifre + simbolo e non cambia mai. */
+  --nov-cifre: tabular-nums;
+  --nov-gradi-larghezza: 2.17em;  /* 3 x 0,6095 + 0,3345 = 2,163 em, arrotondato */
+
+  /* Misura della riga di lettura (56 caratteri di Lexend 18) */
+  --nov-colonna: 32.5rem;         /* 520 px */
+  --nov-colonna-stretta: 22rem;   /* 352 px: colonna destra a 90° su desktop */
+
+  /* ---- 1.6 Spazi (base 4) ---- */
+  --nov-sp-1: 0.25rem;   /* 4 */
+  --nov-sp-2: 0.5rem;    /* 8 */
+  --nov-sp-3: 0.75rem;   /* 12 */
+  --nov-sp-4: 1rem;      /* 16 */
+  --nov-sp-5: 1.5rem;    /* 24 */
+  --nov-sp-6: 2rem;      /* 32 */
+  --nov-sp-7: 3rem;      /* 48 */
+  --nov-sp-8: 4rem;      /* 64 */
+  --nov-sp-9: 6rem;      /* 96 */
+  --nov-sp-10: 7.5rem;   /* 120: vuoto tra gli angoli in vista elenco (desktop) */
+  --nov-margine: clamp(1.25rem, calc(0.633rem + 2.629vw), 3rem);   /* 20 -> 48: bordo destro e margini del campo */
+  --nov-vuoto-elenco: clamp(4.5rem, calc(3.708rem + 3.380vw), 7.5rem); /* 72 -> 120 tra le sezioni in elenco */
+
+  /* ---- 1.7 Forme ---- */
+  --nov-raggio: 14px;             /* unico raggio delle superfici (campi, listino, disclosure) */
+  --nov-pillola: 999px;           /* solo ciò che si afferra o si preme */
+  --nov-h-bottone: 3.5rem;        /* 56: Prenota, Fissa le due visite */
+  --nov-h-pillola: 2.75rem;       /* 44: vista elenco, prima/dopo, passi, suggerimenti */
+  --nov-h-campo: 3.25rem;         /* 52 */
+  --nov-bordo: 1.5px;             /* contorni: pillola a contorno, campi, disco */
+  --nov-bordo-attivo: 2px;        /* campo con il focus (più l'anello di focus) */
+
+  /* ---- 1.8 Focus ---- */
+  --nov-focus-spessore: 3px;
+  --nov-focus-distanza: 3px;
+  --nov-focus-anello: var(--nov-focus-spessore) solid var(--nov-focus);
+
+  /* ---- 1.9 Lo strumento (quadrante, mini archi, indice dell'anello) ----
+     Valori della geometria "fondo" (mobile); "bordo" più sotto. Il disegno
+     vero è generato da dial/ (vector-artist) e Braccio.tsx: questi sono i
+     numeri da usare, in px del viewBox = px CSS. */
+  --nov-contorno-disco: 1.5px;    /* filo petrolio sull'arco: senza, il gesso sull'albicocca (1,31:1) sparisce */
+  --nov-tacca-corta: 7px;         /* ogni grado */
+  --nov-tacca-media: 11px;        /* ogni 5 gradi */
+  --nov-tacca-lunga: 18px;        /* ogni 10 gradi */
+  --nov-tacca-spessore: 1px;
+  --nov-tacca-spessore-lunga: 2px;
+  --nov-braccio-spessore: 8px;
+  --nov-braccio-sporgenza: 0px;   /* sotto il pollice la manopola sta sull'arco: a 375 non esce mai dallo schermo */
+  --nov-manopola: 26px;           /* disegnata */
+  --nov-manopola-tocco: 48px;     /* area toccabile */
+  --nov-perno: 16px;              /* rivetto petrolio */
+  --nov-perno-anello: 3px;        /* anello gesso dentro il rivetto */
+  --nov-finestrella: 26px;        /* oblò tondo sul braccio con il numero intero, controruotato */
+  --nov-basamento-linea: 2px;     /* il diametro: riga petrolio sul bordo alto del basamento */
+  --nov-ombra-braccio: drop-shadow(0 3px 3px rgb(14 61 73 / 0.12));  /* unica ombra del sito */
+
+  /* ---- 1.10 Foto (piano B attivo: nessuna foto; restano per il porting) ---- */
+  --nov-foto-velatura: var(--nov-albicocca);
+  --nov-foto-velatura-opacita: 0.12;   /* in mix-blend-mode: multiply */
+  --nov-foto-filtro: saturate(0.82) contrast(0.96);
+
+  /* ---- 1.11 Livelli (tech-architect §5) ---- */
+  --nov-z-contenuto: 1;
+  --nov-z-quadrante: 2;
+  --nov-z-testata: 3;
+  --nov-z-salto: 4;
+  /* il ConceptBackButton del sito sta a 2147483000: nessuno lo supera */
+
+  background-color: var(--nov-fondo);
+  color: var(--nov-testo);
+}
+
+/* --------------------------------------------------------------------------
+   2. Geometria "bordo" (desktop): stesse soglie di core/modo.ts
+   (MQ_BORDO: larghezza >= 47.5em, altezza >= 35em, orizzontale).
+   La media query serve alla prima pittura; dopo il mount vale data-geo.
+   -------------------------------------------------------------------------- */
+@media (min-width: 47.5em) and (min-height: 35em) and (min-aspect-ratio: 11/10) {
+  .nov-root {
+    --nov-fs-gradi: clamp(9rem, 26svh, 17.5rem);           /* piano B senza foto: 26vh (ux §5.1); 234 px a 900 */
+    --nov-fs-gradi-prenota: clamp(6rem, 16svh, 9rem);     /* 144 px a 900 */
+    --nov-fs-gradi-elenco: var(--nov-fs-misura);
+
+    --nov-tacca-corta: 10px;
+    --nov-tacca-media: 16px;
+    --nov-tacca-lunga: 26px;
+    --nov-tacca-spessore: 1.25px;
+    --nov-tacca-spessore-lunga: 2.5px;
+    --nov-braccio-spessore: 10px;
+    --nov-braccio-sporgenza: 40px;
+    --nov-manopola: 28px;
+    --nov-perno: 20px;
+    --nov-finestrella: 30px;
+  }
+}
+
+.nov-root[data-geo="fondo"] {
+  --nov-fs-gradi: clamp(5rem, 15.6svh, 6.5rem);
+  --nov-fs-gradi-prenota: var(--nov-fs-misura);
+  --nov-tacca-corta: 7px;
+  --nov-tacca-media: 11px;
+  --nov-tacca-lunga: 18px;
+  --nov-tacca-spessore: 1px;
+  --nov-tacca-spessore-lunga: 2px;
+  --nov-braccio-spessore: 8px;
+  --nov-braccio-sporgenza: 0px;
+  --nov-manopola: 26px;
+  --nov-perno: 16px;
+  --nov-finestrella: 26px;
+}
+
+.nov-root[data-geo="bordo"] {
+  --nov-fs-gradi: clamp(9rem, 26svh, 17.5rem);
+  --nov-fs-gradi-prenota: clamp(6rem, 16svh, 9rem);
+  --nov-tacca-corta: 10px;
+  --nov-tacca-media: 16px;
+  --nov-tacca-lunga: 26px;
+  --nov-tacca-spessore: 1.25px;
+  --nov-tacca-spessore-lunga: 2.5px;
+  --nov-braccio-spessore: 10px;
+  --nov-braccio-sporgenza: 40px;
+  --nov-manopola: 28px;
+  --nov-perno: 20px;
+  --nov-finestrella: 30px;
+}
+
+/* --------------------------------------------------------------------------
+   3. Contrasto aumentato: il secondario torna pieno, le tacche spente si
+   vedono di più, il filetto diventa un contorno vero.
+   -------------------------------------------------------------------------- */
+@media (prefers-contrast: more) {
+  .nov-root {
+    --nov-petrolio-quieto: #0E3D49;
+    --nov-tacca-spenta: #6E8488;     /* petrolio 60% su gesso */
+    --nov-filetto: #415E63;
+    --nov-bordo: 2px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   4. Colori forzati (Windows ad alto contrasto): i ruoli passano ai colori
+   di sistema, così nessuna informazione resta affidata all'albicocca.
+   -------------------------------------------------------------------------- */
+@media (forced-colors: active) {
+  .nov-root {
+    --nov-fondo: Canvas;
+    --nov-testo: CanvasText;
+    --nov-testo-quieto: CanvasText;
+    --nov-superficie: Canvas;
+    --nov-strumento: CanvasText;
+    --nov-primario: ButtonText;
+    --nov-primario-premuto: Highlight;
+    --nov-su-primario: ButtonFace;
+    --nov-pillola-hover: Highlight;
+    --nov-bordo-campo: CanvasText;
+    --nov-bordo-campo-attivo: Highlight;
+    --nov-focus: Highlight;
+    --nov-selezione-fondo: Highlight;
+    --nov-selezione-testo: HighlightText;
+    --nov-chiuso: GrayText;
+    --nov-tacca-spenta: GrayText;
+    --nov-filetto: GrayText;
+    --nov-inattivo: GrayText;
+    --nov-ombra-braccio: none;
+  }
+}
