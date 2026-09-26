@@ -77,7 +77,7 @@
   --evd-carta-premuta: #D4CFC2;  /* carta + 8% nero: stato :active dei bottoni di testo, riga trascinata */
   --evd-velo: #1C1C1A4D;         /* nero 30%: foglio oscurato sotto scheda e giro */
   --evd-ombra-tinta: #58503C;    /* ombra color carta (mai nera) */
-  --evd-retino-piatto: #B3AEA2;  /* carta + 60% retino: foto a retino in Pagina intera (niente moiré) */
+  --evd-retino-piatto: #B1ADA2;  /* carta + 60% retino: foto a retino in Pagina intera (niente moiré) */
 
   /* ---------- Ruoli (usare questi nei CSS di sezione) ---------- */
   --evd-fondo: var(--evd-carta);
@@ -335,6 +335,8 @@
     --evd-carta-premuta: Canvas;
     --evd-tratto-blend: normal;
     --evd-tratto-opacita: 1;
+    --evd-tratto-forzato: 1;             /* tratto.css: in questo modo il tratto diventa una barra
+                                            Highlight alta 4 px sotto la riga, mai sopra il testo */
     --evd-selezione-fondo: Highlight;
     --evd-selezione-testo: HighlightText;
   }
