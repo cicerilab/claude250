@@ -570,3 +570,69 @@ webgl-artist si può chiudere così.
 - **performance-auditor / cross-browser-tester**: le prove con il GL vanno
   fatte con i font veri (in locale), altrimenti i cambi di layout dovuti al
   font non si vedono.
+
+---
+
+## Giro 3b
+
+Richiesta (correzione M, `responsive-tester.md` "Giro 3"): col GL a 1440 la
+copertina di Per chi era un rettangolo nero vuoto e "Chiara Zanin" si vedeva
+appena finché lo shader non aveva cotto le maschere. Il rilievo CSS si
+spegneva prima che il blocco fosse davvero disegnato. Toccati solo
+`ImprontaGL.ts`, `blocks.ts` e questo documento.
+
+### Regola nuova di `data-imp-gl="fuori"`
+
+- Il fantasma è `fuori` **dalla registrazione** (l'attributo si scrive
+  subito, senza aspettare un render) finché il GL non l'ha disegnato
+  **almeno una volta con la sua maschera cotta** (`disegnatoUnaVolta` in
+  `StatoBloccoGL`). Si toglie nello stesso frame in cui il GL lo disegna.
+- Dopo, è `fuori` solo se è sullo schermo e in quel frame il GL non lo
+  disegna (oltre gli 8). Fuori dallo schermo resta com'è, così lo stile del
+  fantasma non cambia a ogni entrata e uscita.
+- Se la maschera si perde (sfratto dall'atlante, compattazione, contesto
+  ripristinato) il blocco torna `fuori` **subito**.
+- Il passaggio da `fuori` a disegnato fa ricontrollare la firma di stile
+  (giro 3): se gli assi del fantasma erano quelli della pressa, la maschera si
+  rifà una volta.
+
+Nessuna regola CSS in più: basta quella che c'è già in
+`relief-fallback.css`, Per chi e Banco (`:not([data-imp-gl="fuori"])`).
+
+### Verifica
+
+Font veri in locale, SwiftShader, `?gl=1`, 1440×900, una foto ogni ~1,5 s
+(`giro3b-*.png`, `giro3b-dopo-*.png`):
+
+| Caso | Esito |
+|---|---|
+| Arrivo diretto su Per chi con il GL in `pending` | `pending` → CSS; al passaggio a `on` (5,4 s) i 4 pezzi sono già tutti disegnati (la comparsa aspetta le maschere sullo schermo) |
+| GL già acceso sull'hero, salto a Per chi | a 0,2 s: 2 pezzi disegnati dal GL, 2 `fuori` con il rilievo CSS; a 22 s tutti disegnati. **In ogni foto** un blocco senza `fuori` è tra quelli che il GL sta disegnando |
+| GL già acceso, salto al Banco | la prova e il prezzo restano `fuori`, con "Chiara Zanin" e "170 €" in rilievo CSS, fino alla cottura (8,8 s); poi GL. Mai vuoti |
+
+Resta un momento di **carta senza segni** nei pezzi appena disegnati dal GL:
+è la pressa che non è ancora scesa (pressione 0: lo shader mostra
+l'inchiostro solo da 0,05). È la coreografia del motion-designer (i pezzi di
+Per chi si premono entrando in vista, sfalsati), non un blocco vuoto. Su un
+dispositivo vero dura il ritardo più circa 0,6 s. In SwiftShader ~20 s,
+perché ogni frame costa secondi ma il ticker avanza al massimo di 50 ms per
+frame.
+
+typecheck, lint e build verdi; chunk WebGL 24,7 KB gz + three 112,8 KB gz =
+**137,5 KB gz** (budget 160).
+
+### Lamina chiara sulla prova dopo l'invio (Cotone, 768)
+
+Riprodotta (`giro3b-768-cotone-inviata.png`). **Non è il GL**: a 768 la
+lastra del banco è fissa e opaca sopra il compositoio, e `Prova.tsx` la tiene
+fuori dal GL (`registraGL: false`: niente `data-imp-relief` su
+`.imp-banco__prova` e `.imp-banco__prezzo`, 0 blocchi disegnati). Il nome
+pallido è la lamina CSS `.imp-caldo`, argento chiaro su carta bianca.
+
+Richiesta all'**art-director** (`relief-fallback.css`) e al
+**section-builder-banco**: sulla carta Cotone la lamina CSS ha bisogno del
+"filo scuro" che il webgl-artist ha dato alla lamina GL nel giro 2. Per
+esempio, per `.imp-root [data-carta="cotone"] .imp-caldo` un contorno o
+un'ombra interna verso `LAMINA.profonda` (`#7E868E`) di 1 px, e il gradiente
+spostato verso `LAMINA.scura`, così il nome si legge come metallo e non come
+grigio chiaro su bianco.
