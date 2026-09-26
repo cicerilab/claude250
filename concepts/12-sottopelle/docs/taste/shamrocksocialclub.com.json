@@ -1,0 +1,117 @@
+{
+  "source": "https://www.shamrocksocialclub.com",
+  "tokens": {
+    "spacing": {
+      "scale": [
+        8,
+        11,
+        16,
+        22.4,
+        32
+      ],
+      "base_unit": "~8 (Squarespace fluid engine)"
+    },
+    "typography": {
+      "families": [
+        "blackletter in immagine (hero)",
+        "ivymode",
+        "athelas-web",
+        "Roboto (banner)"
+      ],
+      "scale": [
+        {
+          "role": "wordmark gotico",
+          "size": "~130px",
+          "weight": "n/d (immagine/SVG)",
+          "family": "blackletter"
+        },
+        {
+          "role": "h2 'New Location'",
+          "size": "55.7px",
+          "weight": "600",
+          "family": "ivymode"
+        },
+        {
+          "role": "corpo",
+          "size": "17.7px",
+          "weight": "400",
+          "family": "athelas-web, lh 28.4px"
+        }
+      ]
+    },
+    "colors": [
+      {
+        "role": "fondo hero/sezioni scure (54.6%)",
+        "value": "#000000"
+      },
+      {
+        "role": "fondo sezioni chiare (44.4%)",
+        "value": "#FFFFFF"
+      },
+      {
+        "role": "bottoni pieni",
+        "value": "#2E2D2A"
+      },
+      {
+        "role": "segnaposto mappa",
+        "value": "#E5E3DF"
+      }
+    ],
+    "radius": [
+      "0px ovunque"
+    ],
+    "shadows": [
+      "nessuna"
+    ],
+    "image_ratios": [
+      {
+        "usage": "hero",
+        "ratio": "16:9 a tutta finestra"
+      },
+      {
+        "usage": "ritratti artisti",
+        "ratio": "0.91:1"
+      }
+    ],
+    "grid": {
+      "max_width": "1440px fluido",
+      "columns": 26,
+      "gutter": "11px"
+    }
+  },
+  "taste": [
+    {
+      "name": "Il gotico come firma, una volta sola",
+      "trigger": "Dare identita' da tatuaggio tradizionale senza sembrare un negozio di souvenir",
+      "decision": "Fraktur solo nel nome in grande sull'hero; tutto il resto in un serif da libro (athelas 17.7px) invece di gotico ovunque",
+      "reason": "La fraktur a corpo grande e' leggibile e riconoscibile come 'lettering da pelle'; in un paragrafo diventa rumore",
+      "evidence": [
+        "wordmark ~130px su 2 righe",
+        "corpo athelas-web 17.7px",
+        "nessun altro testo gotico"
+      ]
+    },
+    {
+      "name": "Ritratto del fondatore invece dei lavori",
+      "trigger": "Prima schermata",
+      "decision": "Foto in bianco e nero del titolare a tutta finestra + macchinetta e guanti nella seconda sezione, invece di mostrare tatuaggi guariti",
+      "reason": "Vende la leggenda della persona: funziona per un nome famoso, per uno studio di provincia sarebbe vuoto (e la macchinetta con guanti e' vietata qui)",
+      "evidence": [
+        "hero 1440x810 ritratto",
+        "sezione 2: sessione in corso",
+        "illustrazioni rosa/teschio e aquila"
+      ]
+    },
+    {
+      "name": "Nessuna ombra, nessun raggio",
+      "trigger": "Componenti del modulo e bottoni",
+      "decision": "Raggio 0 e ombre assenti su bottoni #2E2D2A e campi, invece dei default arrotondati del template",
+      "reason": "Tiene il tono da insegna stampata anche dentro un template commerciale",
+      "evidence": [
+        "radii []",
+        "shadows []",
+        "bottoni padding 22.4/32px"
+      ]
+    }
+  ]
+}

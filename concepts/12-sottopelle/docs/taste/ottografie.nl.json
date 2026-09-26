@@ -1,0 +1,112 @@
+{
+  "source": "https://www.ottografie.nl",
+  "tokens": {
+    "spacing": {
+      "scale": [
+        20,
+        30,
+        106,
+        211,
+        313
+      ],
+      "base_unit": "posizioni libere (scarti -68/-41/-15px)"
+    },
+    "typography": {
+      "families": [
+        "Big Caslon",
+        "Suisse Intl"
+      ],
+      "scale": [
+        {
+          "role": "nome categoria",
+          "size": "180px",
+          "weight": "400",
+          "family": "Big Caslon, tracking -5.4px"
+        },
+        {
+          "role": "contatore (09)",
+          "size": "~20px",
+          "weight": "400",
+          "family": "Big Caslon corsivo"
+        },
+        {
+          "role": "etichette",
+          "size": "14px",
+          "weight": "400",
+          "family": "Suisse Intl maiuscolo"
+        }
+      ]
+    },
+    "colors": [
+      {
+        "role": "intro",
+        "value": "#000000"
+      },
+      {
+        "role": "parete",
+        "value": "#F5F0EB"
+      },
+      {
+        "role": "testo",
+        "value": "#181716"
+      },
+      {
+        "role": "pillola 'View Project'",
+        "value": "rgba(23,23,23,0.8)"
+      }
+    ],
+    "radius": [
+      "100% (cursore)",
+      "53px (pillola)",
+      "0px (foto)"
+    ],
+    "shadows": [
+      "nessuna"
+    ],
+    "image_ratios": [
+      {
+        "usage": "tessere",
+        "ratio": "0.75:1 e 1.78:1 misti"
+      }
+    ],
+    "grid": {
+      "max_width": "nessuno (superficie trascinabile)",
+      "columns": "libere",
+      "gutter": "irregolare"
+    }
+  },
+  "taste": [
+    {
+      "name": "Parete libera, foto a distanze irregolari",
+      "trigger": "Portfolio di centinaia di scatti",
+      "decision": "Superficie trascinabile con foto di formati misti posate con scarti irregolari e molto vuoto, invece di una griglia a colonne",
+      "reason": "Il vuoto tra le foto fa sembrare ogni scatto appeso, non impaginato: si guarda uno alla volta",
+      "evidence": [
+        "foto 217x289 e 335x447 a distanze diverse",
+        "~55% della finestra vuota",
+        "scarti negativi -68/-41/-15px"
+      ]
+    },
+    {
+      "name": "Titolo gigante in mezzo alla parete",
+      "trigger": "Orientarsi tra le categorie",
+      "decision": "Nome della categoria a 180px al centro dello schermo mentre si trascina, invece di un menu fisso",
+      "reason": "Dice dove sei senza chrome; ma copre le foto e fa da poster",
+      "evidence": [
+        "h2 180px Big Caslon",
+        "contatore (09)"
+      ]
+    },
+    {
+      "name": "Il desktop prima di tutto (rifiutato qui)",
+      "trigger": "Telefono in verticale",
+      "decision": "Mostra '(Please rotate your device)' a 375px invece di adattare la parete",
+      "reason": "La parete a trascinamento e' pensata solo per mouse: l'esatto opposto di quello che serve a SOTTOPELLE",
+      "evidence": [
+        "375x812: solo la scritta di rotazione",
+        "cursore custom cerchio '+'",
+        "intro con conteggio e video prima della parete"
+      ]
+    }
+  ]
+}

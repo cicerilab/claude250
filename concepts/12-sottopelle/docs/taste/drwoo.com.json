@@ -1,0 +1,108 @@
+{
+  "source": "https://www.drwoo.com",
+  "tokens": {
+    "spacing": {
+      "scale": [
+        4,
+        10,
+        11,
+        20,
+        30
+      ],
+      "base_unit": "~10"
+    },
+    "typography": {
+      "families": [
+        "MaisonNeue",
+        "futura-pt",
+        "logo DR.WOO in lettering proprio"
+      ],
+      "scale": [
+        {
+          "role": "logo",
+          "size": "~28px",
+          "weight": "n/d",
+          "family": "lettering"
+        },
+        {
+          "role": "barra (citta', ora, Rx)",
+          "size": "11px",
+          "weight": "400",
+          "family": "MaisonNeue mono-like, maiuscolo"
+        },
+        {
+          "role": "titoli interni",
+          "size": "21.6-39.6px",
+          "weight": "500",
+          "family": "futura-pt"
+        }
+      ]
+    },
+    "colors": [
+      {
+        "role": "foto a tutta finestra scurita",
+        "value": "~#2A2826 medio"
+      },
+      {
+        "role": "testo barra",
+        "value": "#FFFFFF"
+      },
+      {
+        "role": "unico testo rosso",
+        "value": "#D2232A"
+      }
+    ],
+    "radius": [
+      "0px"
+    ],
+    "shadows": [
+      "nessuna"
+    ],
+    "image_ratios": [
+      {
+        "usage": "hero",
+        "ratio": "a tutta finestra 1440x900 e 375x812 (cover)"
+      }
+    ],
+    "grid": {
+      "max_width": "nessuno",
+      "columns": 0,
+      "gutter": "30px margini"
+    }
+  },
+  "taste": [
+    {
+      "name": "Il lavoro guarito e' la prima schermata",
+      "trigger": "Come si presenta un tatuatore di linea fine famoso",
+      "decision": "Una sola foto di due avambracci con rose in nero e grigio a tutta finestra, niente titolo, niente bottone, invece di un hero con slogan",
+      "reason": "Chi cerca un tatuatore giudica le linee e i neri: mostrare subito la pelle vera e' la prova piu' forte",
+      "evidence": [
+        "viewport 1440x900 occupato al 100% dalla foto",
+        "nessun h1",
+        "testo solo nella barra a 11px"
+      ]
+    },
+    {
+      "name": "Foto abbassata di tono e con grana",
+      "trigger": "Unificare foto di provenienza diversa",
+      "decision": "Esposizione ridotta e grana visibile su tutta la foto invece della foto nitida a colori veri",
+      "reason": "Crea atmosfera notturna coerente, ma nasconde proprio i dettagli (linee, pelle) che un cliente vuole valutare",
+      "evidence": [
+        "foto media ~#2A2826",
+        "grana fine a tutto schermo",
+        "contrasto delle linee ridotto"
+      ]
+    },
+    {
+      "name": "Nessuna struttura visibile: il sito e' un'immagine",
+      "trigger": "Navigazione",
+      "decision": "Un '+' in alto a sinistra apre un menu, barra con 'LOS ANGELES 11:00PM PST Rx', nessun elenco dei servizi",
+      "reason": "Funziona solo per chi ha gia' deciso; per chi arriva la prima volta non c'e' un percorso (e l'ora nella barra e' un vezzo vietato qui)",
+      "evidence": [
+        "8 link totali",
+        "body 11px",
+        "nessun contenuto oltre la foto a 375"
+      ]
+    }
+  ]
+}

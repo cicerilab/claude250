@@ -1,0 +1,131 @@
+{
+  "source": "https://bangbangforever.com",
+  "tokens": {
+    "spacing": {
+      "scale": [
+        12,
+        17,
+        33.6,
+        80,
+        100
+      ],
+      "base_unit": "~17 (non sistematico)"
+    },
+    "typography": {
+      "families": [
+        "bebas-neue-by-fontfabric",
+        "Droid Sans Mono",
+        "Space Mono"
+      ],
+      "scale": [
+        {
+          "role": "hero wordmark",
+          "size": "72px",
+          "weight": "400",
+          "family": "bebas-neue, tracking ~12px"
+        },
+        {
+          "role": "nome artista h2",
+          "size": "33.6px",
+          "weight": "400",
+          "family": "bebas-neue"
+        },
+        {
+          "role": "bottone VIEW GALLERY",
+          "size": "21px",
+          "weight": "400",
+          "family": "bebas-neue, sottolineato"
+        },
+        {
+          "role": "testo",
+          "size": "12px",
+          "weight": "400",
+          "family": "Droid Sans Mono, lh 19.2px"
+        }
+      ]
+    },
+    "colors": [
+      {
+        "role": "fondo (85.7% area)",
+        "value": "#151515"
+      },
+      {
+        "role": "testo corpo",
+        "value": "#A8A8A8"
+      },
+      {
+        "role": "testo secondario",
+        "value": "#C2C2C2"
+      },
+      {
+        "role": "titoli",
+        "value": "#FFFFFF"
+      },
+      {
+        "role": "fondo ritratti (foto)",
+        "value": "#FFFFFF"
+      },
+      {
+        "role": "banner cookie",
+        "value": "#EDEDED"
+      }
+    ],
+    "radius": [
+      "0px (bottoni, foto)",
+      "50% (4 icone)"
+    ],
+    "shadows": [
+      "rgba(0,0,0,0.1) 0 0 75px (invisibile su #151515)"
+    ],
+    "image_ratios": [
+      {
+        "usage": "ritratti artisti",
+        "ratio": "1:1, 215px"
+      },
+      {
+        "usage": "hero/galleria",
+        "ratio": "16:9 e 1.9:1"
+      }
+    ],
+    "grid": {
+      "max_width": "~960px (4 colonne da 215px)",
+      "columns": 4,
+      "gutter": "~34px"
+    }
+  },
+  "taste": [
+    {
+      "name": "Il nero pieno come muro, la foto come luce",
+      "trigger": "Studio con 30+ artisti da presentare in una pagina",
+      "decision": "Fondo unico #151515 su 85.7% della superficie, ritratti in bianco e nero su fondo bianco che fanno da unici punti luminosi, invece di alternare sezioni chiare e scure",
+      "reason": "In una pagina lunghissima (17113px) l'occhio si orienta sulle macchie chiare: ogni ritratto e' un segnaposto visivo",
+      "evidence": [
+        "bg #151515 area 85.7%",
+        "ritratti 1:1 con fondo #FFF",
+        "nessuna sezione chiara"
+      ]
+    },
+    {
+      "name": "Monospace ovunque: la trappola",
+      "trigger": "Dare un tono 'da studio' ai testi biografici",
+      "decision": "Droid Sans Mono 12px per tutto il corpo (943 elementi) invece di un grotesk da lettura",
+      "reason": "Legge come carattere di cartellino, ma a 12px con righe di 30 caratteri i paragrafi di 8 righe stancano: e' esattamente la ricetta vietata",
+      "evidence": [
+        "body 12px/19.2px mono",
+        "colonne da 215px",
+        "nessun max-width in ch"
+      ]
+    },
+    {
+      "name": "Il nome in maiuscolo condensato, niente decoro",
+      "trigger": "Ogni artista ha bisogno di un'etichetta forte",
+      "decision": "Bebas maiuscolo 33.6px + bottone quadrato a contorno 'VIEW GALLERY', zero ombre e zero raggi",
+      "reason": "La ripetizione identica 32 volte rende la pagina un catalogo di schede uguali: chiarezza, ma nessuna gerarchia tra lavori",
+      "evidence": [
+        "h2 33.6px x54",
+        "radius 0",
+        "stesso modulo ripetuto"
+      ]
+    }
+  ]
+}
