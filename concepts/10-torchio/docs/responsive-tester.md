@@ -164,3 +164,71 @@ del per-chi a 375 descritta al punto 5.
   2560; segnapagina non insieme a un altro "Prova la tua" visibile.
 - **section-builder-banco**: lastra sotto i 42svh tra 600 e 1023; sdoppiamento
   della lamina a pressione piena.
+
+---
+
+## Giro 2
+
+Build nuova (`npm run build`), preview sulla 8201 (chiusa alla fine). Font serviti in
+`page.route` con **curl** (stesso content-type, CORS aperto): a fine giro `Anybody` e
+`Hanken Grotesk` in stato `loaded` in tutti i 16 giri, nessun ripiego negli scatti.
+Carte **Citrino** (predefinita) e **Cotone** (`?carta=cotone`). GL: `?gl=1` con
+SwiftShader e init senza `failIfMajorPerformanceCaveat`, attesa di `data-gl="on"` e
+presse finite. Fallback: `?gl=0` con Chromium **senza** argomenti SwiftShader.
+Leva a metà: mouse giù, 450 ms (250 col GL), poi `requestAnimationFrame` fermato e
+scatto (`--imp-hold` 0,51 in fallback; col GL 0,03-0,38 perché i frame sono lenti);
+poi seconda tenuta e successo, scattato dove lo porta il fuoco.
+
+```
+qa/shots-g2/
+  375/ 768/ 1440/ 2560/          GL, <nn-sezione>-<carta>.png
+  gl0/375/ … gl0/2560/           ?gl=0, stessa numerazione
+  full-<w>-<carta>-a|b|c.png     pagina intera (giro ?gl=0)
+  misure/report-<gl|gl0>-<w>-<carta>.json
+```
+Nuovi nomi del banco: `06d-banco-leva-a-meta-<carta>`, `06e-banco-successo-<carta>`.
+260 PNG in tutto. Invio riuscito in **tutti i 16 giri**, anche col GL
+(al giro 1 col GL a 768 e 1440 finiva in "Hai lasciato presto").
+
+### Misure
+
+- `scrollWidth` = larghezza del viewport in tutti gli scatti: **nessuno scroll orizzontale**.
+- Nessun elemento con testo fuori dal bordo senza ritaglio (i nomi enormi della carta
+  tagliati a destra sono voluti, section-builder-carta §162).
+- Fuoco dopo l'invio sempre sulla frase di successo e dentro lo schermo
+  (375: 485-714; 768: 574-782; 1440: 389-607; 2560: 660-877).
+
+### Risolto rispetto al giro 1
+
+| Giro 1 | Stato |
+|---|---|
+| A · Sigillo del colophon rettangolo grigio senza GL | **Risolto**: marchio IMPRONTA premuto a secco in fallback a tutte le larghezze e su tutte e due le carte |
+| A · Copertina "Sul Noncello" vuota col GL a 2560 | **Risolto**: titolo, "poesie" e autrice disegnati |
+| M · "Noncello" tagliato a destra (1440, 2560) | **Risolto**: il titolo sta dentro la copertina |
+| M · Hero con metà schermo vuota (768, 2560, 375) | **Risolto**: *impronta* ora enorme su due righe, riempie il primo schermo; a 2560 il per-chi inizia già nel primo schermo |
+| M · Due "Prova la tua" insieme a 375 | **Risolto**: nel per-chi il richiamo è un link "Prova la tua partecipazione ›" e il segnapagina non compare lì |
+| M · Nome della prova sdoppiato dopo l'invio | **Risolto** in fallback (lamina netta); col GL leggibile |
+| M · Lastra sticky sopra la leva a 768 | **Risolto**: la lastra finisce a ~430 px, la leva sta sotto con il suo titolo |
+| B · Intro della carta rientrata | **Risolto**: allineata al titolo |
+| B · Taglio colorato come filetto nero | **Risolto su Cotone** (bordo giallo dipinto visibile); su Citrino a 375 il taglio resta scuro, da confermare con il section-builder-tecniche |
+| Leva = barra grigia, successo poco leggibile | **Risolto**: solco, manico tondo in lamina, fermo; la leva a metà corsa si legge bene a tutte le larghezze |
+
+### Difetti rimasti
+
+| Sezione | Larghezza | Problema | Gravità | Proprietario |
+|---|---|---|---|---|
+| Legatoria, fine | 1440, 2560 | ~250 px vuoti prima di "Prezzi su 100 copie" e ~240 dopo "Prova la tua" (solo il filo scende nel vuoto) | B | section-builder-legatoria (`legatoria.css`) |
+| Fissi in basso a 375 | 375 | Bottone del sito (sx) + "Prova la tua" del segnapagina (dx) occupano tutta l'ultima riga: il testo che scorre sotto (legatoria, bottega, tecniche) è coperto per 44 px; niente di fermo ci resta sotto, tranne la fila "‹ partecipazione biglietto copertina" quando il per-chi entra dal basso | B | section-builder-hero (`testata.css`) + per-chi (padding in fondo) |
+| Banco, colonna destra | 1440 | Dopo il successo resta una colonna larga di carta vuota sotto "Prova un'altra cosa" (~300 px) | B | section-builder-banco |
+
+### Difetti nuovi
+
+| Sezione | Larghezza | Problema | Gravità | Proprietario |
+|---|---|---|---|---|
+| Colophon, sigillo col GL | 1440 (Citrino, GL) | Il marchio IMPRONTA disegnato dallo shader sta ~30 px più in basso del fantasma DOM (fallback 418-545, GL 450-580) e la riga "tipografia e legatoria · Pordenone" finisce **sopra** il piede delle lettere | M | shader-engineer (allineamento del blocco) o section-builder-colophon (margine sotto il sigillo) |
+| Banco, successo | 375 | Dopo l'invio la frase sale sopra la lastra (voluto) ma in fondo allo schermo resta solo il dial "luce" orfano accanto al bottone del sito, senza la prova | B | section-builder-banco |
+| Leva col GL (prova headless) | tutte | In SwiftShader la leva a metà si ferma a `--imp-hold` 0,03-0,38 invece di 0,5: è la lentezza del frame, non un difetto; lo scatto buono della metà corsa è in `gl0/*/06d-*` | — | nessuno (limite della prova) |
+| Per-chi, biglietto | 1440, 2560 | Il biglietto "Chiara Zanin" si sovrappone all'angolo della partecipazione (voluto come pila sul bancone?) e il nome in lamina col GL a 2560 ha il bordo sfrangiato | B | section-builder-per-chi / shader-engineer |
+
+Tutto il resto (tecniche nei 3 punti del pin, carta, banco vuoto e compilato,
+bottega) è pulito sulle due carte e sulle quattro larghezze.
