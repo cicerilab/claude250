@@ -228,7 +228,16 @@
   --imb-binario-scala: 6px;       /* torre: binario verticale a destra */
   --imb-fascia-nome-min: 48px;    /* il solaio sotto ogni piano È la fascia del nome (poché) */
   --imb-fascia-sezione: 46px;     /* sezione: altezza FISSA, una riga di nome + una riga piccola, mai a capo */
-  --imb-nome-adatta: 8.6cqi;      /* sezione: nome = min(--imb-t-nome-cella, 8,6% della cella), nowrap */
+  /* Sezione: la fascia è un contenitore (container-type: inline-size) e il
+     nome si adatta alla cella senza andare a capo:
+       font-size: clamp(var(--imb-t-nome-min), var(--imb-nome-adatta), var(--imb-t-nome-cella))
+     12,5cqi regge i nomi fino a 12 lettere (IL CAMPANILE, SUL NONCELLO);
+     gli spazi comuni hanno nomi corti in cella (PORTICO, ANDRONE, COLAZIONE)
+     e usano 17cqi. Sotto il minimo il nome può andare su due righe. */
+  --imb-nome-adatta: 12.5cqi;
+  --imb-nome-adatta-spazio: 17cqi;
+  --imb-t-nome-min: 13px;
+  --imb-t-sub-min: 12px;          /* riga piccola della fascia: clamp(12px, 8cqi, --imb-t-piccolo) */
   --imb-modulo: 7.2;              /* u = larghezza del palazzo / 7,2: altezza di riferimento di un piano */
   --imb-h-sottotetto: 0.95;       /* altezze delle scatole in u (ux-architect §2.2) */
   --imb-h-nobile: 1.2;

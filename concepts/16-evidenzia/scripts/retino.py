@@ -52,7 +52,7 @@ def retino(im: Image.Image, w: int, h: int, passo: float = 4.0,
     grigio = ImageOps.grayscale(ritaglia(im.convert('RGB'), w, h, fuoco))
     # contrasto da carta di giornale: neri non pieni, bianchi puliti
     grigio = ImageOps.autocontrast(grigio, cutoff=1)
-    grigio = grigio.filter(ImageFilter.GaussianBlur(passo * 0.35))
+    grigio = grigio.filter(ImageFilter.GaussianBlur(passo * 0.2))
     px = grigio.load()
 
     W, H = w * SUPER, h * SUPER
@@ -76,6 +76,9 @@ def retino(im: Image.Image, w: int, h: int, passo: float = 4.0,
                 xs = min(max(int(x), 0), w - 1)
                 ys = min(max(int(y), 0), h - 1)
                 scuro = 1 - px[xs, ys] / 255
+                # curva da carta di giornale: compensa l'allargamento del punto,
+                # le ombre restano aperte (mai nero pieno)
+                scuro = 0.9 * scuro ** 1.35
                 punti.append((x, y, scuro))
     # mezzitoni in retino
     for x, y, s in punti:
@@ -85,8 +88,8 @@ def retino(im: Image.Image, w: int, h: int, passo: float = 4.0,
             d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=1)
     # ombre in nero, sopra
     for x, y, s in punti:
-        if s > 0.5:
-            r = raggio_max * math.sqrt((s - 0.5) / 0.5) * 0.95 * SUPER
+        if s > 0.55:
+            r = raggio_max * math.sqrt((s - 0.55) / 0.35) * 0.8 * SUPER
             cx, cy = x * SUPER, y * SUPER
             d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=2)
 

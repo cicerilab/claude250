@@ -247,6 +247,55 @@ export const QUADRANTE = {
   finestrella: (gradi: number) => String(Math.round(gradi)),
 } as const;
 
+/* ================================================================== testi alternativi */
+
+/**
+ * `alt` delle tre foto scelte dal photo-editor (Wikimedia Commons, guardate
+ * una per una). Descrivono ciò che si vede davvero. Le chiavi coincidono con
+ * `ChiaveFoto` di `assets/foto/index.ts`: la chiave `ingresso` resta per
+ * contratto, ma la foto è l'angolo d'attesa.
+ */
+export const ALT_FOTO = {
+  studio:
+    'Una stanza dello studio vuota: il lettino con un cuscino a ferro di cavallo e un rullo arancio, davanti alla finestra con due piante sul davanzale.',
+  attrezzi:
+    'Attrezzi appoggiati al muro: un tappetino blu arrotolato, un cuscino di equilibrio, tappetini rossi, tavolette per l\'equilibrio e un rullo.',
+  ingresso: 'L\'angolo d\'attesa dello studio: una poltrona grigia accanto a una lampada di carta accesa.',
+} as const;
+
+/**
+ * Crediti delle foto (CC BY 4.0, attribuzione obbligatoria). Vanno nel piede
+ * di 180° e nel piede della vista elenco. Autore e licenza sono link: la
+ * licenza a `licenzaHref`, le fonti alle pagine `FOTO[chiave].url` di
+ * `assets/foto/index.ts`, con le etichette di `fonti`.
+ * Il nome dello studio della fonte non si scrive da nessuna parte.
+ */
+export const CREDITI_FOTO = {
+  /** Riga intera in testo semplice (se non si usano i link). */
+  riga: 'Foto: PantheraLeo1359531, Wikimedia Commons, licenza CC BY 4.0. Ritagliate e ridimensionate.',
+  prima: 'Foto: ',
+  autore: 'PantheraLeo1359531',
+  fonte: 'Wikimedia Commons',
+  licenza: 'CC BY 4.0',
+  licenzaAria: `Licenza CC BY 4.0 ${'(si apre in una nuova scheda)'}`,
+  licenzaHref: 'https://creativecommons.org/licenses/by/4.0/deed.it',
+  modifiche: 'Ritagliate e ridimensionate.',
+  /** Etichette dei link alle pagine delle foto. */
+  fontiTitolo: 'Le foto su Wikimedia Commons:',
+  fonti: {
+    studio: 'la stanza',
+    attrezzi: 'gli attrezzi',
+    ingresso: 'l\'angolo d\'attesa',
+  },
+  fontiAria: {
+    studio: 'la stanza: pagina della foto su Wikimedia Commons (si apre in una nuova scheda)',
+    attrezzi: 'gli attrezzi: pagina della foto su Wikimedia Commons (si apre in una nuova scheda)',
+    ingresso: 'l\'angolo d\'attesa: pagina della foto su Wikimedia Commons (si apre in una nuova scheda)',
+  },
+  /** Precisazione onesta: le foto non sono di uno studio di Pordenone. */
+  nota: 'Le foto mostrano un vero studio di terapia, non NOVANTA.',
+} as const;
+
 /* ================================================================== angoli */
 
 /** 0° · da zero. */
@@ -633,6 +682,8 @@ export const PREZZI_DOVE = {
   /** Piede dell'angolo. Testo semplice, non un bottone (il ritorno è il ConceptBackButton). */
   conceptDi: COMUNI.conceptDi,
   finzione: COMUNI.finzione,
+  /** Crediti delle foto, obbligatori (CC BY 4.0), nel piede dell'angolo. */
+  creditiFoto: CREDITI_FOTO,
 } as const;
 
 /** Il contenuto di ogni angolo: titolo h2 (≤ 6 parole) e nome. */
@@ -663,20 +714,8 @@ export const ELENCO = {
     maps: CONTATTI.maps,
     conceptDi: COMUNI.conceptDi,
     finzione: COMUNI.finzione,
+    creditiFoto: CREDITI_FOTO,
   },
-} as const;
-
-/* ================================================================== testi alternativi */
-
-/**
- * Proposta di `alt` per le foto (0°, 60°, 180°). Il file `assets/foto/index.ts`
- * è dell'art-director / photo-editor: se la foto scelta non corrisponde, l'alt
- * va riscritto sulla foto vera (chiedere al copywriter).
- */
-export const ALT_FOTO = {
-  studio: 'Una stanza dello studio vuota, con la luce della finestra sul lettino.',
-  attrezzi: 'Elastici e un rullo appoggiati vicino alla spalliera, nella palestra dello studio.',
-  ingresso: 'L\'ingresso dello studio, con la porta aperta sulla sala d\'attesa.',
 } as const;
 
 /* ================================================================== annunci aria-live */
@@ -737,6 +776,7 @@ export const TESTI = {
   prezziDove: PREZZI_DOVE,
   elenco: ELENCO,
   altFoto: ALT_FOTO,
+  creditiFoto: CREDITI_FOTO,
   annunci: ANNUNCI,
 } as const;
 

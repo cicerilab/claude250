@@ -65,7 +65,8 @@ import { RECAPITI, ACCESSO } from '../../content/studio';
 | `PREZZI_DOVE` | 180° | `titolo`, `prezziTitolo`, `prezziNota`, `listinoAria`, `pagamento`, `cicli`, `detrazione`, `assicurazioni`, `disdetta`, `accessoDiretto`, `doveTitolo`, `indirizzo.{riga1, riga2}`, `accesso`, `parcheggio`, `orariTitolo`, `orariAria`, `chiama`, `scrivi`, `maps`, `recapitiNota`, `conceptDi`, `finzione` |
 | `ANGOLI_TESTI` | `Angolo` / `h2` | per angolo: `parola`, `annuncio`, `frammento`, `titolo` |
 | `ELENCO` | vista elenco | `automatico.{finestraBassa, testoGrande, nonSiPuo}`, `piede.{aria, dove, chiama, maps, conceptDi, finzione}` |
-| `ALT_FOTO` | `alt` proposti | `studio`, `attrezzi`, `ingresso` |
+| `ALT_FOTO` | `alt` delle tre foto vere (Wikimedia Commons, guardate) | `studio`, `attrezzi`, `ingresso` (è l'angolo d'attesa) |
+| `CREDITI_FOTO` | attribuzione CC BY 4.0 obbligatoria, anche in `PREZZI_DOVE.creditiFoto` e `ELENCO.piede.creditiFoto` | `riga`, `prima`, `autore`, `fonte`, `licenza`, `licenzaAria`, `licenzaHref`, `modifiche`, `fontiTitolo`, `fonti.{studio, attrezzi, ingresso}`, `fontiAria.*`, `nota` |
 | `ANNUNCI` | `aria-live` | vedi §5 |
 | aiuti di data | ovunque | `GIORNI.{lungo, breve}`, `MESI`, `oraVista`, `oraFrase`, `oraSr`, `giornoBreve`, `giornoLungo`, `quandoBreve`, `quandoFrase`, `quandoSr` |
 | `TESTI` | tutto in un oggetto (default export) | |
@@ -211,9 +212,14 @@ annunciano la stessa frase che mostrano (`PRENOTA.stati.*`).
   `OCCUPATE.interna/esterna`, `PASSO_MINUTI`, `FINESTRA_CONTROLLO`,
   `ANTICIPO_MINIMO_ORE`, e passa alle frasi oggetti `Quando`. Lo stato S5 va
   simulato (i dati di default non lo producono).
-- **art-director / photo-editor**: l'`alt` in `assets/foto/index.ts` parta
-  da `ALT_FOTO` e, se la foto scelta è diversa dalla descrizione, me lo si
-  dica e lo riscrivo sulla foto vera.
+- **photo-editor / section-builder**: `ALT_FOTO` è riscritto sulle tre foto
+  vere; `FOTO[k].alt` in `assets/foto/index.ts` può restare o puntare ad
+  `ALT_FOTO[k]` (stesso contenuto, preferibile `ALT_FOTO`).
+- **section-builder-prezzi-dove e vista elenco**: nel piede i crediti da
+  `creditiFoto` (autore, "Wikimedia Commons", link alla licenza
+  `licenzaHref`, link alle tre pagine `FOTO[k].url` con le etichette
+  `fonti.*`, `modifiche`). Obbligatori finché c'è almeno una foto
+  (`CI_SONO_FOTO`).
 - **section-builder-quadrante**: le parole sul quadrante sono
   `NOMI_ANGOLI[g].parola` (minuscolo); `aria-valuetext` da
   `QUADRANTE.valoreSr(gradi, angoloPiuVicino(gradi))`.

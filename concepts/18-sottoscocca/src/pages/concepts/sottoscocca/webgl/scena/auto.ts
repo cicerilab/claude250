@@ -86,10 +86,16 @@ export function leggiAuto(buf: ArrayBuffer): DatiAuto {
     const nq = new Int8Array(buf, m.normali.offset, m.vertici * 3);
     const pos = new Float32Array(m.vertici * 3);
     const nor = new Float32Array(m.vertici * 3);
-    for (let i = 0; i < m.vertici * 3; i++) {
-      const a = i % 3;
-      pos[i] = m.posizioni.min[a] + ((q[i] ?? 0) + 32768) * m.posizioni.passo[a];
+    const [mx, my, mz] = m.posizioni.min;
+    const [px, py, pz] = m.posizioni.passo;
+    for (let v = 0; v < m.vertici; v++) {
+      const i = v * 3;
+      pos[i] = mx + ((q[i] ?? 0) + 32768) * px;
+      pos[i + 1] = my + ((q[i + 1] ?? 0) + 32768) * py;
+      pos[i + 2] = mz + ((q[i + 2] ?? 0) + 32768) * pz;
       nor[i] = (nq[i] ?? 0) / 127;
+      nor[i + 1] = (nq[i + 1] ?? 0) / 127;
+      nor[i + 2] = (nq[i + 2] ?? 0) / 127;
     }
     const idx = new Uint16Array(buf.slice(m.indici.offset, m.indici.offset + m.indici.conta * 2));
     const g = new BufferGeometry();
