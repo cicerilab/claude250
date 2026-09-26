@@ -90,7 +90,7 @@
   --btf-marcatura-gesso: var(--btf-cobalto);     /* stencil dei costi e delle quote della finestra (solo da 24 px) */
   --btf-gesso: var(--btf-cobalto);               /* la linea battuta e ogni tratto battuto */
   --btf-filo: var(--btf-ferro);                  /* il filo teso, non battuto, e il tratteggio del vuoto */
-  --btf-bordo-campo: var(--btf-ferro);           /* riga di base dei campi, 2 px */
+  --btf-riga-campo: var(--btf-ferro);            /* colore della riga di base dei campi (spessore: --btf-bordo-campo) */
   --btf-errore: var(--btf-ferro);                /* l'errore non ha colore: testo, icona, forma */
   --btf-segnaposto: var(--btf-calcestruzzo-ombra);
   --btf-bottone: var(--btf-cobalto);

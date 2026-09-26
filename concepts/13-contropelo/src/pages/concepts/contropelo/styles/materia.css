@@ -117,8 +117,6 @@
 /* ------------------------------------------------------------------------ */
 
 .ctp-root .ctp-pennarello {
-  position: relative;
-  z-index: var(--ctp-z-pennarello);
   color: var(--ctp-pennarello);
   font-family: var(--ctp-font-pennarello);
   font-weight: 400;
@@ -188,7 +186,8 @@
 .ctp-root .ctp-colonna-prezzi {
   display: grid;
   grid-template-columns: minmax(0, 1fr) var(--ctp-prezzo-col);
-  column-gap: var(--ctp-sp-4);
+  column-gap: var(--ctp-sp-3);
+  max-width: var(--ctp-listino-max);
   align-items: baseline;
 }
 
@@ -196,6 +195,8 @@
   justify-self: end;
   text-align: end;
   white-space: nowrap;
+  font-size: var(--ctp-t-prezzo);
+  line-height: 1;
 }
 
 /* Stati della scrittura */

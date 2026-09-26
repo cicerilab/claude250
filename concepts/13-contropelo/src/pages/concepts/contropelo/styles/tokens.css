@@ -103,7 +103,8 @@
   /* Scala: pennarello (Mansalva), fluida 375 → 1440 ---------------------- */
   --ctp-t-nome: clamp(1.75rem, 1.4859rem + 1.1268vw, 2.5rem);      /* 28 → 40 barbiere in testa al vetro (h2) */
   --ctp-t-titolo: clamp(1.5rem, 1.368rem + 0.5634vw, 1.875rem);     /* 24 → 30 "Il listino", giorno della lista (h3) */
-  --ctp-t-riga: clamp(1.5rem, 1.3239rem + 0.7512vw, 2rem);          /* 24 → 32 voci e prezzi, righe della barba, orari */
+  --ctp-t-riga: clamp(1.375rem, 1.1549rem + 0.939vw, 2rem);         /* 22 → 32 voci del listino, righe della barba, orari */
+  --ctp-t-prezzo: clamp(1.625rem, 1.4049rem + 0.939vw, 2.25rem);    /* 26 → 36 il prezzo, scritto più grande della voce */
   --ctp-t-ora: clamp(1.5rem, 1.434rem + 0.2817vw, 1.6875rem);       /* 24 → 27 righe della lista (ora + nome) */
   --ctp-t-nota: clamp(1.375rem, 1.331rem + 0.1878vw, 1.5rem);       /* 22 → 24 la riga sul barbiere */
   --ctp-t-link: clamp(1.5rem, 1.456rem + 0.1878vw, 1.625rem);       /* 24 → 26 "la lista", "domani", "Apri in Maps" */
@@ -115,7 +116,8 @@
   --ctp-lh-nome: 1.02;
   --ctp-lh-chiuso: 0.9;
   --ctp-ls-pennarello: 0.004em;
-  --ctp-prezzo-col: 2.4em;       /* colonna dei prezzi allineati a destra (Mansalva non ha cifre tabellari) */
+  --ctp-prezzo-col: calc(var(--ctp-t-prezzo) * 1.45); /* colonna dei prezzi: il "25" più largo misura 1,32 em; Mansalva non ha cifre tabellari */
+  --ctp-listino-max: 30rem;      /* voce più lunga (10,5 em) + colonna prezzi: i prezzi restano vicini alle voci */
 
   /* Scala: insegna (Limelight) ----------------------------------------- */
   --ctp-t-insegna: clamp(1.375rem, 1.243rem + 0.5634vw, 1.75rem);   /* 22 → 28 */
@@ -218,14 +220,22 @@
   }
 }
 
-/* Schermi grandi: il vetro a 2560 è largo 2200 px, le scritte crescono ancora */
+/* Schermi grandi: da 1920 px le scritte continuano a crescere fino a 2560
+   (il vetro lì è largo quasi 1900 px: con i corpi del 1440 sembrava vuoto) */
 @media (min-width: 1920px) {
   .ctp-root {
-    --ctp-t-nome: clamp(2.5rem, 1.8571rem + 0.7143vw, 3rem);
-    --ctp-t-riga: clamp(2rem, 1.6786rem + 0.3571vw, 2.25rem);
-    --ctp-t-ora: clamp(1.6875rem, 1.4464rem + 0.2679vw, 1.875rem);
-    --ctp-lista-w: 28%;
-    --ctp-lista-x: 64%;
+    --ctp-t-nome: clamp(2.5rem, 0.8929rem + 1.7857vw, 3.75rem);      /* 40 → 60 */
+    --ctp-t-titolo: clamp(1.875rem, 1.0714rem + 0.8929vw, 2.5rem);   /* 30 → 40 */
+    --ctp-t-riga: clamp(2rem, 1.0357rem + 1.0714vw, 2.75rem);        /* 32 → 44 */
+    --ctp-t-prezzo: clamp(2.25rem, 1.125rem + 1.25vw, 3.125rem);     /* 36 → 50 */
+    --ctp-t-ora: clamp(1.6875rem, 0.9643rem + 0.8036vw, 2.25rem);    /* 27 → 36 */
+    --ctp-t-nota: clamp(1.5rem, 1.0179rem + 0.5357vw, 1.875rem);     /* 24 → 30 */
+    --ctp-t-link: clamp(1.625rem, 1.1429rem + 0.5357vw, 2rem);       /* 26 → 32 */
+    --ctp-t-insegna: clamp(1.75rem, 1.1071rem + 0.7143vw, 2.25rem);  /* 28 → 36 */
+    --ctp-t-barbiere: clamp(1.25rem, 0.9286rem + 0.3571vw, 1.5rem);  /* 20 → 24 */
+    --ctp-listino-max: 44rem;
+    --ctp-vetro-y: 96px;
+    --ctp-lista-y: 80px;
   }
 }
 

@@ -1,0 +1,363 @@
+/* ==========================================================================
+   BATTIFILO · materiali (art-director)
+   --------------------------------------------------------------------------
+   Classi di materiale condivise da tutte le sezioni. Non fanno layout (quello
+   è di layout.css e dei CSS di sezione): dicono solo di che cosa è fatta una
+   superficie o una scritta.
+
+   .btf-lastra            il calcestruzzo: tinta + mappa di luminanza in soft-light
+   .btf-lastra--ombra     la stessa lastra in ombra (segnaposto della foto)
+   .btf-stencil           la marcatura a spruzzo (Big Shoulders Stencil)
+     --titolo --fase --costo --schermata --enorme --marchio --quota --data --tacca
+     --gesso (cobalto) --calce (solo fascia e cartello)
+   .btf-cifre             cifre tabellari in Chivo (prezzi in riga)
+   .btf-rasatura          il fondo liscio dei campi, con la riga di base
+   .btf-bottone-cobalto   il bottone del gesso (Misura e manda, Manda le misure)
+   .btf-cartello          il pannello ferro con bordo calce
+   .btf-cartello__fascetta le due fascette che lo appendono
+   .btf-gesso             il pieno cobalto della linea battuta (la maschera
+                          della tessera la mette linea.css); ripiego senza mask
+
+   Contrasti: docs/art-director.md §3 (script scripts/contrasti.mjs).
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. La lastra
+   La texture è una mappa di luminanza in grigio (photo-editor, file in
+   assets/foto/lastra-800.webp e lastra-1600.webp: media 128, valori 116-146,
+   ripetibile senza cuciture). Soft-light sulla tinta: la luminanza resta
+   tra -5,8% e +6,2% della tinta media, quindi i contrasti del caso peggiore
+   restano AA. La tinta piena sta sotto: prima che arrivi la texture la
+   lastra ha già il colore giusto (nessun salto di contrasto).
+   -------------------------------------------------------------------------- */
+.btf-root .btf-lastra {
+  background-color: var(--btf-calcestruzzo);
+  background-image: url("../assets/foto/lastra-1600.webp");
+  background-repeat: repeat;
+  background-size: var(--btf-lastra-tessera) auto;
+  background-position: 0 0;
+  background-blend-mode: var(--btf-lastra-fusione);
+  color: var(--btf-testo);
+}
+
+@media (max-width: 59.99em) {
+  .btf-root .btf-lastra {
+    background-image: url("../assets/foto/lastra-800.webp");
+  }
+}
+
+/* Segnaposto della foto e fondo del "mese senza foto" mentre la lastra sale:
+   stessa texture, tinta in ombra. Nessun testo sopra l'ombra. */
+.btf-root .btf-lastra--ombra {
+  background-color: var(--btf-calcestruzzo-ombra);
+}
+
+/* La texture non scorre mai con il contenuto delle schermate che scorrono:
+   è il materiale, non un disegno. */
+.btf-root .btf-lastra--ferma {
+  background-attachment: local;
+}
+
+/* --------------------------------------------------------------------------
+   2. La marcatura a spruzzo
+   Big Shoulders Stencil, solo maiuscolo, solo sulla lastra (o sul cartello e
+   sulla fascia per il marchio). Mai sopra una foto, mai sotto 20 px, mai
+   frasi intere: parole-marcatura (fase, mese, cifre, quote, marchio). Al
+   massimo la frase d'apertura in due o tre righe.
+   Il bordo della vernice: un alone di 0,6 px dello stesso colore e una
+   maschera di rumore (polvere-bordo.svg, vector-artist) che buca pochi punti
+   come fa lo spruzzo su un getto liscio. Niente gocce, niente schizzi.
+   Dimensione ottica automatica: sopra 72 px il taglio Display, a 20-24 px il
+   taglio più aperto (con opsz 72 a 20 px i ponti diventano troppo sottili).
+   -------------------------------------------------------------------------- */
+.btf-root .btf-stencil {
+  font-family: var(--btf-font-stencil);
+  font-weight: var(--btf-wght-stencil);
+  font-optical-sizing: auto;
+  font-style: normal;
+  font-synthesis: none;
+  font-kerning: normal;
+  font-variant-ligatures: none;
+  text-transform: uppercase;
+  letter-spacing: var(--btf-ls-stencil);
+  line-height: var(--btf-lh-stencil);
+  color: var(--btf-marcatura);
+  text-shadow: 0 0 var(--btf-spruzzo-alone) currentColor;
+  -webkit-mask-image: url("../assets/svg/polvere-bordo.svg");
+  mask-image: url("../assets/svg/polvere-bordo.svg");
+  -webkit-mask-size: var(--btf-spruzzo-tessera) var(--btf-spruzzo-tessera);
+  mask-size: var(--btf-spruzzo-tessera) var(--btf-spruzzo-tessera);
+  -webkit-mask-repeat: repeat;
+  mask-repeat: repeat;
+  /* la maschera copre anche l'alone: un margine di 2 px intorno al testo */
+  padding-block: 0.06em 0.02em;
+  margin-block: -0.06em -0.02em;
+  text-wrap: balance;
+  overflow-wrap: normal;
+  hyphens: none;
+}
+
+/* Misure: una per ruolo. Mai più di due misure stencil nella stessa schermata
+   oltre alle tacche. */
+.btf-root .btf-stencil--titolo    { font-size: var(--btf-fs-titolo); }
+.btf-root .btf-stencil--fase      { font-size: var(--btf-fs-fase); }
+.btf-root .btf-stencil--costo     { font-size: var(--btf-fs-costo); line-height: var(--btf-lh-cifra); }
+.btf-root .btf-stencil--schermata { font-size: var(--btf-fs-schermata); }
+.btf-root .btf-stencil--enorme    { font-size: var(--btf-fs-enorme); line-height: 0.86; }
+.btf-root .btf-stencil--marchio   { font-size: var(--btf-fs-marchio); line-height: 1; letter-spacing: 0.02em; }
+.btf-root .btf-stencil--data      { font-size: var(--btf-fs-data); line-height: var(--btf-lh-cifra); }
+
+/* Piccoli: tacche e quote. Peso 800 (il 900 a 20-24 px chiude i ponti) e un
+   filo d'aria tra le lettere. La maschera di spruzzo a questa misura
+   mangerebbe le aste: tolta. */
+.btf-root .btf-stencil--tacca,
+.btf-root .btf-stencil--quota {
+  font-weight: var(--btf-wght-stencil-piccolo);
+  letter-spacing: var(--btf-ls-tacca);
+  line-height: 1;
+  -webkit-mask-image: none;
+  mask-image: none;
+  padding-block: 0;
+  margin-block: 0;
+}
+.btf-root .btf-stencil--tacca { font-size: var(--btf-fs-tacca); }
+.btf-root .btf-stencil--quota { font-size: var(--btf-fs-quota); }
+
+/* Colori della marcatura. Il cobalto è gesso: si usa solo dove "il filo ha
+   battuto" (costi, quote della finestra, data del successo) e solo da 24 px. */
+.btf-root .btf-stencil--gesso { color: var(--btf-marcatura-gesso); }
+.btf-root .btf-stencil--calce { color: var(--btf-calce); }
+
+/* Cifre a stencil in un riquadro di larghezza fissa: tra un mese e l'altro
+   il costo cambia senza spostare niente (CLS 0). Allineate a destra, come
+   si incolonnano i soldi. */
+.btf-root .btf-stencil--riquadro-costo {
+  display: inline-block;
+  inline-size: var(--btf-costo-larghezza);
+  text-align: end;
+  white-space: nowrap;
+}
+.btf-root .btf-stencil--riquadro-totale {
+  display: inline-block;
+  inline-size: var(--btf-totale-larghezza);
+  text-align: end;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   3. Cifre in Chivo (prezzi in riga, progressivo, forbice)
+   -------------------------------------------------------------------------- */
+.btf-root .btf-cifre {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   4. Rasatura: il fondo dei campi
+   Un rettangolo liscio e più chiaro sulla lastra, spigolo vivo, con la riga
+   di base di 2 px ferro (il bordo del getto). Niente contorno sottile
+   tutto intorno. In errore il bordo diventa pieno sui quattro lati: cambia
+   la forma, non il colore.
+   -------------------------------------------------------------------------- */
+.btf-root .btf-rasatura {
+  background-color: var(--btf-fondo-campo);
+  color: var(--btf-testo);
+  border: 0;
+  border-radius: 0;
+  box-shadow: inset 0 calc(-1 * var(--btf-bordo-campo)) 0 0 var(--btf-riga-campo);
+}
+.btf-root .btf-rasatura[aria-invalid="true"],
+.btf-root .btf-rasatura--errore {
+  box-shadow: inset 0 0 0 var(--btf-bordo-campo-errore) var(--btf-riga-campo);
+}
+
+/* --------------------------------------------------------------------------
+   5. Il bottone del gesso
+   Cobalto pieno, testo calce Chivo 700, spigolo vivo. Un solo intento in
+   tutto il sito (Misura e manda); "Manda le misure" è l'atto dentro il
+   flusso. Premuto: scende di 1 px. Nessuna ombra, nessun bagliore.
+   -------------------------------------------------------------------------- */
+.btf-root .btf-bottone-cobalto {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--btf-sp-2);
+  min-block-size: var(--btf-bottone-h);
+  padding-inline: var(--btf-sp-5);
+  border: 0;
+  border-radius: 0;
+  background-color: var(--btf-bottone);
+  color: var(--btf-bottone-testo);
+  font-family: var(--btf-font-testo);
+  font-size: var(--btf-fs-bottone);
+  font-weight: var(--btf-wght-forte);
+  line-height: 1.15;
+  letter-spacing: 0;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 160ms cubic-bezier(0.2, 0, 0, 1), transform 90ms cubic-bezier(0.2, 0, 0, 1);
+}
+@media (hover: hover) {
+  .btf-root .btf-bottone-cobalto:hover {
+    background-color: var(--btf-bottone-sopra);
+  }
+}
+.btf-root .btf-bottone-cobalto:active {
+  background-color: var(--btf-bottone-sopra);
+  transform: translateY(1px);
+}
+.btf-root .btf-bottone-cobalto[aria-busy="true"] {
+  cursor: progress;
+}
+.btf-root .btf-bottone-cobalto--fascia {
+  min-block-size: var(--btf-bottone-h-fascia);
+  padding-inline: var(--btf-sp-4);
+}
+
+/* --------------------------------------------------------------------------
+   6. Il cartello di cantiere
+   Pannello ferro, bordo calce 4 px, testo calce. Appeso alla lastra con due
+   fascette (rettangoli ferro 8 × 26 che escono dal bordo superiore).
+   Il cartello stesso non ha ombra: la sola cosa che lo stacca è il bordo.
+   -------------------------------------------------------------------------- */
+.btf-root .btf-cartello {
+  position: relative;
+  background-color: var(--btf-ferro);
+  color: var(--btf-calce);
+  border: var(--btf-bordo-cartello) solid var(--btf-calce);
+  border-radius: 0;
+}
+.btf-root .btf-cartello a {
+  color: var(--btf-link-su-ferro);
+}
+.btf-root .btf-cartello__fascetta {
+  position: absolute;
+  inset-block-start: calc(-1 * var(--btf-fascetta-h) + var(--btf-bordo-cartello) + 6px);
+  inline-size: var(--btf-fascetta-w);
+  block-size: var(--btf-fascetta-h);
+  background-color: var(--btf-ferro);
+  /* il giro della fascetta sul bordo calce: una tacca di calce di 2 px */
+  box-shadow: inset 0 -8px 0 0 var(--btf-ferro), inset 0 -10px 0 0 var(--btf-calce);
+  pointer-events: none;
+}
+.btf-root .btf-cartello__fascetta--sinistra { inset-inline-start: 12%; }
+.btf-root .btf-cartello__fascetta--destra   { inset-inline-end: 12%; }
+
+/* --------------------------------------------------------------------------
+   7. Il gesso della linea battuta
+   Il pieno cobalto; la tessera di polvere (assets/svg/polvere-tessera.svg)
+   come maschera la mette linea.css, che conosce le misure della linea.
+   Senza supporto per mask-image: un tratto pieno di 5 px con i bordi sfumati.
+   -------------------------------------------------------------------------- */
+.btf-root .btf-gesso {
+  background-color: var(--btf-gesso);
+}
+.btf-root .btf-gesso--vecchio {
+  background-color: var(--btf-gesso-vecchio);
+}
+@supports not ((mask-image: url("x.svg")) or (-webkit-mask-image: url("x.svg"))) {
+  .btf-root .btf-gesso {
+    background-color: transparent;
+    background-image: linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(50% - 3.5px),
+      var(--btf-gesso) calc(50% - 2.5px),
+      var(--btf-gesso) calc(50% + 2.5px),
+      transparent calc(50% + 3.5px),
+      transparent 100%
+    );
+  }
+  .btf-root .btf-gesso--vecchio {
+    background-image: linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(50% - 3.5px),
+      var(--btf-gesso-vecchio) calc(50% - 2.5px),
+      var(--btf-gesso-vecchio) calc(50% + 2.5px),
+      transparent calc(50% + 3.5px),
+      transparent 100%
+    );
+  }
+  .btf-root .btf-stencil {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   8. Selezione del testo
+   -------------------------------------------------------------------------- */
+.btf-root ::selection {
+  background-color: var(--btf-selezione-fondo);
+  color: var(--btf-selezione-testo);
+  text-shadow: none;
+}
+
+/* --------------------------------------------------------------------------
+   9. Movimento ridotto: i materiali non si muovono comunque; tolgo solo la
+   transizione del bottone.
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .btf-root .btf-bottone-cobalto {
+    transition: none;
+  }
+  .btf-root .btf-bottone-cobalto:active {
+    transform: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   10. Contrasto forzato (Windows): niente texture, niente maschere, i colori
+   del sistema. Il cartello e i bottoni tengono un bordo visibile.
+   -------------------------------------------------------------------------- */
+@media (forced-colors: active) {
+  .btf-root .btf-lastra,
+  .btf-root .btf-lastra--ombra {
+    background-image: none;
+    background-color: Canvas;
+    color: CanvasText;
+  }
+  .btf-root .btf-stencil {
+    -webkit-mask-image: none;
+    mask-image: none;
+    text-shadow: none;
+    color: CanvasText;
+  }
+  .btf-root .btf-bottone-cobalto {
+    border: 2px solid ButtonText;
+  }
+  .btf-root .btf-rasatura {
+    border: 2px solid CanvasText;
+    box-shadow: none;
+  }
+  .btf-root .btf-cartello {
+    forced-color-adjust: auto;
+    border-color: CanvasText;
+  }
+  .btf-root .btf-gesso,
+  .btf-root .btf-gesso--vecchio {
+    forced-color-adjust: none;
+    background-color: Highlight;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   11. Stampa (solo la vista Tutti i mesi si stampa, layout.css): la lastra
+   diventa la carta della stampante, niente texture, marcature in ferro.
+   -------------------------------------------------------------------------- */
+@media print {
+  .btf-root .btf-lastra,
+  .btf-root .btf-lastra--ombra {
+    background: none;
+    color: var(--btf-ferro);
+  }
+  .btf-root .btf-stencil {
+    -webkit-mask-image: none;
+    mask-image: none;
+    text-shadow: none;
+    color: var(--btf-ferro);
+  }
+}
