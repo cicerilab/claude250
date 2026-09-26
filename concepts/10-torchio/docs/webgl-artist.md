@@ -536,3 +536,28 @@ Richiesta a **section-builder-banco**: le righe d'esempio della prova hanno
 `profondita: 0.45` e restano volutamente più leggere; se la giuria le vuole
 nette come l'hero, 0,7 le tiene distinguibili dal testo del cliente senza
 farle pallide.
+
+---
+
+## Giro 3b (giuria "Giro 3", intervento 2)
+
+- **Leggibilità minima a profondità ridotta** (`maskPainter.canaliDi`): per
+  secco e lamina, che si leggono solo con il solco, la `profondita` di un
+  layer non fa scendere il solco sotto il 70% di quello pieno (`0,7 + 0,3 k`:
+  le righe d'esempio del banco a 0,45 diventano 0,84). L'inchiostro resta
+  libero di andare "a bacio" (0,3), perché lo legge il colore. Il
+  section-builder-banco può lasciare 0,45: la differenza con il testo del
+  cliente resta visibile ma non è più pallida.
+- **Piede scuro della lamina** (`relief.frag.glsl`): tre campioni della
+  maschera della lamina a 2, 4 e 7 px CSS sotto il punto; dove la lettera
+  finisce il metallo va verso 0,42 × argento. Su Cotone l'argento si stacca dal
+  bianco anche a luce ferma; su tutte le carte è la stessa regola. Solo nei
+  pixel di lamina, 3 letture in più.
+- Contratto invariato. Pipeline di prova: WebGL2 e WebGL1 compilano, 0 errori.
+  `tsc -p tsconfig.app.json` ed `eslint` su `webgl/`: verdi.
+- Pagina vera (vite 8105, chiuso; SwiftShader, `?gl=1`, GL acceso), prova del
+  banco a 1440: su Citrino "Chiara Zanin" e "Restauratrice" d'esempio hanno
+  solco e ombra netti come hero e Tecniche; su Cotone lo stesso, e il prezzo
+  "160 €" in lamina ha il piede scuro e si legge. Su Citrino il prezzo nello
+  screenshot è ancora in discesa (il prezzo aspetta la sua linea d'ingresso,
+  cross-browser-tester O6): non è il materiale.
