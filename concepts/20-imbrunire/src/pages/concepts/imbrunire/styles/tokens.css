@@ -75,7 +75,7 @@
   /* Poché: spessore di muri e solai tagliati, gradini, fasce dei nomi */
   --imb-poche: #8A4A38;
   --imb-poche-rgb: 138 74 56;
-  --imb-poche-scuro: #5E2F23;     /* fregio sotto il cornicione, taglio del tetto */
+  --imb-poche-scuro: #5E2F23;     /* falde tagliate del tetto, zoccolo con la frase */
   --imb-inciso: #4E261C;          /* lettere incise nell'intonaco (solo ≥ 24 px) */
 
   /* Interni delle scatole (superfici, mai testo) */

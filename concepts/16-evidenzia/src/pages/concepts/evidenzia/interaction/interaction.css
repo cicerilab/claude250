@@ -1,0 +1,337 @@
+/*
+ * EVIDENZIA · stati di interazione (interaction-designer).
+ *
+ * Anello di fuoco, cursori DI SISTEMA, stati hover / active / premuto,
+ * aree di tocco, touch-action del gesto. Le sezioni aggiungono le classi
+ * `evd-ix-*` accanto alle proprie e gli attributi `data-evd-*` descritti in
+ * docs/interaction-designer.md §6.
+ *
+ * Regole: nessun hex (solo token --evd-* dell'art-director); spigolo vivo;
+ * nessun colore nuovo al passaggio del puntatore (cambia lo spessore
+ * dell'inchiostro, non il colore); il rosa non compare mai qui; nessun
+ * cursore personalizzato (CD 4.4, 4.7); nessuna scritta "trascina".
+ */
+
+/* ================================================================== 1. anello di fuoco */
+
+/* nero 2 px con 2 px di stacco riempito di carta: si vede su carta, su barre e su bottoni neri */
+.evd-root :focus-visible {
+  outline: var(--evd-fuoco-spessore) solid var(--evd-fuoco-colore);
+  outline-offset: var(--evd-fuoco-distanza);
+  box-shadow: var(--evd-fuoco-alone);
+}
+
+.evd-root :focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* il foglio è un contenitore scorrevole focalizzabile: anello DENTRO il bordo, mai tagliato */
+.evd-root .evd-foglio:focus-visible {
+  outline-offset: calc(-1 * (var(--evd-fuoco-spessore) + var(--evd-fuoco-distanza)));
+  box-shadow: none;
+}
+
+/* titoli raggiunti con i salti (sommario, "Vai agli annunci"): l'anello si stacca di più */
+.evd-root [tabindex='-1']:focus-visible {
+  outline-offset: 6px;
+}
+
+@media (forced-colors: active) {
+  .evd-root :focus-visible {
+    outline-color: Highlight;
+    box-shadow: none;
+  }
+}
+
+.evd-root ::selection {
+  background: var(--evd-selezione-fondo);
+  color: var(--evd-selezione-testo);
+}
+
+/* ================================================================== 2. il foglio e la mano */
+
+/* spazi vuoti del foglio: la mano (solo con un puntatore fine; col dito si scorre e basta) */
+@media (pointer: fine) {
+  .evd-root[data-layout='foglio'][data-vista='leggi'] .evd-foglio,
+  .evd-root[data-layout='foglio'][data-vista='leggi'] [data-evd-afferra] {
+    cursor: grab;
+  }
+
+  /* spazio premuto: la mano ovunque sul foglio, anche sopra annunci e link */
+  .evd-root .evd-foglio[data-evd-pan='spazio'],
+  .evd-root .evd-foglio[data-evd-pan='spazio'] * {
+    cursor: grab !important;
+  }
+
+  .evd-root .evd-foglio[data-evd-pan='trascina'],
+  .evd-root .evd-foglio[data-evd-pan='trascina'] * {
+    cursor: grabbing !important;
+  }
+
+  /* Pagina intera: tutto il foglio è un bersaglio che porta a leggere */
+  .evd-root[data-vista='intera'] .evd-foglio,
+  .evd-root[data-vista='intera'] .evd-foglio * {
+    cursor: zoom-in !important;
+  }
+}
+
+/* durante il trascinamento niente selezione accidentale da nessuna parte del foglio */
+.evd-root .evd-foglio[data-evd-pan='trascina'] {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/*
+ * Pizzico sul foglio (tablet): il browser continua a scorrere con un dito ma
+ * non fa il suo zoom DENTRO il foglio (usePizzico lo trasforma in Leggi /
+ * Pagina intera). Fuori dal foglio lo zoom del browser resta (WCAG 1.4.4).
+ */
+.evd-root[data-layout='foglio'] .evd-foglio {
+  touch-action: pan-x pan-y;
+}
+
+/* ================================================================== 3. l'annuncio e il gesto */
+
+/*
+ * [data-evd-annuncio] = l'<article> evidenziabile (non i "Cerchiamo").
+ * La selezione del testo è sostituita dal tratto (CD 4.4): solo qui.
+ */
+.evd-root [data-evd-annuncio] {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+@media (pointer: fine) {
+  .evd-root[data-vista='leggi'] [data-evd-annuncio] {
+    cursor: text;
+  }
+}
+
+/* colonna (< 640 px): tutto l'annuncio lascia al gesto l'orizzontale, lo scroll verticale resta del sistema */
+.evd-root[data-layout='colonna'] [data-evd-annuncio] {
+  touch-action: pan-y;
+}
+
+/* foglio (≥ 640 px): solo la riga d'attacco prende il dito; il resto dell'annuncio sposta il foglio */
+.evd-root[data-layout='foglio'] [data-evd-attacco] {
+  touch-action: pan-y;
+}
+
+/*
+ * L'attacco è il bottone che apre la scheda (dentro l'h3). Riga di stampa:
+ * nessun fondo, nessun bordo; al passaggio compare la sottolineatura.
+ * Col dito l'area di presa sale a 44 px senza toccare l'impaginato.
+ */
+.evd-root .evd-ix-attacco {
+  position: relative;
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--evd-raggio);
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: inherit;
+  cursor: pointer;
+  text-decoration-line: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: var(--evd-sottolineatura);
+  text-underline-offset: var(--evd-sottolineatura-distanza);
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .evd-root .evd-ix-attacco:hover {
+    text-decoration-color: currentColor;
+    text-decoration-thickness: var(--evd-sottolineatura-hover);
+  }
+}
+
+@media (pointer: coarse) {
+  .evd-root .evd-ix-attacco::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: max(100%, var(--evd-tocco));
+    transform: translateY(-50%);
+  }
+}
+
+/* ================================================================== 4. bottoni */
+
+/*
+ * Evidenzia (sull'annuncio) e "Evidenzia per il giro" (nella scheda).
+ * Stato non cromatico (trend R1): spento = contorno nero 1 px su carta;
+ * premuto (aria-pressed=true, testo "Nel giro") = pieno nero, testo carta.
+ */
+.evd-root .evd-ix-interruttore {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--evd-sp-2);
+  min-height: var(--evd-tocco);
+  min-width: var(--evd-tocco);
+  padding: 0 var(--evd-sp-3);
+  border: var(--evd-filo) solid var(--evd-nero);
+  border-radius: var(--evd-raggio);
+  background: var(--evd-carta);
+  color: var(--evd-nero);
+  font-family: var(--evd-font-titoli);
+  font-weight: var(--evd-peso-interfaccia);
+  font-size: var(--evd-fs-bottone);
+  line-height: var(--evd-lh-interfaccia);
+  white-space: nowrap;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.evd-root .evd-ix-interruttore[aria-pressed='true'] {
+  background: var(--evd-nero);
+  color: var(--evd-carta);
+}
+
+.evd-root .evd-ix-interruttore svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+
+/*
+ * Bottoni pieni neri (Prepara il giro, Manda il giro) e interruttori:
+ * al passaggio un filo di carta si disegna dentro il bordo (l'inchiostro
+ * si "stampa" più marcato); premuti, il bottone scende di 1 px nella carta.
+ */
+@media (hover: hover) and (pointer: fine) {
+  .evd-root .evd-ix-interruttore:hover {
+    box-shadow: inset 0 0 0 1px var(--evd-nero);
+  }
+
+  .evd-root .evd-ix-interruttore[aria-pressed='true']:hover,
+  .evd-root .evd-ix-premibile:hover {
+    box-shadow: inset 0 0 0 2px var(--evd-nero), inset 0 0 0 3px var(--evd-carta);
+  }
+
+  /* con il fuoco da tastiera vince l'anello */
+  .evd-root .evd-ix-interruttore:focus-visible,
+  .evd-root .evd-ix-premibile:focus-visible {
+    box-shadow: var(--evd-fuoco-alone);
+  }
+}
+
+.evd-root .evd-ix-premibile {
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.evd-root .evd-ix-interruttore:active,
+.evd-root .evd-ix-premibile:active {
+  transform: translateY(1px);
+}
+
+/* bottoni di testo su carta (Prima, Dopo, Togli, Rimetti nella pagina): premuti, la carta si scurisce appena */
+.evd-root .evd-ix-testo {
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.evd-root .evd-ix-testo:active {
+  background: var(--evd-carta-premuta);
+}
+
+/* disattivato ma raggiungibile (aria-disabled, mai disabled): "Mando il giro…" */
+.evd-root .evd-ix-premibile[aria-disabled='true'],
+.evd-root .evd-ix-interruttore[aria-disabled='true'] {
+  cursor: default;
+  transform: none;
+}
+
+.evd-root .evd-ix-premibile[aria-disabled='true']:hover {
+  box-shadow: none;
+}
+
+/* area minima 44 × 44 per ogni controllo al tocco */
+.evd-root .evd-ix-tocco {
+  min-width: var(--evd-tocco);
+  min-height: var(--evd-tocco);
+}
+
+/* ================================================================== 5. link */
+
+/* sottolineatura come riga di stampa: sottile, più spessa al passaggio, mai un colore nuovo */
+.evd-root .evd-ix-link {
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-thickness: var(--evd-sottolineatura);
+  text-underline-offset: var(--evd-sottolineatura-distanza);
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .evd-root .evd-ix-link:hover {
+    text-decoration-thickness: var(--evd-sottolineatura-hover);
+  }
+}
+
+.evd-root .evd-ix-link:active {
+  text-decoration-thickness: calc(var(--evd-sottolineatura-hover) + 1px);
+}
+
+/* ================================================================== 6. tappe del giro (useTrascinaTappe) */
+
+.evd-root .evd-ix-tappa {
+  position: relative;
+  transform: translateY(var(--evd-ix-sposta, 0px));
+  transition: transform 150ms var(--evd-ease-posa, ease-out);
+}
+
+@media (pointer: fine) {
+  .evd-root .evd-ix-tappa {
+    cursor: grab;
+  }
+
+  .evd-root [data-evd-trascina] .evd-ix-tappa,
+  .evd-root [data-evd-trascina] .evd-ix-tappa * {
+    cursor: grabbing;
+  }
+}
+
+/* la tappa in mano: segue il puntatore senza ritardo, sopra le altre, carta appena premuta */
+.evd-root .evd-ix-tappa[data-evd-trascina] {
+  z-index: 1;
+  transition: none;
+  background: var(--evd-carta-premuta);
+}
+
+.evd-root [data-evd-trascina] {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ================================================================== 7. reduced motion */
+
+.evd-root[data-motion='reduced'] .evd-ix-tappa {
+  transition: none;
+}
+
+.evd-root[data-motion='reduced'] .evd-ix-interruttore:active,
+.evd-root[data-motion='reduced'] .evd-ix-premibile:active {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .evd-root .evd-ix-tappa {
+    transition: none;
+  }
+
+  .evd-root .evd-ix-interruttore:active,
+  .evd-root .evd-ix-premibile:active {
+    transform: none;
+  }
+}
