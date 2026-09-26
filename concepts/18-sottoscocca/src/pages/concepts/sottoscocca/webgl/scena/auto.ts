@@ -134,8 +134,9 @@ function materialiPer(nomi: string[], mappa: Record<string, Material>): Material
 }
 
 /**
- * Monta l'auto con i materiali della palette. Le ruote anteriori hanno gomma e
- * cerchio propri (evidenza della gomma, cerchio che si apre a 80 cm).
+ * Monta l'auto con i materiali della palette. La ruota anteriore sinistra (lato
+ * camera) ha gomma e cerchio che si aprono in trasparenza; le gomme anteriori
+ * e posteriori hanno materiali propri per l'evidenza.
  */
 export function costruisciAuto(dati: DatiAuto, mat: Materiali): Auto {
   const gruppo = new Group();
@@ -159,14 +160,17 @@ export function costruisciAuto(dati: DatiAuto, mat: Materiali): Auto {
   for (const pos of POSIZIONI_RUOTA) {
     const info = dati.ruote[pos];
     const anteriore = pos.startsWith('anteriore');
+    const aperta = pos === 'anteriore-sinistra';
     const m = new Mesh(
       dati.geometrie[info.mesh],
       materialiPer(dati.gruppi[info.mesh], {
-        gomma: anteriore ? mat.gommaAnteriore : mat.gommaPosteriore,
-        cerchio: anteriore ? mat.cerchioAnteriore : mat.cerchioPosteriore,
+        gomma: aperta ? mat.gommaAperta : anteriore ? mat.gommaAnteriore : mat.gommaPosteriore,
+        cerchio: aperta ? mat.cerchioAperto : mat.cerchio,
       }),
     );
     m.name = `ruota-${pos}`;
+    // la ruota che si apre va disegnata dopo i pezzi opachi e l'ombra a terra
+    if (aperta) m.renderOrder = 2;
     const perno = new Group();
     perno.name = `perno-${pos}`;
     perno.position.set(info.centro[0], info.centro[1], info.centro[2]);

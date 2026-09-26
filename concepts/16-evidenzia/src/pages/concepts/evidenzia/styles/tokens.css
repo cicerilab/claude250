@@ -113,6 +113,7 @@
   --evd-tratto-altezza: 1.15;          /* × corpo della riga d'attacco */
   --evd-tratto-dy-max: 2px;
   --evd-tratto-rotazione-max: 0.6deg;
+  --evd-tratto-forzato: 0;             /* 1 solo in contrasto forzato (sezione 3) */
 
   /* ---------- Mappa ---------- */
   --evd-mappa-filtro: grayscale(0.35);

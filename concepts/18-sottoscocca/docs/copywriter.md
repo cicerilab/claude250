@@ -19,6 +19,9 @@ Controlli fatti sui due file:
   solo in "Invio..." (eccezione del creative-director), mai più di un `·` per
   stringa; nessuna parola della lista "da evitare" del brand-strategist, mai
   "prima di toccare", mai "Prenota" come comando, nessun "01 ·".
+- nessun `✓` né `→` nelle stringhe (non esistono in Tektur né in Red Hat Text):
+  `→` c'è solo nei commenti del codice; la spunta è detta a parole ("Nel tuo
+  lavoro, togli"), la freccia dei link esterni è l'icona SVG del vector-artist.
 
 ---
 

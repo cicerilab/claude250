@@ -1,0 +1,249 @@
+/*
+ * NOVANTA · movimento in CSS (motion-designer).
+ *
+ * Una sola curva (la frenata, motion/easing.ts), tre tempi (180 / 350 /
+ * 400-600 ms). Qui vive solo cio che e transizione o animazione CSS; il
+ * braccio e l'anello li muove il rotore nel ticker, mai una transition.
+ *
+ * Contenuto del file:
+ *   1. variabili --nov-motion-* (fonte: variabiliMotion() in choreography.ts)
+ *   2. dissolvenza incrociata degli angoli in vista quadrante
+ *   3. mini arco: il braccietto che sale una volta (proprieta registrata)
+ *   4. prenotazione: arco del ciclo, tacca presa, tacche attenuate
+ *   5. utilita di durata per i cambi di impaginazione su mobile
+ *
+ * Tutti i selettori partono da .nov-root. Nessuna regola prima del mount:
+ * le animazioni valgono solo con data-pronto="1" (la prima pittura non si anima).
+ */
+
+/* ------------------------------------------------------------------ */
+/* 1. Variabili                                                         */
+/* ------------------------------------------------------------------ */
+
+.nov-root {
+  --nov-motion-curva: cubic-bezier(0.3333, 0.5, 0.6667, 1);
+  --nov-motion-sposta: 8px;
+  --nov-motion-dur-dissolvenza: 180ms;
+  --nov-motion-dur-ciclo-chiude: 520ms;
+  --nov-motion-dur-ciclo-apre: 400ms;
+  --nov-motion-dur-proposta: 180ms;
+  --nov-motion-dur-spegni: 320ms;
+  --nov-motion-dur-attenua: 400ms;
+  --nov-motion-opacita-attenuata: 0.35;
+  --nov-motion-dur-fascia: 320ms;
+  --nov-motion-dur-riduci: 240ms;
+  --nov-motion-dur-mini: 400ms;
+}
+
+/* Reduced motion: stato finale immediato; resta solo una dissolvenza di 120 ms
+   del contenuto, senza spostamento (creative-director 4.8). Due volte: la
+   media query vale anche prima che Novanta.tsx scriva data-motion. */
+.nov-root[data-motion="reduced"] {
+  --nov-motion-sposta: 0px;
+  --nov-motion-dur-dissolvenza: 120ms;
+  --nov-motion-dur-ciclo-chiude: 0ms;
+  --nov-motion-dur-ciclo-apre: 0ms;
+  --nov-motion-dur-proposta: 0ms;
+  --nov-motion-dur-spegni: 0ms;
+  --nov-motion-dur-attenua: 0ms;
+  --nov-motion-dur-fascia: 0ms;
+  --nov-motion-dur-riduci: 0ms;
+  --nov-motion-dur-mini: 0ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nov-root:not([data-motion="full"]) {
+    --nov-motion-sposta: 0px;
+    --nov-motion-dur-dissolvenza: 120ms;
+    --nov-motion-dur-ciclo-chiude: 0ms;
+    --nov-motion-dur-ciclo-apre: 0ms;
+    --nov-motion-dur-proposta: 0ms;
+    --nov-motion-dur-spegni: 0ms;
+    --nov-motion-dur-attenua: 0ms;
+    --nov-motion-dur-fascia: 0ms;
+    --nov-motion-dur-riduci: 0ms;
+    --nov-motion-dur-mini: 0ms;
+  }
+}
+
+/* Verso dello spostamento: "nella direzione della rotazione".
+   bordo (desktop): alla linea di lettura (90) la punta del braccio sale quando
+   i gradi crescono, quindi avanti = il testo sale; fondo (mobile): in cima
+   (90) la punta va verso destra, quindi avanti = il testo va a destra. */
+.nov-root[data-geo="bordo"][data-dir="avanti"] {
+  --nov-motion-entra-da: 0 var(--nov-motion-sposta);
+  --nov-motion-esce-a: 0 calc(var(--nov-motion-sposta) * -1);
+}
+
+.nov-root[data-geo="bordo"][data-dir="indietro"] {
+  --nov-motion-entra-da: 0 calc(var(--nov-motion-sposta) * -1);
+  --nov-motion-esce-a: 0 var(--nov-motion-sposta);
+}
+
+.nov-root[data-geo="fondo"][data-dir="avanti"] {
+  --nov-motion-entra-da: calc(var(--nov-motion-sposta) * -1) 0;
+  --nov-motion-esce-a: var(--nov-motion-sposta) 0;
+}
+
+.nov-root[data-geo="fondo"][data-dir="indietro"] {
+  --nov-motion-entra-da: var(--nov-motion-sposta) 0;
+  --nov-motion-esce-a: calc(var(--nov-motion-sposta) * -1) 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* 2. Dissolvenza incrociata degli angoli                               */
+/* ------------------------------------------------------------------ */
+
+/* Chi entra resta trasparente per il primo 30% del tempo e chi esce e gia
+   sparito al 65%: i due testi sovrapposti nello stesso Palco non si leggono
+   mai insieme a meta opacita. Stati di Angolo (scaffold):
+     attivo  in vista dal primo frame, nessuna animazione;
+     entra   diventato attivo per un cambio: anima l'ingresso;
+     esce    era attivo: anima l'uscita e finisce nascosto;
+     spento  nascosto, nessuna animazione. */
+
+@keyframes nov-motion-angolo-entra {
+  0% {
+    opacity: 0;
+    translate: var(--nov-motion-entra-da, 0 0);
+  }
+  30% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes nov-motion-angolo-esce {
+  0% {
+    opacity: 1;
+    translate: 0 0;
+    visibility: visible;
+  }
+  65% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+    translate: var(--nov-motion-esce-a, 0 0);
+    visibility: hidden;
+  }
+}
+
+.nov-root[data-modo="quadrante"][data-pronto="1"] .nov-angolo[data-stato="entra"] {
+  animation: nov-motion-angolo-entra var(--nov-motion-dur-dissolvenza) var(--nov-motion-curva) both;
+}
+
+.nov-root[data-modo="quadrante"][data-pronto="1"] .nov-angolo[data-stato="esce"] {
+  animation: nov-motion-angolo-esce var(--nov-motion-dur-dissolvenza) var(--nov-motion-curva) both;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* 3. Mini arco: il braccietto sale una volta all'ingresso dell'angolo   */
+/* ------------------------------------------------------------------ */
+
+/* dial/Arco.tsx ruota il braccietto del mini arco di
+   calc(var(--nov-m-sale, 1) * <valore>deg) sull'elemento con classe
+   nov-m-sale. Fuori dall'animazione vale 1 (braccietto gia all'obiettivo):
+   in vista elenco, al primo frame, con reduced motion. */
+@property --nov-m-sale {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1;
+}
+
+@keyframes nov-motion-mini-sale {
+  from {
+    --nov-m-sale: 0;
+  }
+  to {
+    --nov-m-sale: 1;
+  }
+}
+
+.nov-root[data-modo="quadrante"][data-pronto="1"] .nov-angolo[data-stato="entra"] .nov-m-sale {
+  animation: nov-motion-mini-sale var(--nov-motion-dur-mini) var(--nov-motion-curva) both;
+  animation-delay: calc(var(--nov-motion-dur-dissolvenza) * 0.3);
+}
+
+.nov-root[data-motion="reduced"] .nov-m-sale {
+  animation: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* 4. Prenotazione                                                      */
+/* ------------------------------------------------------------------ */
+
+/* Arco del ciclo. Prenota.tsx mette data-nov-ciclo sul gruppo SVG del ciclo:
+     nessuno   nessun controllo (ciclo tolto o non ancora proposto)
+     proposto  il controllo e acceso: linea sottile, tratto pieno ancora vuoto
+     chiuso    invio in corso o riuscito: il tratto pieno si disegna dalla
+               prima visita al controllo (il path parte dalla prima visita)
+   L'errore di invio torna a "proposto": il tratto ripercorre la strada
+   all'indietro in 400 ms. Tutti i path hanno pathLength="1". */
+.nov-root .nov-ciclo__proposta {
+  opacity: 0;
+  transition: opacity var(--nov-motion-dur-proposta) var(--nov-motion-curva);
+}
+
+.nov-root [data-nov-ciclo="proposto"] .nov-ciclo__proposta,
+.nov-root [data-nov-ciclo="chiuso"] .nov-ciclo__proposta {
+  opacity: 1;
+}
+
+.nov-root .nov-ciclo__pieno {
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset var(--nov-motion-dur-ciclo-apre) var(--nov-motion-curva);
+}
+
+.nov-root [data-nov-ciclo="chiuso"] .nov-ciclo__pieno {
+  stroke-dashoffset: 0;
+  transition-duration: var(--nov-motion-dur-ciclo-chiude);
+}
+
+/* S10: l'ora e stata presa nel frattempo. La tacca con data-nov-spegni="1"
+   si spegne; Prenota.tsx la ridisegna come occupata alla fine
+   (DUR_SPEGNI in choreography.ts). */
+.nov-root .nov-m-spegnibile {
+  transition: opacity var(--nov-motion-dur-spegni) var(--nov-motion-curva);
+}
+
+.nov-root .nov-m-spegnibile[data-nov-spegni="1"] {
+  opacity: 0;
+}
+
+/* S12: successo. Le tacche non scelte si attenuano, le due scelte restano
+   piene (data-nov-scelta). data-nov-esito="fatto" sull'anello. */
+.nov-root .nov-m-attenuabile {
+  transition: opacity var(--nov-motion-dur-attenua) var(--nov-motion-curva);
+}
+
+.nov-root [data-nov-esito="fatto"] .nov-m-attenuabile:not([data-nov-scelta]) {
+  opacity: var(--nov-motion-opacita-attenuata);
+}
+
+/* ------------------------------------------------------------------ */
+/* 5. Cambi di impaginazione su mobile                                  */
+/* ------------------------------------------------------------------ */
+
+/* A 90 su mobile il quadrante diventa fascia da 64 px e sale l'anello;
+   entrando nei campi l'anello si riduce a 140 px. Le regole di layout sono
+   dei proprietari (quadrante.css, prenota.css): qui solo tempo e curva, da
+   usare con queste classi sugli elementi che cambiano misura o posizione.
+   Solo transform e opacity: le misure cambiano di colpo, la scala le
+   accompagna (vedi docs/motion-designer.md, sezione 5). */
+.nov-root[data-pronto="1"] .nov-m-fascia {
+  transition:
+    transform var(--nov-motion-dur-fascia) var(--nov-motion-curva),
+    opacity var(--nov-motion-dur-fascia) var(--nov-motion-curva);
+}
+
+.nov-root[data-pronto="1"] .nov-m-riduci {
+  transition:
+    transform var(--nov-motion-dur-riduci) var(--nov-motion-curva),
+    opacity var(--nov-motion-dur-riduci) var(--nov-motion-curva);
+}

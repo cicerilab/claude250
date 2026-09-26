@@ -70,10 +70,15 @@ export interface Materiali {
   fondo: MeshLambertMaterial;
   vetri: MeshLambertMaterial;
   fanali: MeshLambertMaterial;
+  /** Gomma anteriore destra (lato lontano dalla camera): sempre piena. */
   gommaAnteriore: MaterialeEvidenza;
+  /** Gomma anteriore sinistra (lato camera): si apre al 35% da 20 a 80 cm. */
+  gommaAperta: MaterialeEvidenza;
   gommaPosteriore: MaterialeEvidenza;
-  cerchioAnteriore: MeshLambertMaterial;
-  cerchioPosteriore: MeshLambertMaterial;
+  /** Cerchi pieni (tre ruote). */
+  cerchio: MeshLambertMaterial;
+  /** Cerchio anteriore sinistro: si apre insieme alla sua gomma. */
+  cerchioAperto: MeshLambertMaterial;
   // ponte
   ponte: MeshLambertMaterial;
   tampone: MeshLambertMaterial;
@@ -106,10 +111,13 @@ export interface TextureScena {
 /**
  * Crea tutti i materiali. Colori:
  * - carrozzeria, colonne, bracci, pezzi: verde macchina;
- * - fascia bassa della scocca: verde ombra (la scocca resta leggibile in due toni);
- * - pianale e passaruota, gomme, tamponi, vetri: nero grasso (i vetri
- *   schiariti verso lo zincato al 30%, OPACITA.vetri: la scocca non ha interni,
- *   un vetro trasparente mostrerebbe il vuoto);
+ * - fascia bassa, pianale e passaruota: verde ombra. Il pianale NON e' nero:
+ *   da sotto, su fondo nero grasso, una scocca nera sparisce (provato: la
+ *   sagoma non si legge). Scala dei valori a 180 cm: fondo nero < pianale
+ *   verde ombra < pezzi verde < metallo zincato < evidenza bianca;
+ * - gomme, tamponi, vetri: nero grasso (i vetri schiariti verso lo zincato al
+ *   30%, OPACITA.vetri: la scocca non ha interni, un vetro trasparente
+ *   mostrerebbe il vuoto);
  * - cerchi, fanali, meccanica non evidenziabile: zincato.
  */
 export function creaMateriali(tex: TextureScena): Materiali {
@@ -119,10 +127,12 @@ export function creaMateriali(tex: TextureScena): Materiali {
   const pezzi = coloreRuolo('pezzi');
   const vetro = coloreRuolo('vetri').lerp(zincato, 1 - OPACITA.vetri);
 
-  const cerchioAnteriore = lambert(zincato.clone(), { doppio: true });
-  cerchioAnteriore.transparent = true;
-  cerchioAnteriore.opacity = 1;
-  cerchioAnteriore.depthWrite = false;
+  const cerchioAperto = lambert(zincato.clone(), { doppio: true });
+  cerchioAperto.transparent = true;
+  cerchioAperto.depthWrite = false;
+  const gommaAperta = evidenziabile(nero, { doppio: true });
+  gommaAperta.transparent = true;
+  gommaAperta.depthWrite = false;
 
   const pavimento = new MeshBasicMaterial({ color: 0xffffff, map: tex.pavimento, side: FrontSide });
   const ombra = new MeshBasicMaterial({
@@ -137,13 +147,14 @@ export function creaMateriali(tex: TextureScena): Materiali {
   return {
     carrozzeria: lambert(verde.clone(), { doppio: true }),
     fascia: lambert(colorePalette('verdeOmbra'), { doppio: true }),
-    fondo: lambert(nero.clone(), { doppio: true }),
+    fondo: lambert(colorePalette('verdeOmbra'), { doppio: true }),
     vetri: lambert(vetro, { doppio: true }),
     fanali: lambert(coloreRuolo('fanali'), { doppio: true }),
     gommaAnteriore: evidenziabile(nero, { doppio: true }),
+    gommaAperta,
     gommaPosteriore: evidenziabile(nero, { doppio: true }),
-    cerchioAnteriore,
-    cerchioPosteriore: lambert(zincato.clone(), { doppio: true }),
+    cerchio: lambert(zincato.clone(), { doppio: true }),
+    cerchioAperto,
     ponte: lambert(coloreRuolo('colonne')),
     tampone: lambert(coloreRuolo('tamponi')),
     metallo: lambert(coloreRuolo('pezziMetallo')),
@@ -165,8 +176,10 @@ export function creaMateriali(tex: TextureScena): Materiali {
 }
 
 /**
- * Opacita' del cerchio anteriore: pieno a terra e a 20 cm, al 35% a 80 cm
- * (si vedono disco e pinza), resta aperto sopra. `cm` e' la quota corrente.
+ * Opacita' della ruota anteriore sinistra (gomma e cerchio): piena a terra e a
+ * 20 cm, al 35% a 80 cm (si vedono disco, pinza e montante), resta aperta
+ * sopra: da sotto, a 180 cm, lascia vedere la pinza evidenziata.
+ * `cm` e' la quota corrente.
  */
 export function opacitaCerchio(cm: number): number {
   const t = cm <= 20 ? 0 : cm >= 80 ? 1 : (cm - 20) / 60;
@@ -175,13 +188,14 @@ export function opacitaCerchio(cm: number): number {
 }
 
 /**
- * Applica l'opacita' al cerchio anteriore. Il materiale resta sempre
+ * Applica l'opacita' alla ruota che si apre. I materiali restano sempre
  * `transparent` (cambiare il flag a runtime sposta la mesh tra le liste di
- * render e fa un salto): a opacita' 1 si vede identico a un opaco.
+ * render): a opacita' 1 si vedono identici a un opaco.
  */
-export function impostaCerchio(m: MeshLambertMaterial, opacita: number): boolean {
-  if (Math.abs(m.opacity - opacita) < 1 / 512) return false;
-  m.opacity = opacita;
+export function impostaApertura(m: Materiali, opacita: number): boolean {
+  if (Math.abs(m.cerchioAperto.opacity - opacita) < 1 / 512) return false;
+  m.cerchioAperto.opacity = opacita;
+  m.gommaAperta.opacity = opacita;
   return true;
 }
 
