@@ -312,8 +312,7 @@ sola lastra, si apre dalla fascia alta, dal bottone di S0 e dai mesi 7 e 12.
   (squadra propria di muratori, posatori dei serramenti interni all'impresa).
   Un link "Apri in Maps" verso la mappa vera. Nessun numero di permesso, nessuna
   partita IVA, nessun nome di direttore lavori: niente dati legali inventati.
-- Una sola foto piccola sopra il cartello? No: nessuna foto. Il cartello è il
-  contenuto.
+- Nessuna foto in questa schermata: il cartello è il contenuto.
 
 **S5 · Tutti i mesi** (vista elenco, alternativa accessibile e stampabile)
 - Link "Leggi tutti i mesi" nella lastra di S1 e nel cartello. Apre una
@@ -515,7 +514,7 @@ un calendario, non finisce in cartolina.
   con le due misure." Il bottone di invio c'è ma dice cosa manca.
 - *Parziale*: una sola misura scritta: il filo si tende solo su quel lato
   (una linea della lunghezza giusta, ancora non battuta).
-- *Errore*: 
+- *Errore*:
   - misura fuori campo (sotto 40 o sopra 300 cm): sotto il campo, in ferro con
     un'icona Phosphor di avviso e bordo del campo a 2 px ferro, la frase
     "Una finestra da 12 cm non esiste: controlla la misura." Nel disegno il filo
@@ -675,10 +674,6 @@ un calendario, non finisce in cartolina.
 - **trend-researcher**: siti di imprese e studi di architettura con timeline
   fotografiche di cantiere, siti con un solo controllo fisico come navigazione,
   uso di font stencil fuori dal cliché militare. Estrarre principi, non copiare.
-- **tech-architect**: niente three/R3F per questo concept; niente Lenis; porte
-  9140-9159? No: porte **9140-9159** non esistono per la regola del Lab, il
-  concept 14 usa **9140-9159** solo se N=14 dà 9140-9159: la regola è
-  `9N00-9N19`, quindi per 14 le porte sono **91400-91419**? No: per concept 11
-  la regola dà 9110-9119; per 14 dunque **9140-9149** (e fino a 9159 per
-  analogia con "9N00-9N19" letto come due cifre). Usare **9140-9149**, sempre
-  con `--strictPort`.
+- **tech-architect**: niente three/R3F e niente Lenis per questo concept.
+  Porte del concept 14, secondo la regola del Lab (come 11 usa 9110-9119):
+  **9140-9149**, sempre con `--strictPort`.
