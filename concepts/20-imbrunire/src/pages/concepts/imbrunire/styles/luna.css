@@ -1,0 +1,106 @@
+/* ==========================================================================
+   IMBRUNIRE · la luna generata (art-director)
+   --------------------------------------------------------------------------
+   Veste il componente luna/Luna.tsx (scaffold). La forma la calcola
+   luna/disegno.ts (pathLuna → due `d`); qui solo colori, stati e alone.
+
+   Struttura attesa (vedi docs/art-director.md §4, richiesta allo scaffold):
+     <svg class="imb-luna [modificatori]" viewBox="-R -R 2R 2R"
+          width=… height=… aria-hidden="true" focusable="false">
+       <circle class="imb-luna__anello" r="r + 4"/>   (solo con anello)
+       <path class="imb-luna__ombra" d="ombra"/>      disco intero
+       <path class="imb-luna__luce"  d="luce"/>       parte illuminata
+     </svg>
+   con R = r + 6 (margine per anello e alone, nessun ritaglio).
+
+   Modificatori:
+     imb-luna--vuota    prima del calcolo (prerender): solo il disco in ombra
+     imb-luna--stasera  anello sottile di luce (stato vuoto del nastro)
+     imb-luna--scelta   alone di luce dietro (notte scelta sul nastro)
+     imb-luna--chiusa   notti di chiusura: velata
+     imb-luna--cielo    luna nel cielo (stasera o prima notte): alone lunare
+   Nessuna animazione infinita, nessun bagliore che pulsa.
+   ========================================================================== */
+
+.imb-root .imb-luna {
+  display: block;
+  overflow: visible;
+  flex: none;
+  border-radius: var(--imb-raggio-disco);
+}
+
+/* Disco in ombra: la luce cinerea, si intravede appena */
+.imb-root .imb-luna__ombra {
+  fill: var(--imb-luna-spenta);
+  fill-opacity: var(--imb-luna-ombra-opacita);
+}
+
+/* Parte illuminata. Entra in dissolvenza quando le fasi sono calcolate
+   (300 ms, CD §7.4); con reduced motion la durata la azzera il
+   motion-designer tramite --imb-dur-fase. */
+.imb-root .imb-luna__luce {
+  fill: var(--imb-luna);
+  opacity: 1;
+  transition: opacity var(--imb-dur-fase, 300ms) linear;
+}
+
+.imb-root .imb-luna--vuota .imb-luna__luce {
+  opacity: 0;
+}
+
+/* Prima del calcolo il disco si legge comunque come "luna": ombra più piena */
+.imb-root .imb-luna--vuota .imb-luna__ombra {
+  fill-opacity: 0.34;
+}
+
+/* Anello: presente solo su "stasera" (stato vuoto) */
+.imb-root .imb-luna__anello {
+  fill: none;
+  stroke: var(--imb-luce);
+  stroke-width: 1.5;
+  opacity: 0;
+}
+
+.imb-root .imb-luna--stasera .imb-luna__anello {
+  opacity: 1;
+}
+
+/* Notte scelta: alone di luce dietro il disco (non una pillola) */
+.imb-root .imb-luna--scelta {
+  background: var(--imb-luna-alone-scelta);
+}
+
+/* Notti di chiusura: velate, non scelgibili (la parola "chiuso" la mette il nastro) */
+.imb-root .imb-luna--chiusa .imb-luna__luce,
+.imb-root .imb-luna--chiusa .imb-luna__ombra {
+  opacity: 0.35;
+}
+
+/* Luna nel cielo: alone lunare largo e fermo */
+.imb-root .imb-luna--cielo {
+  background: var(--imb-alone-cielo);
+}
+
+/* Contrasto forzato: la forma resta, i colori li dà il sistema */
+@media (forced-colors: active) {
+  .imb-root .imb-luna__ombra {
+    fill: Canvas;
+    fill-opacity: 1;
+    stroke: CanvasText;
+    stroke-width: 1;
+  }
+
+  .imb-root .imb-luna__luce {
+    fill: CanvasText;
+  }
+
+  .imb-root .imb-luna__anello {
+    stroke: Highlight;
+  }
+
+  .imb-root .imb-luna--scelta,
+  .imb-root .imb-luna--cielo {
+    background: none;
+    outline: 2px solid Highlight;
+  }
+}

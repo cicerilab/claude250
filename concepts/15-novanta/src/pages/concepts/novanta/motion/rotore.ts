@@ -10,7 +10,7 @@
  * Viaggi possibili (`rotore.viaggio`):
  * - `nessuno`  fermo, oppure trascinamento 1:1 (il braccio è il dito);
  * - `presa`    tocco lontano dal braccio: la molla "presa" lo porta al dito in
- *              ~150 ms, poi 1:1;
+ *              ~180 ms, poi 1:1;
  * - `lancio`   rilascio: inerzia corta (al massimo `inerziaMax`) e frenata
  *              sull'aggancio, ereditando la velocità del dito;
  * - `salto`    comando (tasti, parole, Prenota, hash, Indietro, anello su
@@ -442,7 +442,7 @@ export function creaRotore(o: OpzioniRotore): Rotore {
           if (ora() - ultimaSpinta >= QUIETE_ROTELLA) {
             s.vel = molla.velocita;
             avviaCorsa(destinazione(s.target), 'lancio', true);
-            return viaggio === 'nessuno' ? false : tickCorsa(h);
+            return (viaggio as Viaggio) === 'nessuno' ? false : tickCorsa(h);
           }
           molla.obiettivo = s.target;
           molla.passo(h);

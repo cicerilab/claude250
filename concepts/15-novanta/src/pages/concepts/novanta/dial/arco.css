@@ -1,0 +1,134 @@
+/* ==========================================================================
+   NOVANTA · dial/arco.css (vector-artist)
+   Colori e spessori del goniometro disegnato da dial/Arco.tsx. Solo token di
+   styles/tokens.css, nessun hex. Gli spessori dei tratti restano in px veri a
+   qualunque scala (vector-effect: non-scaling-stroke), le lunghezze scalano
+   con l'SVG. Le misure del braccio sono attributi (scalano con il disegno).
+   ========================================================================== */
+
+.nov-root .nov-arco {
+  --nov-arco-inchiostro: var(--nov-strumento);
+  --nov-arco-faccia: var(--nov-superficie);
+  --nov-arco-spento: var(--nov-tacca-spenta);
+  display: block;
+  overflow: visible;
+  color: var(--nov-arco-inchiostro);
+  max-width: none;
+}
+
+/* faccia, contorno, diametro ------------------------------------------------ */
+.nov-root .nov-arco__faccia {
+  fill: var(--nov-arco-faccia);
+}
+
+.nov-root .nov-arco__bordo {
+  fill: none;
+  stroke: var(--nov-arco-inchiostro);
+  stroke-width: var(--nov-contorno-disco, 1.5px);
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.nov-root .nov-arco__diametro {
+  fill: none;
+  stroke: var(--nov-arco-inchiostro);
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+}
+
+/* tacche: strato spento e strato percorso ----------------------------------- */
+.nov-root .nov-arco__tacca {
+  fill: none;
+  stroke: var(--nov-arco-spento);
+  stroke-linecap: butt;
+  stroke-width: var(--nov-tacca-spessore, 1px);
+  vector-effect: non-scaling-stroke;
+}
+
+.nov-root .nov-arco__tacca--lunga {
+  stroke-width: var(--nov-tacca-spessore-lunga, 2px);
+}
+
+.nov-root .nov-arco__tacche--percorso .nov-arco__tacca {
+  stroke: var(--nov-arco-inchiostro);
+}
+
+/* mini archi e indice: pochi tratti, spessori propri */
+.nov-root .nov-arco--mini .nov-arco__tacca,
+.nov-root .nov-arco--indice .nov-arco__tacca {
+  stroke-width: 1px;
+}
+
+.nov-root .nov-arco--mini .nov-arco__tacca--lunga,
+.nov-root .nov-arco--indice .nov-arco__tacca--lunga {
+  stroke-width: 1.5px;
+}
+
+.nov-root .nov-arco--mini .nov-arco__bordo {
+  stroke-width: 1.25px;
+}
+
+/* numeri della scala -------------------------------------------------------- */
+.nov-root .nov-arco__numero {
+  fill: var(--nov-arco-inchiostro);
+  font-family: var(--nov-font-misura);
+  font-weight: var(--nov-peso-scala, 500);
+  font-variant-numeric: var(--nov-cifre, tabular-nums);
+  letter-spacing: 0;
+  user-select: none;
+}
+
+/* mini doppio: l'arco che manca tra "oggi" e "obiettivo" -------------------- */
+.nov-root .nov-arco__da-fare {
+  fill: none;
+  stroke: var(--nov-arco-inchiostro);
+  stroke-linecap: round;
+}
+
+/* il braccio (FormaBraccio): in Arco per mini e indice, in Braccio.tsx per il quadrante */
+.nov-root .nov-braccio-forma {
+  color: var(--nov-strumento);
+}
+
+.nov-root .nov-braccio-forma__asta {
+  stroke: var(--nov-strumento);
+  stroke-linecap: round;
+}
+
+.nov-root .nov-braccio-forma__lente {
+  fill: var(--nov-superficie);
+  stroke: var(--nov-strumento);
+  stroke-width: 2px;
+  vector-effect: non-scaling-stroke;
+}
+
+.nov-root .nov-braccio-forma__manopola {
+  fill: var(--nov-strumento);
+}
+
+.nov-root .nov-braccio-forma__presa {
+  fill: var(--nov-superficie);
+}
+
+.nov-root .nov-braccio-forma__perno {
+  fill: var(--nov-strumento);
+}
+
+.nov-root .nov-braccio-forma__anello-perno {
+  fill: none;
+  stroke: var(--nov-superficie);
+}
+
+.nov-root .nov-braccio-forma--fantasma .nov-braccio-forma__asta {
+  stroke-linecap: butt;
+  stroke-dasharray: 3 3;
+  vector-effect: non-scaling-stroke;
+  stroke-width: 1.25px;
+}
+
+.nov-root .nov-braccio-forma--fantasma .nov-braccio-forma__manopola {
+  fill: var(--nov-superficie);
+  stroke: var(--nov-strumento);
+  stroke-width: 1.25px;
+  vector-effect: non-scaling-stroke;
+}

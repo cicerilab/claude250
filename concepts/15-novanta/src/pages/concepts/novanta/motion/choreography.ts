@@ -42,7 +42,7 @@ export const VEL_MIN_LANCIO = 90;
 
 /**
  * Distanza (°) oltre la quale un tocco sul disco non sposta il braccio di
- * colpo: il braccio raggiunge il dito con la molla "presa" (circa 150 ms) e
+ * colpo: il braccio raggiunge il dito con la molla "presa" (circa 180 ms) e
  * da lì lo segue 1:1.
  */
 export const SOGLIA_PRESA = 6;

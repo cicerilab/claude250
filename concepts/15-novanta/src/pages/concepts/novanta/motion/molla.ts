@@ -3,7 +3,7 @@
  *
  * Serve in due soli punti del rotore:
  * - **presa**: si tocca il disco lontano dal braccio, il braccio raggiunge il
- *   dito in circa 150 ms e da lì lo segue 1:1;
+ *   dito in circa 180 ms e da lì lo segue 1:1;
  * - **rotella**: i delta della rotella o del trackpad spostano un obiettivo e
  *   il braccio lo insegue morbido; quando la rotella tace, il rotore passa alla
  *   frenata verso l'aggancio.
@@ -26,7 +26,7 @@ export interface ParametriMolla {
 
 /**
  * Preset. Tempo di assestamento (entro 0,1° su un salto di 30°):
- * presa ≈ 0,19 s, rotella ≈ 0,33 s (vedi `tempoDiAssestamento`).
+ * presa ≈ 0,18 s, rotella ≈ 0,31 s (vedi `tempoDiAssestamento`).
  */
 export const MOLLE = {
   /** Il braccio che raggiunge il dito dopo un tocco lontano sul disco. */
