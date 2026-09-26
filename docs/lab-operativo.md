@@ -17,8 +17,7 @@
 
 ## Porte (mai usare quelle di un altro concept)
 
-Concept N usa le porte `9N00`–`9N19` (es. concept 11 → 9110–9119, concept 20 →
-9200–9219). Ogni agent usa una porta sua nel range del concept, sempre con
+Ogni concept ha il suo intervallo di porte (tabella in fondo a `docs/ruoli-agent.md`). Ogni agent usa una porta sua nel range del concept, sempre con
 `--strictPort`, e chiude il proprio server alla fine. Mai uccidere processi altrui.
 
 ## Font negli screenshot
