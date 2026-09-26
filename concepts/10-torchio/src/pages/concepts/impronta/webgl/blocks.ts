@@ -92,6 +92,16 @@ export interface StatoBloccoGL {
   fuori: boolean;
   /** Stile del fantasma quando la maschera è stata disegnata (vedi `firmaStile`). */
   firma: string;
+  /**
+   * La firma è stata ricontrollata da quando il blocco è entrato in vista
+   * (o dall'ultimo cambio di layout). Giro 3: uno stile che cambia a scatola
+   * invariata (corpo o assi adattati dalla sezione dopo il montaggio) non
+   * lo vede nessun observer.
+   */
+  firmaControllata: boolean;
+  /** Pressione vista all'ultimo frame e se si stava muovendo (per ricontrollare la firma a pressa ferma). */
+  pressioneVista: number;
+  pressaInMoto: boolean;
   /** Urto corrente 0..1 (`--imp-press-urto` di motion/usePressione), letto a ogni frame per i selezionati. */
   urto: number;
 }
@@ -113,6 +123,9 @@ export function nuovoStato(id: string): StatoBloccoGL {
     canvas: null,
     fuori: false,
     firma: '',
+    firmaControllata: false,
+    pressioneVista: Number.NaN,
+    pressaInMoto: false,
     urto: 0,
   };
 }
@@ -122,7 +135,8 @@ const FIRMA_MAX_ELEMENTI = 12;
 
 /**
  * Firma dello stile tipografico del fantasma e dei suoi primi discendenti:
- * famiglia, corpo, assi, peso, larghezza, spaziatura. Se cambia, cambiano i
+ * famiglia, corpo, assi, peso, larghezza, spaziatura, più la misura del testo
+ * composto (per accorgersi del font vero che arriva dopo il ripiego). Se cambia, cambiano i
  * glifi anche a scatola invariata (assi di arrivo con data-gl="on", font
  * arrivato con size-adjust): la maschera va ridisegnata. Legge il layout: si
  * chiama solo nella fase 'read', al disegno e dopo la comparsa.
@@ -134,6 +148,17 @@ export function firmaStile(el: HTMLElement): string {
     parti.push(`${cs.fontFamily}|${cs.fontSize}|${cs.fontVariationSettings}|${cs.fontWeight}|${cs.fontStretch}|${cs.letterSpacing}`);
   };
   leggi(el);
+  // Larghezza e altezza del testo composto (Range sul contenuto): cambiano
+  // quando il font vero sostituisce quello di ripiego, cosa che lo stile
+  // calcolato non dice (la famiglia resta la stessa stringa).
+  try {
+    const r = document.createRange();
+    r.selectNodeContents(el);
+    const q = r.getBoundingClientRect();
+    parti.push(`${Math.round(q.width * 2) / 2}x${Math.round(q.height * 2) / 2}`);
+  } catch {
+    // Range non disponibile: basta lo stile
+  }
   const figli = el.querySelectorAll('*');
   const n = Math.min(figli.length, FIRMA_MAX_ELEMENTI);
   for (let i = 0; i < n; i += 1) {

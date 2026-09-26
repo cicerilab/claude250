@@ -454,3 +454,119 @@ a un valore irraggiungibile.
 - **interaction-designer**: `light.ts` durante il giro lanciava
   `ReferenceError: arcoVietatoQui` a ogni frame (modifica in corso?).
   Controllare che la versione finale sia pulita.
+
+---
+
+## Giro 3
+
+Richiesta: priorità 1 della giuria (`awwwards-jury.md`, "Giro 2"). Blocchi GL
+fuori posto dopo cambi di layout o di font: indirizzo della bottega a 375
+(sopra i link), marchio del colophon a 1440 (~30 px più in basso), Per chi a
+1440 (~35 px), lamina pallida della prova a 2560; e `urto` per blocco
+(webgl-artist, "Giro 2"). Toccati solo `ImprontaGL.ts`, `blocks.ts` e questo
+documento. **Nessuna richiesta allo scaffold**: il registro espone già
+`invalidate()`, e basta chiamarlo.
+
+### Esito
+
+| Controllo | Esito |
+|---|---|
+| typecheck, lint (`eslint src`), build | verdi |
+| Chunk WebGL | `index-*.js` 24,6 KB gz + three 112,8 KB gz = **137,4 KB gz** (budget 160) |
+| Allineamento, 375 / 1440 / 2560, **dopo aver scrollato dall'alto fino in fondo** | Per chi, bottega, colophon: scarto verticale tra rettangolo del registro e DOM **0 px** per ogni blocco in vista, tutti disegnati, nessuno `fuori`; rilievo sotto il DOM rosso negli screenshot |
+| Errori in console | 0 |
+
+Prove su `npx vite --port 8113 --strictPort` (chiuso alla fine), Chromium
+con gli argomenti SwiftShader e `?gl=1`, **font veri serviti in locale** con
+`route` (senza, il proxy della sandbox li blocca e i cambi di layout dovuti al
+font non si vedono: è così che nel giro 1 il difetto mi era sfuggito), HMR
+finto nel browser di prova. Screenshot in `/tmp/claude-0/shots-shader/`:
+`giro3-{375,1440,2560}-{lavori,bottega,colophon}.png` e le versioni
+`-rosso.png` (fantasmi in rosso sopra il rilievo),
+`giro3-2560-banco-lamina.png`.
+
+### 1. Causa vera dei blocchi fuori posto (due difetti)
+
+**A · Rettangoli "doc" non rinfrescati quando cambia una sezione sopra.**
+Misura con i font veri a 1440: subito dopo la comparsa, **tutti i blocchi da
+Per chi in giù erano 47 px più in basso del DOM** (`rectDoc.y − y reale =
++47`). L'hero si ricompone quando Anybody arriva e si accorcia. Il registro
+rimisura un blocco quando cambia la *sua* misura (ResizeObserver
+dell'elemento), a resize della finestra e a `fonts.ready`/`loadingdone`. Non
+lo fa quando si sposta perché una sezione *sopra* ha cambiato altezza dopo:
+nessun evento lo dice. Da qui colophon e Per chi fuori posto a 1440, e la
+bottega a 375.
+
+Correzione (`ImprontaGL.osservaLayout`): un ResizeObserver su
+`.imp-contenuto`, sui suoi figli e sulle sezioni di `<main>`. Qualsiasi cambio
+di misura porta a `registry.invalidate()` nella fase `read` successiva, al
+massimo ogni 100 ms, con l'ultima rimisura sempre garantita (il ticker resta
+sveglio fino ad allora). Dopo la correzione lo scarto è 0 a 375, 1440 e 2560,
+con 1 rimisura all'avvio (diagnostica `rimisureLayout`). Il costo è una
+lettura di `getBoundingClientRect` per blocco, solo quando una sezione cambia
+misura, mai durante lo scroll.
+
+Richiesta facoltativa allo scaffold: lo stesso osservatore starebbe bene
+anche in `relief/registry.ts` (vale per chiunque usi il registro). Oggi non
+serve: nel concept il registro lo usa solo il GL.
+
+**B · Maschera cotta con gli assi sbagliati (bottega a 2560, parola larga al
+76%).** Il blocco si disegna una viewport prima di entrare in vista. Il
+disegno (`disegnaMaschera`) aspetta i font, e nel frattempo il blocco entra in
+vista ancora senza maschera, diventa `data-imp-gl="fuori"`, e
+`relief-fallback.css` (`:not([data-imp-gl="fuori"])`) gli rimette gli assi
+della pressa: a pressione 0 sono stretti. La maschera usciva stretta, ma la
+firma di stile era stata presa **prima** del disegno (larga), quindi nessun
+controllo la trovava diversa. Verificato: la stessa `disegnaMaschera` chiamata
+a mano a blocco fermo dava l'inchiostro largo giusto (4-1267 px contro
+0-1273 px del testo DOM), quella cotta no; col canvas nascosto il testo
+stretto spariva.
+
+Correzioni:
+- la firma (`firmaStile`) si prende **dopo** il disegno, cioè dallo stato
+  che la maschera ha visto davvero, e comprende anche la misura del testo
+  composto (Range sul contenuto), così si vede anche il font vero che
+  sostituisce il ripiego a stile calcolato invariato;
+- la firma si ricontrolla (al massimo 4 blocchi per frame) quando un blocco
+  entra in vista, quando cambia misura o layout, quando smette di essere
+  `fuori` e quando la sua pressa si ferma. Se è diversa, la maschera si rifà
+  **una volta**: da lì il blocco resta disegnato con gli assi di arrivo.
+
+A 2560 la bottega converge con 2 ricotture in più (16 → 18) ed è allineata.
+
+### 2. Lamina pallida della prova a 2560
+
+Riprodotta con `aggiornaProva({ tecnica: 'lamina' })` a 2560
+(`giro3-2560-banco-lamina.png`): a maschera cotta "Chiara Zanin" e "250 €"
+sono metallo grigio spazzolato con il filo scuro, non un secco. Il pallido
+visto dalla giuria è l'intervallo tra il cambio di tecnica (versione nuova del
+blocco) e la cottura della maschera nuova: fino ad allora resta quella a
+secco, con i parametri della lamina. In SwiftShader a 2560 dura secondi (un
+frame ≈ 3-5 s), su GPU vera 1-2 frame. Con il giro 2 (2 cotture per frame
+quando manca qualcosa in vista) il recupero è già il più rapido che il budget
+permette. Resa del metallo: webgl-artist.
+
+### 3. Urto per blocco
+
+`motion/usePressione` scrive l'urto come variabile inline
+`--imp-press-urto` sull'elemento premuto, che è lo stesso del blocco. A ogni
+frame, per i soli blocchi selezionati (≤ 8), `ImprontaGL` legge
+`el.style.getPropertyValue('--imp-press-urto')` (stile inline, nessun
+layout), lo passa a `scriviBlocco` come `urto` (campo facoltativo del
+webgl-artist, impacchettato in `uBlockB.z`), e segna il frame da ridisegnare
+quando cambia. Non serve `registry.setUrto`: la richiesta allo scaffold del
+webgl-artist si può chiudere così.
+
+### 4. Richieste
+
+- **art-director**: con la regola `:not([data-imp-gl="fuori"])` gli assi del
+  fantasma cambiano quando il GL lo prende in carico. Adesso il GL lo gestisce
+  (ricottura una tantum), ma costa una cottura in più per blocco alla prima
+  comparsa. Alternativa più economica, se va bene al disegno: tenere gli assi
+  di arrivo anche con `fuori` sui blocchi `.imp-pressa` la cui pressa è già
+  finita (`[data-imp-pressa="premuta"]`).
+- **scaffold-engineer** (facoltativa): ResizeObserver delle sezioni nel
+  registro, vedi 1.A.
+- **performance-auditor / cross-browser-tester**: le prove con il GL vanno
+  fatte con i font veri (in locale), altrimenti i cambi di layout dovuti al
+  font non si vedono.

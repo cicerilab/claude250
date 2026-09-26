@@ -124,6 +124,8 @@ const COTTURE_PER_FRAME = 1;
 const COTTURE_PER_FRAME_RECUPERO = 2;
 /** Intervallo minimo tra due rimisure del registro per cambi di layout (ms); l'ultima arriva sempre. */
 const INTERVALLO_RIMISURA = 100;
+/** Firme di stile ricontrollate per frame, al massimo (getComputedStyle su pochi elementi ciascuna). */
+const CONTROLLI_FIRMA_PER_FRAME = 4;
 /** Variabile inline scritta da motion/usePressione sull'elemento premuto: urto 0..1. */
 const VAR_URTO = '--imp-press-urto';
 /** Attributo scritto sui fantasmi che il GL non sta disegnando (vedi docs/shader-engineer.md). */
@@ -482,6 +484,9 @@ export class ImprontaGL {
       if (b !== undefined) this.aggiungiStato(b);
     } else if (e.tipo === 'rimosso') {
       this.togliStato(e.id);
+    } else if (e.tipo === 'visibilita' || e.tipo === 'misura') {
+      const st = this.stati.get(e.id);
+      if (st !== undefined) st.firmaControllata = false;
     }
     // versione, spec, misura, visibilita: se ne occupano preparazione e render.
     ticker.wake();
@@ -580,6 +585,21 @@ export class ImprontaGL {
       }
     }
 
+    // Giro 3: firma di stile ricontrollata quando un blocco entra in vista o
+    // il layout cambia. Se il fantasma ha cambiato corpo, assi, larghezza o
+    // spaziatura a scatola invariata (una sezione che adatta il testo alla
+    // larghezza dopo il montaggio), la maschera cotta è vecchia: si rifà.
+    let controlli = 0;
+    for (const b of registry.all()) {
+      if (controlli >= CONTROLLI_FIRMA_PER_FRAME) break;
+      if (!b.visibile || !b.misurato || !b.el.isConnected) continue;
+      const st = this.stati.get(b.id);
+      if (st === undefined || st.firmaControllata || st.firma === '' || st.inCorso !== 0 || st.pronta !== null) continue;
+      st.firmaControllata = true;
+      controlli += 1;
+      if (firmaStile(b.el) !== st.firma) st.daRifare = true;
+    }
+
     // Blocchi che chiedono un disegno, in ordine: slot riservato (Banco,
     // cambia a ogni tasto), poi sullo schermo per priorità e area in vista
     // (i pezzi grandi prima), poi quelli entro una viewport (IO del registro).
@@ -654,6 +674,16 @@ export class ImprontaGL {
     for (const b of this.selezione) {
       const st = this.stati.get(b.id);
       if (st === undefined) continue;
+      // A pressa ferma la firma si ricontrolla: con il fallback CSS acceso
+      // sul blocco (`fuori`) gli assi del fantasma seguono la pressa.
+      if (b.pressione !== st.pressioneVista) {
+        if (!Number.isNaN(st.pressioneVista)) st.pressaInMoto = true;
+        st.pressioneVista = b.pressione;
+      } else if (st.pressaInMoto) {
+        st.pressaInMoto = false;
+        st.firmaControllata = false;
+        ticker.wake();
+      }
       const grezzo = parseFloat(b.el.style.getPropertyValue(VAR_URTO));
       const urto = Number.isFinite(grezzo) ? Math.max(0, Math.min(1, grezzo)) : 0;
       if (urto !== st.urto) {
@@ -783,6 +813,7 @@ export class ImprontaGL {
     const ro = new ResizeObserver(() => {
       if (this.smontato) return;
       this.layoutCambiato = true;
+      for (const st of this.stati.values()) st.firmaControllata = false;
       ticker.wake();
     });
     ro.observe(contenuto);
@@ -874,7 +905,9 @@ export class ImprontaGL {
     stato.inCorso = versione;
     stato.daRifare = false;
     stato.diversoDa = Number.NaN;
-    stato.firma = b.el.isConnected ? firmaStile(b.el) : '';
+    // La firma si prende DOPO il disegno (vedi sotto), non adesso: il disegno
+    // aspetta i font, e nel frattempo il fantasma può cambiare stile.
+    stato.firmaControllata = true;
     this.diagnostica.disegniMaschera += 1;
 
     let canvas: HTMLCanvasElement | null = null;
@@ -896,6 +929,16 @@ export class ImprontaGL {
         if (this.smontato || this.stati.get(b.id) !== stato) return;
         stato.inCorso = 0;
         stato.pronta = { risultato, versione, misuraW, misuraH };
+        // Giro 3: firma dello stile che la maschera ha visto davvero. Il
+        // disegno aspetta i font; nel frattempo il blocco può entrare in
+        // vista ancora senza maschera, diventare `fuori`, e relief-fallback.css
+        // gli rimette gli assi della pressa (stretti a pressione 0). Presa qui,
+        // la firma è quella stretta: quando il blocco è disegnato e torna agli
+        // assi di arrivo, il controllo la trova diversa e la maschera si rifà.
+        // (Prima si prendeva all'avvio del disegno: bottega a 2560 restava
+        // stretta al 76%.)
+        stato.firma = b.el.isConnected ? firmaStile(b.el) : '';
+        stato.firmaControllata = false;
         runtime.markDirty();
         ticker.wake();
       },
@@ -1115,6 +1158,15 @@ export class ImprontaGL {
       const fuori = b.visibile && sulloSchermo(b, this.cssW, this.cssH) && !this.disegnati.has(b.id);
       if (fuori && b.versione !== stato.versioneFallita) mancano = true;
       if (fuori === stato.fuori) continue;
+      // Giro 3: con `fuori` relief-fallback.css tiene gli assi del fantasma
+      // sulla pressa; togliendolo tornano quelli di arrivo. Una maschera
+      // cotta mentre il blocco era fuori può quindi essere più stretta: la
+      // firma si ricontrolla nella prossima fase 'read' (e si ricuoce una
+      // volta sola, perché da lì il blocco resta disegnato).
+      if (stato.fuori && !fuori) {
+        stato.firmaControllata = false;
+        ticker.wake();
+      }
       stato.fuori = fuori;
       if (fuori) b.el.setAttribute(ATTR_FUORI_GL, 'fuori');
       else b.el.removeAttribute(ATTR_FUORI_GL);
