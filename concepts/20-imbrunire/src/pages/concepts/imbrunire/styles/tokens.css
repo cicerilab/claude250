@@ -146,7 +146,9 @@
   --imb-t-nome-cella: clamp(17px, 15.94px + 0.282vw, 20px);  /* nome della stanza sulla fascia di poché */
   --imb-t-marchio: clamp(16px, 14.94px + 0.282vw, 19px);     /* nome dell'albergo nella testata (h1) */
   --imb-t-mese: clamp(15px, 14.3px + 0.188vw, 17px);         /* mese sul nastro delle lune */
-  --imb-t-fregio: clamp(14px, 12.94px + 0.282vw, 17px);      /* frase sotto il cornicione */
+  --imb-t-fregio: clamp(14px, 12.94px + 0.282vw, 17px);      /* frase incisa nello zoccolo */
+  --imb-t-nome-spazio: clamp(15px, 14.3px + 0.188vw, 17px);  /* portico, androne, colazione: celle strette */
+  --imb-t-iscrizione-cella: 11cqi;                            /* ALBERGO IMBRUNIRE dentro la cella piccola (la cella è un contenitore) */
   --imb-lh-display: 1.1;
 
   /* Commissioner */
@@ -210,12 +212,17 @@
   --imb-pelle: 3px;               /* pelle d'intonaco sul lato esterno dei muri perimetrali */
   --imb-palazzo-max: 1180px;      /* larghezza massima del palazzo (1400 se l'altezza lo consente, a 2560) */
   --imb-palazzo-max-alto: 1400px;
-  --imb-palazzo-rapporto: 1.18;   /* larghezza = min(max, 82vw, altezza disponibile × 1,18) */
+  --imb-palazzo-rapporto: 1.18;   /* larghezza = min(max, --imb-palazzo-vw, altezza disponibile × 1,18) */
+  --imb-palazzo-vw: 82vw;         /* 92vw sotto 1024 px (sotto) */
+  --imb-sopra-palazzo: 222px;     /* sezione: testata 64 + nastro con riga di stato fino a ~206 + 16 */
+  --imb-marciapiede-h: 36px;      /* striscia di pietra sotto lo zoccolo, con la riga "Albergo inventato" */
   --imb-tetto-pendenza: 0.33;     /* falde basse da coppi veneti: altezza = metà larghezza × 0,33 */
   --imb-comignolo-w: 3.2%;        /* della larghezza del palazzo */
   --imb-comignolo-h: 5.5%;
   --imb-cornicione-h: 10px;       /* aggetto del cornicione, intonaco-luce */
-  --imb-fregio-h: clamp(28px, 2.4vw, 40px); /* fascia di poché scuro con la frase */
+  --imb-manto: clamp(14px, 1.5vw, 26px);    /* spessore delle falde tagliate (poché scuro) */
+  --imb-gronda: 1.4;              /* sporto delle falde oltre i muri: × --imb-muro */
+  --imb-zoccolo-h: clamp(30px, 2.4vw, 40px);/* zoccolo di poché scuro sotto il piano terra: porta la frase di chi siamo */
   --imb-gradino-alzata: 7px;      /* scala: scatole di poché, pianta a gradini veri */
   --imb-gradino-pedata: 11px;
   --imb-binario-scala: 6px;       /* torre: binario verticale a destra */
@@ -237,7 +244,7 @@
   --imb-prospettiva: 1.05;
   --imb-profondita: 0.7;
   --imb-occhio-y: 42%;
-  --imb-prospettiva-dentro: 3.6;  /* strato Dentro: × altezza della finestra; la foto copre ~84% */
+  --imb-prospettiva-dentro: 3;    /* strato Dentro: × altezza della finestra; la foto copre ~81% */
   --imb-profondita-dentro: 0.7;
   --imb-trave-w: 7%;              /* larghezza di una trave rispetto al soffitto */
   --imb-trave-passo: 22%;         /* interasse delle travi */
@@ -327,7 +334,7 @@
 .imb-root[data-imb-layout="torre"] {
   --imb-muro: 16px;
   --imb-solaio: 20px;
-  --imb-fregio-h: 32px;
+  --imb-zoccolo-h: 32px;
   --imb-luna-d: 40px;
   --imb-luna-passo: 48px;
   --imb-luna-cielo: 40px;
@@ -336,6 +343,31 @@
   --imb-occhio-y: 40%;
   --imb-testata-h: var(--imb-testata-h-torre);
   --imb-riga-max: var(--imb-riga-max-torre);
+}
+
+/* Tablet in sezione: il palazzo prende più larghezza (a 768 i nomi non vanno a capo) */
+@media (max-width: 1023px) {
+  .imb-root {
+    --imb-palazzo-vw: 92vw;
+  }
+}
+
+/* Schermi grandi: il palazzo cresce fino a 1400 px se l'altezza lo consente,
+   e con lui i nomi; il cielo prende il resto (il palazzo sta sempre sulla strada). */
+@media (min-width: 1920px) and (min-height: 1000px) {
+  .imb-root {
+    --imb-palazzo-max: var(--imb-palazzo-max-alto);
+    --imb-t-nome-cella: 22px;
+    --imb-t-nome-spazio: 19px;
+    --imb-t-corpo: 18px;
+    --imb-t-piccolo: 16px;
+    --imb-t-marchio: 21px;
+    --imb-t-mese: 18px;
+    --imb-t-micro: 14px;
+    --imb-luna-d: 38px;
+    --imb-luna-passo: 50px;
+    --imb-luna-cielo: 64px;
+  }
 }
 
 /* Contrasto forzato (Windows): le luci non si vedono, restano le parole.

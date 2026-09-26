@@ -403,7 +403,7 @@ cornice né didascalie sopra.
 | Larghezza | Forma |
 |---|---|
 | < 640 | Colonna del giornale piegato, corpi fluidi 320 → 639 |
-| 640 – 1023 | Foglio identico, 2-3 colonne visibili, molo (zone nascoste sotto 700) |
+| da 640 a 1023 | Foglio identico, 2-3 colonne visibili, molo (zone nascoste sotto 700) |
 | ≥ 1024 | Foglio, molo completo |
 | 2560 | Stesso foglio: la finestra ne mostra di più, niente si ingrandisce |
 
