@@ -52,6 +52,15 @@ export interface OpzioniCompleta extends OpzioniTratto {
   velocita?: number;
 }
 
+export interface OpzioniRitira extends OpzioniTratto {
+  /**
+   * Dove torna la punta: il punto in cui si era posata (`segni.inizio(id)`,
+   * il tratto parte dal punto premuto, CD 4.4). Default 0. A fine ritiro il
+   * tratto è vuoto e l'avanzamento si scrive 0.
+   */
+  verso?: number;
+}
+
 export interface OpzioniDimostrativo extends OpzioniTratto {
   /** Attesa prima del tratto, in ms. Default `TRATTO.dimostrativoAttesa`. */
   ritardo?: number;
@@ -60,6 +69,8 @@ export interface OpzioniDimostrativo extends OpzioniTratto {
 export interface OpzioniScarico extends OpzioniTratto {
   /** Seme dell'annuncio (core/semi.ts): sposta di poco il punto in cui l'inchiostro finisce. */
   seme?: number;
+  /** Punto in cui la punta si è posata (0..1). Il tratto scarico parte da lì. Default 0. */
+  inizio?: number;
 }
 
 /* ------------------------------------------------------------------ */
@@ -243,15 +254,17 @@ export function completa(el: HTMLElement | SVGElement, da: number, opz?: Opzioni
 }
 
 /** Rilascio sotto la soglia (o annullamento): il tratto torna all'inizio della riga. */
-export function ritira(el: HTMLElement | SVGElement, da: number, opz?: OpzioniTratto): Animation | null {
+export function ritira(el: HTMLElement | SVGElement, da: number, opz?: OpzioniRitira): Animation | null {
   controllaFoglia(el);
   if (ridottoDa(opz) || !registraAvanzamento()) return subito(el, 0, opz);
   const inizio = clamp01(da);
-  if (inizio <= 0.001) return subito(el, 0, opz);
-  const durata = durataPerDistanza(TRATTO.ritira, TRATTO.ritiraMin, inizio, 0.55);
+  const verso = Math.min(inizio, clamp01(opz?.verso ?? 0));
+  const distanza = inizio - verso;
+  if (distanza <= 0.001) return subito(el, 0, opz);
+  const durata = durataPerDistanza(TRATTO.ritira, TRATTO.ritiraMin, distanza, 0.55);
   return avvia({
     el,
-    keyframes: [kf(inizio), kf(0)],
+    keyframes: [kf(inizio), kf(verso)],
     durata,
     easing: easingCss('rientro'),
     finale: 0,
@@ -335,7 +348,8 @@ export function fermaScarico(seme: number | undefined): number {
  */
 export function scarico(el: HTMLElement | SVGElement, opz?: OpzioniScarico): Animation | null {
   controllaFoglia(el);
-  const meta = fermaScarico(opz?.seme);
+  const partenza = clamp01(opz?.inizio ?? 0);
+  const meta = partenza + (1 - partenza) * fermaScarico(opz?.seme);
   const vecchia = inCorso.get(el);
   if (vecchia) {
     inCorso.delete(el);
@@ -358,10 +372,10 @@ export function scarico(el: HTMLElement | SVGElement, opz?: OpzioniScarico): Ani
   return avvia({
     el,
     keyframes: [
-      kf(0, { offset: 0, easing: easingCss('esaurisce') }),
+      kf(partenza, { offset: 0, easing: easingCss('esaurisce') }),
       kf(meta, { offset: o1, easing: 'linear' }),
       kf(meta, { offset: o2, easing: easingCss('rientro') }),
-      kf(0, { offset: 1 }),
+      kf(partenza, { offset: 1 }),
     ],
     durata: totale,
     easing: 'linear',

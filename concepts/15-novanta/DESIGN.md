@@ -299,7 +299,7 @@ variabili `--nov-tacca-*`, `--nov-braccio-*`, `--nov-manopola`,
 | Manopola | Ø 28 disegnata, 48 toccabile, anello gesso interno 1,5 px | Ø 26, 48 toccabile | petrolio |
 | Oblò (finestrella) | Ø 30 a 78 px dal bordo verso il perno, bordo 3 px petrolio | Ø 26 a 58 px | fondo gesso, numero intero Epilogue 700 12 px **controruotato** (sempre dritto) |
 | Perno (rivetto) | Ø 20 petrolio con anello gesso 3 px | Ø 16 | petrolio |
-| Basamento (solo fondo) | — | fascia gesso a tutta larghezza, bordo alto 2 px petrolio (il diametro) | gesso |
+| Basamento (solo fondo) | non c'è | fascia gesso a tutta larghezza, bordo alto 2 px petrolio (il diametro) | gesso |
 
 Regole viste a schermo (prova in `qa/art-director/`):
 - La parola sta a **66 px** dall'arco su desktop perché la manopola arriva a

@@ -191,9 +191,11 @@
   --imb-riserva-fondo: 72px;      /* fascia di riserva in fondo ai fogli mobili */
 
   /* Finestre delle ore d'arrivo: "facciata" di 3 piani × 5 finestre */
-  --imb-finestra-w: 60px;
-  --imb-finestra-h: 48px;
-  --imb-finestra-spazio: 8px;
+  --imb-finestra-w: 52px;         /* 5 × 52 + 4 × 6 + 2 × 8 = 300 px: entra nei 312 utili del pannello */
+  --imb-finestra-h: 44px;
+  --imb-finestra-spazio: 6px;
+  --imb-finestra-muro: 8px;       /* intonaco attorno alla "facciata" delle ore */
+  --imb-finestra-telaio-w: 3px;
   --imb-finestra-spenta: var(--imb-notte-profonda);
   --imb-finestra-telaio: var(--imb-poche);
   --imb-finestra-accesa: var(--imb-luce);
@@ -217,7 +219,12 @@
   --imb-gradino-alzata: 7px;      /* scala: scatole di poché, pianta a gradini veri */
   --imb-gradino-pedata: 11px;
   --imb-binario-scala: 6px;       /* torre: binario verticale a destra */
-  --imb-fascia-nome-min: 44px;    /* fascia di poché sotto ogni cella (cresce col testo) */
+  --imb-fascia-nome-min: 48px;    /* il solaio sotto ogni piano È la fascia del nome: poché, cresce col testo */
+  --imb-modulo: 7.2;              /* u = larghezza del palazzo / 7,2: altezza di riferimento di un piano */
+  --imb-h-sottotetto: 0.95;       /* altezze delle scatole in u (ux-architect §2.2) */
+  --imb-h-nobile: 1.2;
+  --imb-h-terra: 1;
+  --imb-ginocchio: 0.45;          /* muretto d'imposta del tetto: frazione dell'altezza del sottotetto */
 
   /* Scatola della stanza (CSS 3D). Decisione misurata a schermo, vedi
      docs/art-director.md §1.4: la prospettiva è proporzionale all'altezza
@@ -230,7 +237,8 @@
   --imb-prospettiva: 1.05;
   --imb-profondita: 0.7;
   --imb-occhio-y: 42%;
-  --imb-prospettiva-dentro: 1.1;  /* strato Dentro: rispetto all'altezza della finestra */
+  --imb-prospettiva-dentro: 3.6;  /* strato Dentro: × altezza della finestra; la foto copre ~84% */
+  --imb-profondita-dentro: 0.7;
   --imb-trave-w: 7%;              /* larghezza di una trave rispetto al soffitto */
   --imb-trave-passo: 22%;         /* interasse delle travi */
 
@@ -248,8 +256,13 @@
   /* Interno della scatola, stanza accesa: la luce viene dalla lampada in
      fondo, quindi le superfici sono più chiare verso la foto e più scure
      verso il fronte aperto. Da usare come background delle facce. */
-  --imb-parete-sx: linear-gradient(to right, rgb(var(--imb-notte-profonda-rgb) / 0.55), rgb(var(--imb-notte-profonda-rgb) / 0) 70%), var(--imb-sfondo-intonaco);
-  --imb-parete-dx: linear-gradient(to left, rgb(var(--imb-notte-profonda-rgb) / 0.55), rgb(var(--imb-notte-profonda-rgb) / 0) 70%), var(--imb-sfondo-intonaco);
+  --imb-sfondo-intonaco-ombra: var(--imb-grana) 0 0 / 160px 160px, var(--imb-intonaco-ombra);
+  --imb-parete-sx: linear-gradient(to right, rgb(var(--imb-notte-profonda-rgb) / 0.55), rgb(var(--imb-notte-profonda-rgb) / 0) 70%), var(--imb-sfondo-intonaco-ombra);
+  --imb-parete-dx: linear-gradient(to left, rgb(var(--imb-notte-profonda-rgb) / 0.55), rgb(var(--imb-notte-profonda-rgb) / 0) 70%), var(--imb-sfondo-intonaco-ombra);
+  /* Travi di noce sul soffitto: strisce che corrono verso il fondo (le
+     scatole sottili del CD si possono aggiungere sopra; questo è il minimo) */
+  --imb-travi: repeating-linear-gradient(to right, var(--imb-soffitto) 0 15%, var(--imb-trave) 15% 22%);
+  --imb-soffitto-travi: linear-gradient(to top, rgb(var(--imb-notte-profonda-rgb) / 0.5), rgb(var(--imb-notte-profonda-rgb) / 0) 75%), var(--imb-travi);
   --imb-soffitto-sfondo: linear-gradient(to top, rgb(var(--imb-notte-profonda-rgb) / 0.5), rgb(var(--imb-notte-profonda-rgb) / 0) 75%), var(--imb-soffitto);
   /* Pavimento: il colore della foto (--imb-pavimento sulla scatola) con la
      stessa caduta di luce verso il fronte */

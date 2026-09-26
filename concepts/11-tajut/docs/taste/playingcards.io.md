@@ -9,7 +9,7 @@ Cattura: 2026-09-26, 1440x900 e 375x812, metodo curl; solo la home pubblica (le 
 
 - **canvas**: #83D8FF (71%) azzurro
 - **surface**: #FFFFFF (29%) fascia del codice stanza
-- **ink**: #333333 testo, #79399C link Premium
+- **ink**: #333333 testo, #79399C link dell'abbonamento
 
 ### Tipografia
 

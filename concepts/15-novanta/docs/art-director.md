@@ -107,7 +107,7 @@ schermo
 
 Script `contrasti.mjs` in appendice (luminanza relativa sRGB, formula WCAG
 2.x). Soglie: testo 4,5:1, elementi non testuali 3:1. **Tutte le coppie con
-soglia usate nel sito passano**; l'unica che non passa è segnata come
+soglia usate nel sito passano**; le righe RIFERIMENTO sono i valori scartati, e l'unica coppia reale che non passa è segnata come
 combinazione vietata e scritta nelle regole di `DESIGN.md`.
 
 | Coppia | Primo piano | Fondo | Rapporto | Soglia | Esito |
