@@ -284,3 +284,127 @@ Servono corse Lighthouse/WebPageTest su device reali prima della consegna.
 Dopo le correzioni di P1-P4 vanno ripetute: build (pesi), Lighthouse `?gl=0`
 mobile (TBT), `misura.mjs mobile` (fps e RecalcStyle in scroll 4×) e
 `misura.mjs inp` (INP del Banco).
+
+---
+
+## Giro 3 · rimisura dopo le correzioni (26/09/2026)
+
+Build nuovo (HEAD `eeb091a`), `npx vite preview --port 8203 --strictPort`
+(chiusa a fine prova). Stessi strumenti e stessi limiti del giro 1 (font serviti
+via `page.route` con 1200 ms di ritardo; Lighthouse senza font; SwiftShader non
+rappresentativo). Script: `misura3.mjs`, `cls3.mjs`, `idle*.mjs`, JSON `g3-*.json`
+nella scratchpad `perf/`.
+
+**Decisione dell'orchestratore, annotata**: budget CSS portato da 20 a
+**24 KB gz** (3 KB non cambiano la velocità percepita, i tagli rischiano
+regressioni). Il tech-architect aggiorni §8.
+
+### Pesi gz (Vite) prima / dopo
+
+| Voce | Budget | Giro 1 | Giro 3 | Esito |
+|---|---|---|---|---|
+| Chunk `Concept10` | ≤ 60 | 62,55 | **60,52** | **fuori di 0,52** |
+| `lenis` (chunk dinamico nuovo) | — | nel Concept10 | 5,64 | fuori dal percorso critico |
+| JS iniziale totale (index 1,27 + react 52,32 + Concept10) | ≤ 130 | 116,1 | **114,1** | ok |
+| WebGL lazy (`index` + `three`) | ≤ 160 | 135,1 | **137,4** (24,55 + 112,82) | ok |
+| CSS | ≤ **24** (era 20) | 21,34 | **23,18** | ok col budget nuovo (fuori col vecchio) |
+
+Il chunk `Concept10` è sceso di 2 KB con lenis dinamico, ma nel frattempo le
+sezioni sono cresciute: mancano 0,52 KB. Resta il taglio P3.2 (un solo
+marchio, −~0,5 KB gz: section-builder-hero + section-builder-colophon), che da
+solo lo porta al limite.
+
+### Lighthouse `?gl=0` prima / dopo
+
+| | Giro 1 mobile | Giro 3 mobile | Giro 1 desktop | Giro 3 desktop |
+|---|---|---|---|---|
+| Performance | 94 | **95** | 98 | **100** |
+| FCP | 1,49 s | 1,75 s | 0,42 s | 0,47 s |
+| LCP (budget 2,5 / 1,5) | 2,20 s | **2,43 s** (ok, margine 70 ms) | 0,55 s | **0,60 s** |
+| TBT (budget 150 mobile) | 233 ms | **166 ms** (fuori di 16) | 27 ms | **13 ms** |
+| CLS | 0 | 0 | 0 | 0 |
+| TTI | 4,45 s | **2,46 s** | 3,28 s | **0,60 s** |
+| styleLayout nel trace | 4977 ms | **1563 ms** | 6905 ms | **543 ms** |
+
+Elemento LCP: `div.imp-hero__riga` (testo dell'hero), mai il canvas. Il TBT
+mobile residuo è quasi tutto un task di React al montaggio (332 ms simulati):
+il P1 non c'entra più. La varianza di Lighthouse su TBT a questa scala è
+±30 ms: è al limite, non un problema strutturale.
+
+### Scroll continuo 390×844, CPU 4×, `?gl=0` (lenis, 8 s di rotella)
+
+| | Giro 1 | Giro 3 |
+|---|---|---|
+| Hero fermo 4 s: RecalcStyle | 3650 ms | **0 ms** (nessun rAF: su touch niente arco) |
+| JS rAF (ticker + lenis) p50 / p95 / max | 0,4 / 5,1 / 30,2 ms | 0,7 / 4,7 / 74,6 ms (1 frame su 431 > 16) |
+| FPS stimati | ~6 | **~50** (intervallo p50 16,7 ms, p95 42,6) |
+| Scroll percorso | 365 px | **2398 px** |
+| RecalcStyle / Task | 8046 / 8788 ms | **661 / 3895 ms** |
+| Long task | 36 (max 395 ms) | **6** (max 389 ms) |
+
+Il JS del ticker e di lenis resta sotto 16 ms al p95. I 6 task lunghi arrivano
+all'ingresso di nuove sezioni (montaggio, primo layout), non a regime.
+
+Desktop 1440 `?gl=0` con hero in vista (arco della luce acceso): 600 rAF in
+10 s, **RecalcStyle 564 ms per 572 ricalcoli (~1 ms l'uno, era 63 ms)**, task
+totale 12%. **P1 risolto.**
+
+### INP del Banco (23 tasti + un radio, Event Timing)
+
+| | Giro 1 | Giro 3 | Budget |
+|---|---|---|---|
+| Desktop 1× p50 / p95 / max | 48 / 120 / 160 ms | **40 / 80 / 88 ms** | ok |
+| Mobile 390 CPU 4× p95 / max | 256 / 256 ms | **136 / 160 ms** | max fuori di 10 ms |
+
+Il caso peggiore su mobile è `keypress` con 63 ms di processing (render React
+del Banco a ogni tasto). **P2 risolto su desktop, quasi su mobile 4×.**
+Suggerimento (bassa, section-builder-banco): `useDeferredValue` o
+`startTransition` sul testo passato a `Prova`, così la prova si ridisegna dopo
+il tasto e il campo risponde subito.
+
+### Render a pagina ferma
+
+| | Giro 1 | Giro 3 |
+|---|---|---|
+| `?gl=0`, scroll 2700, 10 s | 0 rAF | **0 rAF**, task 1 ms |
+| GL (SwiftShader, `?gl=1`), scroll 2700, 10 s | frame solo dalla coda della luce | idem: 11 frame, nessuna cottura, azimut 135,4 → 135,1 |
+
+La coda di inerzia della luce (P8) resta visibile solo in SwiftShader: il dt è
+limitato a 50 ms e un frame costa ~1 s, quindi la convergenza dura decine di
+secondi. A 60 fps reali, con `QUIETE_GRADI = 0.15`, finisce in meno di 1 s.
+Nessuna azione.
+
+### Regressione nuova · ALTA · CLS all'arrivo dei font nell'hero
+
+- **Misura** (font in ritardo di 1,2 s): CLS **0,060 desktop, 0,061 mobile**
+  (giro 1: 0,0043 / 0,0018; budget 0,02). Lighthouse dà 0 solo perché lì i font
+  non arrivano mai.
+- **Cosa si sposta**: al cambio da "Impronta Anybody Ripiego" ad Anybody,
+  `imp-hero__riga--1` ("impronta") passa da 1354 a 1181 px di larghezza; subito
+  dopo (~5 ms, nuova misura della composizione) `imp-hero__riga--2` passa da
+  228 a 196 px di altezza (mobile 97 → 87), e `imp-hero__testo`,
+  `imp-hero__luce` e la sezione `imp-perchi` salgono di 26-52 px.
+- **Causa**: la nuova composizione a due righe dell'hero dimensiona le righe
+  sulla misura del testo, e il fallback metrico non può imitare l'asse `wdth`
+  di Anybody. Quindi la scatola cambia al cambio font.
+- **Correzione**: dare alle righe dell'hero un'altezza che non dipende dal font
+  (`block-size` in `em`/`cqi` calcolata dai token, `line-height: 1`,
+  `overflow: clip` sul contenuto a rilievo), in modo che il cambio font cambi
+  solo i glifi e non la scatola. In più, rimisurare la composizione solo sulla
+  larghezza, senza toccare l'altezza. In alternativa (peggiore) tarare
+  `size-adjust` del ripiego sulla larghezza di "impronta" al `wdth` usato.
+- **Proprietario**: **section-builder-hero** (`Hero.tsx`, `hero.css`), con
+  l'**art-director** per il ripiego in `tokens.css`.
+
+### Stato dei problemi
+
+| # | Giro 1 | Giro 3 |
+|---|---|---|
+| P1 luce su `.imp-root` | alta | **risolto** (1 ms per ricalcolo, 50 fps in scroll 4×) |
+| P2 INP Banco | alta | **risolto desktop**, mobile 4× max 160 ms (bassa) |
+| P3 chunk Concept10 | media | **aperto, +0,52 KB** (P3.2 marchio unico) |
+| P4 CSS | media | **chiuso per decisione**: budget 24 KB, misurato 23,18 |
+| P5/P6 avvio GL, atlante | media / bassa | dichiarati corretti; non misurabili in SwiftShader, da device |
+| P8 coda della luce | bassa | ok (soglia 0,15°) |
+| CLS hero ai font | — | **nuovo, alto** (0,06 contro 0,02) |
+| TBT mobile | fuori (233) | 166 ms, al limite (bassa) |
