@@ -127,6 +127,7 @@
   background-clip: text;
   -webkit-text-fill-color: transparent;
   filter:
+    drop-shadow(0 0 0.6px var(--imp-caldo-filo, transparent))
     drop-shadow(var(--_imp-dx) var(--_imp-dy) 0 color-mix(in srgb, var(--imp-carta-ombra) 85%, transparent))
     drop-shadow(calc(var(--_imp-dx) * -0.8) calc(var(--_imp-dy) * -0.8) 0 var(--imp-carta-luce));
 }

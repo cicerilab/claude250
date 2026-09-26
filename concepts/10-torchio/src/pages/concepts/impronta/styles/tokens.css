@@ -257,6 +257,7 @@
   --imp-inchiostro-velato: #505327;
   --imp-lamina-bordo: #5E656C;
   --imp-taglio: #17231D;
+  --imp-caldo-filo: transparent;
   --imp-spessore: 3px;          /* costa delle strisce "La carta" (esagerata) */
   --imp-spessore-pezzo: 1px; /* costa di un pezzo appoggiato, uguale al GL */
 }
@@ -276,6 +277,11 @@
   --imp-taglio: #E4CF3F;
   --imp-spessore: 6px;          /* costa delle strisce "La carta" (esagerata) */
   --imp-spessore-pezzo: 1.8px; /* costa di un pezzo appoggiato, uguale al GL */
+  /* Giro 3c: su Cotone (quasi bianco) la lamina delle lettere si perdeva.
+     Piede della sfumatura in acciaio e filo d'acciaio intorno alla lettera,
+     solo su questa carta. */
+  --imp-caldo-filo: #5E656C;
+  --imp-lamina-sfumatura-testo: linear-gradient(180deg, var(--imp-lamina-riflesso) 0%, var(--imp-lamina) 28%, var(--imp-lamina-riflesso) 44%, var(--imp-lamina-scura) 52%, #5E656C 100%);
 }
 
 .imp-root[data-carta="cipria"],
@@ -291,6 +297,7 @@
   --imp-inchiostro-velato: #5A4343;
   --imp-lamina-bordo: #5E656C;
   --imp-taglio: #2A2C2F;
+  --imp-caldo-filo: transparent;
   --imp-spessore: 4px;          /* costa delle strisce "La carta" (esagerata) */
   --imp-spessore-pezzo: 1.1px; /* costa di un pezzo appoggiato, uguale al GL */
 }
@@ -308,6 +315,7 @@
   --imp-inchiostro-velato: #B6B6B3;
   --imp-lamina-bordo: #A7AEB5;
   --imp-taglio: #E4CF3F;
+  --imp-caldo-filo: transparent;
   --imp-spessore: 5px;          /* costa delle strisce "La carta" (esagerata) */
   --imp-spessore-pezzo: 1.3px; /* costa di un pezzo appoggiato, uguale al GL */
 }

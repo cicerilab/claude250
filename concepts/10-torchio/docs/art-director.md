@@ -578,6 +578,22 @@ Somma delle stime: 3,7-4,0 KB gz, abbastanza per stare sotto 20 con margine.
   giro.
 - Dev server 8104 chiuso. Nessun commit.
 
+### 7.4 Giro 3c: lamina su Cotone (shader-engineer "Giro 3b" punto 2)
+
+Sotto 1024 px la prova del banco resta al rilievo CSS e su Cotone il nome in
+lamina dopo l'invio si perdeva sul fondo quasi bianco. Solo su Cotone
+(`tokens.css`, blocco della carta): `--imp-lamina-sfumatura-testo` con il
+piede in acciaio `#5E656C` invece di `#7E868E`, e `--imp-caldo-filo:
+#5E656C`, letto da `.imp-caldo` come primo `drop-shadow(0 0 0,6px)` (un filo
+d'acciaio attorno alla lettera). Sulle altre carte `--imp-caldo-filo` è
+`transparent` (dichiarato esplicitamente, così un pezzo di altra carta dentro
+un sito Cotone non eredita il filo). Contrasto del filo su Cotone 5,22:1
+(decorativo, come la lamina); nessun testo di lettura cambia, le 48 coppie AA
+restano valide. Verificato con `?gl=0&carta=cotone` a 768 e 375: nome
+scritto ("Elena Moretti"), tecnica lamina, leva tenuta 1,4 s, invio riuscito
+("Ricevuto… Mandi, Marta"): il nome in lamina ora si legge. Server 8104
+chiuso, nessun commit.
+
 ---
 
 ## Appendice: script dei contrasti
