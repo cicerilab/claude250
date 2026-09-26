@@ -166,7 +166,7 @@ questo:
 - Il contenitore della parete ha una **zona sicura** per il fuoco e per
   "porta il lavoro nello schermo": 72 px in alto, 80 px in basso, 24 px ai lati.
 
-### 2.4 Tablet (641–1023 px, controllato a 768)
+### 2.4 Tablet (641-1023 px, controllato a 768)
 
 - ConceptBackButton in alto a sinistra (regola del sito sopra 640).
 - In alto a destra: nome (fuori dall'ingresso) e "Grande come?".
@@ -822,7 +822,7 @@ la taratura).
 
 | Parte | Vuota si legge | Apre (desktop: popover sotto la parola; mobile: foglio dal basso) |
 |---|---|---|
-| misura | `[che misura?]` | porta il fuoco al campo Larghezza del banco (mobile: scorre al banco). Non un doppione dei campi |
+| misura | sempre compilata (5 × 5 di partenza) | porta il fuoco al campo Larghezza del banco (mobile: scorre al banco). Non un doppione dei campi |
 | zona | `[dove?]` | gruppo di radio con 13 zone in parole: polso, avambraccio, braccio, spalla, scapola, schiena, costole, fianco, coscia, polpaccio, caviglia, mano, collo |
 | stile | `[che stile?]` | radio: linea fine, blackwork, lettering, ornamentale, nero e grigio, "non lo so" |
 | primo | `[primo]` (valore iniziale) | radio: primo / non il primo |

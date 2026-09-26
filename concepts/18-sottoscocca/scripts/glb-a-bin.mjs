@@ -274,29 +274,44 @@ const corpo = costruisci(
   },
 );
 
-// Ruote: una sinistra e una destra, riferite al centro della ruota.
+// Ruote: una sinistra e una destra, riferite al centro geometrico della ruota
+// (in Kenney l'origine del nodo sta sulla faccia esterna, non a meta' battistrada).
+// ALLARGA_RUOTE sposta le ruote verso l'esterno: nel giocattolo sono rientrate
+// sotto la scocca (carreggiata 0,85 su 1,50 di larghezza).
+const ALLARGA_RUOTE = 0.1;
 const ruote = {};
 const posizioniRuote = {};
+const centroXRuota = {};
 for (const [nomeKenney, lato] of [
   ['wheel-front-left', 'sx'],
   ['wheel-front-right', 'dx'],
 ]) {
+  const { pos } = nodi[nomeKenney];
+  let mn = Infinity;
+  let mx = -Infinity;
+  for (let i = 0; i < pos.length; i += 3) {
+    mn = Math.min(mn, pos[i]);
+    mx = Math.max(mx, pos[i]);
+  }
+  const cx = (mn + mx) / 2;
+  centroXRuota[lato] = cx;
   const nodo = { ...nodi[nomeKenney], t: [0, 0, 0] };
   ruote[`ruota-${lato}`] = costruisci(nodo, CELLE_RUOTA, GRUPPI_RUOTA, (p, n) => [
-    [p[0] * SCALA, p[1] * SCALA, p[2] * SCALA],
+    [(p[0] - cx) * SCALA, p[1] * SCALA, p[2] * SCALA],
     normalizza(n),
   ]);
 }
-for (const [nomeKenney, nome, mesh] of [
-  ['wheel-front-left', 'anteriore-sinistra', 'ruota-sx'],
-  ['wheel-front-right', 'anteriore-destra', 'ruota-dx'],
-  ['wheel-back-left', 'posteriore-sinistra', 'ruota-sx'],
-  ['wheel-back-right', 'posteriore-destra', 'ruota-dx'],
+for (const [nomeKenney, nome, mesh, lato] of [
+  ['wheel-front-left', 'anteriore-sinistra', 'ruota-sx', 'sx'],
+  ['wheel-front-right', 'anteriore-destra', 'ruota-dx', 'dx'],
+  ['wheel-back-left', 'posteriore-sinistra', 'ruota-sx', 'sx'],
+  ['wheel-back-right', 'posteriore-destra', 'ruota-dx', 'dx'],
 ]) {
   const t = nodi[nomeKenney].t;
+  const x = (t[0] + centroXRuota[lato]) * SCALA + Math.sign(t[0]) * ALLARGA_RUOTE;
   posizioniRuote[nome] = {
     mesh,
-    centro: [t[0] * SCALA, t[1] * SCALA, allungaZ(t[2] * SCALA)].map((x) => +x.toFixed(4)),
+    centro: [x, t[1] * SCALA, allungaZ(t[2] * SCALA)].map((v) => +v.toFixed(4)),
   };
 }
 
@@ -333,11 +348,10 @@ const misure = {
   zMax: +rCorpo.max[2].toFixed(3),
   passo: +(posizioniRuote['anteriore-sinistra'].centro[2] - posizioniRuote['posteriore-sinistra'].centro[2]).toFixed(3),
   carreggiata: +(posizioniRuote['anteriore-sinistra'].centro[0] - posizioniRuote['anteriore-destra'].centro[0]).toFixed(3),
+  // meta' larghezza del passaruota (interno del parafango), utile ai pezzi
+  passaruotaX: +(0.57 * SCALA).toFixed(3),
   raggioRuota: +((rRuota.max[1] - rRuota.min[1]) / 2).toFixed(3),
   larghezzaRuota: +(rRuota.max[0] - rRuota.min[0]).toFixed(3),
-  // x della faccia esterna della ruota sinistra, relativa al suo centro
-  ruotaEsternoX: +rRuota.max[0].toFixed(3),
-  ruotaInternoX: +rRuota.min[0].toFixed(3),
 };
 
 // ---------------------------------------------------------------- scrittura
