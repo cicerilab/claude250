@@ -232,3 +232,58 @@ Nuovi nomi del banco: `06d-banco-leva-a-meta-<carta>`, `06e-banco-successo-<cart
 
 Tutto il resto (tecniche nei 3 punti del pin, carta, banco vuoto e compilato,
 bottega) è pulito sulle due carte e sulle quattro larghezze.
+
+---
+
+## Giro 3
+
+Stesso metodo del giro 2 (build nuova, preview 8201 chiusa alla fine, font serviti con
+curl, Citrino e Cotone, 375/768/1440/2560, `?gl=1` con SwiftShader e `?gl=0` senza,
+leva a metà con `requestAnimationFrame` fermo, successo). In più: prima del primo
+scatto lo script **aspetta che `Anybody` e `Hanken Grotesk` siano `loaded` in
+`document.fonts`**, e col GL aspetta altri 4 s, oltre alle presse finite e a due frame
+disegnati. Tutti gli scatti di sezione sono della **finestra** (niente fullPage); le
+`full-*.png` restano solo come panoramica del ritmo (giro `?gl=0`).
+
+```
+qa/shots-g3/  375/ 768/ 1440/ 2560/  gl0/<w>/  full-<w>-<carta>-*.png  misure/
+```
+262 PNG. In più, a 1440 col GL: `02-per-chi-lavori-<carta>-attesa15s.png` (vedi sotto).
+
+### Misure
+
+- `scrollWidth` = larghezza in tutti gli scatti dei 16 giri: **nessuno scroll orizzontale**.
+- Font veri caricati in tutti i 16 giri, nessun ripiego visibile.
+- Invio riuscito in tutti i 16 giri. Leva a metà: `--imp-hold` 0,51-0,58 in fallback
+  (lo scatto buono è `gl0/*/06d-*`); col GL 0,02-0,18 per la lentezza di SwiftShader.
+- Fuoco dopo l'invio sulla frase di successo e dentro lo schermo in 14 giri su 16; in
+  due giri GL (375 Citrino, 768 Cotone) al momento della misura il fuoco era sul `body`,
+  ma la frase è comunque in vista (scatti `06e`). Probabile corsa col frame lento; da
+  riguardare su un telefono vero (section-builder-banco).
+
+### Risolto rispetto al giro 2
+
+| Giro 2 | Stato |
+|---|---|
+| M · Marchio del colophon col GL spostato ~30 px, riga "tipografia e legatoria" sopra le lettere | **Risolto**: a 1440 e 2560 il marchio sta sopra la riga, con spazio (1440 GL: lettere 465-597, riga a 631) |
+| B · Vuoti in fondo alla legatoria (1440, 2560) | **Risolto**: "Prova la tua" è salito accanto ai prezzi, a destra sotto lo schema; restano ~100 px, normali |
+| B · A 375 dopo l'invio restava solo il dial "luce" in fondo | **Risolto**: dopo il successo si vede titolo, frase, "Prova un'altra cosa" e sotto la prova intera con il prezzo |
+| B · Taglio colorato scuro su Citrino a 375 | **Risolto**: il biglietto è bianco con il bordo dipinto rosa visibile di lato |
+| B · Nome "Chiara Zanin" sfrangiato col GL a 2560 | **Risolto**: lamina netta |
+
+### Difetti rimasti
+
+| Sezione | Larghezza | Problema | Gravità | Proprietario |
+|---|---|---|---|---|
+| Fissi in basso | 375 | Bottone del sito + "Prova la tua" occupano l'ultima riga; il testo che scorre è coperto per ~44 px, e con il per-chi che entra dal basso la fila "‹ partecipazione biglietto copertina" passa sotto il bottone del sito | B | section-builder-hero / per-chi |
+| Biglietto sopra la partecipazione | 1440, 2560 | Il biglietto copre l'angolo in basso a destra della partecipazione (pila sul bancone, probabilmente voluto) | B | section-builder-per-chi |
+
+### Difetti nuovi
+
+| Sezione | Larghezza | Problema | Gravità | Proprietario |
+|---|---|---|---|---|
+| Per chi, col GL | 1440 (Citrino e Cotone) | Nello scatto del giro (presse finite + 2 frame) la **copertina è un rettangolo nero vuoto** e "Chiara Zanin" è appena visibile. Con 15 s di attesa (`*-attesa15s.png`) titolo, autrice e biglietto ci sono tutti, con 4 blocchi disegnati e nessun `fuori`. Quindi i pezzi arrivano **molto dopo** la fine della pressa: in SwiftShader sono secondi, ma nell'attesa il fantasma DOM è già trasparente e il pezzo resta vuoto. Serve che il fantasma resti visibile finché il blocco non è davvero disegnato (stesso contratto di `data-imp-gl="fuori"`) | M | shader-engineer (`ImprontaGL.ts`, quando togliere il fantasma) + art-director (`relief-fallback.css`) |
+| Banco, prova col GL | 768 Cotone | Dopo l'invio il nome in lamina sulla prova è molto chiaro su Cotone (si legge a fatica); in fallback è netto | B | shader-engineer / webgl-artist (lamina su carta chiara) |
+
+Tutto il resto (hero, tecniche nei 3 punti, carta, legatoria, banco vuoto e compilato,
+bottega, colophon) è pulito sulle due carte e sulle quattro larghezze, con e senza GL.
