@@ -188,8 +188,11 @@
   --nod-bottone-h: 52px;
   --nod-campo-h: 48px;
   --nod-indice-riga: 40px;
-  --nod-cursore-segno: 16px;                                   /* segno vernice del cursore (lunghezza) */
-  --nod-cursore-spessore: 2px;
+  --nod-cursore-segno: 20px;                                   /* segno vernice del cursore (lunghezza), dentro un'area di 44 x 44 */
+  --nod-cursore-spessore: 3px;                                 /* a 2 px su stretto si perdeva tra le tacche (provato) */
+  --nod-regolo-cifre-x: 20px;                                  /* cifre della scala: distanza dal binario (largo) */
+  --nod-regolo-valore-x: 64px;                                 /* valore corrente: corsia sua, oltre le cifre (largo) */
+  --nod-regolo-vuoto: 24px;                                    /* cifre della scala nascoste entro questa distanza dal cursore */
   --nod-tacca-l: 8px;                                          /* tacca ogni 10 Hz */
   --nod-tacca-cifra-l: 14px;                                   /* tacca ogni 50 Hz */
   --nod-binario: 1px;

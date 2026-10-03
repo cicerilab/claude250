@@ -1,0 +1,245 @@
+/* ==========================================================================
+   SOTTOSCOCCA · base (scaffold)
+   --------------------------------------------------------------------------
+   Reset leggero e tipografia di base, TUTTO sotto .ssc-root (tech-architect
+   §5): nel sito vero questo CSS resta caricato anche fuori dalla pagina, e lo
+   scope evita che tocchi altre pagine. Unica eccezione: `html:has(.ssc-root)`
+   per lo scroll-padding (come nel pilota). Nessun hex: solo variabili di
+   tokens.css (art-director).
+
+   Ordine di import (Radice.tsx): tokens.css → motion-vars.css → base.css →
+   layout.css → interaction/interaction.css → CSS delle sezioni.
+
+   :where() ovunque possibile: specificità minima, così i CSS di sezione (che
+   iniziano tutti con .ssc-root) vincono senza forzature.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Il fuoco e le ancore non finiscono mai sotto la testata (in alto) o sotto
+   il bottone "Torna in Ciceri Lab" (in basso a sinistra sotto 640 px).
+   Valori fissi: le variabili di .ssc-root non arrivano a <html>.
+   Testata 56 (64 da 768) + 16; zona del bottone 72 + 16 (ux §2.2).
+   -------------------------------------------------------------------------- */
+html:has(.ssc-root) {
+  scroll-padding-block: 72px 88px;
+}
+
+@media (min-width: 640px) {
+  html:has(.ssc-root) {
+    scroll-padding-block: 88px 16px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Radice: il pavimento dell'officina (art-director §5)
+   NIENTE transform, filter, contain o container-type qui: i figli fissi
+   (fondale, canvas, punti, asta, scheda, barra) restano agganciati alla
+   finestra. `isolation` crea il contesto di livelli del concept.
+   -------------------------------------------------------------------------- */
+.ssc-root {
+  position: relative;
+  isolation: isolate;
+  min-block-size: 100vh;
+  min-block-size: 100svh;
+  background-color: var(--ssc-fondo);
+  color: var(--ssc-testo);
+  font-family: var(--ssc-font-testo);
+  font-size: var(--ssc-t-corpo);
+  font-weight: 400;
+  line-height: var(--ssc-t-corpo-lh);
+  font-kerning: normal;
+  font-synthesis: none;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: clip;
+}
+
+.ssc-root ::selection {
+  background-color: var(--ssc-selezione-fondo);
+  color: var(--ssc-selezione-testo);
+}
+
+/* --------------------------------------------------------------------------
+   Reset scoped
+   -------------------------------------------------------------------------- */
+.ssc-root,
+.ssc-root :where(*, *::before, *::after) {
+  box-sizing: border-box;
+}
+
+.ssc-root :where(h1, h2, h3, h4, h5, h6, p, figure, blockquote, dl, dd, ol, ul, fieldset, legend, pre, address, table) {
+  margin: 0;
+}
+
+.ssc-root :where(ol, ul)[role="list"],
+.ssc-root :where(ol, ul):where(.ssc-lista) {
+  padding: 0;
+  list-style: none;
+}
+
+.ssc-root :where(fieldset) {
+  min-inline-size: 0;
+  padding: 0;
+  border: 0;
+}
+
+.ssc-root :where(legend) {
+  padding: 0;
+}
+
+.ssc-root :where(table) {
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.ssc-root :where(th) {
+  text-align: start;
+  font-weight: var(--ssc-t-etichetta-wght);
+}
+
+.ssc-root :where(img, svg, video, canvas, picture) {
+  display: block;
+  max-inline-size: 100%;
+}
+
+.ssc-root :where(img, video) {
+  block-size: auto;
+}
+
+/* art-director §5: senza `font: inherit` i bottoni escono in Arial */
+.ssc-root :where(button, input, select, textarea) {
+  margin: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+}
+
+.ssc-root :where(button) {
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+  border-radius: var(--ssc-raggio);
+  text-align: inherit;
+}
+
+.ssc-root :where(button:disabled, [aria-disabled="true"]) {
+  cursor: default;
+}
+
+.ssc-root :where(input, select, textarea) {
+  border-radius: var(--ssc-raggio);
+  font-size: var(--ssc-t-campo);
+}
+
+.ssc-root :where(a) {
+  color: inherit;
+  text-decoration-thickness: var(--ssc-filo);
+  text-underline-offset: 0.2em;
+}
+
+.ssc-root :where(strong, b) {
+  font-weight: 700;
+}
+
+.ssc-root :where([hidden]) {
+  display: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   Titoli: Tektur (DESIGN.md §3). La cifra di quota e il marchio hanno le
+   loro classi nelle sezioni; qui solo h2 e h3 di base.
+   -------------------------------------------------------------------------- */
+.ssc-root :where(h1, h2, h3) {
+  font-family: var(--ssc-font-tecnico);
+  font-stretch: 100%;
+}
+
+.ssc-root :where(h2) {
+  font-size: var(--ssc-t-titolo2);
+  font-weight: var(--ssc-t-titolo2-wght);
+  line-height: var(--ssc-t-titolo2-lh);
+  letter-spacing: var(--ssc-t-titolo2-tracking);
+}
+
+.ssc-root :where(h3) {
+  font-size: var(--ssc-t-titolo3);
+  font-weight: var(--ssc-t-titolo3-wght);
+  line-height: var(--ssc-t-titolo3-lh);
+}
+
+/* Intestazioni che ricevono il fuoco da vaiA() (tabindex="-1"): niente anello */
+.ssc-root :where(h1, h2, h3)[tabindex="-1"]:focus {
+  outline: none;
+}
+
+/* --------------------------------------------------------------------------
+   Utilità tipografiche (le sezioni le usano invece di riscrivere le terne)
+   -------------------------------------------------------------------------- */
+.ssc-root .ssc-lead {
+  font-size: var(--ssc-t-lead);
+  line-height: var(--ssc-t-lead-lh);
+}
+
+.ssc-root .ssc-piccolo {
+  font-size: var(--ssc-t-piccolo);
+  line-height: var(--ssc-t-piccolo-lh);
+}
+
+.ssc-root .ssc-nota {
+  font-size: var(--ssc-t-nota);
+  font-weight: var(--ssc-t-nota-wght);
+  line-height: 1.4;
+}
+
+.ssc-root .ssc-numeri {
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   Solo lettori di schermo
+   -------------------------------------------------------------------------- */
+.ssc-root .ssc-sr {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Link di salto (ux §2.1): primi due tabulabili, visibili solo col fuoco,
+   in alto al centro (in alto a sinistra c'è il bottone del sito).
+   -------------------------------------------------------------------------- */
+.ssc-root .ssc-salto {
+  position: fixed;
+  inset-block-start: var(--ssc-sp-3);
+  inset-inline-start: 50%;
+  z-index: calc(var(--ssc-z-testata) + 1);
+  translate: -50% calc(-100% - var(--ssc-sp-5));
+  min-block-size: var(--ssc-controllo-minimo);
+  display: inline-flex;
+  align-items: center;
+  padding-inline: var(--ssc-sp-4);
+  background-color: var(--ssc-azione);
+  color: var(--ssc-su-azione);
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.ssc-root .ssc-salto:focus,
+.ssc-root .ssc-salto:focus-visible {
+  translate: -50% 0;
+  outline: var(--ssc-fuoco-spessore) solid var(--ssc-nero);
+  outline-offset: calc(-1 * var(--ssc-fuoco-distanza) - var(--ssc-fuoco-spessore));
+}
+

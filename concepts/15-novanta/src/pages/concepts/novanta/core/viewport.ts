@@ -3,8 +3,8 @@
  *
  * `osservaViewport(onCambio)`: scrive `runtime.viewport` (w, h, vvH, dpr) su
  * `resize` della finestra e del `visualViewport` (tastiera del telefono),
- * scrive `--nov-vv-h` sulla radice (elemento foglia per quella variabile,
- * marcato `data-nov-var`), e chiama `onCambio` con debounce di 100 ms. Solo
+ * scrive `--nov-vv-h` e `data-tastiera="0|1"` (tastiera del telefono aperta)
+ * sulla radice, e chiama `onCambio` con debounce di 100 ms. Solo
  * Novanta.tsx. Nessun accesso al browser a livello di modulo.
  */
 
@@ -21,9 +21,14 @@ export function misuraViewport(): void {
   runtime.viewport.dpr = window.devicePixelRatio || 1;
 }
 
+/** Sotto questa differenza tra finestra e visualViewport non è la tastiera (barre del browser). */
+export const SOGLIA_TASTIERA = 120;
+
 function scriviVvH(root: HTMLElement): void {
   const v = `${runtime.viewport.vvH}px`;
   if (root.style.getPropertyValue('--nov-vv-h') !== v) root.style.setProperty('--nov-vv-h', v);
+  const tastiera = runtime.viewport.h - runtime.viewport.vvH > SOGLIA_TASTIERA ? '1' : '0';
+  if (root.getAttribute('data-tastiera') !== tastiera) root.setAttribute('data-tastiera', tastiera);
 }
 
 /**
@@ -51,5 +56,6 @@ export function osservaViewport(root: HTMLElement, onCambio: () => void): () => 
     window.removeEventListener('resize', suResize);
     vv?.removeEventListener('resize', suResize);
     root.style.removeProperty('--nov-vv-h');
+    root.removeAttribute('data-tastiera');
   };
 }

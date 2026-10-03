@@ -7,14 +7,12 @@
  *   </div>
  *
  * In vista quadrante i sette `li` sono sovrapposti nella stessa area (uno
- * solo visibile) e il Palco scorre da solo se il contenuto è lungo
- * (`overflow: auto`, `touch-action: pan-y`: `data-nov-ix-scorre` è il gancio
- * di interaction.css e della rotella, che prima scorre qui e poi ruota). In
- * vista elenco è un flusso verticale normale. Tutto in layout.css.
- *
- * Il numero grande dei gradi che scorre, la linea di lettura e la maschera
- * sfumata sono del section-builder del quadrante (LetturaGradi.tsx) e del
- * CSS di layout: il Palco resta un contenitore senza stato.
+ * solo visibile) e il CORPO dell'angolo attivo scorre se è lungo (vedi
+ * Angolo.tsx): il titolo resta sulla linea di lettura e il testo non passa
+ * mai sotto il numero grande. `data-nov-ix-scorre` (interaction.css): sul
+ * Palco `touch-action: pan-y`, sul corpo anche lo scroll della rotella, che
+ * prima scorre il corpo e poi ruota il braccio. In vista elenco è un flusso
+ * verticale normale. Tutto in layout.css.
  */
 
 import type { ReactNode } from 'react';

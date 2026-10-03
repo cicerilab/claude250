@@ -1,0 +1,96 @@
+/* ==========================================================================
+   SOTTOSCOCCA · impaginato e livelli (scaffold)
+   --------------------------------------------------------------------------
+   Classi condivise (tech-architect §5): .ssc-contenuto, .ssc-main,
+   .ssc-stazione, .ssc-gl-strato / .ssc-gl, .ssc-pagina, .ssc-banco,
+   .ssc-griglia. Livelli dai token dell'art-director (DESIGN.md §6):
+   scena 0, contenuto 1, punti 2, asta 5, scheda/barra 6, testata 10.
+
+   LIVELLI · scelta dello scaffold (vedi docs/scaffold-engineer.md §5):
+   .ssc-contenuto è `position: relative` SENZA z-index. Così il contenuto
+   in flusso si dipinge sopra il fondale e il canvas (vengono prima nel DOM,
+   livello 0) e i figli con z-index (punti 2, asta 5, testata 10) restano nel
+   contesto di .ssc-root, dove i livelli del DESIGN.md valgono davvero: con
+   `z-index: 1` sul contenuto la testata (10) finirebbe sotto l'asta (5).
+   Per lo stesso motivo NESSUN z-index, transform, filter, opacity < 1,
+   contain o container-type su .ssc-stazione e sulle sezioni (art-director §5).
+   ========================================================================== */
+
+.ssc-root .ssc-contenuto {
+  position: relative;
+}
+
+.ssc-root .ssc-main {
+  display: block;
+}
+
+/* Stazione del ponte: solo un segno per chi legge il codice e per la QA. */
+.ssc-root .ssc-stazione {
+  position: relative;
+}
+
+/* --------------------------------------------------------------------------
+   Strato WebGL (shader-engineer): wrapper fisso + canvas foglia.
+   Il wrapper fa la dissolvenza on/off (data-gl); il canvas riceve la
+   variabile calda --ssc-opacita-scena (useMotionVars, data-sscvar): due
+   elementi diversi, così la transizione non insegue il valore caldo.
+   -------------------------------------------------------------------------- */
+.ssc-root .ssc-gl-strato {
+  position: fixed;
+  inset: 0;
+  z-index: var(--ssc-z-scena);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--ssc-durata-gl-spegni) var(--ssc-curva-lineare);
+}
+
+.ssc-root[data-gl="on"] .ssc-gl-strato {
+  opacity: 1;
+  transition-duration: var(--ssc-durata-gl-comparsa);
+}
+
+.ssc-root .ssc-gl {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  opacity: var(--ssc-opacita-scena, 1);
+}
+
+/* --------------------------------------------------------------------------
+   Gabbia della pagina (DESIGN.md §5): margine a sinistra, corsia dell'asta
+   a destra; oltre 1680 px la griglia smette di crescere, sempre a sinistra.
+   -------------------------------------------------------------------------- */
+.ssc-root .ssc-pagina {
+  inline-size: 100%;
+  max-inline-size: 1680px;
+  padding-inline: var(--ssc-margine) var(--ssc-corsia-asta);
+}
+
+/* Il banco: la colonna dei pannelli e del testo, sempre a sinistra. */
+.ssc-root .ssc-banco {
+  inline-size: var(--ssc-banco);
+  max-inline-size: 100%;
+}
+
+.ssc-root .ssc-griglia {
+  display: grid;
+  grid-template-columns: repeat(var(--ssc-colonne), minmax(0, 1fr));
+  column-gap: var(--ssc-canalino);
+}
+
+.ssc-root .ssc-giustezza {
+  max-inline-size: var(--ssc-giustezza);
+}
+
+/* --------------------------------------------------------------------------
+   Modalità fermo (`?fermo=<quota>`, tech-architect §8.4): resta solo la
+   scena. Serve a `npm run fermi`; nessun visitatore la vede.
+   -------------------------------------------------------------------------- */
+.ssc-root[data-fermo] > :not(.ssc-gl-strato) {
+  visibility: hidden !important;
+}
+
+.ssc-root[data-fermo] .ssc-gl-strato {
+  opacity: 1;
+  transition: none;
+}

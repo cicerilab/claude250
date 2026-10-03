@@ -224,7 +224,7 @@ export const INIZIO_PASSATA = APERTURA.sale + APERTURA.pausa;
  *   (9,6 s dove nuclea per primo, 12,4 s dove nuclea per ultimo).
  *
  * Risultato: una zona pulita comincia a velarsi a chiazze dopo 3,6 s, a 10 s
- * le chiazze sono al 79% e il resto al 32%, a 15,2 s le chiazze sono chiuse e
+ * le chiazze sono al 79% e il resto al 30%, a 15,2 s le chiazze sono chiuse e
  * a 17,6 s è tutto coperto in modo uniforme. In ogni punto il vapore sale e
  * basta: nessuna oscillazione, nessun respiro.
  */
@@ -343,7 +343,7 @@ export interface TabelleNebbia {
 /**
  * Costruisce le tabelle di `nebbiaNelTempo` ed `etaPerNebbia` per `livelli`
  * valori di nucleazione (livello k = nucleazione k / (livelli - 1)).
- * Circa 17 KB con i valori di default. Pura: nessun accesso al browser.
+ * Circa 34 KB con i valori di default (1102 passi × 16 livelli + 16 × 256 età). Pura: nessun accesso al browser.
  */
 export function costruisciTabelleNebbia(passoMs: number = RITORNO.passoTabella, livelli: number = RITORNO.livelli): TabelleNebbia {
   const passo = Math.max(1, passoMs);

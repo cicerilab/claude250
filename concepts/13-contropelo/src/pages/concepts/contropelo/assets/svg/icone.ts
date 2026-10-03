@@ -8,6 +8,10 @@
 // stessa griglia 256 e con lo stesso tratto Light (12 unità), con gli spigoli vivi
 // del bisello degli specchi (CD §4.3).
 //
+// Le due frecce ("freccia-sinistra", "freccia-destra") sono disegnate a mano col tratto
+// del pennarello (22 su 256, capi tondi, come tratti.ts): Mansalva, Figtree e Limelight
+// non hanno i glifi ← → (tokens.ts, METRICHE_FONT), quindi le frecce del vetro sono SVG.
+//
 // Nessuna forbice, rasoio, pettine, baffo, palo o figura (CD §4.3, §12).
 // Tutte in currentColor: prendono il colore del testo accanto (pennarello).
 // Si usano con <Icona nome="..." /> di Icona.tsx.
@@ -26,6 +30,8 @@ export interface DatiIcona {
   readonly d: string
   /** Solo per 'tratto': giunti degli angoli. */
   readonly giunti?: 'miter' | 'round'
+  /** Solo per 'tratto': spessore su 256 se diverso da TRATTO_ICONA (frecce a pennarello). */
+  readonly spessore?: number
 }
 
 export const ICONE = {
@@ -73,6 +79,27 @@ export const ICONE = {
     giunti: 'miter',
     d: 'M40 40h176v176H40ZM76 116l40-40m-40 80 80-80',
   },
+  /**
+   * Disegnata a mano, tratto di pennarello. Prima di "il listino", "la barba",
+   * "dove e quando", "oggi", "<giorno>" (tornare indietro). Asta che scende appena
+   * verso la punta, punta in un solo colpo (la penna non si stacca).
+   */
+  'freccia-sinistra': {
+    modo: 'tratto',
+    giunti: 'round',
+    spessore: 22,
+    d: 'M232 127c-52-3-122-1-198 4m52-47c-16 16-34 32-55 47 21 15 37 29 53 49',
+  },
+  /**
+   * Disegnata a mano, tratto di pennarello. Dopo "la lista", "domani", "<giorno>"
+   * (andare avanti). Non è lo specchio esatto della sinistra: una mano non le fa uguali.
+   */
+  'freccia-destra': {
+    modo: 'tratto',
+    giunti: 'round',
+    spessore: 22,
+    d: 'M26 136c52-6.5 120-10 196-11m-54-45c18 16 36 30 57 45-21 15-37 31-53 53',
+  },
 } as const satisfies Record<string, DatiIcona>
 
 export type NomeIcona = keyof typeof ICONE
@@ -90,4 +117,6 @@ export const USO_ICONE: Readonly<Record<NomeIcona, string>> = {
   telefono: 'vetro di Samir e riga di stato: prima di "Chiama"; 0,8 em',
   vapore: 'mensola / fascia: interruttore "Specchio pulito" quando il vapore è attivo; 22 px',
   pulito: 'mensola / fascia: interruttore "Specchio pulito" quando è premuto; 22 px',
+  'freccia-sinistra': 'vetro e lista: prima di "il listino" / "oggi" / "<giorno>"; 0,9 em del testo a pennarello, aria-hidden',
+  'freccia-destra': 'vetro e lista: dopo "la lista" / "domani" / "<giorno>"; 0,9 em del testo a pennarello, aria-hidden',
 }
