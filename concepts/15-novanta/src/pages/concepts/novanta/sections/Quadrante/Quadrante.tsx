@@ -6,7 +6,6 @@
  * LetturaGradi, basamento, useBraccio).
  */
 import { NOMI_ANGOLI, QUADRANTE } from '../../content/testi';
-import { ID_ANGOLI } from '../../core/ids';
 import { ANGOLI } from '../../dial/geometria';
 import { useNovanta } from '../../state/store';
 import './quadrante.css';
@@ -15,7 +14,7 @@ export default function Quadrante() {
   const attivo = useNovanta((s) => s.attivo);
   return (
     <nav className="nov-quadrante" aria-label={QUADRANTE.navAria}>
-      <ol className="nov-lista" aria-controls={ID_ANGOLI}>
+      <ol className="nov-lista">
         {ANGOLI.map((a) => (
           <li key={a}>
             <a

@@ -59,6 +59,24 @@ pilota.
 10. **Riga di stato di successo senza servizio né prezzo**: l'ux ne metteva
     di più, ma su 375 px sarebbero quattro righe. Resta giorno, ora,
     barbiere, come disdire, saluto: 97 caratteri.
+11. **Niente frecce nel testo** (giro 2, richiesta del vector-artist): Mansalva
+    e Figtree non hanno ← → (verificato sui cmap dei woff2: U+2190 e U+2192
+    assenti). `BARBIERI[].indietro` ("il listino", "la barba", "dove e
+    quando"), `VETRO_COMUNE.vaiAllaLista` ("la lista"), `LISTA.avanti`
+    ("domani" o il giorno) e `LISTA.indietro` ("oggi" o il giorno) sono solo
+    parole: la freccia è l'SVG `freccia-sinistra` (prima del testo) o
+    `freccia-destra` (dopo), `aria-hidden`, messa dal componente. Gli `*Aria`
+    non cambiano.
+
+### Glifi controllati
+
+Script `glifi13.py` (scratchpad) con `fontTools` sui woff2 latin di Google
+Fonts (Mansalva 227 codepoint, Figtree 222, Limelight): legge solo le stringhe
+dei quattro file `content/*.ts`, commenti esclusi. Caratteri non ASCII usati:
+spazio non separabile, `·` (solo META/VETRINA), à è ì ù, `€`. **Tutti presenti
+in Mansalva e Figtree**; "Contropelo", "Mattia", "Denis", "Samir" interamente
+coperti da Limelight. Chi aggiunge testo non usa frecce, virgolette curve,
+trattini lunghi né lettere maiuscole accentate senza ricontrollare.
 
 ---
 
@@ -100,14 +118,14 @@ import { NOMI_PER_SPECCHIO, NOMI_VIETATI } from '../../content/nomi';
 | `LINK` | `core/links.ts` | `lab` (`/`), `cicerilab`, `maps`, `telefono`, `email` | dati |
 | `META` | `index.html`, `document.title` | `title` (58), `description` (153), `ogTitle`, `ogDescription`, `ogImageAlt` | |
 | `VETRINA` | voce `CONCEPTS` del sito vero (proposta) | `tag`, `title`, `subtitle`, `desc`, `perche`, `mestieri[]` | |
-| `BARBIERI[0..2]` | ovunque | `id` (`listino`, `barba`, `orari`), `nome`, `poltrona`, `titoloVetro`, `riga`, `indietro`, `indietroAria` | nome: Limelight (mensola) / Mansalva (vetro) |
+| `BARBIERI[0..2]` | ovunque | `id` (`listino`, `barba`, `orari`), `nome`, `poltrona`, `titoloVetro`, `riga`, `indietro` (senza freccia), `indietroAria` | nome: Limelight (mensola) / Mansalva (vetro) |
 | `PARETE` | Parete, Specchio | `h2Sr(i)`, `bordoAria(i)`, `riflessoAlt` (`''`) | sr |
 | `FASCIA` | Fascia | `insegna`, `sotto`, `informazioni`, `informazioniAria` | Limelight + Figtree |
 | `SALTI` | link di salto | `lista` | Figtree |
 | `VETRO_LISTINO` | VetroListino | `titolo`, `voci[id].{voce, sr}`, `ordine`, `prezzo(id)`, `prezzoSr(id)`, `durata`, `pagamento`, `elencoAria` | Mansalva |
 | `VETRO_BARBA` | VetroBarba | `titolo`, `passaggi[k]`, `ordine`, `minuti(k)`, `minutiSr(k)`, `totale`, `totaleSr`, `lama`, `sensibile`, `barbaLunga`, `barbaLungaSr`, `contropeloSpiegato`, `matrimonio`, `elencoAria` | Mansalva |
 | `VETRO_DOVE` | VetroDove | `titolo`, `orari` (= `ORARI_VETRO`), `orariAria`, `indirizzo`, `parcheggio`, `maps`, `mapsSr`, `chiama`, `chiamaAria`, `scrivi`, `scriviAria`, `regole[3]`, `regoleAria` | Mansalva (link inclusi) |
-| `VETRO_COMUNE` | Vetro | `vaiAllaLista`, `vaiAllaListaAria(i)` | Mansalva |
+| `VETRO_COMUNE` | Vetro | `vaiAllaLista` (senza freccia), `vaiAllaListaAria(i)` | Mansalva |
 | `LISTA` | Lista | vedi §4 | righe Mansalva, messaggi Figtree |
 | `SCRITTURA` | RigaScrittura | `formAria`, `sostituisce`, `servizio.{legenda, parole, ordine, prezzo, radioAria, aiuto}`, `nome.etichetta`, `telefono.{etichetta, aiuto}`, `segna`, `lasciaStare`, `lasciaStareAria`, `inCorso` | etichette Figtree, parole e campi Mansalva |
 | `ERRORI` | sotto i campi | `servizioVuoto`, `nomeVuoto`, `telefonoVuoto`, `telefonoNonValido` | Figtree + icona |
@@ -173,7 +191,7 @@ Stati dell'ux-architect (§6.3) e chiave da usare.
 | L0 prerender | h3 | `LISTA.titoloAttesa` |
 | L1 a riposo | h3 con `<time>` | `LISTA.titolo(rel, giorno)`; sotto `LISTA.promessa`; righe: `liberoSr`, `occupatoSr`, `secondaMezzoraSr`, `passataSr`, `pranzo`/`pranzoSr`; `<ol aria-label>` = `elencoAria(nome)`; con `forced-colors` la parola `liberoParola` |
 | Fasce | bottoni | `fasce.mattina`, `fasce.pomeriggio`, gruppo `fasceAria`; a 4 fasce il testo è `oraVisibile(da)` e l'aria `fasciaOraAria(da)` |
-| Giorni | bottoni a pennarello | `avanti(rel, nomeGiorno)`, `indietro(rel, nomeGiorno)`, aria `vaiAGiornoAria(giorno)`; oltre i 6 giorni `oltre` + link `oltreChiama` (`oltreChiamaAria`) |
+| Giorni | bottoni a pennarello, freccia SVG nel componente | `avanti(rel, nomeGiorno)`, `indietro(rel, nomeGiorno)`, aria `vaiAGiornoAria(giorno)`; oltre i 6 giorni `oltre` + link `oltreChiama` (`oltreChiamaAria`) |
 | L2 cambio giorno/fascia | annuncio | `ANNUNCI.giorno({ rel, giorno, fascia?, liberi })` |
 | L3 chiuso | lista | `LISTA.chiuso` (grande), sr `chiusoSr(giorno)`; annuncio `ANNUNCI.chiuso(giorno)` |
 | L4 pieno | lista, Figtree | `pieno(rel, giorno)` + link `pienoProposta(p)` con `aria-label` `pienoPropostaAria(p)`; se non c'è nulla: `pienoSettimana` + link `pienoSettimanaChiama` + `pienoSettimanaDopo` |
@@ -263,5 +281,7 @@ comunque).
   poltrone in fila, la mensola, la porta sulla via"; se le foto scelte
   mostrano altro, dimmelo e cambio la frase. `INFORMAZIONI.foto(autore)` usa
   il campo `autore` di `assets/foto/index.ts`.
+- **interaction-designer**: il commento di `interaction.css` (riga ~110,
+  "← il listino") va aggiornato: il testo ora è "il listino".
 - **seo-engineer**: `META` è pronto; JSON-LD WebPage/CreativeWork di Ciceri
   Lab, mai LocalBusiness.

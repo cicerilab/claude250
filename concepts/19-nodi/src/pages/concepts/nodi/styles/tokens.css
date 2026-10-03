@@ -216,12 +216,19 @@
   --nod-vena-rumore: 0.18;                                     /* ondulazione delle righe */
   --nod-giunta-mm: 0.25;                                       /* linea della giunta al centro */
 
-  /* Tempi e curve (valori di partenza: le curve definitive sono del motion-designer) */
+  /* Tempi e curve: stessi valori di motion/easing.ts (BEZIER_CSS) e di
+     motion/choreography.ts (motion-designer). Se cambiano là, cambiano qui. */
   --nod-t-dissolvenza-testo: 200ms;
   --nod-t-dissolvenza-modo: 300ms;
   --nod-t-dissolvenza-fermo: 400ms;
   --nod-t-caduta: 1200ms;
-  --nod-ease-fermo: cubic-bezier(0.2, 0, 0, 1);
+  --nod-t-canvas: 300ms;                                       /* poster → canvas, una volta */
+  --nod-t-cuscinetti: 1400ms;                                  /* cuscinetti verso i nodi del modo nuovo */
+  --nod-curva-posa: cubic-bezier(0.3, 0.55, 0.2, 1);           /* una foglia che tocca il legno */
+  --nod-curva-assesta: cubic-bezier(0.12, 0.42, 0.28, 1);      /* una foglia che scivola verso il nodo */
+  --nod-curva-cuscinetto: cubic-bezier(0.45, 0.02, 0.22, 1);   /* alza, porta, appoggia */
+  --nod-curva-velo: cubic-bezier(0.4, 0.15, 0.6, 0.85);        /* dissolvenze di testi e figure */
+  --nod-curva-inseguito: cubic-bezier(0.2, 0.6, 0.25, 1);      /* il cursore che rincorre un valore */
 
   /* Livelli ------------------------------------------------------------- */
   --nod-z-palco: 0;
@@ -229,4 +236,11 @@
   --nod-z-regolo: 2;
   --nod-z-testata: 10;
   --nod-z-menu: 11;
+}
+
+/* Reduced motion: nessuna caduta, cuscinetti in dissolvenza breve senza
+   spostamento (motion-designer, docs/motion-designer.md). */
+.nod-root[data-motion='reduced'] {
+  --nod-t-caduta: 0ms;
+  --nod-t-cuscinetti: 400ms;
 }

@@ -19,6 +19,7 @@ import {
   LISTA,
   MISURE,
   RIPARAZIONI,
+  RIPARAZIONI_VIOLONCELLO,
   SABATO,
   SERVIZIO,
   STRUMENTI,
@@ -107,12 +108,6 @@ function listinoDi(strumento: Strumento) {
   const voce = STRUMENTI.find((s) => s.strumento === strumento);
   if (!voce) throw new Error(`Strumento sconosciuto: ${strumento}`);
   return voce;
-}
-
-function prezzoRiparazione(id: IdRiparazione): number {
-  const voce = RIPARAZIONI.find((r) => r.id === id);
-  if (!voce) throw new Error(`Riparazione sconosciuta: ${id}`);
-  return voce.prezzoDa;
 }
 
 /* ================================================================== bottega (dati di esempio) */
@@ -331,7 +326,7 @@ export function valuetextRighello(
  */
 export const FIGURE = {
   1: 'una croce: una linea lungo la giunta e una di traverso all\'altezza delle C',
-  2: 'due linee lungo la tavola, che scendono dalle spalle e si avvicinano tra le effe senza toccarsi',
+  2: 'due linee lungo la tavola, dagli angoli in alto a quelli in basso, che si avvicinano tra le effe senza toccarsi',
   5: 'un anello dentro il bordo, che si apre all\'altezza delle C',
 } as const satisfies Record<Modo, string>;
 
@@ -341,7 +336,7 @@ export const FIGURE = {
  */
 export const GUARDA = {
   1: 'Guarda la croce: una linea lungo la giunta, una di traverso alle C.',
-  2: 'Guarda le due linee: scendono dalle spalle e si avvicinano tra le effe.',
+  2: 'Guarda le due linee: corrono lungo la tavola e si avvicinano tra le effe.',
   5: 'Guarda l\'anello: corre dentro il bordo e si apre all\'altezza delle C.',
 } as const satisfies Record<Modo, string>;
 
@@ -443,11 +438,11 @@ export const LEGNI = {
   foto: 'legni',
   paroleTitolo: 'Le parole del mestiere',
   parole: PAROLE_DEL_MESTIERE,
-} as const satisfies { foto: ChiaveFoto } & Record<string, unknown>;
+} as const;
 
 /* ================================================================== modo 2: costruire */
 
-const STRUMENTI_NOMI = {
+export const STRUMENTI_NOMI = {
   violino: {
     nome: 'Violino',
     minuscolo: 'violino',
@@ -478,8 +473,6 @@ const STRUMENTI_NOMI = {
   },
 } as const satisfies Record<Strumento, unknown>;
 
-export { STRUMENTI_NOMI };
-
 /** "3-4 mesi al banco" */
 function mesiAlBanco(m: { min: number; max: number }): string {
   return m.min === m.max ? `${m.min} mesi al banco` : `${m.min}-${m.max} mesi al banco`;
@@ -507,7 +500,7 @@ export const COSTRUIRE = {
       aria: `${STRUMENTI_NOMI[s].nome}: ${prezzoDa(l.prezzoDa)}, ${mesiAlBanco(l.mesi)}.`,
     };
   }),
-  incluso: 'Il prezzo comprende montatura, corde, un anno di regolazioni e il foglio della prova: le frequenze delle sue tavole, scritte a mano. Custodia e arco a parte.',
+  incluso: 'Il prezzo comprende montatura, corde, un anno di regolazioni e il foglio della prova: le frequenze delle sue tavole, scritte a mano. Custodia e archetto a parte.',
   ivaInclusa: 'Prezzi di esempio, IVA inclusa.',
   mesiNota: 'I mesi al banco partono quando tocca a te in lista.',
   comeFunzionaTitolo: 'Come funziona',
@@ -564,6 +557,21 @@ export const ZONE = {
     dallaVoce: 'dalla voce brillante e pronta',
   },
 } as const satisfies Record<ZonaVoce, { breve: string; frase: string; dallaVoce: string }>;
+
+/** Righe del successo della voce (V7, V10), fuori da VOCE per poterle comporre. */
+function successoSeconda(s: Strumento, z: ZonaVoce): string {
+  return `Hai chiesto ${STRUMENTI_NOMI[s].conArticolo} ${ZONE[z].dallaVoce}.`;
+}
+
+/** Il messaggio chiave torna qui, in un'altra forma. */
+function successoTerza(s: Strumento): string {
+  const lo = STRUMENTI_NOMI[s].lo;
+  return `Ti scriviamo entro due giorni per fissare una prova in bottega. Prima di chiuderl${lo === 'la' ? 'a' : 'o'}, ${lo} ascoltiamo insieme.`;
+}
+
+function successoTesto(s: Strumento, z: ZonaVoce): string {
+  return `Sei in lista, al numero ${LISTA[s].numero}. ${successoSeconda(s, z)} ${successoTerza(s)}`;
+}
 
 /** Valori 0-100 di un asse in parole (aria-valuetext dei due range). */
 function asseInParole(v: number, basso: string, alto: string, centro: string): string {
@@ -702,15 +710,10 @@ export const VOCE = {
       { t: String(LISTA[s].numero), cifra: true },
       { t: '.' },
     ],
-    seconda: (s: Strumento, z: ZonaVoce) => `Hai chiesto ${STRUMENTI_NOMI[s].conArticolo} ${ZONE[z].dallaVoce}.`,
-    /** Il messaggio chiave torna qui, in un'altra forma. */
-    terza: (s: Strumento) => {
-      const lo = STRUMENTI_NOMI[s].lo;
-      return `Ti scriviamo entro due giorni per fissare una prova in bottega. Prima di chiuderl${lo === 'la' ? 'a' : 'o'}, ${lo} ascoltiamo insieme.`;
-    },
+    seconda: successoSeconda,
+    terza: successoTerza,
     /** Tutte e tre le righe come testo (annuncio, focus). */
-    testo: (s: Strumento, z: ZonaVoce) =>
-      `Sei in lista, al numero ${LISTA[s].numero}. ${VOCE.successo.seconda(s, z)} ${VOCE.successo.terza(s)}`,
+    testo: successoTesto,
     cambia: 'Cambia la voce',
     concept: 'Questo è un concept di Ciceri Lab: la richiesta non è stata inviata a nessuno.',
   },
@@ -747,7 +750,7 @@ export const RIPARAZIONI_TESTI = {
     vernice: true,
   },
   crine: {
-    nome: 'Crine nuovo all\'arco',
+    nome: 'Crine nuovo all\'archetto',
     spiega: null,
     tempo: 'in giornata',
     vernice: false,
@@ -798,14 +801,14 @@ export const RIPARAZIONI_SEZIONE = {
       aria: `${t.nome}: ${prezzoDa(r.prezzoDa)}, ${t.tempo}.`,
     };
   }),
-  violoncello: `Sul violoncello ponticello e crine costano un po' di più: ${prezzoDa(220)} e ${prezzoDa(75)}.`,
+  violoncello: `Sul violoncello ponticello e crine costano un po' di più: ${prezzoDa(RIPARAZIONI_VIOLONCELLO.ponticello)} e ${prezzoDa(RIPARAZIONI_VIOLONCELLO.crine)}.`,
   prezzoPrima: 'Il prezzo te lo diciamo prima di cominciare.',
   restauro: 'Strumenti di famiglia: prima li guardiamo il sabato, poi ti diciamo se vale la pena e quanto costa.',
   prestito: `Se studi e il lavoro dura più di ${SERVIZIO.prestitoOltreGiorni === 7 ? 'una settimana' : `${SERVIZIO.prestitoOltreGiorni} giorni`}, ti prestiamo uno strumento della bottega.`,
   nonFacciamo: 'Chitarre, mandolini e strumenti elettrici no: non è il nostro banco. Perizie per l\'assicurazione nemmeno, ma ti diciamo a chi chiedere.',
 
   sabatoTitolo: 'Il sabato di bottega',
-  sabatoTesto: `Il sabato mattina, dalle 9 a mezzogiorno e mezzo, la bottega è aperta. Porti lo strumento, lo guardiamo insieme e il controllo non si paga.`,
+  sabatoTesto: 'Il sabato mattina, dalle 9 a mezzogiorno e mezzo, la bottega è aperta. Porti lo strumento, lo guardiamo insieme e il controllo non si paga.',
   sabatoIrene: 'Al banco c\'è Irene: ti dice cosa ha lo strumento, quanto costa e se vale la pena sistemarlo.',
 } as const;
 
@@ -837,7 +840,7 @@ export const SABATI = {
   },
   /** R6. `quando` = sabatoInParole(...) o sabatoDaIso(...). */
   successo: (quando: string) =>
-    `Ti aspettiamo ${quando} tra le 9 e mezzogiorno e mezzo. Porta anche l'arco.`,
+    `Ti aspettiamo ${quando} tra le 9 e mezzogiorno e mezzo. Porta anche l'archetto.`,
   saluto: 'Mandi, Irene',
   concept: 'È un concept: la richiesta non è partita.',
   altro: 'Scegli un altro sabato',
@@ -925,7 +928,7 @@ export const ANNUNCI = {
   },
   erroriVoce: riepilogoErrori,
   invioVoce: 'Ti mettiamo in lista.',
-  successoVoce: (s: Strumento, z: ZonaVoce) => VOCE.successo.testo(s, z),
+  successoVoce: successoTesto,
   fallitoVoce: VOCE.fallito.testo,
   cambiaVoce: 'Puoi cambiare la voce. I tuoi dati sono ancora qui.',
   /* sabato */

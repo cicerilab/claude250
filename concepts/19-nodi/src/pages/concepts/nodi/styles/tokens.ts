@@ -330,12 +330,25 @@ export const FOGLIE_SCHERMO = {
   esagerazioneMax: 2.2,
 } as const;
 
-/** Tempi di dissolvenza usati dal CSS (le curve definitive sono del motion-designer). */
+/**
+ * Tempi usati dal CSS, in ms (specchio di tokens.css). Le curve stanno solo
+ * in `motion/easing.ts` (`CURVE`, `BEZIER_CSS`) e in tokens.css come
+ * `--nod-curva-*`: qui non si ripetono. Con reduced motion caduta 0 e
+ * cuscinetti 400 (`TEMPI_RIDOTTI`).
+ */
 export const TEMPI = {
   dissolvenzaTesto: 200,
   dissolvenzaModo: 300,
   dissolvenzaFermo: 400,
   caduta: 1200,
+  canvas: 300,
+  cuscinetti: 1400,
+} as const;
+
+export const TEMPI_RIDOTTI = {
+  ...TEMPI,
+  caduta: 0,
+  cuscinetti: 400,
 } as const;
 
 export const LIVELLI = {

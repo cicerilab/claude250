@@ -127,6 +127,9 @@ export const RIPARAZIONI: readonly Riparazione[] = [
   { id: 'cavigliere', prezzoDa: 250 },
 ];
 
+/** Sul violoncello ponticello e crine costano di più (citati in una riga). */
+export const RIPARAZIONI_VIOLONCELLO = { ponticello: 220, crine: 75 } as const;
+
 /** Gli id delle riparazioni, per tipizzare i testi. */
 export type IdRiparazione =
   | 'anima'
