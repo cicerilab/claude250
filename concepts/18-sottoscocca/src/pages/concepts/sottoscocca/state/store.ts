@@ -106,6 +106,11 @@ export interface SottoscoccaState {
   giornoRichiesto: string | null;
   /** `?invio=ko` (o `?invio=errore`): l'invio simulato deve fallire. */
   simulaErroreInvio: boolean;
+  /**
+   * `?fermo=0|20|80|180` (tech-architect §8.4): scena ferma al plateau, DOM
+   * nascosto, per `npm run fermi`. Lo legge lo shader-engineer.
+   */
+  fermo: Quota | null;
 }
 
 export type PatchStato = Partial<SottoscoccaState> | ((s: SottoscoccaState) => Partial<SottoscoccaState>);
@@ -192,6 +197,7 @@ export function statoIniziale(): SottoscoccaState {
     bassa: false,
     giornoRichiesto: null,
     simulaErroreInvio: false,
+    fermo: null,
   };
 }
 
@@ -367,6 +373,8 @@ export interface ParametriUrl {
   giorno: string | null;
   /** `?invio=ko` o `?invio=errore` */
   invioKo: boolean;
+  /** `?fermo=0|20|80|180` */
+  fermo: Quota | null;
 }
 
 const ALIAS_LAVORI: Readonly<Record<string, IdLavoro>> = {
@@ -388,11 +396,14 @@ export function leggiParametriUrl(search: string): ParametriUrl {
   }
   const giorno = q.get('giorno');
   const invio = q.get('invio');
+  const fermoGrezzo = q.get('fermo');
+  const fermo = fermoGrezzo === null ? null : Number(fermoGrezzo);
   return {
     lavori: normalizzaLavori(lavori),
     depositoSi,
     giorno: eGiornoIso(giorno) ? giorno : null,
     invioKo: invio === 'ko' || invio === 'errore',
+    fermo: eQuota(fermo) ? fermo : null,
   };
 }
 
@@ -427,6 +438,7 @@ export function inizializzaStore({ search, reducedMotion, bassa = false }: Opzio
     bassa,
     giornoRichiesto: url.giorno,
     simulaErroreInvio: url.invioKo,
+    fermo: url.fermo,
   };
   avvisa();
   return stato;
@@ -485,6 +497,10 @@ export function selSchedaAperta(s: SottoscoccaState): SchedaAperta | null {
 
 export function selLavori(s: SottoscoccaState): readonly IdLavoro[] {
   return s.lavori;
+}
+
+export function selFermo(s: SottoscoccaState): Quota | null {
+  return s.fermo;
 }
 
 export function selModoAsta(s: SottoscoccaState): ModoAsta {

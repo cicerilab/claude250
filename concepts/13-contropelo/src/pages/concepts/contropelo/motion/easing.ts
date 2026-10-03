@@ -200,7 +200,7 @@ export const lineare: Easing = (t: number): number => clamp01(t);
 
 /**
  * Il vapore che torna in un punto, per u in 0..1 sul suo tratto di ritorno
- * (i tempi del tratto sono in tempi.ts, `VAPORE`). Smootherstep: parte a
+ * (i tempi del tratto sono in tempi.ts, `RITORNO`). Smootherstep: parte a
  * velocità nulla (nessuno scatto alla fine della pausa di pulito), la
  * velocità massima è 1,875 volte la media, arriva a velocità nulla.
  * Monotona: in un punto il vapore sale e basta, mai oscillazioni.

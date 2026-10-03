@@ -38,17 +38,24 @@
  */
 .btf-root .btf-tappa {
   opacity: 0;
-  transition: opacity var(--btf-dur-tappa-esce) var(--btf-ease-velatura);
+  visibility: hidden;
+  transition:
+    opacity var(--btf-dur-tappa-esce) var(--btf-ease-velatura),
+    visibility 0s linear var(--btf-dur-tappa-esce);
 }
 
 .btf-root .btf-tappa[data-stato="attiva"] {
   opacity: 1;
+  visibility: visible;
   transition: none;
 }
 
 .btf-root .btf-tappa[data-stato="entra"] {
   opacity: 1;
-  transition: opacity var(--btf-dur-tappa-entra) var(--btf-ease-velatura) var(--btf-ritardo-tappa-entra);
+  visibility: visible;
+  transition:
+    opacity var(--btf-dur-tappa-entra) var(--btf-ease-velatura) var(--btf-ritardo-tappa-entra),
+    visibility 0s linear 0s;
 }
 
 .btf-root .btf-tappa[data-stato="esce"] {
@@ -57,6 +64,7 @@
 
 .btf-root .btf-tappa[data-stato="spenta"] {
   opacity: 0;
+  visibility: hidden;
   transition: none;
 }
 
@@ -265,22 +273,37 @@
 /* ------------------------------------------------------------------ */
 
 /* Dissolvenza pura: niente tendina che scende, niente scala. */
+/* Chiusi: trasparenti e poi `visibility: hidden` a dissolvenza finita (niente strati invisibili cliccabili). */
 .btf-root .btf-menu {
   opacity: 0;
-  transition: opacity var(--btf-dur-menu) var(--btf-ease-velatura);
+  visibility: hidden;
+  transition:
+    opacity var(--btf-dur-menu) var(--btf-ease-velatura),
+    visibility 0s linear var(--btf-dur-menu);
 }
 
 .btf-root .btf-menu[data-aperto="1"] {
   opacity: 1;
+  visibility: visible;
+  transition:
+    opacity var(--btf-dur-menu) var(--btf-ease-velatura),
+    visibility 0s linear 0s;
 }
 
 .btf-root .btf-schermata {
   opacity: 0;
-  transition: opacity var(--btf-dur-schermata) var(--btf-ease-velatura);
+  visibility: hidden;
+  transition:
+    opacity var(--btf-dur-schermata) var(--btf-ease-velatura),
+    visibility 0s linear var(--btf-dur-schermata);
 }
 
 .btf-root .btf-schermata[data-aperta="1"] {
   opacity: 1;
+  visibility: visible;
+  transition:
+    opacity var(--btf-dur-schermata) var(--btf-ease-velatura),
+    visibility 0s linear 0s;
 }
 
 /* ------------------------------------------------------------------ */
@@ -316,8 +339,12 @@
   .btf-root .btf-tappa[data-stato="entra"],
   .btf-root .btf-foto__livello,
   .btf-root .btf-foto__vuoto {
-    transition-duration: 150ms;
-    transition-delay: 0s;
+    transition-duration: 150ms, 0s;
+    transition-delay: 0s, 150ms;
+  }
+
+  .btf-root .btf-tappa[data-stato="entra"] {
+    transition-delay: 0s, 0s;
   }
 }
 

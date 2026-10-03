@@ -189,7 +189,7 @@ export const APERTURA = {
   attesaFontMassima: 2500,
   /** Se il canvas non ha ancora deciso (on/off), si rinuncia all'apertura dopo questo tempo. */
   attesaCanvasMassima: 3000,
-  /** Il vapore sale dal basso e copre il vetro. Curva `sale`, fronte con banda `VAPORE.bandaSalita`. */
+  /** Il vapore sale dal basso e copre il vetro. Curva `sale`, fronte con banda `RITORNO.bandaSalita`. */
   sale: 2400,
   /** Il vapore si posa prima della passata. */
   pausa: 700,
@@ -228,7 +228,7 @@ export const INIZIO_PASSATA = APERTURA.sale + APERTURA.pausa;
  * a 17,6 s è tutto coperto in modo uniforme. In ogni punto il vapore sale e
  * basta: nessuna oscillazione, nessun respiro.
  */
-export const VAPORE = {
+export const RITORNO = {
   /** Pausa di pulito pieno dove il vapore nuclea per ultimo (nucleazione 0). */
   inizioLento: 5200,
   /** Pausa di pulito pieno dove nuclea per primo (nucleazione 1). */
@@ -265,8 +265,8 @@ export interface TrattoRitorno {
 export function trattoRitorno(nucleazione: number): TrattoRitorno {
   const n = clamp01(nucleazione);
   return {
-    inizio: lerp(VAPORE.inizioLento, VAPORE.inizioSvelto, n),
-    durata: lerp(VAPORE.durataLenta, VAPORE.durataSvelta, n),
+    inizio: lerp(RITORNO.inizioLento, RITORNO.inizioSvelto, n),
+    durata: lerp(RITORNO.durataLenta, RITORNO.durataSvelta, n),
   };
 }
 
@@ -309,7 +309,7 @@ export function etaPerNebbia(nebbia: number, nucleazione: number): number {
  * attraversa: nessun lampo, nessuna linea netta.
  */
 export function vaporeInAlzata(y: number, t: number): number {
-  const b = VAPORE.bandaSalita;
+  const b = RITORNO.bandaSalita;
   const fronte = sale(clamp01(t)) * (1 + b);
   return clamp01((fronte - (1 - clamp01(y))) / b);
 }
@@ -345,10 +345,10 @@ export interface TabelleNebbia {
  * valori di nucleazione (livello k = nucleazione k / (livelli - 1)).
  * Circa 17 KB con i valori di default. Pura: nessun accesso al browser.
  */
-export function costruisciTabelleNebbia(passoMs: number = VAPORE.passoTabella, livelli: number = VAPORE.livelli): TabelleNebbia {
+export function costruisciTabelleNebbia(passoMs: number = RITORNO.passoTabella, livelli: number = RITORNO.livelli): TabelleNebbia {
   const passo = Math.max(1, passoMs);
   const nLivelli = Math.max(2, Math.floor(livelli));
-  const passi = Math.ceil(VAPORE.ritornoVapore / passo) + 2;
+  const passi = Math.ceil(RITORNO.ritornoVapore / passo) + 2;
   const nebbia = new Uint8Array(nLivelli * passi);
   const eta = new Float32Array(nLivelli * 256);
   for (let k = 0; k < nLivelli; k += 1) {

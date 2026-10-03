@@ -144,6 +144,9 @@ coppie.push(['bordo del cartello (calce su ferro)', C.calce, 'ferro', rgb(C.ferr
 coppie.push(['cassetta (ferro) sulla lastra: vedi riga "filo teso"', C.ferro, 'lastra, punto più chiaro', lastra.chiaro, 3, 'non testuale']);
 coppie.push(['bottone cobalto sulla fascia ferro', C.cobalto, 'ferro', rgb(C.ferro), null, 'il bottone si riconosce dal testo calce (6,8:1)']);
 coppie.push(['anello di fuoco calce intorno al bottone nella fascia', C.calce, 'ferro', rgb(C.ferro), 3, 'non testuale']);
+coppie.push(['anello di fuoco calce DENTRO il bottone cobalto (interaction-designer)', C.calce, 'cobalto', rgb(C.cobalto), 3, 'non testuale']);
+coppie.push(['anello di fuoco calce DENTRO la cassetta (ferro)', C.calce, 'ferro', rgb(C.ferro), 3, 'non testuale']);
+coppie.push(['calce sulla lastra (perché l\u2019anello calce non va fuori dagli oggetti)', C.calce, 'lastra, tinta media', lastra.tinta, null, 'troppo debole: mai calce sulla lastra']);
 coppie.push(['testo sul segnaposto in ombra (vietato)', C.ferro, 'calcestruzzo ombra, punto più scuro', ombra.scuro, null, 'nessun testo sull’ombra: riga di controllo']);
 
 /* ---------------------------------------------------------------- stampa */

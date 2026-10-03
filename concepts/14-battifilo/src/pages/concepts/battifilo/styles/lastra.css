@@ -64,9 +64,11 @@
    sulla fascia per il marchio). Mai sopra una foto, mai sotto 20 px, mai
    frasi intere: parole-marcatura (fase, mese, cifre, quote, marchio). Al
    massimo la frase d'apertura in due o tre righe.
-   Il bordo della vernice: un alone di 0,6 px dello stesso colore e una
-   maschera di rumore (polvere-bordo.svg, vector-artist) che buca pochi punti
-   come fa lo spruzzo su un getto liscio. Niente gocce, niente schizzi.
+   Il bordo della vernice: un alone di 0,6 px dello stesso colore e, solo da
+   32 px in su, una maschera di rumore (polvere-bordo.svg, vector-artist,
+   circa il 4% di lacune) che buca pochi punti come fa lo spruzzo su un getto
+   liscio. Niente gocce, niente schizzi. Tacche, quote e marchio: senza
+   maschera.
    Dimensione ottica automatica: sopra 72 px il taglio Display, a 20-24 px il
    taglio più aperto (con opsz 72 a 20 px i ponti diventano troppo sottili).
    -------------------------------------------------------------------------- */
@@ -105,6 +107,16 @@
 .btf-root .btf-stencil--schermata { font-size: var(--btf-fs-schermata); }
 .btf-root .btf-stencil--enorme    { font-size: var(--btf-fs-enorme); line-height: 0.86; }
 .btf-root .btf-stencil--marchio   { font-size: var(--btf-fs-marchio); line-height: 1; letter-spacing: 0.02em; }
+
+/* Il marchio (24-28 px) resta pulito: la maschera di spruzzo vale solo da
+   32 px in su (provato a schermo: sul marchio piccolo i buchi lo fanno
+   sembrare consumato, non marcato). */
+.btf-root .btf-stencil--marchio {
+  -webkit-mask-image: none;
+  mask-image: none;
+  padding-block: 0;
+  margin-block: 0;
+}
 .btf-root .btf-stencil--data      { font-size: var(--btf-fs-data); line-height: var(--btf-lh-cifra); }
 
 /* Piccoli: tacche e quote. Peso 800 (il 900 a 20-24 px chiude i ponti) e un
@@ -129,27 +141,20 @@
 .btf-root .btf-stencil--calce { color: var(--btf-calce); }
 
 /* Cifre a stencil in un riquadro di larghezza fissa: tra un mese e l'altro
-   il costo cambia senza spostare niente (CLS 0). Allineate a destra, come
-   si incolonnano i soldi. */
+   il costo cambia senza spostare niente (CLS 0). Allineate all'inizio: il
+   bordo sinistro della cifra cade sulla tacca della sua colonna (griglia del
+   filo), il riquadro tiene solo lo spazio per la cifra più larga. */
 .btf-root .btf-stencil--riquadro-costo {
   display: inline-block;
   inline-size: var(--btf-costo-larghezza);
-  text-align: end;
+  text-align: start;
   white-space: nowrap;
 }
 .btf-root .btf-stencil--riquadro-totale {
   display: inline-block;
   inline-size: var(--btf-totale-larghezza);
-  text-align: end;
+  text-align: start;
   white-space: nowrap;
-}
-/* Su telefono la scheda è una colonna sola allineata a sinistra: il
-   riquadro resta largo (niente salti) ma la cifra parte dal bordo. */
-@media (max-width: 59.99em) {
-  .btf-root .btf-stencil--riquadro-costo,
-  .btf-root .btf-stencil--riquadro-totale {
-    text-align: start;
-  }
 }
 
 /* --------------------------------------------------------------------------
