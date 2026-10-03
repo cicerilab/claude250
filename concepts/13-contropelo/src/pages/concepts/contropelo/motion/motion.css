@@ -97,10 +97,13 @@
   to { clip-path: inset(-8px -8px -8px -8px); }
 }
 
-/* Il tratto turchese (path con pathLength="1", vector-artist). */
+/* Il tratto turchese (path con pathLength="1", vector-artist). L'opacità
+   nei primi 6% nasconde il puntino che il cappuccio tondo lascerebbe a
+   tratto ancora vuoto (verificato a schermo). */
 @keyframes ctp-traccia {
-  from { stroke-dashoffset: 1; }
-  to { stroke-dashoffset: 0; }
+  0% { stroke-dashoffset: 1; opacity: 0; }
+  6% { opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 1; }
 }
 
 /* Ricomparsa per opacità (righe raccolte che tornano, riga di scrittura, riduzione del movimento). */
