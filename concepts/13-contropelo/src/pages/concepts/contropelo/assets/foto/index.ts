@@ -61,7 +61,7 @@ export interface FotoSpecchio {
   readonly luminanzaMax: readonly [number, number];
 }
 
-const MODIFICHE = 'specchiata, desaturata, schiarita meno e sfocata';
+const MODIFICHE = 'specchiata, desaturata, luci abbassate, sfocata';
 
 export const FOTO_SPECCHI: readonly [FotoSpecchio, FotoSpecchio, FotoSpecchio] = [
   {

@@ -738,7 +738,7 @@ export const RIPARAZIONI_TESTI = {
     vernice: false,
   },
   regolazione: {
-    nome: 'Regolazione completa: anima, ponticello, capotasto, piroli',
+    nome: 'Regolazione completa di anima, ponticello, capotasto e piroli',
     spiega: null,
     tempo: 'in giornata',
     vernice: false,

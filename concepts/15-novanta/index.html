@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>NOVANTA, fisioterapia e osteopatia · Concept di Ciceri Lab</title>
+    <meta
+      name="description"
+      content="Concept di Ciceri Lab: il sito di uno studio di fisioterapia e osteopatia di Pordenone, inventato. Alzi il braccio del goniometro e prenoti visita e controllo."
+    />
+    <meta name="theme-color" content="#F4D5C0" />
+    <meta name="color-scheme" content="light" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!--
+      Solo app standalone (non si porta): fondo albicocca prima di React
+      (= COLORI.albicocca di styles/tokens.ts, art-director §4), così non c'è
+      un lampo bianco. Il resto lo decide Novanta.tsx al primo render.
+    -->
+    <style>
+      html,
+      body {
+        margin: 0;
+        background-color: #f4d5c0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
