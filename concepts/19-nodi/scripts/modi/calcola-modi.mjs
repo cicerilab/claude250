@@ -740,7 +740,7 @@ const topo = {
 const attese = { 1: 'croce', 2: 'parentesi', 5: 'anello' };
 for (const modo of [1, 2, 5]) {
   const t = topo[/** @type {1|2|5} */ (modo)];
-  console.log(`figura spedita modo ${modo}: ${t.nome} (asse [${t.zeriAsse.join(' ')}], larghezze ${t.larghezze.join('/')}, vita ${t.vita})`);
+  console.log(`figura spedita modo ${modo}: ${t.nome} (asse [${t.zeriAsse.join(" ")}], lato ${t.lato}, alte ${t.spalleAlte}, vita ${t.vita}, basse ${t.spalleBasse}, larghezze ${t.larghezze.join("/")})`);
   if (t.nome !== attese[/** @type {1|2|5} */ (modo)]) throw new Error(`la figura del modo ${modo} non ha la topologia attesa (${attese[/** @type {1|2|5} */ (modo)]})`);
 }
 const aperto = anelloAperto(tarati[5].w, out.maschera, NU_OUT, NV_OUT);

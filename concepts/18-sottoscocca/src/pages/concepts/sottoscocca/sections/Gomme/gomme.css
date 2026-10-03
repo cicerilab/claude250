@@ -1,6 +1,280 @@
 /* ==========================================================================
-   SOTTOSCOCCA · Gomme (section-builder-gomme)
-   Stub dello scaffold: da qui in poi il file è del section-builder.
-   Ogni selettore comincia con .ssc-root; niente z-index, transform, filter,
-   opacity < 1 o contain sulla sezione stessa (layout.css, art-director §5).
+   SOTTOSCOCCA · Gomme · quota 20 cm (section-builder-gomme)
+   --------------------------------------------------------------------------
+   La sezione è un tratto di pavimento: vuoto di scena, pannello sul banco,
+   vuoto di scena. Le misure dei vuoti vengono dalla geometria di riferimento
+   del motion-designer (motion/percorso.ts `geometriaBase`, motion §4.4):
+   - orizzontale: pannello a +25 vh dall'inizio della sezione, 75 vh di sola
+     scena dopo il pannello (con i 25 vh dei freni fanno i 100 vh di vuoto);
+   - verticale: +55 svh e 55 svh dopo (con i freni fanno i 110 svh).
+   Si usa la media query di orientamento e non data-orient: è vera già al
+   primo paint (anche nel prerender del sito), quindi niente salto di layout
+   all'idratazione; il motore misura comunque la geometria vera.
+
+   Regole dello scaffold e dell'art-director: ogni selettore comincia con
+   .ssc-root; niente z-index, transform, filter, opacity < 1, contain o
+   container-type sulla sezione (i punti fissi dentro resterebbero
+   intrappolati); nessun hex, solo variabili di tokens.css; raggio 0; nessuna
+   ombra; nessun filetto decorativo (gli unici fili sono quelli della tabella,
+   DESIGN.md §4 "Pannello di quota").
    ========================================================================== */
+
+.ssc-root .ssc-gomme {
+  padding-block: 25vh 75vh;
+  padding-block: 25svh 75svh;
+}
+
+@media (orientation: portrait) {
+  .ssc-root .ssc-gomme {
+    padding-block: 55vh 55vh;
+    padding-block: 55svh 55svh;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Il pannello: verde ombra con la vernice martellata, spigolo vivo.
+   -------------------------------------------------------------------------- */
+.ssc-root .ssc-gomme__pannello {
+  --ssc-gomme-p: var(--ssc-pannello-padding);
+  padding: var(--ssc-gomme-p);
+  padding-block-end: calc(var(--ssc-gomme-p) + var(--ssc-sp-1));
+  background-color: var(--ssc-pannello);
+  background-image: var(--ssc-martellata);
+  background-size: var(--ssc-martellata-misura);
+  color: var(--ssc-pannello-testo);
+}
+
+/* --------------------------------------------------------------------------
+   La cifra di quota, in piedi sulla sua linea a terra. La linea corre da un
+   bordo all'altro del pannello (margini negativi pari al padding): il
+   pannello è un pezzo di pavimento con la sua striscia bianca.
+   -------------------------------------------------------------------------- */
+.ssc-root .ssc-gomme__cifra {
+  display: block;
+  margin-inline: calc(-1 * var(--ssc-gomme-p));
+  margin-block: 0 var(--ssc-sp-5);
+  padding-inline: var(--ssc-gomme-p);
+  padding-block-end: var(--ssc-sp-3);
+  border-block-end: var(--ssc-linea-terra) solid var(--ssc-bianco);
+  font-family: var(--ssc-font-tecnico);
+  font-size: var(--ssc-t-quota);
+  font-stretch: var(--ssc-t-quota-wdth);
+  font-weight: var(--ssc-t-quota-wght);
+  line-height: var(--ssc-t-quota-lh);
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ssc-root .ssc-gomme__unita {
+  margin-inline-start: 0.15em;
+  font-size: var(--ssc-t-quota-unita);
+  font-stretch: 100%;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Titolo e testo
+   -------------------------------------------------------------------------- */
+.ssc-root .ssc-gomme__titolo {
+  margin-block-end: var(--ssc-sp-4);
+}
+
+.ssc-root .ssc-gomme__testo {
+  display: grid;
+  gap: var(--ssc-sp-3);
+  max-inline-size: var(--ssc-giustezza);
+  margin-block-end: var(--ssc-sp-6);
+}
+
+/* --------------------------------------------------------------------------
+   Listino: tabella vera. Intestazioni in etichetta con filo gesso sotto,
+   cifre in targhetta (Tektur), righe separate da un filo nero al 35%,
+   nessuna zebratura (DESIGN.md §4).
+   -------------------------------------------------------------------------- */
+.ssc-root .ssc-gomme__listino {
+  margin-block-end: var(--ssc-sp-5);
+}
+
+.ssc-root .ssc-gomme__tabella {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.ssc-root .ssc-gomme__didascalia {
+  padding-block-start: var(--ssc-sp-3);
+  caption-side: bottom;
+  text-align: start;
+  font-size: var(--ssc-t-piccolo);
+  line-height: var(--ssc-t-piccolo-lh);
+  color: var(--ssc-pannello-secondario);
+}
+
+.ssc-root .ssc-gomme__intestazione {
+  padding-block: 0 var(--ssc-sp-2);
+  border-block-end: var(--ssc-filo) solid var(--ssc-pannello-secondario);
+  vertical-align: bottom;
+  font-family: var(--ssc-font-testo);
+  font-size: var(--ssc-t-etichetta);
+  font-weight: var(--ssc-t-etichetta-wght);
+  line-height: 1.25;
+  color: var(--ssc-pannello-secondario);
+}
+
+.ssc-root .ssc-gomme__intestazione--cifra {
+  padding-inline-start: var(--ssc-sp-4);
+  text-align: end;
+}
+
+.ssc-root .ssc-gomme__misura,
+.ssc-root .ssc-gomme__prezzo,
+.ssc-root .ssc-gomme__tempo {
+  padding-block: var(--ssc-sp-3);
+  vertical-align: baseline;
+  font-family: var(--ssc-font-tecnico);
+  font-size: var(--ssc-t-targhetta);
+  font-stretch: var(--ssc-t-targhetta-wdth);
+  font-weight: var(--ssc-t-targhetta-wght);
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ssc-root .ssc-gomme__misura {
+  text-align: start;
+}
+
+.ssc-root .ssc-gomme__prezzo,
+.ssc-root .ssc-gomme__tempo {
+  padding-inline-start: var(--ssc-sp-4);
+  text-align: end;
+}
+
+/* Il prezzo è il numero che si cerca: stesso Tektur, un peso in più. */
+.ssc-root .ssc-gomme__prezzo {
+  font-weight: 600;
+}
+
+.ssc-root .ssc-gomme__riga + .ssc-gomme__riga > * {
+  border-block-start: var(--ssc-filo) solid rgb(var(--ssc-nero-rgb) / 0.35);
+}
+
+/* Sotto 360 px: elenco di frasi al posto della tabella (ux §5.2). */
+.ssc-root .ssc-gomme__stretto {
+  display: none;
+}
+
+.ssc-root .ssc-gomme__stretto .ssc-gomme__didascalia {
+  padding-block: 0 var(--ssc-sp-2);
+}
+
+.ssc-root .ssc-gomme__righe {
+  display: grid;
+}
+
+.ssc-root .ssc-gomme__riga-stretta {
+  padding-block: var(--ssc-sp-2);
+  font-weight: 500;
+}
+
+.ssc-root .ssc-gomme__riga-stretta + .ssc-gomme__riga-stretta {
+  border-block-start: var(--ssc-filo) solid rgb(var(--ssc-nero-rgb) / 0.35);
+}
+
+@media (max-width: 359.98px) {
+  .ssc-root .ssc-gomme__tabella {
+    display: none;
+  }
+
+  .ssc-root .ssc-gomme__stretto {
+    display: block;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Gomme nuove e convergenza: secondario in gesso (DESIGN.md §4).
+   -------------------------------------------------------------------------- */
+.ssc-root .ssc-gomme__note {
+  display: grid;
+  gap: var(--ssc-sp-1);
+  max-inline-size: var(--ssc-giustezza);
+  margin-block-end: var(--ssc-sp-5);
+  color: var(--ssc-pannello-secondario);
+}
+
+/* --------------------------------------------------------------------------
+   Rimando al deposito
+   -------------------------------------------------------------------------- */
+.ssc-root .ssc-gomme__deposito {
+  max-inline-size: var(--ssc-giustezza);
+  margin-block-end: var(--ssc-sp-6);
+}
+
+.ssc-root .ssc-gomme__link {
+  font-weight: 700;
+  color: var(--ssc-pannello-testo);
+}
+
+/* --------------------------------------------------------------------------
+   "Da qui si vede": bottoni a contorno bianco 2 px (il bordo vero, così
+   l'hover di interaction.css lo porta a 3 px con l'ombra interna da 1 px).
+   Scheda aperta da qui o dal punto: pieno bianco, come il tampone toccato,
+   e lo stato lo dice anche aria-expanded con la scheda aperta a parole.
+   -------------------------------------------------------------------------- */
+.ssc-root .ssc-gomme__vista-etichetta {
+  margin-block-end: var(--ssc-sp-2);
+  font-size: var(--ssc-t-etichetta);
+  font-weight: var(--ssc-t-etichetta-wght);
+  line-height: 1.25;
+}
+
+.ssc-root .ssc-gomme__pezzi {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ssc-sp-2);
+}
+
+.ssc-root .ssc-gomme__pezzo {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--ssc-controllo-minimo);
+  padding-inline: var(--ssc-sp-4);
+  border: var(--ssc-bordo) solid var(--ssc-bianco);
+  font-size: var(--ssc-t-bottone-testo);
+  font-weight: var(--ssc-t-bottone-testo-wght);
+  line-height: 1.2;
+  color: var(--ssc-pannello-testo);
+  white-space: nowrap;
+}
+
+.ssc-root .ssc-gomme__pezzo[aria-expanded="true"] {
+  background-color: var(--ssc-azione);
+  color: var(--ssc-su-azione);
+}
+
+/* Su bianco l'anello del fuoco bianco sparirebbe: filo nero dentro. */
+.ssc-root .ssc-gomme__pezzo[aria-expanded="true"]:focus-visible {
+  outline: var(--ssc-fuoco-spessore) solid var(--ssc-nero);
+  outline-offset: -6px;
+  box-shadow:
+    0 0 0 3px var(--ssc-nero),
+    0 0 0 5px var(--ssc-bianco);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ssc-root .ssc-gomme__pezzo[aria-expanded="true"]:hover {
+    background-color: var(--ssc-azione-premuta);
+  }
+}
+
+@media (forced-colors: active) {
+  .ssc-root .ssc-gomme__pezzo {
+    border-color: ButtonText;
+  }
+
+  .ssc-root .ssc-gomme__pezzo[aria-expanded="true"] {
+    border-color: Highlight;
+  }
+}
