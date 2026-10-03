@@ -1,0 +1,349 @@
+/* ==========================================================================
+   NOVANTA · layout (scaffold)
+   --------------------------------------------------------------------------
+   Impaginazione delle due viste (tech-architect §3.1, §7.4, ux-architect
+   §2.2, §2.3, §5, DESIGN.md §5.1):
+
+   - QUADRANTE: la pagina non scorre. La radice è alta quanto il visualViewport,
+     il quadrante (section-builder) sta sul perno, il Palco è l'area di
+     lettura a destra del disco (bordo) o sopra il quadrante (fondo). I sette
+     angoli sono sovrapposti nel Palco: se ne vede uno, il suo corpo scorre da
+     solo se è lungo.
+   - ELENCO: pagina verticale normale, i sette angoli uno sotto l'altro, nessun
+     inert, scroll nativo.
+
+   Variabili scritte da JS sulla radice (core/modo.ts, core/viewport.ts),
+   mai per frame: --nov-r, --nov-perno-x, --nov-perno-y, --nov-basamento,
+   --nov-vv-h. Qui sotto hanno un valore di ripiego per la prima pittura.
+   Variabili derivate (solo CSS, le usano anche i section-builder):
+     --nov-fascia-alta     fascia riservata in alto (bordo 72, fondo 48 = testata)
+     --nov-colonna-x       inizio del Palco da sinistra (bordo R + 220, fondo 0)
+     --nov-palco-inizio    distanza del Palco dall'alto della radice
+     --nov-palco-fine      distanza del Palco dal fondo della radice
+     --nov-linea-y         linea di lettura (bordo = y del perno): l'h2 poggia lì
+     --nov-titolo-blocco   altezza riservata al titolo (2 righe di h2)
+     --nov-spazio-gradi    altezza del numero grande dei gradi (LetturaGradi)
+     --nov-fascia-h        fascia del quadrante a 90° su mobile (64)
+
+   Le soglie della prima pittura ripetono a mano quelle di core/modo.ts
+   (MQ_BORDO, MQ_FONDO): se cambiano là, vanno cambiate qui.
+   Nessun hex. Tutti i selettori partono da .nov-root.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   0. Valori di ripiego (prima pittura) e derivate
+   -------------------------------------------------------------------------- */
+.nov-root {
+  --nov-basamento: 0px;
+  --nov-r: min(calc(50vw - 44px), 26svh, 190px);
+  --nov-perno-x: 50vw;
+  --nov-perno-y: calc(100svh - 74px);
+  --nov-fascia-alta: 48px;
+  --nov-fascia-h: 64px;
+  --nov-titolo-blocco: calc(var(--nov-fs-titolo) * var(--nov-lh-titolo) * 2);
+  --nov-spazio-gradi: calc(var(--nov-fs-gradi) * var(--nov-lh-gradi));
+  --nov-colonna-x: 0px;
+  --nov-linea-y: var(--nov-perno-y);
+  /* fondo: il Palco va dalla testata alla parola attiva sopra la manopola */
+  --nov-palco-inizio: var(--nov-fascia-alta);
+  --nov-palco-fine: calc(100% - var(--nov-perno-y) + var(--nov-r) + 52px);
+}
+
+/* Prima pittura in geometria bordo: stesse soglie di MQ_BORDO (core/modo.ts). */
+@media (min-width: 47.5em) and (min-height: 35em) and (min-aspect-ratio: 11/10) {
+  .nov-root {
+    --nov-r: clamp(220px, calc(50svh - 36px - 80px), 480px);
+    --nov-perno-x: 24px;
+    --nov-perno-y: calc(72px + (100svh - 72px) / 2);
+  }
+}
+
+.nov-root[data-geo="bordo"] {
+  --nov-fascia-alta: 72px;
+  --nov-colonna-x: calc(var(--nov-r) + 220px);
+  --nov-palco-inizio: var(--nov-fascia-alta);
+  --nov-palco-fine: 0px;
+}
+
+.nov-root[data-attivo="90"] {
+  --nov-spazio-gradi: calc(var(--nov-fs-gradi-prenota) * var(--nov-lh-gradi));
+}
+
+/* Mobile a 90°: il quadrante diventa fascia (64 px) sopra il basamento. */
+.nov-root[data-geo="fondo"][data-attivo="90"] {
+  --nov-palco-fine: calc(var(--nov-basamento) + var(--nov-fascia-h));
+}
+
+/* Tastiera del telefono aperta (core/viewport.ts): fascia e passi sono
+   coperti comunque, il Palco arriva fino in fondo. */
+.nov-root[data-geo="fondo"][data-tastiera="1"] {
+  --nov-palco-fine: 0px;
+}
+
+/* --------------------------------------------------------------------------
+   1. Struttura comune
+   -------------------------------------------------------------------------- */
+.nov-root .nov-angoli {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nov-root .nov-angolo__sezione {
+  min-inline-size: 0;
+}
+
+.nov-root .nov-angolo__gradi {
+  font-family: var(--nov-font-misura);
+  font-weight: var(--nov-peso-gradi);
+  font-size: var(--nov-fs-gradi-elenco);
+  line-height: var(--nov-lh-misura);
+  letter-spacing: var(--nov-trk-misura);
+  font-variant-numeric: var(--nov-cifre);
+  font-synthesis: none;
+  color: var(--nov-testo);
+  white-space: nowrap;
+}
+
+.nov-root .nov-angolo__simbolo {
+  font-weight: var(--nov-peso-simbolo);
+}
+
+.nov-root .nov-angolo__mini {
+  inline-size: 3rem;
+  block-size: auto;
+  flex: none;
+}
+
+.nov-root .nov-angolo__titolo {
+  color: var(--nov-testo);
+}
+
+/* Il testo continua sotto (maschera morbida 16 px, ux-architect §3). Lo
+   scrive Palco.tsx sul corpo dell'angolo attivo. */
+.nov-root .nov-angolo__corpo[data-continua="1"] {
+  -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 16px), transparent);
+  mask-image: linear-gradient(to bottom, black calc(100% - 16px), transparent);
+}
+
+/* --------------------------------------------------------------------------
+   2. Vista QUADRANTE
+   -------------------------------------------------------------------------- */
+.nov-root[data-modo="quadrante"] {
+  block-size: var(--nov-vv-h, 100dvh);
+  overflow: hidden;
+}
+
+.nov-root[data-modo="quadrante"] .nov-main {
+  position: absolute;
+  inset: 0;
+  z-index: var(--nov-z-contenuto);
+  pointer-events: none;
+}
+
+.nov-root[data-modo="quadrante"] .nov-palco {
+  position: absolute;
+  inset-block: var(--nov-palco-inizio) var(--nov-palco-fine);
+  inset-inline: var(--nov-colonna-x) 0;
+  pointer-events: auto;
+  container: nov-palco / inline-size;
+}
+
+.nov-root[data-modo="quadrante"] .nov-angoli {
+  position: relative;
+  block-size: 100%;
+}
+
+/* I sette angoli sovrapposti nella stessa area: il cambio d'angolo non
+   sposta niente (CLS). `entra` si comporta come `attivo`, `esce` come
+   `spento`: è motion.css a tenerlo visibile per la dissolvenza. */
+.nov-root[data-modo="quadrante"] .nov-angolo {
+  position: absolute;
+  inset: 0;
+}
+
+.nov-root[data-modo="quadrante"] .nov-angolo:is([data-stato="esce"], [data-stato="spento"]) {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.nov-root[data-modo="quadrante"][data-pronto="1"] .nov-angolo[data-stato="spento"] {
+  content-visibility: hidden;
+}
+
+.nov-root[data-modo="quadrante"] .nov-angolo__sezione {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
+  block-size: 100%;
+}
+
+/* Il numero dell'angolo e il mini arco servono solo in elenco: in vista
+   quadrante il numero è quello grande che scorre (LetturaGradi). La testa
+   resta come spazio che il numero grande occupa. */
+.nov-root[data-modo="quadrante"] .nov-angolo__testa {
+  block-size: var(--nov-spazio-gradi);
+}
+
+.nov-root[data-modo="quadrante"] .nov-angolo__testa > * {
+  display: none;
+}
+
+.nov-root[data-modo="quadrante"] .nov-angolo__corpo {
+  min-block-size: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  padding-block: var(--nov-sp-4) var(--nov-sp-6);
+}
+
+.nov-root[data-modo="quadrante"] .nov-angolo__lato {
+  display: none;
+}
+
+/* 2.1 Geometria bordo (desktop): l'h2 poggia sulla linea di lettura (y del
+   perno), il numero sta sopra, il testo sotto; colonna di 520 px. */
+.nov-root[data-modo="quadrante"][data-geo="bordo"] .nov-angolo__sezione {
+  grid-template-columns: minmax(0, var(--nov-colonna)) minmax(0, 1fr);
+  column-gap: var(--nov-sp-7);
+  padding-inline-end: var(--nov-margine);
+}
+
+.nov-root[data-modo="quadrante"][data-geo="bordo"] .nov-angolo__testa {
+  grid-column: 1;
+  block-size: calc(var(--nov-linea-y) - var(--nov-palco-inizio) - var(--nov-titolo-blocco));
+}
+
+.nov-root[data-modo="quadrante"][data-geo="bordo"] .nov-angolo__titolo {
+  grid-column: 1;
+  min-block-size: var(--nov-titolo-blocco);
+  display: flex;
+  align-items: flex-end;
+}
+
+.nov-root[data-modo="quadrante"][data-geo="bordo"] .nov-angolo__corpo {
+  grid-column: 1;
+}
+
+/* Lato (foto a filo del bordo destro, 0° 60° 180°): solo se c'è posto oltre
+   la colonna (520 + 48 + 280 + 48 px). */
+@container nov-palco (min-width: 56rem) {
+  .nov-root[data-modo="quadrante"][data-geo="bordo"] .nov-angolo__lato {
+    display: block;
+    grid-column: 2;
+    grid-row: 1 / -1;
+    justify-self: end;
+    align-self: stretch;
+    min-block-size: 0;
+    margin-inline-end: calc(var(--nov-margine) * -1);
+    margin-block-start: calc(var(--nov-palco-inizio) * -1 + 64px);
+  }
+}
+
+/* 2.2 Geometria fondo (mobile): numero, titolo e testo allineati a sinistra
+   con il margine, il quadrante sotto. */
+.nov-root[data-modo="quadrante"][data-geo="fondo"] .nov-angolo__sezione {
+  padding-inline: var(--nov-margine);
+  padding-block-start: var(--nov-sp-3);
+}
+
+.nov-root[data-modo="quadrante"][data-geo="fondo"] .nov-angolo__testa {
+  margin-block-end: var(--nov-sp-3);
+}
+
+/* 2.3 Impaginazione libera (90°, prenota): la sezione occupa tutto il Palco
+   (fino al margine destro in bordo) e il section-builder dispone titolo,
+   anello e modulo. Testa e corpo non hanno regole di colonna. */
+.nov-root[data-modo="quadrante"] .nov-angolo__sezione--libera {
+  display: block;
+  block-size: 100%;
+}
+
+.nov-root[data-modo="quadrante"] .nov-angolo__sezione--libera > .nov-angolo__testa {
+  display: none;
+}
+
+.nov-root[data-modo="quadrante"] .nov-angolo__sezione--libera > .nov-angolo__corpo {
+  overflow: visible;
+  padding: 0;
+  block-size: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   3. Vista ELENCO (ux-architect §5.9): pagina verticale, nessun inert
+   -------------------------------------------------------------------------- */
+.nov-root[data-modo="elenco"] {
+  min-block-size: 100svh;
+}
+
+.nov-root[data-modo="elenco"] .nov-main {
+  padding-block: var(--nov-sp-8) calc(var(--nov-sp-8) + var(--nov-basamento));
+  padding-inline: var(--nov-margine);
+}
+
+.nov-root[data-modo="elenco"] .nov-angoli {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nov-vuoto-elenco);
+  max-inline-size: 75rem;
+  margin-inline: auto;
+}
+
+.nov-root[data-modo="elenco"] .nov-angolo__sezione {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--nov-sp-4);
+  scroll-margin-block-start: var(--nov-sp-6);
+}
+
+.nov-root[data-modo="elenco"] .nov-angolo__testa {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--nov-sp-4);
+}
+
+.nov-root[data-modo="elenco"] .nov-angolo__corpo {
+  max-inline-size: var(--nov-colonna);
+}
+
+.nov-root[data-modo="elenco"] .nov-angolo__sezione--libera > .nov-angolo__corpo {
+  max-inline-size: none;
+}
+
+.nov-root[data-modo="elenco"] .nov-angolo__lato {
+  display: none;
+}
+
+@media (min-width: 47.5em) {
+  .nov-root[data-modo="elenco"] .nov-angolo__sezione {
+    grid-template-columns: minmax(10rem, 15rem) minmax(0, 1fr);
+    column-gap: var(--nov-sp-8);
+    align-items: start;
+  }
+
+  .nov-root[data-modo="elenco"] .nov-angolo__testa {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nov-root[data-modo="elenco"] .nov-angolo__titolo,
+  .nov-root[data-modo="elenco"] .nov-angolo__corpo {
+    grid-column: 2;
+  }
+
+  .nov-root[data-modo="elenco"] .nov-angolo__lato {
+    display: block;
+    grid-column: 2;
+    max-inline-size: 22rem;
+  }
+}
+
+/* Senza JavaScript (prerender letto senza script): la vista elenco è anche
+   la resa di ripiego, quindi i blocchi del quadrante non si vedono. */
+@media (scripting: none) {
+  .nov-root .nov-quadrante {
+    display: none;
+  }
+}

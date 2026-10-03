@@ -1,0 +1,76 @@
+/* ==========================================================================
+   SOTTOSCOCCA · variabili di movimento (scaffold)
+   --------------------------------------------------------------------------
+   Il motion-designer (§8.1) chiede all'art-director le variabili
+   --ssc-curva-* e --ssc-durata-*; tokens.css non le ha. Le genera qui lo
+   scaffold, IDENTICHE a `variabiliMotion(false)` e `variabiliMotion(true)`
+   di motion/choreography.ts (curve da BEZIER_CSS di motion/easing.ts),
+   prodotte con uno script (esbuild + node) il giorno dello scaffold: se il
+   motion-designer cambia una durata, questo file va rigenerato (comando in
+   docs/scaffold-engineer.md §6). Solo variabili, nessuna regola visiva.
+   Importato da Radice.tsx subito dopo tokens.css.
+   ========================================================================== */
+
+/* --ssc-curva-* e --ssc-durata-*: valori normali */
+.ssc-root {
+  --ssc-curva-colonna: cubic-bezier(0.42, 0, 0.22, 1);
+  --ssc-curva-sfiato: cubic-bezier(0.5, 0.04, 0.26, 1);
+  --ssc-curva-cassetto: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ssc-curva-via: cubic-bezier(0.5, 0, 0.75, 0.3);
+  --ssc-curva-aggancio: cubic-bezier(0.15, 0.9, 0.3, 1);
+  --ssc-curva-ritorno: cubic-bezier(0.35, 0, 0.2, 1);
+  --ssc-curva-vernice: cubic-bezier(0.4, 0, 0.6, 1);
+  --ssc-curva-lineare: linear;
+  --ssc-durata-evidenza: 250ms;
+  --ssc-durata-scheda-apri: 280ms;
+  --ssc-durata-scheda-chiudi: 180ms;
+  --ssc-durata-foglio-apri: 320ms;
+  --ssc-durata-foglio-chiudi: 220ms;
+  --ssc-durata-foglio-ritorno: 200ms;
+  --ssc-durata-barra-entra: 280ms;
+  --ssc-durata-barra-esce: 200ms;
+  --ssc-durata-mensola-entra: 240ms;
+  --ssc-durata-mensola-esce: 180ms;
+  --ssc-durata-asta-ritiro: 420ms;
+  --ssc-durata-asta-ritorno: 420ms;
+  --ssc-durata-blocco-aggancio: 160ms;
+  --ssc-durata-blocco-ritorno: 260ms;
+  --ssc-durata-blocco-sale: 400ms;
+  --ssc-durata-blocco-scende: 240ms;
+  --ssc-durata-ombra-tacca: 90ms;
+  --ssc-durata-corsie-attenua: 200ms;
+  --ssc-durata-planning-giorno: 200ms;
+  --ssc-durata-testata-fondo: 200ms;
+  --ssc-durata-testata-bottone: 160ms;
+  --ssc-durata-gl-comparsa: 300ms;
+  --ssc-durata-gl-spegni: 300ms;
+  --ssc-durata-fondale-foto: 300ms;
+  --ssc-durata-dissolvenza-ridotta: 200ms;
+}
+
+/* Reduced motion = stato finale immediato: restano solo le dissolvenze di grandi superfici */
+.ssc-root[data-motion="reduced"] {
+  --ssc-durata-evidenza: 0ms;
+  --ssc-durata-scheda-apri: 0ms;
+  --ssc-durata-scheda-chiudi: 0ms;
+  --ssc-durata-foglio-apri: 0ms;
+  --ssc-durata-foglio-chiudi: 0ms;
+  --ssc-durata-foglio-ritorno: 0ms;
+  --ssc-durata-barra-entra: 0ms;
+  --ssc-durata-barra-esce: 0ms;
+  --ssc-durata-mensola-entra: 0ms;
+  --ssc-durata-mensola-esce: 0ms;
+  --ssc-durata-asta-ritiro: 0ms;
+  --ssc-durata-asta-ritorno: 0ms;
+  --ssc-durata-blocco-aggancio: 0ms;
+  --ssc-durata-blocco-ritorno: 0ms;
+  --ssc-durata-blocco-sale: 0ms;
+  --ssc-durata-blocco-scende: 0ms;
+  --ssc-durata-ombra-tacca: 0ms;
+  --ssc-durata-corsie-attenua: 0ms;
+  --ssc-durata-planning-giorno: 0ms;
+  --ssc-durata-testata-bottone: 0ms;
+  --ssc-durata-gl-comparsa: 200ms;
+  --ssc-durata-gl-spegni: 200ms;
+  --ssc-durata-fondale-foto: 0ms;
+}
