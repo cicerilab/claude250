@@ -28,6 +28,7 @@
 
 import { useEffect, type RefObject } from 'react';
 import { ticker } from '../core/ticker';
+import { passoInerzia as spostamentoInerzia } from '../motion/easing';
 import { runtime } from '../state/runtime';
 import { store } from '../state/store';
 
@@ -89,7 +90,7 @@ export function collegaGestiStriscia(binario: HTMLElement, opz: OpzioniGestiStri
 
   let swipe: { id: number; x0: number; y0: number; ultimoX: number; stato: 'indeciso' | 'orizzontale'; campioni: Campione[] } | null = null;
   let sopprimiClicFino = 0;
-  let velocita = 0;
+  const inerzia = { v: 0 };
   let togliInerzia: (() => void) | null = null;
 
   function attiva(): boolean {
@@ -99,7 +100,7 @@ export function collegaGestiStriscia(binario: HTMLElement, opz: OpzioniGestiStri
   /* -------------------------------------------------------------- inerzia */
 
   function fermaInerzia(): void {
-    velocita = 0;
+    inerzia.v = 0;
     if (togliInerzia !== null) {
       togliInerzia();
       togliInerzia = null;
@@ -110,10 +111,10 @@ export function collegaGestiStriscia(binario: HTMLElement, opz: OpzioniGestiStri
   }
 
   function passoInerzia(dt: number): boolean {
-    if (velocita === 0) return false;
-    const mosso = scorriStriscia(velocita * dt, runtime.scrollY);
-    velocita *= Math.exp(-dt / TAU_INERZIA_S);
-    if (!mosso || Math.abs(velocita) < VELOCITA_MINIMA) {
+    if (inerzia.v === 0) return false;
+    // Spostamento esatto sul dt (motion/easing.ts): non dipende dai frame.
+    const mosso = scorriStriscia(spostamentoInerzia(inerzia, dt, TAU_INERZIA_S), runtime.scrollY);
+    if (!mosso || Math.abs(inerzia.v) < VELOCITA_MINIMA) {
       // Fine: si stacca fuori dal frame (rimozione sicura anche qui dentro).
       queueMicrotask(fermaInerzia);
       return false;
@@ -125,7 +126,7 @@ export function collegaGestiStriscia(binario: HTMLElement, opz: OpzioniGestiStri
     fermaInerzia();
     if (store.get().reducedMotion) return;
     if (Math.abs(v) < VELOCITA_MINIMA * 4) return;
-    velocita = Math.max(-VELOCITA_MASSIMA, Math.min(VELOCITA_MASSIMA, v));
+    inerzia.v = Math.max(-VELOCITA_MASSIMA, Math.min(VELOCITA_MASSIMA, v));
     togliInerzia = ticker.add(passoInerzia, 'update');
     // Qualsiasi nuovo input ferma l'inerzia subito.
     window.addEventListener('pointerdown', fermaInerzia, true);
