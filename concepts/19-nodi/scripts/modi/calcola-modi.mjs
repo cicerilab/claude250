@@ -40,8 +40,8 @@ const opzione = (/** @type {string} */ nome, /** @type {number} */ def) => {
 
 const ABETE = {
   EL: 15.0e9, // modulo lungo la vena (asse y, lunghezza della tavola)
-  ER: 0.8e9, // modulo di traverso (asse x, radiale nel taglio di quarto)
-  G: 0.84e9, // modulo di taglio L-R
+  ER: opzione("--ER", 0.8) * 1e9, // modulo di traverso (asse x, radiale nel taglio di quarto)
+  G: opzione("--G", 0.84) * 1e9, // modulo di taglio L-R
   nuLR: 0.37, // Poisson (contrazione R per trazione L)
   rho: 460, // kg/m³
   h: 2.8e-3, // m
@@ -139,7 +139,7 @@ if (CON_CATENA) {
     const t = (ym[g] - centro) / meta;
     const H = (c.altezzaEstremiMm + (c.altezzaCentroMm - c.altezzaEstremiMm) * Math.sqrt(Math.max(0, 1 - t * t))) * 1e-3;
     // trave: E I / b distribuito sulla sua larghezza (sopra la piastra: asse neutro spostato, approssimato)
-    const EIperB = (ABETE.EL * (H + ABETE.h) ** 3) / 12;
+    const EIperB = (opzione("--catena-scala", 1) * ABETE.EL * (H + ABETE.h) ** 3) / 12;
     Dy[g] = Math.max(DyPiastra, EIperB);
   }
 }
