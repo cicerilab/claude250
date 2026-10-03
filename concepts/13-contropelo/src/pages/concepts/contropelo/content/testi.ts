@@ -163,7 +163,7 @@ export const BARBIERI = [
     poltrona: 'poltrona 1',
     titoloVetro: 'Il listino',
     riga: 'Mattia: forbice e riga, da quando aveva 17 anni.',
-    indietro: '← il listino',
+    indietro: 'il listino',
     indietroAria: 'Torna al listino di Mattia',
   },
   {
@@ -172,7 +172,7 @@ export const BARBIERI = [
     poltrona: 'poltrona 2',
     titoloVetro: 'La barba',
     riga: 'Denis: panno caldo e lama. Viene da Conegliano.',
-    indietro: '← la barba',
+    indietro: 'la barba',
     indietroAria: 'Torna alla barba di Denis',
   },
   {
@@ -181,7 +181,7 @@ export const BARBIERI = [
     poltrona: 'poltrona 3',
     titoloVetro: 'Dove e quando',
     riga: 'Samir: sfumature a pelle e bambini che non stanno fermi.',
-    indietro: '← dove e quando',
+    indietro: 'dove e quando',
     indietroAria: 'Torna a dove e quando, sullo specchio di Samir',
   },
 ] as const;
@@ -299,7 +299,7 @@ export const VETRO_DOVE = {
 
 /** In fondo a ogni vetro, solo dove le facce si alternano (S, M, L stretto). */
 export const VETRO_COMUNE = {
-  vaiAllaLista: 'la lista →',
+  vaiAllaLista: 'la lista',
   vaiAllaListaAria: (i: Indice) => `Vai alla lista di ${BARBIERI[i].nome}`,
 } as const;
 
@@ -347,10 +347,10 @@ export const LISTA = {
   cancella: 'cancella',
   cancellaAria: (ora: string) => `Cancella il tuo nome delle ${oraVisibile(ora)}`,
   /** Navigazione tra i giorni, a pennarello. `nomeGiorno` = "sabato" o "sabato 3", da core/date.ts. */
-  avanti: (rel: Relativo, nomeGiorno: string) => (rel === 'domani' ? 'domani →' : `${nomeGiorno} →`),
-  indietro: (rel: Relativo, nomeGiorno: string) => (rel === 'oggi' ? '← oggi' : `← ${nomeGiorno}`),
+  avanti: (rel: Relativo, nomeGiorno: string) => (rel === 'domani' ? 'domani' : nomeGiorno),
+  indietro: (rel: Relativo, nomeGiorno: string) => (rel === 'oggi' ? 'oggi' : nomeGiorno),
   vaiAGiornoAria: (giorno: string) => `Vai a ${giorno}`,
-  /** Oltre i 6 giorni lavorativi, al posto di "giorno dopo →" (Figtree). */
+  /** Oltre i 6 giorni lavorativi, al posto del bottone "giorno dopo" (Figtree). */
   oltre: 'Più in là? ',
   oltreChiama: 'Chiama',
   oltreChiamaAria: 'Chiama la barberia per un giorno più avanti',
