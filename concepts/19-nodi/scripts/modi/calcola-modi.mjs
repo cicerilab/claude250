@@ -63,6 +63,7 @@ const CATENA = { xMm: -18.5, larghezzaMm: 5.5, y0Mm: 46, y1Mm: 316, altezzaCentr
 /** Quante forme calcolate (della parità giusta) entrano nella taratura, e penalità sui modi alti. */
 const BASE_TARATURA = opzione('--base', 6);
 const PENALITA = opzione('--penalita', 0.002);
+const PESO_VENTRI = opzione('--peso-ventri', 0.05);
 
 /**
  * Linee nodali misurate da Jansson, fig. 5.17 (media di 14 tavole), riga in
@@ -618,12 +619,30 @@ function bersagli() {
 }
 
 /**
+ * Ventri attesi (punti dove la tavola si muove, con il segno relativo) per
+ * ogni figura di Jansson: senza questi i minimi quadrati potrebbero
+ * aggiungere linee nodali che le tavole vere non hanno.
+ * @returns {Record<number, Array<[number, number, number]>>} x, y (mm), segno
+ */
+function ventri() {
+  const L = Hmm, c = L / 2;
+  return {
+    1: [[40, 95, 1], [-40, 95, -1], [40, 285, -1], [-40, 285, 1], [70, 60, 1], [-70, 60, -1], [70, 300, -1], [-70, 300, 1]],
+    2: [[0, c, 1], [0, 60, 1], [0, 300, 1], [78, 95, -1], [-78, 95, -1], [47, c, -1], [-47, c, -1], [88, 280, -1], [-88, 280, -1]],
+    5: [[0, c, 1], [30, c - 40, 1], [-30, c - 40, 1], [30, c + 50, 1], [-30, c + 50, 1], [47, c, 1], [-47, c, 1],
+      [0, 28, -1], [40, 40, -1], [-40, 40, -1], [0, L - 26, -1], [50, L - 40, -1], [-50, L - 40, -1]],
+  };
+}
+
+/**
  * Combinazione dei modi calcolati di parità `segnoParita` che annulla w sui
- * punti misurati. Restituisce il campo normalizzato e i pesi.
+ * punti misurati e rispetta i segni dei ventri attesi (minimi quadrati
+ * regolarizzati: i modi alti costano di più).
  * @param {Array<[number, number]>} punti
+ * @param {Array<[number, number, number]>} segni
  * @param {1 | -1} segnoParita
  */
-function combina(punti, segnoParita) {
+function combina(punti, segni, segnoParita) {
   const base = calcolati.filter((c) => c.t.parita * segnoParita > 0.9).slice(0, BASE_TARATURA);
   const K = base.length;
   const m = out.maschera;
@@ -634,66 +653,72 @@ function combina(punti, segnoParita) {
     const f = 1 / Math.sqrt(s / q);
     return c.w.map((v) => v * f);
   });
-  const B = new Float64Array(K * K), A = new Float64Array(K * K);
-  let q = 0;
-  for (let k = 0; k < m.length; k++) if (m[k]) q++;
-  for (let a = 0; a < K; a++) for (let b = a; b < K; b++) {
-    let s = 0;
-    for (let k = 0; k < m.length; k++) if (m[k]) s += campi[a][k] * campi[b][k];
-    B[a * K + b] = B[b * K + a] = s / q;
-    let r = 0;
-    for (const [x, y] of punti) r += campionaMm(campi[a], x, y) * campionaMm(campi[b], x, y);
-    A[a * K + b] = A[b * K + a] = r / punti.length;
+  // equazioni normali: (Σ a aᵀ / P + β Σ b bᵀ / Q + R) c = β Σ s b / Q
+  const M = Array.from({ length: K }, () => new Float64Array(K));
+  const r = new Float64Array(K);
+  const P = punti.length, Q = segni.length;
+  for (const [x, y] of punti) {
+    const v = campi.map((f) => campionaMm(f, x, y));
+    for (let i = 0; i < K; i++) for (let j = 0; j < K; j++) M[i][j] += (v[i] * v[j]) / P;
+  }
+  for (const [x, y, sg] of segni) {
+    const v = campi.map((f) => campionaMm(f, x, y));
+    for (let i = 0; i < K; i++) {
+      for (let j = 0; j < K; j++) M[i][j] += (PESO_VENTRI * v[i] * v[j]) / Q;
+      r[i] += (PESO_VENTRI * sg * v[i]) / Q;
+    }
   }
   const f0 = base[0].hz;
-  for (let a = 0; a < K; a++) A[a * K + a] += PENALITA * ((base[a].hz / f0) ** 2 - 1);
-  // min c'Ac con c'Bc = 1: B^(-1/2) A B^(-1/2)
-  const eb = jacobi(B, K);
-  const Bm = new Float64Array(K * K);
-  for (let i = 0; i < K; i++) for (let j = 0; j < K; j++) {
-    let s = 0;
-    for (let r = 0; r < K; r++) s += eb.vettori[i * K + r] * eb.vettori[j * K + r] / Math.sqrt(Math.max(eb.valori[r], 1e-12));
-    Bm[i * K + j] = s;
+  for (let i = 0; i < K; i++) M[i][i] += PENALITA * (base[i].hz / f0) ** 2;
+  // Gauss con pivot parziale
+  const c = Array.from(r);
+  for (let col = 0; col < K; col++) {
+    let piv = col;
+    for (let i = col + 1; i < K; i++) if (Math.abs(M[i][col]) > Math.abs(M[piv][col])) piv = i;
+    [M[col], M[piv]] = [M[piv], M[col]];
+    [c[col], c[piv]] = [c[piv], c[col]];
+    for (let i = col + 1; i < K; i++) {
+      const f = M[i][col] / M[col][col];
+      for (let j = col; j < K; j++) M[i][j] -= f * M[col][j];
+      c[i] -= f * c[col];
+    }
   }
-  const C = new Float64Array(K * K);
-  for (let i = 0; i < K; i++) for (let j = 0; j < K; j++) {
-    let s = 0;
-    for (let r = 0; r < K; r++) for (let t2 = 0; t2 < K; t2++) s += Bm[i * K + r] * A[r * K + t2] * Bm[t2 * K + j];
-    C[i * K + j] = s;
+  for (let i = K - 1; i >= 0; i--) {
+    for (let j = i + 1; j < K; j++) c[i] -= M[i][j] * c[j];
+    c[i] /= M[i][i];
   }
-  const ec = jacobi(C, K);
-  const y = Array.from({ length: K }, (_, r) => ec.vettori[r * K + 0]);
-  const c = Array.from({ length: K }, (_, i) => y.reduce((s, yr, r) => s + Bm[i * K + r] * yr, 0));
   const w = new Float64Array(m.length);
-  for (let a = 0; a < K; a++) for (let k = 0; k < w.length; k++) w[k] += c[a] * campi[a][k];
-  // quota di energia per modo (i campi sono quasi ortogonali: B ≈ I)
-  const tot = c.reduce((s, v) => s + v * v, 0);
-  const pesi = base.map((b, a) => ({ ordine: b.ordine, hz: Math.round(b.hz), quota: Math.round((c[a] * c[a]) / tot * 1000) / 1000 }))
+  for (let a2 = 0; a2 < K; a2++) for (let k = 0; k < w.length; k++) w[k] += c[a2] * campi[a2][k];
+  const tot = c.reduce((s2, v) => s2 + v * v, 0);
+  const pesi = base.map((b2, a2) => ({ ordine: b2.ordine, hz: Math.round(b2.hz), quota: Math.round((c[a2] * c[a2]) / tot * 1000) / 1000 }))
     .sort((p1, p2) => p2.quota - p1.quota);
-  // residuo: distanza media (mm) dei punti misurati dalla linea nodale ottenuta
   normalizza(w, m);
+  // residuo: distanza media (mm) dei punti misurati dalla linea nodale ottenuta
   let distTot = 0;
   for (const [x, y] of punti) {
+    const s0 = Math.sign(campionaMm(w, x, y));
     let best = 30;
-    for (let r = 0.5; r < 30 && best === 30; r += 0.5) {
-      for (let ang = 0; ang < 360; ang += 15) {
-        const xx = x + r * Math.cos(ang * Math.PI / 180), yy = y + r * Math.sin(ang * Math.PI / 180);
-        if (Math.sign(campionaMm(w, xx, yy)) !== Math.sign(campionaMm(w, x, y))) { best = r; break; }
+    for (let rr = 0.25; rr < 30 && best === 30; rr += 0.25) {
+      for (let ang = 0; ang < 360; ang += 10) {
+        const xx = x + rr * Math.cos((ang * Math.PI) / 180), yy = y + rr * Math.sin((ang * Math.PI) / 180);
+        if (Math.sign(campionaMm(w, xx, yy)) !== s0) { best = rr; break; }
       }
     }
-    distTot += Math.abs(campionaMm(w, x, y)) < 0.01 ? 0 : best;
+    distTot += best;
   }
-  return { w, pesi, distanzaMediaMm: Math.round((distTot / punti.length) * 10) / 10 };
+  const segniRispettati = segni.filter(([x, y, sg]) => Math.sign(campionaMm(w, x, y)) === Math.sign(sg) * Math.sign(c.reduce((s2, v, i) => s2 + v * campionaMm(campi[i], segni[0][0], segni[0][1]), 0) * segni[0][2])).length;
+  return { w, pesi, distanzaMediaMm: Math.round((distTot / P) * 10) / 10, segniRispettati: `${segniRispettati}/${Q}` };
 }
 
 const B5 = bersagli();
+const V5 = ventri();
 const tarati = {
-  1: combina(B5[1], -1),
-  2: combina(B5[2], 1),
-  5: combina(B5[5], 1),
+  1: combina(B5[1], V5[1], -1),
+  2: combina(B5[2], V5[2], 1),
+  5: combina(B5[5], V5[5], 1),
 };
 for (const [modo, r] of Object.entries(tarati)) {
-  console.log(`modo ${modo}: distanza media dalle linee misurate ${r.distanzaMediaMm} mm; pesi ${r.pesi.slice(0, 4).map((p) => `${p.ordine}°(${p.hz} Hz) ${(p.quota * 100).toFixed(1)}%`).join(', ')}`);
+  console.log(`modo ${modo}: distanza media dalle linee misurate ${r.distanzaMediaMm} mm, ventri col segno giusto ${r.segniRispettati}; pesi ${r.pesi.slice(0, 4).map((p) => `${p.ordine}°(${p.hz} Hz) ${(p.quota * 100).toFixed(1)}%`).join(', ')}`);
 }
 
 // segno: centro della tavola positivo per i simmetrici, quarto in alto a destra positivo per la croce (solo convenzione)
