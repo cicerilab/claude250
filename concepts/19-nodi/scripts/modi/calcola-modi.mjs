@@ -331,9 +331,42 @@ function topologia(w, m, nu, nv) {
     const i = Math.round(((xmm - x0) / Wmm) * nu - 0.5);
     return Array.from({ length: nv }, (_, j) => j * nu + i);
   };
+  /**
+   * Posizioni (mm) dei passaggi per lo zero lungo una sequenza di celle, con
+   * interpolazione lineare; `coord(q)` dà la coordinata della q-esima cella.
+   * @param {number[]} ks
+   * @param {(q: number) => number} coord
+   */
+  const zeri = (ks, coord) => {
+    /** @type {number[]} */
+    const z = [];
+    let qPrec = -1, segno = 0;
+    ks.forEach((k, q) => {
+      if (!m[k] || Math.abs(w[k]) < 0.06) return;
+      const s = Math.sign(w[k]);
+      if (segno !== 0 && s !== segno && qPrec >= 0) {
+        // cerca il passaggio esatto tra qPrec e q
+        let best = coord((qPrec + q) / 2);
+        for (let t = qPrec; t < q; t++) {
+          const a = w[ks[t]], b = w[ks[t + 1]];
+          if (Math.sign(a) !== Math.sign(b) && a !== b) { best = coord(t + a / (a - b)); break; }
+        }
+        z.push(Math.round(best * 10) / 10);
+      }
+      segno = s; qPrec = q;
+    });
+    return z;
+  };
+  const yDiCella = (/** @type {number} */ q) => y0 + ((q + 0.5) / nv) * Hmm;
+  const xDiCella = (/** @type {number} */ q) => x0 + ((q + 0.5) / nu) * Wmm;
   // la colonna centrale cade sulla giunta: si legge a ±4 mm
-  const asse = cambi(colonna(4)) ;
+  const asse = cambi(colonna(4));
   const asseB = cambi(colonna(-4));
+  const zeriAsse = zeri(colonna(4), yDiCella);
+  const larghezze = [0.12, 0.5, 0.88].map((t) => {
+    const z = zeri(riga(y0 + t * Hmm), xDiCella);
+    return z.length === 2 ? Math.round((z[1] - z[0]) * 10) / 10 : null;
+  });
   const r = {
     parita,
     asse: Math.max(asse, asseB),
@@ -341,12 +374,16 @@ function topologia(w, m, nu, nv) {
     spalleAlte: cambi(riga(85)),
     vita: cambi(riga(178)),
     spalleBasse: cambi(riga(285)),
+    zeriAsse,
+    larghezze,
   };
   /** @type {string} */
   let nome = 'altro';
+  const L = Hmm;
   if (parita < -0.5 && r.lato === 1 && r.spalleAlte <= 1 && r.spalleBasse <= 1) nome = 'croce';
-  else if (parita > 0.5 && r.asse === 0 && r.vita === 2) nome = 'parentesi';
-  else if (parita > 0.5 && r.asse === 2 && r.spalleAlte === 2 && r.spalleBasse === 2) nome = 'anello';
+  else if (parita > 0.5 && r.asse === 0 && (r.vita === 2 || r.spalleAlte === 2) && r.spalleBasse === 2) nome = 'parentesi';
+  else if (parita > 0.5 && r.asse === 2 && zeriAsse.length === 2 &&
+    zeriAsse[0] > y0 + 0.1 * L && zeriAsse[0] < y0 + 0.42 * L && zeriAsse[1] > y0 + 0.62 * L && zeriAsse[1] < y0 + 0.93 * L) nome = 'anello';
   return { nome, ...r };
 }
 
@@ -495,7 +532,7 @@ for (const [ordine, m] of elastici.entries()) {
   const w = normalizza(valutaSuGriglia(coefficientiModo(m), NU_OUT, NV_OUT), out.maschera);
   const t = topologia(w, out.maschera, NU_OUT, NV_OUT);
   elenco.push({ ordine: ordine + 1, hz: Math.round(freq[m] * 10) / 10, ...t });
-  console.log(`modo elastico ${ordine + 1}: ${freq[m].toFixed(1)} Hz  ${t.nome.padEnd(9)} parità ${t.parita.toFixed(2)} asse ${t.asse} lato ${t.lato} spalle alte ${t.spalleAlte} vita ${t.vita} spalle basse ${t.spalleBasse}`);
+  console.log(`modo elastico ${ordine + 1}: ${freq[m].toFixed(1)} Hz  ${t.nome.padEnd(9)} parità ${t.parita.toFixed(2)} asse ${t.asse} [${t.zeriAsse.join(' ')}] lato ${t.lato} alte ${t.spalleAlte} vita ${t.vita} basse ${t.spalleBasse} larghezze ${t.larghezze.join('/')}`);
   scriviPng(`calcolato-${String(ordine + 1).padStart(2, '0')}-${t.nome}.png`, { campo: w, maschera: out.maschera, nu: NU_OUT, nv: NV_OUT, scala: 3 });
   if (t.nome !== 'altro' && !trovati[t.nome]) trovati[t.nome] = { m, w, hz: freq[m], t };
   confronti.push({ campo: w, maschera: out.maschera, nu: NU_OUT, nv: NV_OUT, scala: 2 });
