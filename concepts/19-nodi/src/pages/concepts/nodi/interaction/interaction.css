@@ -1,0 +1,557 @@
+/*
+ * NODI · stati di interazione (interaction-designer).
+ *
+ * Classi `nod-ix-*` che i section-builder aggiungono ai loro elementi, più
+ * l'anello di focus di tutto il concept. Ogni selettore parte da .nod-root
+ * (tech-architect §5.1). Nessun hex: solo le variabili dell'art-director
+ * (styles/tokens.css). Raggio 0 ovunque, tranne la foglia del piano del
+ * suono (oggetto, CD §4.1).
+ *
+ * Regole: niente cursore custom (cursori di sistema che dicono cosa si può
+ * fare: mano sui link, presa sul cursore e sulla foglia); niente bottoni
+ * magnetici; niente glow né ombre (l'unica ombra del sito è quella della
+ * tavola); si muovono solo transform e opacity; nessun cambio di colore di
+ * superfici grandi; con reduced motion ogni cambio è immediato.
+ */
+
+/* ================================================================== 0. variabili locali */
+
+.nod-root {
+  --nod-ix-rapido: 140ms;
+  --nod-ix-medio: 200ms;
+  /* Curve del motion-designer (motion/easing.ts, BEZIER_CSS). */
+  --nod-ix-curva-velo: cubic-bezier(0.4, 0.15, 0.6, 0.85);
+  --nod-ix-curva-presa: cubic-bezier(0.2, 0.6, 0.25, 1);
+  --nod-ix-pollice: 16px;
+}
+
+/* ================================================================== 1. anello di focus */
+
+/*
+ * Un filo d'ebano di 2 px a 2 px di distanza, a spigolo vivo (CD §4.8): si
+ * vede sull'abete e, grazie allo stacco d'abete, anche attorno al bottone
+ * ebano. Solo con :focus-visible: col mouse non compare.
+ */
+.nod-root :focus-visible {
+  outline: var(--nod-fuoco-spessore) solid var(--nod-fuoco);
+  outline-offset: var(--nod-fuoco-distanza);
+}
+
+.nod-root :focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Titoli raggiunti con i salti (tabindex="-1"): l'anello si stacca dal testo grande. */
+.nod-root [tabindex='-1']:focus-visible {
+  outline-offset: 6px;
+}
+
+/* La foglia del piano è tonda: l'anello segue la forma, un filo più staccato. */
+.nod-root .nod-ix-foglia:focus-visible {
+  outline-offset: 3px;
+}
+
+@media (forced-colors: active) {
+  .nod-root :focus-visible {
+    outline-color: Highlight;
+  }
+}
+
+/* ================================================================== 2. selezione del testo */
+
+.nod-root ::selection {
+  background-color: var(--nod-selezione-fondo);
+  color: var(--nod-selezione-testo);
+}
+
+/* ================================================================== 3. link di testo */
+
+/*
+ * I link sono tè sottolineati, mai colorati (art-director). Sotto il
+ * puntatore il filo passa da 1 a 2 px; premuto resta a 2 px e scende di un
+ * soffio. La voce corrente dell'indice (aria-current) ha il filo d'ebano.
+ */
+.nod-root .nod-ix-link {
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-color: var(--nod-link-filo);
+  text-decoration-thickness: var(--nod-filo);
+  text-underline-offset: 0.22em;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    text-decoration-thickness var(--nod-ix-rapido) var(--nod-ix-curva-presa),
+    text-underline-offset var(--nod-ix-rapido) var(--nod-ix-curva-presa);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nod-root .nod-ix-link:hover {
+    text-decoration-thickness: var(--nod-filo-forte);
+  }
+}
+
+.nod-root .nod-ix-link:active {
+  text-decoration-thickness: var(--nod-filo-forte);
+  text-underline-offset: 0.28em;
+}
+
+.nod-root .nod-ix-link[aria-current] {
+  color: var(--nod-titolo);
+  text-decoration-color: var(--nod-titolo);
+  text-decoration-thickness: var(--nod-filo-forte);
+}
+
+/* ================================================================== 4. il bottone ebano */
+
+/*
+ * "La voce che vorresti" e i bottoni di invio. Fondo ebano, testo abete.
+ * Sotto il puntatore il fondo va a tè (art-director, --nod-azione-premuta):
+ * superficie piccola, un solo cambio per gesto. Premuto scende di 1 px, come
+ * un listello sotto il pollice. In invio (aria-disabled) non risponde.
+ */
+.nod-root .nod-ix-azione {
+  background-color: var(--nod-azione);
+  color: var(--nod-azione-testo);
+  border: 0;
+  border-radius: var(--nod-raggio);
+  min-block-size: var(--nod-bottone-h);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+  transition:
+    background-color var(--nod-ix-rapido) var(--nod-ix-curva-presa),
+    transform var(--nod-ix-rapido) var(--nod-ix-curva-presa);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nod-root .nod-ix-azione:hover:not([aria-disabled='true']) {
+    background-color: var(--nod-azione-premuta);
+  }
+}
+
+.nod-root .nod-ix-azione:active:not([aria-disabled='true']) {
+  background-color: var(--nod-azione-premuta);
+  transform: translateY(1px);
+  transition-duration: 60ms;
+}
+
+.nod-root .nod-ix-azione[aria-disabled='true'] {
+  cursor: default;
+}
+
+/* ================================================================== 5. bottoni di testo e interruttore */
+
+/*
+ * "Suono", "Rimetti le foglie", "Senti la voce", "Cambia la voce",
+ * scorciatoie "modo 1 / 2 / 5": bottoni veri con l'aspetto di testo, alti
+ * almeno 44 px. Filo di 1 px sotto il testo (il builder lo mette sullo span
+ * interno .nod-ix-testo-bottone__testo, così l'area di tocco resta grande).
+ * L'interruttore acceso (aria-pressed="true") ha il filo d'ebano di 2 px e
+ * il testo ebano: lo stato non è detto solo dal colore, c'è la parola.
+ */
+.nod-root .nod-ix-testo-bottone {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--nod-tocco);
+  min-inline-size: var(--nod-tocco);
+  padding: 0;
+  border: 0;
+  border-radius: var(--nod-raggio);
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nod-root .nod-ix-testo-bottone__testo {
+  text-decoration-line: underline;
+  text-decoration-color: var(--nod-link-filo);
+  text-decoration-thickness: var(--nod-filo);
+  text-underline-offset: 0.22em;
+  transition: text-decoration-thickness var(--nod-ix-rapido) var(--nod-ix-curva-presa);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nod-root .nod-ix-testo-bottone:hover:not([aria-disabled='true']) .nod-ix-testo-bottone__testo {
+    text-decoration-thickness: var(--nod-filo-forte);
+  }
+}
+
+.nod-root .nod-ix-testo-bottone:active:not([aria-disabled='true']) .nod-ix-testo-bottone__testo {
+  text-decoration-thickness: var(--nod-filo-forte);
+}
+
+.nod-root .nod-ix-testo-bottone[aria-pressed='true'] {
+  color: var(--nod-titolo);
+}
+
+.nod-root .nod-ix-testo-bottone[aria-pressed='true'] .nod-ix-testo-bottone__testo {
+  text-decoration-color: var(--nod-titolo);
+  text-decoration-thickness: var(--nod-filo-forte);
+}
+
+.nod-root .nod-ix-testo-bottone[aria-disabled='true'] {
+  cursor: default;
+}
+
+/* L'icona dell'altoparlante accanto a "Senti la voce": segue il colore del testo. */
+.nod-root .nod-ix-testo-bottone svg {
+  flex: none;
+  fill: currentColor;
+}
+
+/* ================================================================== 6. scelte (radio veri) */
+
+/*
+ * Strumento (violino, viola, violoncello) e sabati. Markup:
+ *   <label class="nod-ix-scelta"><input class="nod-ix-scelta__input" type="radio" …>
+ *     <span class="nod-ix-scelta__testo">Violino</span></label>
+ * Il radio è vero (fieldset + legend, frecce native, un solo Tab), invisibile
+ * ma presente per i lettori di schermo. Scelto = filo d'ebano di 2 px sotto
+ * la parola (CD §4.4: niente pillole); al passaggio filo tè di 1 px.
+ */
+.nod-root .nod-ix-scelta {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--nod-tocco);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nod-root .nod-ix-scelta__input {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+  appearance: none;
+}
+
+.nod-root .nod-ix-scelta__testo {
+  text-decoration-line: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: var(--nod-filo-forte);
+  text-underline-offset: 0.2em;
+  transition: text-decoration-color var(--nod-ix-rapido) var(--nod-ix-curva-presa);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nod-root .nod-ix-scelta:hover .nod-ix-scelta__testo {
+    text-decoration-color: var(--nod-link-filo);
+    text-decoration-thickness: var(--nod-filo);
+  }
+}
+
+.nod-root .nod-ix-scelta:has(.nod-ix-scelta__input:checked) .nod-ix-scelta__testo {
+  color: var(--nod-titolo);
+  text-decoration-color: var(--nod-titolo);
+  text-decoration-thickness: var(--nod-filo-forte);
+}
+
+/* L'input è invisibile: l'anello va sulla parola. */
+.nod-root .nod-ix-scelta:has(.nod-ix-scelta__input:focus-visible) {
+  outline: var(--nod-fuoco-spessore) solid var(--nod-fuoco);
+  outline-offset: var(--nod-fuoco-distanza);
+}
+
+.nod-root .nod-ix-scelta:has(.nod-ix-scelta__input:disabled) {
+  cursor: default;
+}
+
+/* ================================================================== 7. il righello */
+
+/*
+ * La scala (useRighello: refScala + propsScala) è il tratto 60 → 420 Hz.
+ * Mouse e penna: clic e trascinamento ovunque sulla scala. Dito: sul binario
+ * orizzontale lo scorrimento verticale resta della pagina (pan-y), quello di
+ * lato muove il cursore; sul binario verticale vale solo il tocco.
+ */
+.nod-root .nod-ix-scala {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nod-root .nod-ix-scala[data-orientamento='orizzontale'] {
+  touch-action: pan-y;
+}
+
+.nod-root .nod-ix-scala[data-orientamento='verticale'] {
+  touch-action: manipulation;
+}
+
+/*
+ * Il cursore (role="slider"): area di presa 44 × 44, ancorata dal builder al
+ * punto dei 60 Hz; il transform lo scrive il ticker. Sul cursore il dito non
+ * scorre mai la pagina (touch-action: none, CD §4.9).
+ */
+.nod-root .nod-ix-cursore {
+  min-inline-size: var(--nod-tocco);
+  min-block-size: var(--nod-tocco);
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  will-change: transform;
+}
+
+.nod-root .nod-ix-cursore[data-trascinando] {
+  cursor: grabbing;
+}
+
+.nod-root .nod-ix-cursore[aria-disabled='true'] {
+  cursor: default;
+}
+
+/*
+ * Il segno vernice del cursore: al passaggio si allunga di un quarto, preso
+ * si allunga della metà (come la lancetta che il liutaio tiene tra le
+ * dita). Si allunga lungo il suo verso: in orizzontale sul righello
+ * verticale, in verticale su quello orizzontale.
+ */
+.nod-root .nod-ix-cursore__segno {
+  display: block;
+  background-color: var(--nod-cursore);
+  transition: transform var(--nod-ix-rapido) var(--nod-ix-curva-presa);
+}
+
+.nod-root .nod-ix-scala[data-orientamento='verticale'] .nod-ix-cursore__segno {
+  transform-origin: left center;
+}
+
+.nod-root .nod-ix-scala[data-orientamento='orizzontale'] .nod-ix-cursore__segno {
+  transform-origin: center bottom;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nod-root .nod-ix-scala[data-orientamento='verticale'] .nod-ix-cursore:hover .nod-ix-cursore__segno {
+    transform: scaleX(1.25);
+  }
+
+  .nod-root .nod-ix-scala[data-orientamento='orizzontale'] .nod-ix-cursore:hover .nod-ix-cursore__segno {
+    transform: scaleY(1.25);
+  }
+}
+
+.nod-root .nod-ix-scala[data-orientamento='verticale'] .nod-ix-cursore[data-trascinando] .nod-ix-cursore__segno {
+  transform: scaleX(1.5);
+}
+
+.nod-root .nod-ix-scala[data-orientamento='orizzontale'] .nod-ix-cursore[data-trascinando] .nod-ix-cursore__segno {
+  transform: scaleY(1.5);
+}
+
+/* ================================================================== 8. il piano del suono */
+
+/*
+ * Il quadrato (usePianoVoce: refPiano + propsPiano): un tocco porta lì la
+ * foglia, lo scorrimento verticale del dito resta della pagina.
+ */
+.nod-root .nod-ix-piano {
+  cursor: pointer;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/*
+ * La foglia: area di presa tonda 44 × 44 ancorata al centro del piano (il
+ * ticker scrive translate3d dal centro). Mentre la si tiene lo scroll è
+ * bloccato solo qui. Al passaggio la scaglia ruota appena, come spinta col
+ * dito; presa, si alza un poco (scala), senza ombra.
+ */
+.nod-root .nod-ix-foglia {
+  inline-size: var(--nod-tocco);
+  block-size: var(--nod-tocco);
+  border-radius: var(--nod-raggio-oggetto);
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  will-change: transform;
+}
+
+.nod-root .nod-ix-foglia[data-trascinando] {
+  cursor: grabbing;
+}
+
+.nod-root .nod-ix-foglia[aria-disabled='true'] {
+  cursor: default;
+}
+
+.nod-root .nod-ix-foglia__segno {
+  display: block;
+  inline-size: var(--nod-foglia-piano);
+  block-size: var(--nod-foglia-piano);
+  color: var(--nod-piano-foglia);
+  fill: currentColor;
+  transition: transform var(--nod-ix-rapido) var(--nod-ix-curva-presa);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nod-root .nod-ix-foglia:hover:not([aria-disabled='true']) .nod-ix-foglia__segno {
+    transform: rotate(-8deg);
+  }
+}
+
+.nod-root .nod-ix-foglia[data-trascinando] .nod-ix-foglia__segno {
+  transform: rotate(-8deg) scale(1.12);
+}
+
+/*
+ * I due range accessibili ("Da scuro a brillante", "Da morbido a pronto"):
+ * nascosti alla vista finché uno dei due non ha il fuoco, poi compaiono
+ * sotto il piano come due righelli sottili (ux §7.8). Contenitore:
+ *   <div class="nod-ix-range-voce"> label + input.nod-ix-range × 2 </div>
+ */
+.nod-root .nod-ix-range-voce:not(:focus-within) {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.nod-root .nod-ix-range {
+  display: block;
+  inline-size: 100%;
+  block-size: var(--nod-tocco);
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.nod-root .nod-ix-range[aria-disabled='true'] {
+  cursor: default;
+}
+
+.nod-root .nod-ix-range::-webkit-slider-runnable-track {
+  block-size: var(--nod-filo);
+  background-color: var(--nod-testo);
+  border: 0;
+  border-radius: var(--nod-raggio);
+}
+
+.nod-root .nod-ix-range::-webkit-slider-thumb {
+  inline-size: var(--nod-ix-pollice);
+  block-size: var(--nod-ix-pollice);
+  margin-block-start: calc((var(--nod-filo) - var(--nod-ix-pollice)) / 2);
+  background-color: var(--nod-titolo);
+  border: 0;
+  border-radius: var(--nod-raggio);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.nod-root .nod-ix-range::-moz-range-track {
+  block-size: var(--nod-filo);
+  background-color: var(--nod-testo);
+  border: 0;
+  border-radius: var(--nod-raggio);
+}
+
+.nod-root .nod-ix-range::-moz-range-thumb {
+  inline-size: var(--nod-ix-pollice);
+  block-size: var(--nod-ix-pollice);
+  background-color: var(--nod-titolo);
+  border: 0;
+  border-radius: var(--nod-raggio);
+}
+
+/* ================================================================== 9. il menu a comparsa */
+
+/*
+ * Pannello del menu (useMenuMobile: propsPannello). Chiuso è invisibile e
+ * fuori dall'ordine di tabulazione (visibility). Si apre con una
+ * dissolvenza di 200 ms e una discesa di 6 px dall'angolo del marchio; si
+ * chiude con la stessa dissolvenza. Posizione, misure, fondo e contorno
+ * sono del builder (testata.css), con i token --nod-menu-*.
+ */
+.nod-root .nod-ix-pannello {
+  visibility: hidden;
+  opacity: 0;
+  transform: translate3d(0, -6px, 0);
+  transition:
+    opacity var(--nod-ix-medio) var(--nod-ix-curva-velo),
+    transform var(--nod-ix-medio) var(--nod-ix-curva-velo),
+    visibility 0s linear var(--nod-ix-medio);
+}
+
+.nod-root .nod-ix-pannello[data-aperto] {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity var(--nod-ix-medio) var(--nod-ix-curva-velo),
+    transform var(--nod-ix-medio) var(--nod-ix-curva-velo),
+    visibility 0s linear 0s;
+}
+
+/* Il marchio-bottone: aperto, il filo d'ebano sotto "NODI" dice che il menu è giù. */
+.nod-root .nod-ix-marchio[aria-expanded='true'] .nod-ix-testo-bottone__testo {
+  text-decoration-color: var(--nod-titolo);
+  text-decoration-thickness: var(--nod-filo-forte);
+}
+
+/* ================================================================== 10. area di tocco */
+
+/* 44 × 44 minimo (CD §4.8) senza cambiare il disegno. */
+.nod-root .nod-ix-tocco {
+  position: relative;
+  min-inline-size: var(--nod-tocco);
+  min-block-size: var(--nod-tocco);
+}
+
+/* ================================================================== 11. reduced motion */
+
+/*
+ * Stato finale immediato: niente transizioni sugli stati (lo stato cambia
+ * lo stesso, a scatto). Vale sia per la preferenza del sistema sia per
+ * data-motion="reduced" che Radice scrive su .nod-root.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .nod-root .nod-ix-link,
+  .nod-root .nod-ix-azione,
+  .nod-root .nod-ix-testo-bottone__testo,
+  .nod-root .nod-ix-scelta__testo,
+  .nod-root .nod-ix-cursore__segno,
+  .nod-root .nod-ix-foglia__segno,
+  .nod-root .nod-ix-pannello,
+  .nod-root .nod-ix-pannello[data-aperto] {
+    transition: none;
+  }
+
+  .nod-root .nod-ix-pannello {
+    transform: none;
+  }
+}
+
+.nod-root[data-motion='reduced'] .nod-ix-link,
+.nod-root[data-motion='reduced'] .nod-ix-azione,
+.nod-root[data-motion='reduced'] .nod-ix-testo-bottone__testo,
+.nod-root[data-motion='reduced'] .nod-ix-scelta__testo,
+.nod-root[data-motion='reduced'] .nod-ix-cursore__segno,
+.nod-root[data-motion='reduced'] .nod-ix-foglia__segno,
+.nod-root[data-motion='reduced'] .nod-ix-pannello,
+.nod-root[data-motion='reduced'] .nod-ix-pannello[data-aperto] {
+  transition: none;
+}
+
+.nod-root[data-motion='reduced'] .nod-ix-pannello {
+  transform: none;
+}

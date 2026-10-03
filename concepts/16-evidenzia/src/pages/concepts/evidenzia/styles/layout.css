@@ -1,0 +1,60 @@
+/* ==========================================================================
+   EVIDENZIA · layout (scaffold)
+   --------------------------------------------------------------------------
+   La radice a tutta finestra e chi scorre (tech-architect §2.1):
+   - data-layout="foglio" (≥ 640 px): la finestra NON scorre, `.evd-root` è
+     alta quanto la finestra e scorre `.evd-foglio` (foglio/foglio.css);
+   - data-layout="colonna" (< 640 px): scorre la finestra, il foglio è un
+     blocco normale (barra del giro e barre di rubrica sticky).
+   Livelli (token dell'art-director): foglio 0, comandi 20, avviso "scarico"
+   25, velo 30, scheda 40, clone dello stacco 45, giro 50. Il bottone del sito
+   "Torna in Ciceri Lab" sta sopra tutto con il suo z-index.
+   ========================================================================== */
+
+.evd-root {
+  position: relative;
+}
+
+.evd-root[data-layout='foglio'] {
+  block-size: 100svh;
+  block-size: 100dvh;
+  overflow: hidden;
+}
+
+.evd-root[data-layout='colonna'] {
+  min-block-size: 100svh;
+  min-block-size: 100dvh;
+  overflow-x: clip;
+}
+
+/* --------------------------------------------------------------------------
+   Unica eccezione ammessa ai selettori su html (tech-architect §5):
+   `html:has(.evd-root)` vale solo mentre il concept è montato.
+   - foglio: niente scroll della finestra (scorre il foglio);
+   - colonna: scroll-padding della finestra per la barra del giro (48) e la
+     barra di rubrica (36) sticky in alto, e per "Torna in Ciceri Lab" in
+     basso a sinistra (ux-architect §6.1: alto 96, basso 88).
+   -------------------------------------------------------------------------- */
+html:has(.evd-root[data-layout='foglio']),
+html:has(.evd-root[data-layout='foglio']) body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+html:has(.evd-root[data-layout='colonna']) {
+  scroll-padding-block: 96px calc(88px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Regione aria-live unica (Evidenzia.tsx): fuori dal foglio, sempre montata. */
+.evd-root .evd-live {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

@@ -1,0 +1,126 @@
+/* ==========================================================================
+   EVIDENZIA · il foglio (scaffold): il contenitore, non il contenuto
+   --------------------------------------------------------------------------
+   Struttura (Foglio.tsx):
+     .evd-foglio            lo scroller (foglio) / un blocco (colonna)
+       .evd-dimensionatore  la misura del contenuto scalato (+ spazi per il molo)
+         .evd-pagina        il foglio stampato, 1840 px, data-vista → scala
+           Testata, striscia, main.evd-annunci.evd-colonne, Piede
+
+   Pagina intera = `transform: translate() scale()` su .evd-pagina dentro un
+   dimensionatore grande quanto la finestra (tech-architect §0.5): il DOM non
+   cambia. Le variabili --evd-scala, --evd-intera-x/-y, --evd-area-w/-h le
+   scrive Foglio.tsx sul dimensionatore, solo quando cambiano. Nessuna
+   `transition` sul transform della pagina: il passaggio lo anima
+   motion/vista.ts (cambiaVista).
+
+   Classi condivise: .evd-foglio, .evd-pagina, .evd-colonne.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   FOGLIO (≥ 640 px): scorre nei due assi
+   -------------------------------------------------------------------------- */
+.evd-root[data-layout='foglio'] .evd-foglio {
+  position: absolute;
+  inset: 0;
+  z-index: var(--evd-z-foglio);
+  overflow: auto;
+  overscroll-behavior: contain;
+  background-color: var(--evd-fondo);
+  /* il fuoco portato in vista non finisce sotto "Torna in Ciceri Lab" (alto)
+     né sotto il molo (basso): ux-architect §2.2 e §6.1 */
+  scroll-padding: var(--evd-margine-alto) 0 var(--evd-foglio-spazio-basso) 0;
+}
+
+.evd-root[data-layout='foglio'] .evd-dimensionatore {
+  inline-size: calc(var(--evd-foglio-l) + var(--evd-foglio-spazio-destro));
+  padding-block-end: var(--evd-foglio-spazio-basso);
+}
+
+.evd-root[data-layout='foglio'] .evd-pagina {
+  position: relative;
+  inline-size: var(--evd-foglio-l);
+  min-block-size: var(--evd-foglio-h);
+  padding: var(--evd-margine-alto) var(--evd-margine) 0;
+  background-color: var(--evd-fondo);
+  transform-origin: 0 0;
+}
+
+/* Pagina intera: il foglio scalato sta tutto nell'area a sinistra del molo */
+.evd-root[data-layout='foglio'][data-vista='intera'] .evd-foglio {
+  overflow: hidden;
+}
+
+.evd-root[data-layout='foglio'][data-vista='intera'] .evd-dimensionatore {
+  inline-size: var(--evd-area-w);
+  block-size: var(--evd-area-h);
+  padding: 0;
+  overflow: clip;
+}
+
+.evd-root[data-layout='foglio'][data-vista='intera'] .evd-pagina {
+  transform: translate(var(--evd-intera-x), var(--evd-intera-y)) scale(var(--evd-scala));
+}
+
+/* Le foto a retino in Pagina intera: un grigio piatto (niente moiré a scala
+   0,4). Contratto con sections/Annunci/FotoRetino.tsx: il contenitore della
+   foto porta `data-evd-retino`, l'<img> sta dentro (art-director §4). */
+.evd-root[data-vista='intera'] [data-evd-retino] {
+  background-color: var(--evd-retino-piatto);
+}
+
+.evd-root[data-vista='intera'] [data-evd-retino] img {
+  visibility: hidden;
+}
+
+/* --------------------------------------------------------------------------
+   La griglia a 6 colonne con i filetti (tech-architect §5)
+   I filetti sono disegnati UNA volta dal fondo della griglia, al centro dei
+   canaletti (xFiletto di tokens.ts): restano continui come su un giornale.
+   I blocchi a riquadro hanno fondo carta e li coprono.
+   La griglia dà solo colonne, canaletti e filetti: righe, aree e posizione
+   di ogni blocco le decide sections/Annunci (impaginato.ts + annunci.css).
+   -------------------------------------------------------------------------- */
+.evd-root[data-layout='foglio'] .evd-colonne {
+  --evd-passo: calc(var(--evd-colonna) + var(--evd-canaletto));
+  --evd-filo-x: calc(var(--evd-colonna) + (var(--evd-canaletto) - var(--evd-filetto)) / 2);
+  display: grid;
+  grid-template-columns: repeat(var(--evd-colonne), var(--evd-colonna));
+  column-gap: var(--evd-canaletto);
+  align-items: start;
+  background-image: linear-gradient(
+    to right,
+    transparent var(--evd-filo-x),
+    var(--evd-filetto-colore) var(--evd-filo-x) calc(var(--evd-filo-x) + var(--evd-filetto)),
+    transparent calc(var(--evd-filo-x) + var(--evd-filetto)) calc(var(--evd-filo-x) + var(--evd-passo)),
+    var(--evd-filetto-colore) calc(var(--evd-filo-x) + var(--evd-passo)) calc(var(--evd-filo-x) + var(--evd-passo) + var(--evd-filetto)),
+    transparent calc(var(--evd-filo-x) + var(--evd-passo) + var(--evd-filetto)) calc(var(--evd-filo-x) + var(--evd-passo) * 2),
+    var(--evd-filetto-colore) calc(var(--evd-filo-x) + var(--evd-passo) * 2) calc(var(--evd-filo-x) + var(--evd-passo) * 2 + var(--evd-filetto)),
+    transparent calc(var(--evd-filo-x) + var(--evd-passo) * 2 + var(--evd-filetto)) calc(var(--evd-filo-x) + var(--evd-passo) * 3),
+    var(--evd-filetto-colore) calc(var(--evd-filo-x) + var(--evd-passo) * 3) calc(var(--evd-filo-x) + var(--evd-passo) * 3 + var(--evd-filetto)),
+    transparent calc(var(--evd-filo-x) + var(--evd-passo) * 3 + var(--evd-filetto)) calc(var(--evd-filo-x) + var(--evd-passo) * 4),
+    var(--evd-filetto-colore) calc(var(--evd-filo-x) + var(--evd-passo) * 4) calc(var(--evd-filo-x) + var(--evd-passo) * 4 + var(--evd-filetto)),
+    transparent calc(var(--evd-filo-x) + var(--evd-passo) * 4 + var(--evd-filetto))
+  );
+  background-repeat: no-repeat;
+}
+
+/* --------------------------------------------------------------------------
+   COLONNA (< 640 px): scorre la finestra, il foglio è un blocco normale.
+   Nessun overflow sugli antenati: le barre sticky della colonna devono
+   attaccarsi alla finestra.
+   -------------------------------------------------------------------------- */
+.evd-root[data-layout='colonna'] .evd-foglio,
+.evd-root[data-layout='colonna'] .evd-dimensionatore {
+  display: block;
+}
+
+.evd-root[data-layout='colonna'] .evd-pagina {
+  position: relative;
+  padding: 0 var(--evd-colonna-margine) var(--evd-colonna-fondo);
+  padding-block-end: calc(var(--evd-colonna-fondo) + env(safe-area-inset-bottom, 0px));
+}
+
+.evd-root[data-layout='colonna'] .evd-colonne {
+  display: block;
+}

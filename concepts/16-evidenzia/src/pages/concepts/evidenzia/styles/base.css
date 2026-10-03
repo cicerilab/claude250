@@ -1,0 +1,189 @@
+/* ==========================================================================
+   EVIDENZIA · base (scaffold)
+   --------------------------------------------------------------------------
+   Reset leggero e tipografia di base, TUTTO sotto .evd-root (tech-architect
+   §5): nel sito vero questo CSS resta caricato anche fuori dalla pagina, e lo
+   scope evita che tocchi altre pagine. Niente selettori nudi su html, body,
+   :root o *. Nessun hex: solo variabili di tokens.css (art-director §4).
+
+   Ordine di import (Evidenzia.tsx): tokens.css → base.css → layout.css →
+   foglio/foglio.css → interaction/interaction.css → CSS delle sezioni.
+
+   Selettori con :where() dove possibile: specificità minima, così i CSS di
+   sezione (che iniziano tutti con .evd-root) vincono senza forzature.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Radice: la carta del foglio (richiesta dell'art-director §4)
+   NIENTE transform, filter, contain, container-type o isolation qui: i figli
+   fissi (molo, barra, scheda, giro, velo) restano agganciati alla finestra e
+   il multiply del tratto vede il testo.
+   -------------------------------------------------------------------------- */
+.evd-root {
+  background-color: var(--evd-fondo);
+  color: var(--evd-testo);
+  font-family: var(--evd-font-testo);
+  font-size: var(--evd-fs-testo);
+  font-weight: var(--evd-peso-testo);
+  line-height: var(--evd-lh-testo);
+  font-synthesis: none;
+  font-optical-sizing: auto;
+  font-kerning: normal;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.evd-root ::selection {
+  background: var(--evd-selezione-fondo);
+  color: var(--evd-selezione-testo);
+}
+
+/* --------------------------------------------------------------------------
+   Reset scoped
+   -------------------------------------------------------------------------- */
+.evd-root,
+.evd-root :where(*, *::before, *::after) {
+  box-sizing: border-box;
+}
+
+.evd-root :where(h1, h2, h3, h4, h5, h6, p, figure, blockquote, dl, dd, ol, ul, fieldset, legend, pre, address) {
+  margin: 0;
+}
+
+.evd-root :where(ol, ul)[role='list'],
+.evd-root :where(ol, ul):where(.evd-lista) {
+  padding: 0;
+  list-style: none;
+}
+
+.evd-root :where(fieldset) {
+  min-inline-size: 0;
+  padding: 0;
+  border: 0;
+}
+
+.evd-root :where(legend) {
+  padding: 0;
+}
+
+.evd-root :where(img, svg, video, canvas) {
+  display: block;
+  max-inline-size: 100%;
+}
+
+.evd-root :where(img) {
+  block-size: auto;
+}
+
+.evd-root :where(button, input, select, textarea) {
+  margin: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+}
+
+.evd-root :where(button) {
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+  border-radius: var(--evd-raggio);
+  text-align: inherit;
+}
+
+.evd-root :where(button:disabled, [aria-disabled='true']) {
+  cursor: default;
+}
+
+.evd-root :where(input, select, textarea) {
+  border-radius: var(--evd-raggio);
+}
+
+.evd-root :where(a) {
+  color: inherit;
+  text-decoration-thickness: var(--evd-sottolineatura);
+  text-underline-offset: var(--evd-sottolineatura-distanza);
+}
+
+.evd-root :where(p, li, dd, figcaption, blockquote) {
+  overflow-wrap: break-word;
+}
+
+.evd-root :where([hidden]) {
+  display: none;
+}
+
+/* Fuoco programmatico su titoli e pannelli (salti, apertura dei dialoghi):
+   l'anello dei controlli è di interaction.css. */
+.evd-root :where(h1, h2, h3, section, main, footer, [role='dialog'])[tabindex='-1']:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* --------------------------------------------------------------------------
+   Tipografia di base (art-director §3.4): Franklin per ciò che si tocca o si
+   scansiona, Newsreader per ciò che si legge; niente grassetto Newsreader.
+   -------------------------------------------------------------------------- */
+.evd-root :where(h1, h2, h3) {
+  font-family: var(--evd-font-titoli);
+  font-weight: var(--evd-peso-titolo);
+  font-synthesis: none;
+}
+
+.evd-root :where(strong, b) {
+  font-family: var(--evd-font-titoli);
+  font-weight: var(--evd-peso-interfaccia);
+}
+
+.evd-root :where(button, input, select, textarea, label, legend) {
+  font-family: var(--evd-font-titoli);
+}
+
+/* --------------------------------------------------------------------------
+   Classi condivise dello scaffold
+   -------------------------------------------------------------------------- */
+
+/* Solo lettori di schermo. */
+.evd-root .evd-sr {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Link di salto (ux-architect §2.1): primi elementi tabulabili, visibili
+   solo col fuoco, in alto AL CENTRO (in alto a sinistra c'è il bottone
+   "Torna in Ciceri Lab" del sito, che li coprirebbe). */
+.evd-root .evd-salto {
+  position: fixed;
+  inset-block-start: var(--evd-sp-3);
+  inset-inline-start: 50%;
+  z-index: calc(var(--evd-z-giro) + 10);
+  min-block-size: var(--evd-tocco);
+  display: inline-flex;
+  align-items: center;
+  padding-inline: var(--evd-sp-4);
+  background-color: var(--evd-fondo);
+  color: var(--evd-testo);
+  font-family: var(--evd-font-titoli);
+  font-size: var(--evd-fs-bottone);
+  font-weight: var(--evd-peso-interfaccia);
+  line-height: var(--evd-lh-interfaccia);
+  text-decoration: underline;
+  box-shadow: 0 0 0 var(--evd-filo) var(--evd-nero);
+  white-space: nowrap;
+  transform: translate(-50%, calc(-100% - var(--evd-sp-8)));
+}
+
+.evd-root .evd-salto:focus,
+.evd-root .evd-salto:focus-visible {
+  transform: translate(-50%, 0);
+}
