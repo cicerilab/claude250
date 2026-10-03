@@ -9,7 +9,7 @@
 //   src/pages/concepts/nodi/webgl/dati/modi-meta.ts  dimensioni, parametri, cuscinetti, centro dell'anello, topologie
 //   qa/modi/*.png                                    linee nodali di tutti i modi calcolati e dei tre scelti
 //
-// Uso: `npm run modi` (oppure `node scripts/modi/calcola-modi.mjs [--grado 18] [--senza-catena]`).
+// Uso: `npm run modi` (oppure `node scripts/modi/calcola-modi.mjs [--grado 16] [--bombatura 15.5] [--catena [--catena-scala 1]]`).
 // Fisica (correzioni del trend-researcher §2.2 applicate):
 //   - rigidezza lungo la vena / di traverso = 15 / 0,8 GPa ≈ 19 (fascia 17-20, Haines 2000 in Jansson tab. 5.2)
 //   - spessore 2,8 mm (Jansson fig. 5.16e), densità 460 kg/m³ (Jansson tab. 5.1)
@@ -47,7 +47,7 @@ const ABETE = {
   h: 2.8e-3, // m
 };
 const GRADO = opzione('--grado', 18);
-const CON_CATENA = !argomenti.includes('--senza-catena');
+const CON_CATENA = argomenti.includes('--catena');
 const SCALA_CATENA = opzione('--catena-scala', 1);
 /** Altezza della bombatura al centro (mm); 0 = piastra piana. */
 const BOMBATURA_MM = opzione('--bombatura', 15.5);
@@ -517,11 +517,13 @@ function quotaPiana(w) {
   const spiegata = c[0] * sw + c[1] * sxw + c[2] * syw;
   return spiegata / sww;
 }
+const SOGLIA_PIANO = opzione('--soglia-piano', 0.8);
 for (let m = 0; m < nTot && elastici.length < 12; m++) {
   if (freq[m] < 5) continue;
   const prova = valutaSuGriglia(coefficientiModo(m), NU_OUT, NV_OUT);
   const q = quotaPiana(prova);
-  if (q > 0.95) { console.log(`scartato moto rigido a ${freq[m].toFixed(1)} Hz (piano ${q.toFixed(3)})`); continue; }
+  if (q > SOGLIA_PIANO) { console.log(`scartato moto rigido a ${freq[m].toFixed(1)} Hz (piano ${q.toFixed(3)})`); continue; }
+  console.log(`  ${freq[m].toFixed(1)} Hz: quota piana ${q.toFixed(3)}`);
   elastici.push(m);
 }
 

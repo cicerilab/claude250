@@ -31,13 +31,19 @@ export const HZ_SPENTO = 0;
 
 /**
  * Ai due capi della scala lo scroll in pixel interi può cadere appena fuori
- * dalla salita (a 60 Hz nel riposo, a 420 Hz nella coda spenta): si mira un
- * filo dentro. Il valore mostrato resta 60 o 420 (arrotondato).
+ * dalla salita: a 60 Hz nel riposo (spento), a 420 Hz nella coda (spenta).
+ * Si mira un pixel dentro la salita. Il valore mostrato resta 60 o 420
+ * se motion/percorso.ts tiene un piccolo pianerottolo ai due capi (vedi
+ * docs/interaction-designer.md, Richieste ad altri agent).
  */
-const MARGINE_CAPI_HZ = 0.4;
+const SCARTO_CAPI_PX = 1;
 
-function hzPerScroll(hz: number): number {
-  return clamp(hz, HZ_MIN + MARGINE_CAPI_HZ, HZ_MAX - MARGINE_CAPI_HZ);
+function yDaHz(hz: number): number {
+  const h = clamp(hz, HZ_MIN, HZ_MAX);
+  const y = scrollDaHz(h);
+  if (h >= HZ_MAX - 0.5) return Math.max(0, y - SCARTO_CAPI_PX);
+  if (h <= HZ_MIN + 0.5) return y + SCARTO_CAPI_PX;
+  return y;
 }
 
 /**
@@ -50,7 +56,7 @@ export function vaiAllaFrequenza(hz: number, liscio = false): void {
     vaiAScroll(0, morbido);
     return;
   }
-  vaiAScroll(scrollDaHz(hzPerScroll(hz)), morbido);
+  vaiAScroll(yDaHz(hz), morbido);
 }
 
 /** Frequenza del pianerottolo di un modo (il 5 segue la voce). */

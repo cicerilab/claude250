@@ -536,6 +536,9 @@ export function selSegnato(id: IdAnnuncio): (s: EvidenziaState) => boolean {
 
 /* ------------------------------------------------------------------ avvio */
 
+/** true dopo un avvio che ha cambiato il giro rispetto alla memoria (vedi `salvaAvvio`). */
+let daSalvareAllAvvio = false;
+
 export interface IngressiStore {
   /** location.search */
   search: string;
@@ -634,7 +637,17 @@ export function inizializzaStore(o: IngressiStore): EvidenziaState {
     reducedMotion: o.reducedMotion,
     simula,
   };
-  if (daUrl > 0 || sparite > 0 || (salvato !== null && salvato.mandato !== mandato)) salva();
+  // la memoria si riscrive dopo il montaggio (`salvaAvvio`), non qui: in
+  // sviluppo StrictMode chiama due volte l'inizializzatore di useState, e la
+  // seconda chiamata non deve trovare già salvato il giro arrivato da ?segna=
+  daSalvareAllAvvio = daUrl > 0 || sparite > 0 || (salvato !== null && salvato.mandato !== mandato);
   avvisa();
   return stato;
+}
+
+/** Solo Evidenzia.tsx, in un effetto di montaggio: salva il giro ripulito o arrivato da `?segna=`. */
+export function salvaAvvio(): void {
+  if (!daSalvareAllAvvio) return;
+  daSalvareAllAvvio = false;
+  salva();
 }
