@@ -293,7 +293,6 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   row-gap: var(--nov-sp-4);
-  scroll-margin-block-start: var(--nov-sp-6);
 }
 
 .nov-root[data-modo="elenco"] .nov-angolo__testa {

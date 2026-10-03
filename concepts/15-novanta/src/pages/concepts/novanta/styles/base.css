@@ -220,16 +220,18 @@
 }
 
 /* --------------------------------------------------------------------------
-   Vista elenco: lo scroll di pagina non deve lasciare il fuoco sotto il
-   bottone del sito (in basso a sinistra sotto i 640 px, WCAG 2.4.11).
+   Vista elenco: arrivando a una sezione (frammento, "Prenota", cambio di
+   vista) il titolo non deve finire sotto il bottone del sito: in alto a
+   sinistra da 640 px (~58 px), in basso a sinistra sotto (WCAG 2.4.11).
+   Valori letterali: le variabili --nov-* vivono su .nov-root, non su html.
    Unico selettore su html del concept, limitato da :has().
    -------------------------------------------------------------------------- */
 html:has(.nov-root[data-modo="elenco"]) {
-  scroll-padding-block: var(--nov-sp-4);
+  scroll-padding-block: 5rem 1rem;
 }
 
 @media (max-width: 40em) {
   html:has(.nov-root[data-modo="elenco"]) {
-    scroll-padding-block-end: calc(max(env(safe-area-inset-bottom), 14px) + 64px);
+    scroll-padding-block: 1rem calc(max(env(safe-area-inset-bottom), 14px) + 64px);
   }
 }
