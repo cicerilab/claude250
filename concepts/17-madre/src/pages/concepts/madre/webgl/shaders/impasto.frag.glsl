@@ -69,7 +69,7 @@ void main() {
   gradA = gradA * R_ALVEOLI; // ritorno nello spazio del piano (trasposta)
 
   // onde della pelle (B, scala fine)
-  float sOnde = MAD_S_CHIAZZE * 5.3;
+  float sOnde = MAD_S_CHIAZZE * 2.3;
   vec2 to = R_ONDE * p * sOnde + vec2(0.71, 0.29);
   float o0 = texture2D(uSpolvero, to).b;
   float ox = texture2D(uSpolvero, to + vec2(TEXEL, 0.0)).b;
@@ -88,7 +88,7 @@ void main() {
   float chiazze = texture2D(uSpolvero, p * MAD_S_CHIAZZE + vec2(0.13, 0.57)).b;
   float grana = texture2D(uSpolvero, p * MAD_S_GRANA + vec2(0.5, 0.25)).r;
   float crepe = texture2D(uSpolvero, R_CREPE * p * MAD_S_CREPE + vec2(0.21, 0.83)).a;
-  float strisce = texture2D(uSpolvero, (R_STRISCE * p) * vec2(MAD_S_CHIAZZE * 0.7, MAD_S_CHIAZZE * 9.0) + vec2(0.4, 0.9)).b;
+  float strisce = texture2D(uSpolvero, (R_STRISCE * p) * vec2(MAD_S_CHIAZZE * 0.25, MAD_S_CHIAZZE * 3.2) + vec2(0.4, 0.9)).b;
 
   // tensione della pelle: più sulle gonfiature e sulla spalla della cupola
   float tensione = 0.0;
@@ -122,8 +122,9 @@ void main() {
   // densità della farina: un velo continuo a chiazze, più sottile sui fianchi
   // ripidi e sulle bolle (pelle tesa); sul tavolo quasi pieno, con i grumi
   float pendenza = 1.0 - vNormale.z;
-  float densImpasto = 0.76 + (chiazze - 0.5) * 1.3 - pendenza * 1.3 - bolla * 0.3;
-  float densTavolo = 0.9 + (chiazze - 0.5) * 0.25 + (strisce - 0.5) * 0.12 + bolla * 0.4;
+  float macchie = smoothstep(0.3, 0.72, chiazze);
+  float densImpasto = 0.22 + macchie * 0.8 - pendenza * 1.1 - bolla * 0.3;
+  float densTavolo = 0.86 + (chiazze - 0.5) * 0.3 + (strisce - 0.5) * 0.14 + bolla * 0.4;
   float densita = clamp(mix(densTavolo, densImpasto, sullImpasto), 0.0, 1.0);
 
   // grana: modula il velo e, dove è sottile, lo rompe in granelli
@@ -141,8 +142,8 @@ void main() {
   farina *= 1.0 - cratere * 0.8 * sullImpasto;
 
   // ------------------------------------------------------------------ albedo
-  vec3 farinaPiena = min(uFarina * 1.035, vec3(1.0));
-  vec3 pelle = mix(uImpastoNudo, uFarina, 0.5 - nudo * 0.5);
+  vec3 farinaPiena = min(uFarina * vec3(1.05, 1.06, 1.08), vec3(1.0));
+  vec3 pelle = mix(uImpastoNudo, uFarina, 0.28 - nudo * 0.28);
   pelle = mix(pelle, uImpastoNudo * 1.03, bolla * 0.3 * sullImpasto); // bolla: pelle tesa, traslucida
   vec3 tavolo = mix(uFarina, uFarinaOmbra, 0.3);
   vec3 sotto = mix(tavolo, pelle, sullImpasto);

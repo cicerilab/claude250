@@ -1,0 +1,746 @@
+/*
+ * SOTTOPELLE · componenti condivisi (art-director)
+ *
+ * Classi di base che tutte le sezioni usano così come sono. Le sezioni
+ * aggiungono solo posizione e misure nel proprio CSS, mai colori o font
+ * diversi. Solo variabili di tokens.css; nessun hex qui.
+ *
+ *   .stp-azione       bottone rosso (l'unico uso del rosso nel sito)
+ *   .stp-comando      comando di testo: filtri, interruttori, oggetti, icone
+ *     --contorno      comando a contorno osso (Combacia, Salta, Torna alla parete…)
+ *     --icona         comando quadrato con sola icona
+ *     --parola        parte della frase di Grande come?
+ *   .stp-scelta       voce da scegliere in un gruppo (giorni, orari, zone, stili)
+ *   .stp-campo        etichetta, campo, aiuto, errore
+ *   .stp-casella      casella "Ho 18 anni compiuti"
+ *   .stp-isola        cartello appeso sulla parete (e sezione nell'elenco)
+ *   .stp-targa        piastra sotto ogni testo fisso che passa sopra la parete
+ *   .stp-link         collegamento di testo
+ *   .stp-gotico       voce gotica (solo da 32 px)
+ *   .stp-cifre        numeri tabellari in Schibsted
+ *   .stp-cifra-ore    la cifra gotica della stima
+ *   .stp-inchiostro   inchiostro diluito: macchia del banco, posto scelto
+ *
+ * Il fuoco (anello osso 2 px a 2 px) lo applica interaction/interaction.css
+ * con i token --stp-focus-*: qui non si ridefinisce.
+ */
+
+/* Avanzamento del posarsi dell'inchiostro: 0 morbido, 1 posato. Registrato
+   perché motion/motion.css possa animarlo con keyframes. Si scrive
+   sull'elemento .stp-inchiostro stesso. */
+@property --stp-posa {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 1;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Selezione del testo e voce gotica                                        */
+/* ------------------------------------------------------------------------ */
+
+.stp-root ::selection {
+  background-color: var(--stp-selezione-fondo);
+  color: var(--stp-selezione-testo);
+}
+
+.stp-root .stp-gotico {
+  font-family: var(--stp-font-insegna);
+  font-weight: var(--stp-peso-titolo);
+  font-synthesis: none;
+  font-kerning: normal;
+  font-variant-ligatures: common-ligatures;
+  text-transform: none;
+  letter-spacing: 0;
+  line-height: var(--stp-lh-titolo);
+}
+
+.stp-root .stp-cifre {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Bottone rosso: "Grande come?" e "Fissa la consulenza"                    */
+/* ------------------------------------------------------------------------ */
+
+.stp-root .stp-azione {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--stp-sp-2);
+  min-block-size: var(--stp-azione-h);
+  padding-block: 0;
+  padding-inline: var(--stp-azione-pad);
+  margin: 0;
+  border: 0;
+  border-radius: var(--stp-raggio);
+  background-color: var(--stp-azione-fondo);
+  color: var(--stp-azione-testo);
+  font-family: var(--stp-font-testo);
+  font-size: var(--stp-fs-azione);
+  font-weight: var(--stp-peso-forte);
+  line-height: var(--stp-lh-stretta);
+  letter-spacing: 0;
+  text-transform: none;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--stp-dur-colore, 140ms) var(--stp-ease-colore, linear);
+}
+
+.stp-root .stp-azione--grande {
+  min-block-size: var(--stp-azione-h-grande);
+}
+
+.stp-root .stp-azione--piena {
+  inline-size: 100%;
+}
+
+/* Riga A del telefono: 135 px tra il bottone del sito e il margine */
+.stp-root .stp-azione--compatta {
+  min-block-size: var(--stp-tocco);
+  padding-inline: 14px;
+  font-size: 0.9375rem;
+}
+
+@media (hover: hover) {
+  .stp-root .stp-azione:hover {
+    background-color: var(--stp-azione-fondo-sopra);
+  }
+}
+
+.stp-root .stp-azione:active {
+  background-color: var(--stp-azione-fondo-premuto);
+  transform: translateY(1px);
+}
+
+/* Invio in corso ("Sto fissando…"): resta premuto, niente spinner */
+.stp-root .stp-azione[aria-busy='true'],
+.stp-root .stp-azione[data-premuto='si'] {
+  background-color: var(--stp-azione-fondo-premuto);
+  cursor: progress;
+  transform: none;
+}
+
+/* Spento: il rosso non si spegne mai (il bottone spiega cosa manca) */
+.stp-root .stp-azione[aria-disabled='true'] {
+  cursor: default;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Comando di testo                                                          */
+/* ------------------------------------------------------------------------ */
+
+.stp-root .stp-comando {
+  appearance: none;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stp-sp-2);
+  min-block-size: var(--stp-comando-h);
+  padding-block: 0;
+  padding-inline: var(--stp-sp-1);
+  margin: 0;
+  border: 0;
+  border-radius: var(--stp-raggio);
+  background: none;
+  color: var(--stp-testo-2);
+  font-family: var(--stp-font-testo);
+  font-size: var(--stp-fs-comando);
+  font-weight: var(--stp-peso-medio);
+  line-height: var(--stp-lh-stretta);
+  letter-spacing: 0;
+  text-transform: none;
+  text-decoration-line: none;
+  text-decoration-thickness: var(--stp-tratto-forte);
+  text-underline-offset: var(--stp-sottolineatura-distanza);
+  white-space: nowrap;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: color var(--stp-dur-colore, 140ms) var(--stp-ease-colore, linear);
+}
+
+/* Bersaglio di tocco pieno anche quando il comando è disegnato più basso */
+.stp-root .stp-comando::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  inset-block: min(0px, calc((var(--stp-comando-h) - var(--stp-tocco)) / 2));
+}
+
+@media (pointer: fine) {
+  .stp-root .stp-comando::after {
+    inset-block: 0;
+  }
+}
+
+@media (hover: hover) {
+  .stp-root .stp-comando:hover {
+    color: var(--stp-testo);
+  }
+}
+
+/* Attivo: osso + sottolineatura 2 px. Mai rosso, mai un fondo colorato */
+.stp-root .stp-comando[aria-pressed='true'],
+.stp-root .stp-comando[aria-checked='true'],
+.stp-root .stp-comando[aria-current='true'],
+.stp-root .stp-comando[aria-current='page'],
+.stp-root .stp-comando[aria-selected='true'],
+.stp-root .stp-comando[aria-expanded='true'] {
+  color: var(--stp-testo);
+  text-decoration-line: underline;
+  text-decoration-color: var(--stp-osso);
+}
+
+/* Spento (es. "Torna all'ingresso" quando sei già lì): resta leggibile, non
+   reagisce. Il perché lo dice l'etichetta per il lettore di schermo. */
+.stp-root .stp-comando[aria-disabled='true'],
+.stp-root .stp-comando:disabled {
+  color: var(--stp-testo-2);
+  text-decoration-line: none;
+  cursor: default;
+}
+
+/* Etichetta muta dentro un gruppo ("Stile:", "Misura:", "Chi:") */
+.stp-root .stp-comando__gruppo {
+  color: var(--stp-testo-2);
+  font-family: var(--stp-font-testo);
+  font-size: var(--stp-fs-comando);
+  font-weight: var(--stp-peso-testo);
+  line-height: var(--stp-lh-stretta);
+}
+
+.stp-root .stp-comando__icona {
+  flex: none;
+  inline-size: 1.25em;
+  block-size: 1.25em;
+}
+
+/* A contorno: Combacia, Salta, Guarda i N, Torna alla parete, Aggiungi al
+   calendario, Fissa un'altra consulenza. Secondario, mai rosso. */
+.stp-root .stp-comando--contorno {
+  justify-content: center;
+  min-block-size: var(--stp-azione-h);
+  padding-inline: var(--stp-azione-pad);
+  box-shadow: inset 0 0 0 var(--stp-tratto) var(--stp-contorno);
+  color: var(--stp-testo);
+  font-size: var(--stp-fs-azione);
+  font-weight: var(--stp-peso-forte);
+}
+
+@media (hover: hover) {
+  .stp-root .stp-comando--contorno:hover {
+    box-shadow: inset 0 0 0 var(--stp-tratto-forte) var(--stp-contorno);
+  }
+}
+
+.stp-root .stp-comando--contorno:active {
+  box-shadow: inset 0 0 0 var(--stp-tratto-forte) var(--stp-contorno);
+  transform: translateY(1px);
+}
+
+.stp-root .stp-comando--contorno::after {
+  inset-block: min(0px, calc((var(--stp-azione-h) - var(--stp-tocco)) / 2));
+}
+
+/* Solo icona: Chiudi, Torna all'ingresso su telefono, frecce della scheda */
+.stp-root .stp-comando--icona {
+  justify-content: center;
+  inline-size: var(--stp-tocco);
+  min-block-size: var(--stp-tocco);
+  padding: 0;
+  color: var(--stp-testo);
+}
+
+.stp-root .stp-comando--icona .stp-comando__icona {
+  inline-size: 24px;
+  block-size: 24px;
+}
+
+/* Parte della frase di Grande come?: dentro il testo, con il corpo della
+   frase. Piena = osso forte sottolineato; vuota ("dove?") = grigio lettura
+   con sottolineatura tratteggiata. Ogni riga è alta 44 px (--stp-lh-frase),
+   il bersaglio occupa tutta la riga. */
+.stp-root .stp-comando--parola {
+  display: inline-block;
+  min-block-size: 0;
+  padding-block: calc((var(--stp-tocco) - var(--stp-lh-stretta) * 1em) / 2);
+  padding-inline: 0;
+  margin-block: calc((var(--stp-tocco) - var(--stp-lh-stretta) * 1em) / -2);
+  vertical-align: baseline;
+  color: var(--stp-testo);
+  font-size: inherit;
+  font-weight: var(--stp-peso-forte);
+  text-decoration-line: underline;
+  text-decoration-style: solid;
+  text-decoration-color: var(--stp-grigio-sfumato);
+  text-decoration-thickness: var(--stp-tratto-forte);
+  white-space: normal;
+}
+
+.stp-root .stp-comando--parola::after {
+  content: none;
+}
+
+.stp-root .stp-comando--parola[data-vuota='si'] {
+  color: var(--stp-testo-2);
+  font-weight: var(--stp-peso-testo);
+  text-decoration-style: dashed;
+}
+
+@media (hover: hover) {
+  .stp-root .stp-comando--parola:hover {
+    text-decoration-color: var(--stp-osso);
+  }
+}
+
+.stp-root .stp-comando--parola[aria-expanded='true'] {
+  text-decoration-color: var(--stp-osso);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Voce da scegliere: giorni, orari, zone, stili nei fogli                  */
+/* Scelta = inchiostro diluito + bordo osso 2 px + peso forte (tre segni,    */
+/* nessuno affidato al solo colore).                                         */
+/* ------------------------------------------------------------------------ */
+
+.stp-root .stp-scelta {
+  appearance: none;
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  min-block-size: var(--stp-tocco);
+  padding-block: var(--stp-sp-2);
+  padding-inline: var(--stp-sp-3);
+  margin: 0;
+  border: 0;
+  border-radius: var(--stp-raggio);
+  background-color: transparent;
+  box-shadow: inset 0 0 0 var(--stp-tratto) var(--stp-grigio-sfumato);
+  color: var(--stp-testo);
+  font-family: var(--stp-font-testo);
+  font-size: var(--stp-fs-testo);
+  font-weight: var(--stp-peso-testo);
+  font-variant-numeric: tabular-nums lining-nums;
+  line-height: var(--stp-lh-stretta);
+  text-align: start;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: box-shadow var(--stp-dur-colore, 140ms) var(--stp-ease-colore, linear);
+}
+
+.stp-root .stp-scelta__nota {
+  color: var(--stp-testo-2);
+  font-size: var(--stp-fs-nota);
+  font-weight: var(--stp-peso-testo);
+}
+
+@media (hover: hover) {
+  .stp-root .stp-scelta:hover {
+    box-shadow: inset 0 0 0 var(--stp-tratto) var(--stp-osso);
+  }
+}
+
+.stp-root .stp-scelta[aria-checked='true'],
+.stp-root .stp-scelta[aria-pressed='true'],
+.stp-root .stp-scelta[aria-selected='true'],
+.stp-root .stp-scelta:has(> input:checked) {
+  background-color: var(--stp-inchiostro-velo);
+  box-shadow: inset 0 0 0 var(--stp-tratto-forte) var(--stp-osso);
+  font-weight: var(--stp-peso-forte);
+}
+
+.stp-root .stp-scelta[aria-checked='true'] .stp-scelta__nota,
+.stp-root .stp-scelta:has(> input:checked) .stp-scelta__nota {
+  color: var(--stp-osso);
+}
+
+/* Pieno o non disponibile: niente contorno, scritto "pieno" */
+.stp-root .stp-scelta[aria-disabled='true'],
+.stp-root .stp-scelta:disabled {
+  box-shadow: none;
+  color: var(--stp-testo-2);
+  cursor: default;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Campi                                                                     */
+/* ------------------------------------------------------------------------ */
+
+.stp-root .stp-campo {
+  display: grid;
+  gap: var(--stp-sp-2);
+  min-inline-size: 0;
+}
+
+.stp-root .stp-campo__etichetta {
+  color: var(--stp-testo);
+  font-family: var(--stp-font-testo);
+  font-size: var(--stp-fs-etichetta);
+  font-weight: var(--stp-peso-forte);
+  line-height: var(--stp-lh-stretta);
+}
+
+.stp-root .stp-campo__input {
+  appearance: none;
+  display: block;
+  inline-size: 100%;
+  min-inline-size: 0;
+  block-size: var(--stp-campo-h);
+  padding-block: 0;
+  padding-inline: 14px;
+  margin: 0;
+  border: 0;
+  border-radius: var(--stp-raggio);
+  background-color: var(--stp-campo-fondo);
+  box-shadow: inset 0 calc(-1 * var(--stp-tratto)) 0 var(--stp-campo-filo);
+  color: var(--stp-testo);
+  font-family: var(--stp-font-testo);
+  font-size: var(--stp-fs-campo);
+  font-weight: var(--stp-peso-testo);
+  line-height: var(--stp-lh-stretta);
+  caret-color: var(--stp-osso);
+}
+
+.stp-root .stp-campo__input::placeholder {
+  color: var(--stp-testo-2);
+  opacity: 1;
+}
+
+.stp-root .stp-campo__input:focus {
+  box-shadow: inset 0 calc(-1 * var(--stp-tratto-forte)) 0 var(--stp-osso);
+}
+
+/* Errore: filo osso pieno sotto + segno verticale a sinistra; il messaggio
+   dice cosa fare. Nessun rosso (il rosso è solo dei bottoni). */
+.stp-root .stp-campo__input[aria-invalid='true'] {
+  box-shadow:
+    inset 0 calc(-1 * var(--stp-tratto-forte)) 0 var(--stp-osso),
+    inset var(--stp-tratto-forte) 0 0 var(--stp-osso);
+}
+
+/* Campi numerici della macchia: niente frecce del browser, cifre tabellari */
+.stp-root .stp-campo__input[type='number'] {
+  font-variant-numeric: tabular-nums lining-nums;
+  -moz-appearance: textfield;
+}
+
+.stp-root .stp-campo__input[type='number']::-webkit-outer-spin-button,
+.stp-root .stp-campo__input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.stp-root .stp-campo__aiuto {
+  color: var(--stp-testo-2);
+  font-size: var(--stp-fs-nota);
+  line-height: 1.4;
+}
+
+.stp-root .stp-campo__errore {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--stp-sp-2);
+  color: var(--stp-testo);
+  font-family: var(--stp-font-testo);
+  font-size: var(--stp-fs-etichetta);
+  font-weight: var(--stp-peso-medio);
+  line-height: 1.4;
+}
+
+.stp-root .stp-campo__errore-icona {
+  flex: none;
+  inline-size: 1.2em;
+  block-size: 1.2em;
+  margin-block-start: 0.05em;
+}
+
+/* Casella "Ho 18 anni compiuti": quadrato osso a spigolo vivo, bersaglio 44 */
+.stp-root .stp-casella {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stp-sp-3);
+  min-block-size: var(--stp-tocco);
+  color: var(--stp-testo);
+  font-family: var(--stp-font-testo);
+  font-size: var(--stp-fs-testo);
+  line-height: 1.35;
+  cursor: pointer;
+}
+
+.stp-root .stp-casella__input {
+  appearance: none;
+  position: relative;
+  flex: none;
+  inline-size: var(--stp-casella);
+  block-size: var(--stp-casella);
+  margin: 0;
+  border: 0;
+  border-radius: var(--stp-raggio);
+  background-color: var(--stp-campo-fondo);
+  box-shadow: inset 0 0 0 var(--stp-tratto-forte) var(--stp-osso);
+  cursor: pointer;
+}
+
+.stp-root .stp-casella__input::after {
+  content: '';
+  position: absolute;
+  inset-inline-start: 8px;
+  inset-block-start: 3px;
+  inline-size: 6px;
+  block-size: 12px;
+  border-inline-end: 2.5px solid var(--stp-nero);
+  border-block-end: 2.5px solid var(--stp-nero);
+  transform: rotate(45deg);
+  opacity: 0;
+}
+
+.stp-root .stp-casella__input:checked {
+  background-color: var(--stp-osso);
+}
+
+.stp-root .stp-casella__input:checked::after {
+  opacity: 1;
+}
+
+.stp-root .stp-casella__input[aria-invalid='true'] {
+  box-shadow:
+    inset 0 0 0 var(--stp-tratto-forte) var(--stp-osso),
+    0 0 0 var(--stp-tratto-forte) var(--stp-nero-rialzato),
+    0 0 0 calc(var(--stp-tratto-forte) * 2) var(--stp-osso);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Isola: il cartello appeso                                                 */
+/* ------------------------------------------------------------------------ */
+
+.stp-root .stp-isola {
+  box-sizing: border-box;
+  padding: var(--stp-isola-pad);
+  border: 0;
+  border-radius: var(--stp-raggio);
+  background-color: var(--stp-superficie);
+  color: var(--stp-testo);
+  font-family: var(--stp-font-testo);
+  font-size: var(--stp-fs-isola);
+  font-weight: var(--stp-peso-testo);
+  line-height: var(--stp-lh-isola);
+}
+
+.stp-root .stp-isola__titolo {
+  margin: 0 0 var(--stp-sp-3);
+  margin-inline-start: var(--stp-rientro-titolo);
+  color: var(--stp-testo);
+  font-family: var(--stp-font-insegna);
+  font-size: var(--stp-fs-titolo);
+  font-weight: var(--stp-peso-titolo);
+  font-synthesis: none;
+  line-height: var(--stp-lh-titolo);
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.stp-root .stp-isola__testo {
+  margin: 0;
+  max-inline-size: var(--stp-giustezza-isola);
+}
+
+.stp-root .stp-isola__testo + .stp-isola__testo {
+  margin-block-start: var(--stp-sp-2);
+}
+
+.stp-root .stp-isola__testo strong,
+.stp-root .stp-isola__elenco strong {
+  font-weight: var(--stp-peso-forte);
+}
+
+.stp-root .stp-isola__elenco {
+  display: grid;
+  gap: var(--stp-sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stp-root .stp-isola__nota {
+  margin: 0;
+  color: var(--stp-testo-2);
+  font-size: var(--stp-fs-nota);
+  line-height: 1.45;
+}
+
+/* Nome di chi tatua (Nives, Tobia) */
+.stp-root .stp-isola__nome {
+  margin: 0;
+  color: var(--stp-testo);
+  font-family: var(--stp-font-insegna);
+  font-size: var(--stp-fs-nome);
+  font-weight: var(--stp-peso-nome);
+  font-synthesis: none;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Targa: ogni testo fisso che può passare sopra una foto ci sta sopra.     */
+/* Il nome in testata, Torna all'ingresso, Vai all'elenco, "Nessun lavoro   */
+/* così". Nessun testo poggia direttamente sulla parete.                     */
+/* ------------------------------------------------------------------------ */
+
+.stp-root .stp-targa {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stp-sp-3);
+  min-block-size: var(--stp-testata-h);
+  padding-inline: var(--stp-sp-3);
+  background-color: var(--stp-superficie);
+  color: var(--stp-testo);
+}
+
+/* Il nome in testata: gotico 32 sulla targa, porta all'ingresso */
+.stp-root .stp-targa__marchio {
+  display: block;
+  color: var(--stp-testo);
+  font-family: var(--stp-font-insegna);
+  font-size: var(--stp-fs-marchio);
+  font-weight: var(--stp-peso-nome);
+  font-synthesis: none;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  padding-block-end: var(--stp-riserva-discendente);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Collegamento di testo                                                     */
+/* ------------------------------------------------------------------------ */
+
+.stp-root .stp-link {
+  color: var(--stp-testo);
+  font-weight: var(--stp-peso-medio);
+  text-decoration-line: underline;
+  text-decoration-color: var(--stp-grigio-lettura);
+  text-decoration-thickness: var(--stp-tratto);
+  text-underline-offset: var(--stp-sottolineatura-distanza);
+  cursor: pointer;
+  transition: text-decoration-color var(--stp-dur-colore, 140ms) var(--stp-ease-colore, linear);
+}
+
+@media (hover: hover) {
+  .stp-root .stp-link:hover {
+    text-decoration-color: var(--stp-osso);
+    text-decoration-thickness: var(--stp-tratto-forte);
+  }
+}
+
+.stp-root .stp-link__icona {
+  display: inline-block;
+  inline-size: 0.9em;
+  block-size: 0.9em;
+  margin-inline-start: 0.2em;
+  vertical-align: -0.05em;
+}
+
+/* ------------------------------------------------------------------------ */
+/* La cifra delle ore nella stima: l'unico numero gotico                     */
+/* ------------------------------------------------------------------------ */
+
+.stp-root .stp-cifra-ore {
+  display: inline-block;
+  color: var(--stp-testo);
+  font-family: var(--stp-font-insegna);
+  font-size: var(--stp-fs-cifra);
+  font-weight: var(--stp-peso-cifra);
+  font-synthesis: none;
+  font-variant-numeric: lining-nums tabular-nums;
+  line-height: var(--stp-lh-cifra);
+  vertical-align: baseline;
+  margin-inline: 0.06em;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Inchiostro diluito: la macchia del banco e il posto scelto               */
+/* --stp-posa 0 = morbido (bordo largo e sfumato), 1 = posato (bordo stretto) */
+/* Si dà all'elemento la misura; il contorno osso, se serve, lo mette la     */
+/* sezione (la macchia lo ha, il posto scelto no).                            */
+/* ------------------------------------------------------------------------ */
+
+.stp-root .stp-inchiostro {
+  --stp-posa: 1;
+  background-color: var(--stp-inchiostro-velo);
+  box-shadow: inset 0 0
+    calc(var(--stp-macchia-posata) + (1 - var(--stp-posa)) * (var(--stp-macchia-morbida) - var(--stp-macchia-posata)))
+    calc(1px + (1 - var(--stp-posa)) * 6px)
+    var(--stp-banco);
+}
+
+/* La macchia non si è posata (invio fallito): resta morbida */
+.stp-root .stp-inchiostro[data-posa='morbida'] {
+  --stp-posa: 0;
+}
+
+/* "Non lo so ancora": solo il tratteggio, niente inchiostro */
+.stp-root .stp-inchiostro[data-posa='vuota'] {
+  background-color: transparent;
+  box-shadow: none;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Movimento ridotto e colori forzati                                        */
+/* ------------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  .stp-root .stp-azione,
+  .stp-root .stp-comando,
+  .stp-root .stp-scelta,
+  .stp-root .stp-link {
+    transition: none;
+  }
+
+  .stp-root .stp-azione:active,
+  .stp-root .stp-comando--contorno:active {
+    transform: none;
+  }
+}
+
+.stp-root[data-motion='reduced'] .stp-azione,
+.stp-root[data-motion='reduced'] .stp-comando,
+.stp-root[data-motion='reduced'] .stp-scelta,
+.stp-root[data-motion='reduced'] .stp-link {
+  transition: none;
+}
+
+@media (forced-colors: active) {
+  .stp-root .stp-azione {
+    border: 2px solid ButtonText;
+  }
+
+  .stp-root .stp-comando--contorno,
+  .stp-root .stp-scelta,
+  .stp-root .stp-campo__input,
+  .stp-root .stp-casella__input {
+    border: 1px solid ButtonText;
+  }
+
+  .stp-root .stp-scelta[aria-checked='true'],
+  .stp-root .stp-scelta:has(> input:checked) {
+    border: 3px solid Highlight;
+  }
+
+  .stp-root .stp-isola,
+  .stp-root .stp-targa {
+    outline: 1px solid CanvasText;
+  }
+
+  .stp-root .stp-inchiostro {
+    border: 2px solid CanvasText;
+  }
+}

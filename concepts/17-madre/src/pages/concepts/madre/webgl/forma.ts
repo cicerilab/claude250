@@ -123,13 +123,13 @@ export function segmentiGriglia(aspetto: number, leggera: boolean): Vec2 {
 export const LUCE = {
   direzione: [-0.56, 0.44, 0.7] as Vec3,
   avvolgimento: 0.35,
-  ambiente: 0.3,
+  ambiente: 0.26,
   /**
    * Profondità delle ombre: la tinta d'ombra dei token (farina-ombra) dà il
    * TONO; l'esponente dà quanto scende al buio pieno (1 = esattamente la
    * tinta, 2,4 ≈ due volte più scuro, sempre caldo, mai grigio né nero).
    */
-  profonditaOmbra: 2.4,
+  profonditaOmbra: 3.0,
   /** schiarita massima dei lati verso la luce (verso il bianco, 0..1) */
   schiarita: 0.55,
   /** quanto la curvatura convessa schiarisce (traslucenza dei bordi sottili) */
@@ -263,13 +263,13 @@ export const SPOLVERO = {
   /** grana fine della farina (canale R) */
   grana: 3.3,
   /** alveoli sotto la pelle e grumi di farina sul tavolo (canale G) */
-  alveoli: 1.37,
-  /** chiazze e ondulazione della pelle (canale B) */
-  chiazze: 0.53,
+  alveoli: 0.97,
+  /** chiazze dello spolvero e ondulazione della pelle (canale B) */
+  chiazze: 1.45,
   /** rete delle crepe dello spolvero (canale A) */
   crepe: 2.15,
   /** rilievo degli alveoli e dell'ondulazione, in "p" */
-  rilievoAlveoli: 0.0042,
+  rilievoAlveoli: 0.0034,
   rilievoOnde: 0.0016,
   /** larghezza delle crepe a riposo (0..1 della distanza dal bordo cella) */
   crepaRiposo: 0.026,

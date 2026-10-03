@@ -105,8 +105,6 @@ export const FOGLIO = {
   anticipo: 0.3,
   anticipoMin: 72,
   anticipoMax: 380,
-  /** Reduced motion: isteresi (px di cammino) attorno alla soglia del cambio di fondo. */
-  isteresi: 16,
 } as const;
 
 /* ------------------------------------------------------------------ */
@@ -149,8 +147,6 @@ export const TEMPI = {
   glEntrata: 300,
   /** GL → fallback (contesto perso, lento): dissolvenza, mai un lampo. */
   glUscita: 300,
-  /** Reduced motion: il foglio azzurro diventa un cambio di fondo in dissolvenza. */
-  foglioRidotto: 200,
   /** Colore del bottone "Il pane fisso" in testata quando cambia il fondo del banco. */
   colore: 300,
   /** Fissi che arrivano: bottone in testata su mobile, riga dei banchi, barra del riassunto chiusa. */
@@ -213,9 +209,9 @@ function ms(valore: number): string {
 /**
  * Curve e durate per le transizioni CSS. Le scrive Madre.tsx come style di
  * `.mad-root` (con `useVariabiliMotion()` di useMotionVars.ts). Con reduced
- * motion le durate di movimento sono 0 (stato finale immediato); restano
- * solo le due dissolvenze che proteggono da un cambio brusco di luminosità
- * su una grande superficie: canvas GL e foglio azzurro.
+ * motion le durate di movimento sono 0 (stato finale immediato); resta solo
+ * la dissolvenza del canvas GL, che protegge da un cambio brusco di
+ * luminosità su una grande superficie (la pasta in 3D sopra quella in CSS).
  */
 export function variabiliMotion(ridotto: boolean): VariabiliMotion {
   const movimento = (valore: number): string => ms(ridotto ? 0 : valore);
@@ -230,7 +226,6 @@ export function variabiliMotion(ridotto: boolean): VariabiliMotion {
     '--mad-curva-lineare': BEZIER_CSS.lineare,
     '--mad-durata-gl': ms(TEMPI.glEntrata),
     '--mad-durata-gl-uscita': ms(TEMPI.glUscita),
-    '--mad-durata-foglio': ms(TEMPI.foglioRidotto),
     '--mad-durata-colore': movimento(TEMPI.colore),
     '--mad-durata-comparsa': movimento(TEMPI.comparsa),
     '--mad-durata-scomparsa': movimento(TEMPI.scomparsa),

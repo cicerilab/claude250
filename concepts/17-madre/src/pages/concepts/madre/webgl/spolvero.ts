@@ -126,9 +126,9 @@ function alveoli(caso: () => number): Float32Array {
   };
   const famiglie: readonly (readonly [number, number, number, number])[] = [
     // quante, raggio min, raggio max (texel), ampiezza
-    [70, 1.6, 3.2, 0.26],
-    [26, 3.2, 6.5, 0.3],
-    [7, 7, 11, 0.24],
+    [34, 1.8, 3.4, 0.18],
+    [22, 3.4, 7, 0.24],
+    [8, 8, 14, 0.2],
   ];
   for (const [n, r0, r1, amp] of famiglie) {
     for (let k = 0; k < n; k++) {
