@@ -332,7 +332,15 @@ export interface ModoCalcolato {
 
 /** Solo core/modo.ts (via Novanta.tsx): modo e geometria calcolati dalle misure. */
 export function aggiornaModo(m: ModoCalcolato, raggio: number): void {
-  store.set({ modo: m.modo, geometria: m.geometria, motivoElenco: m.motivoElenco, quadrantePossibile: m.quadrantePossibile, raggio });
+  store.set((s) => ({
+    modo: m.modo,
+    geometria: m.geometria,
+    motivoElenco: m.motivoElenco,
+    quadrantePossibile: m.quadrantePossibile,
+    raggio,
+    // cambiando vista non si rianima la dissolvenza dell'ultimo cambio
+    precedente: s.modo !== m.modo ? null : s.precedente,
+  }));
 }
 
 /** Solo Novanta.tsx. */

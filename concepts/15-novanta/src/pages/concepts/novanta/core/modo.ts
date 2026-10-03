@@ -14,6 +14,7 @@
  */
 
 import { raggioMassimoBordo, raggioMassimoFondo, misureArco } from '../dial/geometria';
+import { remPx, safeAreaBasso } from './capabilities';
 import { runtime } from '../state/runtime';
 import { aggiornaModo, type Geometria, type Modo, type ModoCalcolato, type MotivoElenco, type PreferenzaVista } from '../state/store';
 import { raggioMaxFondo, SOGLIE_EM } from '../styles/tokens';
@@ -152,4 +153,14 @@ export function applicaModo(root: HTMLElement, d: DecisioneModo): void {
   scriviVar(root, '--nov-perno-y', `${Math.round(d.perno.y * 100) / 100}px`);
   scriviVar(root, '--nov-basamento', `${Math.round(d.basamento)}px`);
   aggiornaModo(d, d.perno.r);
+}
+
+/**
+ * Le misure di adesso (runtime.viewport già scritto da core/viewport.ts,
+ * sonde per rem e safe area): legge il layout, solo al mount e nel debounce
+ * del resize.
+ */
+export function misureCorrenti(preferenza: PreferenzaVista, modoPrima: Modo | null): MisureModo {
+  const v = runtime.viewport;
+  return { w: v.w, h: v.h, vvH: v.vvH, rem: remPx(), safeBasso: safeAreaBasso(), preferenza, modoPrima };
 }

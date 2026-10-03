@@ -15,8 +15,9 @@ CD §4.3, §9, §12 e trend-researcher (divieto 4): niente forbici, rasoi, petti
 palo a strisce (nemmeno nel favicon), sagome, figure umane, logo disegnato (l'insegna è
 testo in Limelight), mappa. Il vapore è il canvas, non un SVG. Qui ci sono solo:
 
-- **7 icone di servizio** (5 Phosphor Light copiate come path + 2 disegnate a mano
-  sulla stessa griglia), sempre accanto a un testo o dentro un bottone con `aria-label`;
+- **9 icone di servizio** (5 Phosphor Light copiate come path + 4 disegnate a mano
+  sulla stessa griglia: le due dello specchio e le due frecce a pennarello), sempre
+  accanto a un testo o dentro un bottone con `aria-label`;
 - **4 tratti a pennarello** generati alla misura vera: sottolineatura del nome,
   trattino del posto libero (3 varianti), tratteggio della seconda mezz'ora, cerchio
   del fuoco;
@@ -30,12 +31,12 @@ stato scaricato con `npm pack` in una cartella temporanea solo per copiare i pat
 
 | File | Contenuto | Peso |
 |---|---|---|
-| `assets/svg/icone.ts` | `ICONE` (7 icone come dati: `modo`, `d`), `NomeIcona`, `VIEWBOX_ICONA`, `TRATTO_ICONA`, `USO_ICONE` | 1,6 KB di path |
+| `assets/svg/icone.ts` | `ICONE` (9 icone come dati: `modo`, `d`, `spessore?`), `NomeIcona`, `VIEWBOX_ICONA`, `TRATTO_ICONA`, `USO_ICONE` | 1,7 KB di path |
 | `assets/svg/tratti.ts` | funzioni pure `sottolineatura()`, `trattino()`, `tratteggio()`, `cerchio()`; `SPESSORE_TRATTO`, `TRATTEGGIO`, `STACCO_CERCHIO` | generati (0,1-1,1 KB a tratto) |
 | `assets/svg/Icona.tsx` | componenti `<Icona />` e `<Tratto />` | |
 | `public/favicon.svg` | lo specchio appannato con la passata e il trattino turchese | 678 B |
 
-SVG consegnato al browser: ≈ 2,3 KB di path + favicon 0,7 KB, dentro il budget di
+SVG consegnato al browser: ≈ 2,4 KB di path + favicon 0,7 KB, dentro il budget di
 12 KB (tech-architect §8). I file sorgente pesano di più solo per i commenti.
 
 Regole comuni: **nessun id** nelle icone e nei tratti (si ripetono liberamente nella
@@ -58,6 +59,8 @@ Sul pennarello `#FAFAF6` su parete o vetro si leggono bene da 16 px in su (verif
 | `telefono` | Phosphor `phone` Light | prima di "Chiama" (vetro di Samir, riga di stato, invio fallito) | 0,8 em |
 | `vapore` | a mano | interruttore "Specchio pulito" con `aria-pressed="false"` | 22 px |
 | `pulito` | a mano | interruttore "Specchio pulito" con `aria-pressed="true"` | 22 px |
+| `freccia-sinistra` | a mano, tratto pennarello | prima di "il listino", "la barba", "dove e quando", "oggi", "<giorno>" | 0,9 em |
+| `freccia-destra` | a mano, tratto pennarello | dopo "la lista", "domani", "<giorno>" | 0,9 em |
 
 **Le due icone dello specchio** (ux §8.4: l'etichetta non cambia, cambia l'icona):
 stesso quadrato a spigolo vivo (giunti `miter`, come il bisello degli specchi, CD §4.3);
@@ -66,8 +69,17 @@ stesso quadrato a spigolo vivo (giunti `miter`, come il bisello degli specchi, C
 colore. Sono a tratto (`modo: 'tratto'`), le Phosphor sono piene (`modo: 'pieno'`):
 `<Icona />` gestisce i due casi.
 
-Le frecce "domani →", "← oggi", "la lista →" **non sono icone**: sono caratteri scritti a
-pennarello (brand-strategist §3, "→" è un segno che il barbiere disegna davvero).
+**Le frecce a pennarello** (aggiunte dopo: Mansalva, Figtree e Limelight non hanno i
+glifi ← →, vedi `METRICHE_FONT` in `tokens.ts`; il browser li prendeva da un font di
+sistema, sottile e fuori stile). Il barbiere la freccia la disegna davvero
+(brand-strategist §3), quindi sono **tratti di pennarello come quelli di `tratti.ts`**:
+spessore 22 su 256 (a 0,9 em di Mansalva 26 px = 2 px, lo stesso peso delle lettere),
+capi e giunti tondi, asta che scende appena verso la punta, punta in un colpo solo. La
+destra non è lo specchio esatto della sinistra. Misura **0,9 em** del testo accanto,
+`vertical-align: -0.12em` (così il centro sta a metà della x-height di Mansalva:
+provati -0,05 / -0,12 / -0,2 em / `middle`), separazione dal testo uno spazio fine
+(`&#8201;`, o `margin-inline: 0.15em`). Verificate a 24, 26, 32 e 96 px e nella faccia
+da 327 px di 375 (`qa/vector-artist/frecce.png`).
 
 ### API
 
@@ -78,7 +90,12 @@ import { Icona } from '../../assets/svg/Icona'
 <Icona nome="esterna" />                            // 1em: segue il corpo del testo
 <button aria-label="Informazioni"><Icona nome="info" dimensione={22} /></button>
 <Icona nome={pulito ? 'pulito' : 'vapore'} dimensione={22} />
+<button aria-label={VETRO_COMUNE.vaiAllaListaAria(i)}>
+  {VETRO_COMUNE.vaiAllaLista}<Icona nome="freccia-destra" dimensione="0.9em" className="ctp-freccia" />
+</button>
 ```
+
+Per le icone a tratto `spessore` (facoltativo) sostituisce il 12 di Phosphor.
 
 Props: `nome: NomeIcona`, `dimensione?: number | string` (predefinito `'1em'`),
 `etichetta?: string` (solo se l'icona è l'unico contenuto e il controllo non ha
@@ -205,6 +222,10 @@ Il copywriter può citarla nel pannello Informazioni ("Icone: Phosphor, licenza 
   cerchio del fuoco e tratteggio; sottolineatura sotto nomi da 48 a 150 px e a metà
   tracciamento (`dashoffset .5`); cerchio su 56×22, 120×40, 30×30, 200×44; favicon a
   16/32/64/256 su scuro e chiaro. Nessun id nel markup generato.
+- Frecce: disegnate come path, `svgo@4` (precisione 1) per compattare i comandi, poi
+  copiate in `icone.ts`; resa con `<Icona>` vero accanto a Mansalva 24/26/32/96 px,
+  quattro allineamenti verticali, faccia mobile 327 px, confronto con i glifi ← → di
+  ripiego (`qa/vector-artist/frecce.png`), guardata. Typecheck di nuovo verde.
 
 ## Richieste ad altri agent
 
@@ -221,5 +242,26 @@ Il copywriter può citarla nel pannello Informazioni ("Icone: Phosphor, licenza 
 - **section-builder-mensola / fascia**: l'interruttore usa
   `<Icona nome={premuto ? 'pulito' : 'vapore'} dimensione={22} />`; "Informazioni" su
   mobile `<Icona nome="info" dimensione={22} />` dentro il bottone con `aria-label`.
+- **copywriter** (`content/testi.ts`): togliere le frecce testuali, che i font non
+  hanno; la freccia la mette il componente come SVG. Da cambiare:
+  `BARBIERI[0..2].indietro` `'← il listino'` / `'← la barba'` / `'← dove e quando'` →
+  `'il listino'` / `'la barba'` / `'dove e quando'`; `VETRO_COMUNE.vaiAllaLista`
+  `'la lista →'` → `'la lista'`; `LISTA.avanti` → `rel === 'domani' ? 'domani' :
+  nomeGiorno`; `LISTA.indietro` → `rel === 'oggi' ? 'oggi' : nomeGiorno`; il commento
+  di `LISTA.oltre` ("giorno dopo →") senza freccia. Gli `*Aria` restano come sono (già
+  frasi complete: "Torna al listino di Mattia", "Vai a mercoledì 30").
+  `tokens.ts` dice già `frecce: false`.
+- **section-builder-vetro / lista** (come montarle): la freccia è sempre **dentro** il
+  bottone, `aria-hidden` (predefinito di `<Icona>`, mai con `etichetta`), e il nome
+  accessibile resta quello di `aria-label` (`indietroAria`, `vaiAllaListaAria`,
+  `vaiAGiornoAria`). Indietro: freccia **prima** del testo; avanti: **dopo**.
+  `<Icona nome="freccia-sinistra" dimensione="0.9em" />` con `vertical-align: -0.12em`
+  e `margin-inline-end: 0.15em` (sinistra) / `margin-inline-start: 0.15em` (destra), o
+  `display: inline-flex; align-items: center; gap: 0.15em` sul bottone. Colore: eredita
+  il pennarello; con `forced-colors` resta `currentColor`. Nessuna freccia animata.
+- **interaction-designer**: i tre barbieri (tablist) usano i tasti ← → ma **non
+  mostrano frecce**; se in `interaction.css` serve un segno visivo per il pan, usare
+  queste due icone, non i caratteri. Il commento di `interaction.css` (riga ~110,
+  "← il listino") va aggiornato quando il copywriter toglie la freccia.
 - **scaffold-engineer**: `index.html` con
   `<link rel="icon" type="image/svg+xml" href="/favicon.svg">`.
