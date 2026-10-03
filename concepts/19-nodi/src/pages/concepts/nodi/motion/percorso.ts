@@ -353,3 +353,74 @@ export function hzDaU(u: number): number | null {
   if (u <= U_SPENTO / 2) return null;
   return lerpLog(HZ_MIN, HZ_MAX, clamp01(u));
 }
+
+/* ------------------------------------------------------------------ */
+/* Stato della tavola e cuscinetti dal percorso                        */
+/* ------------------------------------------------------------------ */
+
+export type ModoTavola = 1 | 2 | 5;
+export type StatoTavolaPercorso = 'riposo' | ModoTavola | 'ferma' | 'salita';
+
+const MODO_DI_STAZIONE: Readonly<Record<1 | 2 | 3, ModoTavola>> = { 1: 1, 2: 2, 3: 5 };
+
+/**
+ * Pianerottolo corrente (per `store.tavola`, `data-modo`, aria-live): un
+ * modo solo sul suo pianerottolo, 'salita' tra due, 'ferma' nella coda
+ * (anche la seconda metà, spenta, della salita 4).
+ */
+export function statoTavolaDaPercorso(p: number, profilo: Profilo = PROFILO_DEFAULT): StatoTavolaPercorso {
+  const tr = trattoDaPercorso(p, profilo);
+  const i = tr.stazione;
+  if (i >= 4) return 'ferma';
+  if (tr.fase === 'salita') return i === 3 && tr.u >= 0.5 ? 'ferma' : 'salita';
+  if (i === 0) return 'riposo';
+  return MODO_DI_STAZIONE[i as 1 | 2 | 3];
+}
+
+/**
+ * Su quali nodi stanno i cuscinetti. Il liutaio li sposta **prima** di
+ * cercare il modo: dall'inizio della salita verso il modo k i cuscinetti
+ * sono già sui nodi di k (choreography.ts, CUSCINETTI). Dopo la voce restano
+ * sotto l'anello: l'ultima prova fatta.
+ */
+export function modoCuscinetti(p: number, profilo: Profilo = PROFILO_DEFAULT): 'riposo' | ModoTavola {
+  const tr = trattoDaPercorso(p, profilo);
+  const i = tr.stazione;
+  if (i === 0) return tr.fase === 'salita' ? 1 : 'riposo';
+  if (i === 1) return tr.fase === 'salita' ? 2 : 1;
+  if (i === 2) return tr.fase === 'salita' ? 5 : 2;
+  return 5;
+}
+
+/**
+ * Percorso dalla linea di lettura in coordinate documento. `inizi` sono i
+ * bordi alti delle sei stazioni (ogni stazione = la sezione più la salita
+ * che la segue, fino al bordo alto della sezione dopo) e `fine` il bordo
+ * basso della bottega. Funzione pura: le misure le prende lo scaffold
+ * (risonanza/stazioni.ts), mai durante lo scroll.
+ */
+export function percorsoDaLettura(yLettura: number, inizi: readonly number[], fine: number): number {
+  const n = Math.min(inizi.length, N_STAZIONI);
+  if (n === 0) return PERCORSO_RIPOSO;
+  const primo = inizi[0] ?? 0;
+  if (yLettura <= primo) return 0;
+  for (let i = n - 1; i >= 0; i--) {
+    const a = inizi[i] ?? 0;
+    if (yLettura >= a) {
+      const b = i + 1 < n ? (inizi[i + 1] ?? fine) : fine;
+      return Math.min(i + clamp01(b > a ? (yLettura - a) / (b - a) : 0), P_MAX);
+    }
+  }
+  return 0;
+}
+
+/** Inversa di `percorsoDaLettura`: la y della linea di lettura che dà `p`. */
+export function letturaDaPercorso(p: number, inizi: readonly number[], fine: number): number {
+  const n = Math.min(inizi.length, N_STAZIONI);
+  if (n === 0) return 0;
+  const q = clamp(p, 0, n - 1e-6);
+  const i = Math.floor(q);
+  const a = inizi[i] ?? 0;
+  const b = i + 1 < n ? (inizi[i + 1] ?? fine) : fine;
+  return a + (q - i) * (b - a);
+}

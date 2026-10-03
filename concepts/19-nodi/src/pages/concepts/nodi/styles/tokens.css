@@ -112,7 +112,7 @@
 
   /* Scala fluida: 375 px → 1440 px, lineare in mezzo, ferma fuori.
      IM Fell mai sotto 24 px tranne la seconda riga del marchio (18 px, solo largo). */
-  --nod-t-h1: clamp(34px, 27.66px + 1.69vw, 52px);            /* IM Fell 400, 1,08 */
+  --nod-t-h1: clamp(34px, 29.07px + 1.315vw, 48px);           /* IM Fell 400, 1,08: due righe a 384 e a 335 px (provato) */
   --nod-t-h2: clamp(32px, 23.55px + 2.254vw, 56px);           /* IM Fell 400, 1,05 */
   --nod-t-h3: clamp(24px, 22.59px + 0.376vw, 28px);           /* IM Fell 400, 1,15 */
   --nod-t-marchio: clamp(28px, 23.77px + 1.127vw, 40px);      /* IM Fell 400, 1 */
@@ -144,6 +144,7 @@
   --nod-peso-forte: 600;
 
   --nod-misura-riga: 60ch;      /* massimo 60 caratteri per riga di corpo */
+  --nod-spazio-parole: 0.06em;  /* Spline Sans ha lo spazio stretto (0,18 em): su tutto il testo Spline sotto i 20 px */
   --nod-tracking-titolo: -0.005em;
   --nod-tracking-cifra: -0.01em;
 
@@ -173,7 +174,8 @@
   --nod-cornice-apertura-min: 38svh;
   --nod-regolo-h: 56px;                                        /* righello orizzontale su stretto */
   --nod-regolo-x: 1000px;                                      /* binario a 1440: 54 px a destra della tavola */
-  --nod-banco-w: 164px;                                        /* colonna del banco (marchio, suono, indice), largo */
+  --nod-banco-w: 180px;                                        /* colonna del banco (marchio, suono, indice), da 1200 px */
+  --nod-banco-destra: 40px;                                    /* distanza dal bordo destro: a 1440 il banco va da x 1220 a 1400 */
   --nod-ritorno-zona: 72px;                                    /* zona del ConceptBackButton, mai coperta */
   --nod-ritorno-scroll: 88px;                                  /* scroll-margin-bottom su stretto */
   --nod-foto-w: 360px;

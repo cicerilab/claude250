@@ -81,9 +81,12 @@ export function misuraNastro(scroller: HTMLElement, passo: number): GeometriaNas
   if (!prima) return null;
   const rs = scroller.getBoundingClientRect();
   const rp = prima.getBoundingClientRect();
+  // il passo vero è quello impaginato: se la seconda luna c'è, si misura (il token è il ripiego)
+  const seconda = scroller.querySelector<HTMLElement>(`[${ATTRIBUTO_INDICE}="1"]`);
+  const misurato = seconda ? seconda.getBoundingClientRect().left - rp.left : 0;
   return {
     base: rp.left - rs.left + scroller.scrollLeft,
-    passo,
+    passo: misurato > 1 ? misurato : passo,
     diametro: rp.width,
     larghezza: scroller.clientWidth,
     scrollLeft: scroller.scrollLeft,

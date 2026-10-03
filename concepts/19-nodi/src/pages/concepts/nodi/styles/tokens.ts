@@ -244,7 +244,7 @@ export interface StileTesto {
 }
 
 export const TIPO = {
-  h1: { famiglia: 'fell', px: [34, 52], peso: 400, interlinea: 1.08 },
+  h1: { famiglia: 'fell', px: [34, 48], peso: 400, interlinea: 1.08 },
   h2: { famiglia: 'fell', px: [32, 56], peso: 400, interlinea: 1.05 },
   h3: { famiglia: 'fell', px: [24, 28], peso: 400, interlinea: 1.15 },
   marchio: { famiglia: 'fell', px: [28, 40], peso: 400, interlinea: 1 },
@@ -292,7 +292,8 @@ export const MISURE = {
   corniceMinSvh: 34,
   corniceAperturaMinSvh: 38,
   regoloH: 56,
-  bancoW: 164,
+  bancoW: 180,
+  bancoDestra: 40,
   ritornoZona: 72,
   ritornoScroll: 88,
   fotoW: 360,
@@ -310,6 +311,8 @@ export const MISURE = {
   filo: 1,
   filoForte: 2,
   fogliaPiano: 28,
+  /** Spaziatura delle parole aggiunta a Spline Sans sotto i 20 px (em). */
+  spazioParole: 0.06,
   /** DPR massimo del canvas (tech-architect §10). */
   dprMax: { largo: 2, stretto: 1.5 },
 } as const;

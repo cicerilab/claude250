@@ -36,11 +36,12 @@ type Qualsiasi = Record<string, unknown>;
  * chiamano tutti in ordine; per `ref` si chiamano tutte le funzioni; per il
  * resto vince l'ultimo. Serve a mettere su una cella propsCella e propsCalore.
  */
-export function unisciProps<A extends Qualsiasi, B extends Qualsiasi>(a: A, b: B): A & B {
-  const out: Qualsiasi = { ...a };
-  for (const chiave of Object.keys(b)) {
+export function unisciProps<A extends object, B extends object>(a: A, b: B): A & B {
+  const out: Qualsiasi = { ...(a as Qualsiasi) };
+  const bb = b as Qualsiasi;
+  for (const chiave of Object.keys(bb)) {
     const va = out[chiave];
-    const vb = b[chiave];
+    const vb = bb[chiave];
     const concatena = (chiave === 'ref' || /^on[A-Z]/.test(chiave)) && typeof va === 'function' && typeof vb === 'function';
     if (concatena) {
       const fa = va as (...args: unknown[]) => unknown;

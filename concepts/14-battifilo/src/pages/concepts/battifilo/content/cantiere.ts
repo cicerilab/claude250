@@ -35,7 +35,7 @@ export interface Fermo {
   readonly meteo: boolean;
   /** la riga che compare sul buco, sulla tacca a fuoco e nella vista elenco */
   readonly riga: string;
-  /** il pezzo che entra in "chi c’era" */
+  /** il pezzo che entra in "chi c’era", dopo i giorni: "15 giorni in cantiere, 5 fermi per pioggia." */
   readonly breve: string;
   /** la frase detta dallo slider (aria-valuetext) */
   readonly parlato: string;
@@ -99,7 +99,7 @@ const RIGHE: readonly RigaMese[] = [
     costo: 32400,
     fatto:
       'Magrone, il piano pulito sotto le fondazioni. Poi i ferri della platea, la fondazione a lastra unica sotto tutta la casa, e il getto in una giornata.',
-    chi: 'Muratori 4, ferraioli 2, autobetoniera',
+    chi: 'Muratori 4, ferraioli 2',
     giorni: 15,
     fermi: [
       {
@@ -110,7 +110,7 @@ const RIGHE: readonly RigaMese[] = [
         giorniLavorativi: 5,
         meteo: true,
         riga: 'Pioggia: cantiere fermo dal 14 al 18 aprile, 5 giorni.',
-        breve: '5 giorni di pioggia',
+        breve: '5 fermi per pioggia',
         parlato: 'Cantiere fermo 5 giorni per pioggia.',
       },
     ],
@@ -189,7 +189,7 @@ const RIGHE: readonly RigaMese[] = [
         giorniLavorativi: 14,
         meteo: false,
         riga: 'Ferie: cantiere chiuso dal 4 al 22 agosto.',
-        breve: 'ferie dal 4 al 22 agosto',
+        breve: 'ferie dal 4 al 22',
         parlato: 'Cantiere chiuso per ferie dal 4 al 22 agosto.',
       },
     ],
@@ -269,7 +269,7 @@ const RIGHE: readonly RigaMese[] = [
         giorniLavorativi: 6,
         meteo: true,
         riga: 'Gelo: cantiere fermo dal 16 al 23 dicembre, 6 giorni. Sotto i 5 gradi il massetto non si getta.',
-        breve: '6 giorni di gelo',
+        breve: '6 fermi per gelo',
         parlato: 'Cantiere fermo 6 giorni per gelo.',
       },
       {

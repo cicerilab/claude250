@@ -1,0 +1,235 @@
+/* ==========================================================================
+   NOVANTA · base (scaffold)
+   --------------------------------------------------------------------------
+   Reset leggero e tipografia di base, TUTTO sotto .nov-root (tech-architect
+   §5): nel sito vero questo CSS resta caricato anche fuori dalla pagina, e lo
+   scope evita che tocchi altre pagine. Niente selettori su html, body, :root
+   o * nudi (unica eccezione: html:has(.nov-root), come nel pilota). Nessun
+   hex: solo variabili di tokens.css (art-director).
+
+   Ordine di import (Novanta.tsx): tokens.css → base.css → layout.css →
+   dial/arco.css → motion/motion.css → interaction/interaction.css → CSS
+   delle sezioni.
+
+   Selettori con :where(): specificità minima, così i CSS di sezione (che
+   iniziano tutti con .nov-root) vincono senza forzature.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Radice (art-director §4): fondo albicocca, testo petrolio, Lexend al corpo.
+   Il fondo e il colore li mette già tokens.css; qui famiglia, corpo e resa.
+   NIENTE transform, filter, contain o container-type sulla radice: i figli
+   fissi (bottone del sito, link di salto) restano agganciati alla finestra.
+   -------------------------------------------------------------------------- */
+.nov-root {
+  position: relative;
+  isolation: isolate;
+  font-family: var(--nov-font-testo);
+  font-size: var(--nov-fs-corpo);
+  font-weight: var(--nov-peso-testo);
+  line-height: var(--nov-lh-corpo);
+  letter-spacing: var(--nov-trk-corpo);
+  font-kerning: normal;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nov-root ::selection {
+  background: var(--nov-selezione-fondo);
+  color: var(--nov-selezione-testo);
+}
+
+/* --------------------------------------------------------------------------
+   Reset scoped
+   -------------------------------------------------------------------------- */
+.nov-root,
+.nov-root :where(*, *::before, *::after) {
+  box-sizing: border-box;
+}
+
+.nov-root :where(h1, h2, h3, h4, p, figure, blockquote, dl, dd, ol, ul, fieldset, legend, address) {
+  margin: 0;
+}
+
+.nov-root :where(ol, ul) {
+  padding: 0;
+}
+
+.nov-root :where(ol, ul):where([role="list"], .nov-lista) {
+  list-style: none;
+}
+
+.nov-root :where(fieldset) {
+  min-inline-size: 0;
+  padding: 0;
+  border: 0;
+}
+
+.nov-root :where(legend) {
+  padding: 0;
+}
+
+.nov-root :where(img, svg, video) {
+  display: block;
+  max-inline-size: 100%;
+}
+
+.nov-root :where(img) {
+  block-size: auto;
+}
+
+.nov-root :where(button, input, select, textarea) {
+  margin: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+}
+
+.nov-root :where(button) {
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: inherit;
+}
+
+.nov-root :where(button:disabled, [aria-disabled="true"]) {
+  cursor: default;
+}
+
+.nov-root :where(input, select, textarea) {
+  border-radius: var(--nov-raggio);
+}
+
+.nov-root :where(a) {
+  color: inherit;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.18em;
+}
+
+.nov-root :where(p, li, dd, figcaption) {
+  text-wrap: pretty;
+  overflow-wrap: break-word;
+}
+
+.nov-root :where([hidden]) {
+  display: none;
+}
+
+/* Il fuoco programmatico sui contenitori (main, section) non disegna
+   l'anello: non sono controlli. Gli h2 li gestisce interaction.css. */
+.nov-root :where(main, section, footer)[tabindex="-1"]:focus {
+  outline: none;
+}
+
+/* --------------------------------------------------------------------------
+   Tipografia di base (DESIGN.md §3, §10)
+   Titoli in Epilogue, nessun grassetto finto; h1 = il marchio (logotipo).
+   -------------------------------------------------------------------------- */
+.nov-root :where(h1, h2, h3) {
+  font-family: var(--nov-font-misura);
+  font-weight: var(--nov-peso-titolo);
+  font-synthesis: none;
+  text-wrap: balance;
+}
+
+.nov-root :where(h1) {
+  font-size: var(--nov-fs-marchio);
+  font-weight: var(--nov-peso-gradi);
+  line-height: var(--nov-lh-marchio);
+  letter-spacing: var(--nov-trk-marchio);
+}
+
+.nov-root :where(h2) {
+  font-size: var(--nov-fs-titolo);
+  line-height: var(--nov-lh-titolo);
+  letter-spacing: var(--nov-trk-titolo);
+}
+
+.nov-root :where(h3) {
+  font-size: var(--nov-fs-corpo);
+  line-height: var(--nov-lh-interfaccia);
+}
+
+.nov-root :where(small, .nov-nota) {
+  font-size: var(--nov-fs-nota);
+  line-height: var(--nov-lh-nota);
+  letter-spacing: var(--nov-trk-nota);
+}
+
+.nov-root :where(.nov-quieto) {
+  color: var(--nov-testo-quieto);
+}
+
+/* Cifre e gradi: tabellari (Epilogue ha tnum), il "°" a 300. */
+.nov-root :where(.nov-cifre) {
+  font-family: var(--nov-font-misura);
+  font-variant-numeric: var(--nov-cifre);
+  font-synthesis: none;
+}
+
+/* --------------------------------------------------------------------------
+   Classi condivise dello scaffold
+   -------------------------------------------------------------------------- */
+
+/* Solo lettori di schermo. */
+.nov-root .nov-sr {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Link di salto (ux-architect §6.1): primi elementi tabulabili, nascosti
+   finché non hanno il fuoco, poi in alto al centro (in alto a sinistra c'è il
+   bottone del sito, a z-index 2147483000, che li coprirebbe).
+   -------------------------------------------------------------------------- */
+.nov-root .nov-salto {
+  position: fixed;
+  inset-block-start: var(--nov-sp-3);
+  inset-inline-start: 50%;
+  z-index: var(--nov-z-salto);
+  min-block-size: var(--nov-h-pillola);
+  display: inline-flex;
+  align-items: center;
+  padding-inline: var(--nov-sp-5);
+  border: var(--nov-bordo) solid var(--nov-strumento);
+  border-radius: var(--nov-pillola);
+  background-color: var(--nov-superficie);
+  color: var(--nov-testo);
+  font-weight: var(--nov-peso-interfaccia);
+  line-height: var(--nov-lh-interfaccia);
+  text-decoration: none;
+  white-space: nowrap;
+  translate: -50% calc(-100% - var(--nov-sp-6));
+}
+
+.nov-root .nov-salto:focus,
+.nov-root .nov-salto:focus-visible {
+  translate: -50% 0;
+}
+
+/* --------------------------------------------------------------------------
+   Vista elenco: lo scroll di pagina non deve lasciare il fuoco sotto il
+   bottone del sito (in basso a sinistra sotto i 640 px, WCAG 2.4.11).
+   Unico selettore su html del concept, limitato da :has().
+   -------------------------------------------------------------------------- */
+html:has(.nov-root[data-modo="elenco"]) {
+  scroll-padding-block: var(--nov-sp-4);
+}
+
+@media (max-width: 40em) {
+  html:has(.nov-root[data-modo="elenco"]) {
+    scroll-padding-block-end: calc(max(env(safe-area-inset-bottom), 14px) + 64px);
+  }
+}

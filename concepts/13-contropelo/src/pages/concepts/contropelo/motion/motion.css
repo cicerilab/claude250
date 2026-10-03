@@ -1,23 +1,29 @@
 /*
  * CONTROPELO · tempi e curve per il CSS (motion-designer).
  *
- * Solo variabili --ctp-ease-* e --ctp-dur-* su .ctp-root, più le regole di
- * transizione delle CLASSI DI MOVIMENTO condivise (ctp-mov-*), che i
- * section-builder mettono sugli elementi che si muovono. Nessun colore,
- * nessuna geometria: quelli sono di tokens.css / layout.css.
+ * Variabili --ctp-ease-* e --ctp-dur-* su .ctp-root, più le CLASSI DI
+ * MOVIMENTO condivise (ctp-mov-*) che i section-builder mettono sugli
+ * elementi che si muovono. Nessun colore, nessuna geometria: quelli sono di
+ * tokens.css, materia.css, layout.css.
  *
  * I numeri sono gli stessi di easing.ts (BEZIER) e tempi.ts (TEMPI): se ne
  * cambi uno, cambialo anche là.
  *
  * Regole:
  * - si anima solo transform, opacity, clip-path, stroke-dashoffset;
- * - nessun @keyframes infinito, nessun lampo: ogni cambio è un evento unico
- *   causato da un'azione, mai sotto i 100 ms su un'area grande;
+ * - nessuna animazione infinita, nessun lampo: ogni cambio è un evento
+ *   unico causato da un'azione;
+ * - le comparse (righe che si scrivono, nome, tratto, riga di scrittura)
+ *   sono @keyframes con `fill-mode: backwards`: partono da sole quando la
+ *   classe compare o l'elemento si monta, e a fine animazione l'elemento
+ *   torna al suo stile normale (nessuna maschera resta appesa, il fuoco non
+ *   viene tagliato). Nessun "stato di partenza" da togliere al frame dopo;
+ * - le uscite (straccio, cancella, svanire, striscia, suggerimento) sono
+ *   transizioni su elementi già montati;
  * - [data-motion="reduced"] = stato finale subito; restano solo le
- *   dissolvenze di 200 ms decise dalla direzione (specchio, straccio);
- * - lo stato iniziale delle classi ctp-mov-* è già lo stato finale: chi non
- *   aggiunge i modificatori (--via, --arriva, ...) vede tutto fermo, e il
- *   prerender non mostra mai un elemento invisibile.
+ *   dissolvenze della direzione (specchio 200 ms, straccio 100 + 100 ms);
+ * - senza classi modificatrici tutto è fermo e visibile: il prerender non
+ *   mostra mai un elemento invisibile.
  */
 
 .ctp-root {
@@ -27,7 +33,7 @@
   --ctp-ease-straccio: cubic-bezier(0.5, 0.08, 0.3, 1);     /* lo straccio che cancella */
   --ctp-ease-pennarello: cubic-bezier(0.3, 0.12, 0.45, 1);  /* il pennarello che scrive */
   --ctp-ease-sottolinea: cubic-bezier(0.55, 0.02, 0.2, 1);  /* il tratto sotto il nome */
-  --ctp-ease-sale: cubic-bezier(0.25, 0.2, 0.45, 1);        /* il vapore che sale */
+  --ctp-ease-sale: cubic-bezier(0.25, 0.2, 0.45, 1);        /* il vapore che sale (solo canvas: qui per completezza) */
   --ctp-ease-raccolta: cubic-bezier(0.22, 0.7, 0.26, 1);    /* le righe che si stringono */
   --ctp-ease-tastiera: cubic-bezier(0.2, 0.8, 0.2, 1);      /* segue la tastiera virtuale */
   --ctp-ease-striscia: cubic-bezier(0.22, 0.68, 0.3, 1);    /* la riga di stato su mobile */
@@ -35,11 +41,9 @@
 
   /* Durate */
   --ctp-dur-pan: 650ms;
-  --ctp-dur-dissolvi-specchio: 200ms;
+  --ctp-dur-dissolvi-specchio: 0ms;     /* 200ms solo con riduzione del movimento */
   --ctp-dur-straccio-via: 400ms;
-  --ctp-dur-straccio-riga: 60ms;
   --ctp-dur-riga-scrive: 260ms;
-  --ctp-dur-scrittura: 600ms;
   --ctp-dur-scrittura-breve: 260ms;
   --ctp-dur-sottolinea: 400ms;
   --ctp-dur-ritardo-sottolinea: 80ms;
@@ -53,22 +57,18 @@
   --ctp-dur-striscia-esce: 240ms;
   --ctp-dur-suggerimento-entra: 320ms;
   --ctp-dur-suggerimento-esce: 240ms;
-  --ctp-dur-tab: 200ms;             /* il tratto turchese che passa da un nome all'altro sulla mensola */
-  --ctp-dur-pannello: 220ms;        /* pannello Informazioni: compare/scompare (opacità) */
 
-  /* Valori che i builder leggono per gli elementi foglia (scritti una volta al render, non per frame) */
-  --ctp-riga: 0;                    /* indice della riga nella lista, per lo sfasamento della riscrittura */
-  --ctp-passo-riga: var(--ctp-dur-straccio-riga); /* passoRiga(righe) di tempi.ts, se le righe sono tante */
-  --ctp-scrivi: var(--ctp-dur-scrittura);         /* durataScrittura(nome) di tempi.ts */
-  --ctp-lettere: 6;                 /* lettere del nome, per la maschera che avanza a scatti di lettera */
+  /* Valori per gli elementi foglia, scritti dai builder una volta al render
+     (mai per frame): passoRiga(righe) e durataScrittura(nome) di tempi.ts. */
+  --ctp-passo-riga: 60ms;
+  --ctp-scrivi: 600ms;
 }
 
 .ctp-root[data-motion="reduced"] {
   --ctp-dur-pan: 0ms;
+  --ctp-dur-dissolvi-specchio: 200ms;
   --ctp-dur-straccio-via: 100ms;
-  --ctp-dur-straccio-riga: 0ms;
   --ctp-dur-riga-scrive: 100ms;
-  --ctp-dur-scrittura: 0ms;
   --ctp-dur-scrittura-breve: 0ms;
   --ctp-dur-sottolinea: 0ms;
   --ctp-dur-ritardo-sottolinea: 0ms;
@@ -82,191 +82,143 @@
   --ctp-dur-striscia-esce: 0ms;
   --ctp-dur-suggerimento-entra: 0ms;
   --ctp-dur-suggerimento-esce: 0ms;
-  --ctp-dur-tab: 0ms;
-  --ctp-dur-pannello: 0ms;
   --ctp-passo-riga: 0ms;
   --ctp-scrivi: 0ms;
 }
 
 /* ------------------------------------------------------------------ */
-/* La parete: girare la testa (section-builder-parete)                 */
-/* La pista ha `transform: translateX(...)` calcolato dal layout;      */
-/* qui solo la transizione. will-change lo mette e toglie il builder.  */
+/* Le comparse a pennarello (keyframes)                                */
 /* ------------------------------------------------------------------ */
 
+/* Il pennarello scrive da sinistra a destra. Gli insiemi negativi lasciano
+   respirare le code di Mansalva (che escono dal box) e l'anello del fuoco. */
+@keyframes ctp-scrive {
+  from { clip-path: inset(-8px 100% -8px -8px); }
+  to { clip-path: inset(-8px -8px -8px -8px); }
+}
+
+/* Il tratto turchese (path con pathLength="1", vector-artist). */
+@keyframes ctp-traccia {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+
+/* Ricomparsa per opacità (righe raccolte che tornano, riga di scrittura, riduzione del movimento). */
+@keyframes ctp-compare {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ------------------------------------------------------------------ */
+/* La parete: girare la testa (section-builder-parete)                 */
+/* ------------------------------------------------------------------ */
+
+/* La pista ha `transform: translateX(...)` dal layout; qui la transizione.
+   will-change lo mette e toglie il builder solo durante il pan. */
 .ctp-root .ctp-mov-pista {
   transition: transform var(--ctp-dur-pan) var(--ctp-ease-gira);
 }
 
-/* Con riduzione del movimento il pan non c'è: la pista salta e ogni
-   specchio si dissolve (il builder mette --dissolvi sullo specchio che
-   entra e su quello che esce; senza modificatore lo specchio è opaco). */
-.ctp-root[data-motion="reduced"] .ctp-mov-pista {
-  transition: none;
-}
-
+/* Riduzione del movimento: la pista salta (0 ms) e gli specchi si
+   dissolvono. Ogni specchio ha ctp-mov-specchio; quelli non attivi hanno
+   anche --spento (il builder lo mette dallo store). In modo "full" la
+   dissolvenza vale 0 ms e gli specchi restano opachi (si vedono i bordi). */
 .ctp-root .ctp-mov-specchio {
   opacity: 1;
   transition: opacity var(--ctp-dur-dissolvi-specchio) var(--ctp-ease-lineare);
 }
 
-.ctp-root[data-motion="full"] .ctp-mov-specchio {
-  transition: none;
-}
-
-.ctp-root .ctp-mov-specchio--via {
+.ctp-root[data-motion="reduced"] .ctp-mov-specchio--spento {
   opacity: 0;
 }
 
-/* Il tratto turchese sotto il barbiere attivo, sulla mensola: scorre da
-   un nome all'altro (translateX + scaleX calcolati dal builder in
-   --ctp-tab-x / --ctp-tab-w, scritti una volta al cambio). */
-.ctp-root .ctp-mov-tab-tratto {
-  transform: translateX(var(--ctp-tab-x, 0px)) scaleX(var(--ctp-tab-w, 1));
-  transform-origin: 0 50%;
-  transition: transform var(--ctp-dur-tab) var(--ctp-ease-gira);
-}
-
 /* ------------------------------------------------------------------ */
-/* Lo straccio: la lista che si cancella e si riscrive                 */
-/* (section-builder-lista, cambio giorno / fascia; parete per la       */
-/* faccia su mobile). Fasi di useStraccio.ts: 'fermo' → 'via' →       */
-/* 'riscrive' → 'fermo'. La classe sta sul contenitore della lista;    */
-/* le righe hanno ctp-mov-riga con --ctp-riga = indice.                */
+/* Lo straccio (useStraccio): la lista che si cancella e si riscrive   */
+/* contenitore: ctp-mov-straccio [--via | --riscrive]                  */
+/* righe:       ctp-mov-riga, con --ctp-riga = indice                  */
 /* ------------------------------------------------------------------ */
 
-/* Via: lo straccio passa da sinistra a destra. La lista non si sposta:
-   sparisce con una maschera che avanza (clip-path) e un filo di opacità,
-   così sembra cancellata e non dissolta. */
 .ctp-root .ctp-mov-straccio {
-  clip-path: inset(0 0 0 0);
-  opacity: 1;
+  clip-path: inset(-8px -8px -8px -8px);
 }
 
+/* Via: lo straccio passa da sinistra a destra. Il contenitore non si
+   sposta: sparisce con una maschera che avanza e un filo di opacità, così
+   sembra cancellato e non dissolto. */
 .ctp-root .ctp-mov-straccio--via {
-  clip-path: inset(0 0 0 100%);
+  clip-path: inset(-8px -8px -8px 100%);
   opacity: 0.35;
+  pointer-events: none;
   transition:
     clip-path var(--ctp-dur-straccio-via) var(--ctp-ease-straccio),
     opacity var(--ctp-dur-straccio-via) var(--ctp-ease-lineare);
 }
 
-/* Riscrive: il contenitore torna intero subito, sono le righe a scriversi. */
-.ctp-root .ctp-mov-straccio--riscrive {
-  clip-path: inset(0 0 0 0);
-  opacity: 1;
-  transition: none;
-}
-
-/* Ogni riga si scrive da sinistra a destra, una dopo l'altra. Senza il
-   modificatore la riga è intera (stato finale = stato iniziale). */
-.ctp-root .ctp-mov-riga {
-  clip-path: inset(-4px -4px -4px -4px);
-}
-
+/* Riscrive: il contenitore torna intero subito, sono le righe a scriversi,
+   una dopo l'altra (sfasamento --ctp-passo-riga). Tutti i figli che
+   cambiano devono avere ctp-mov-riga, o ricompaiono di colpo. */
 .ctp-root .ctp-mov-straccio--riscrive .ctp-mov-riga {
-  clip-path: inset(-4px -4px -4px -4px);
-  transition: clip-path var(--ctp-dur-riga-scrive) var(--ctp-ease-pennarello);
-  transition-delay: calc(var(--ctp-riga) * var(--ctp-passo-riga));
+  animation: ctp-scrive var(--ctp-dur-riga-scrive) var(--ctp-ease-pennarello)
+    calc(var(--ctp-riga, 0) * var(--ctp-passo-riga)) backwards;
 }
 
-/* Stato di partenza della riscrittura: il builder applica --riscrive e,
-   nello stesso frame, la classe --da-scrivere alle righe, poi la toglie al
-   frame dopo (la transizione parte da qui). */
-.ctp-root .ctp-mov-straccio--riscrive .ctp-mov-riga--da-scrivere {
-  clip-path: inset(-4px 100% -4px -4px);
-  transition: none;
-}
-
-/* Riduzione del movimento: niente maschere, solo dissolvenza 100 + 100 ms. */
+/* Riduzione del movimento: niente maschere, dissolvenza 100 + 100 ms. */
 .ctp-root[data-motion="reduced"] .ctp-mov-straccio--via {
-  clip-path: inset(0 0 0 0);
+  clip-path: inset(-8px -8px -8px -8px);
   opacity: 0;
-  transition: opacity var(--ctp-dur-straccio-via) var(--ctp-ease-lineare);
 }
 
 .ctp-root[data-motion="reduced"] .ctp-mov-straccio--riscrive {
-  opacity: 1;
-  transition: opacity var(--ctp-dur-riga-scrive) var(--ctp-ease-lineare);
+  animation: ctp-compare var(--ctp-dur-riga-scrive) var(--ctp-ease-lineare) backwards;
 }
 
-.ctp-root[data-motion="reduced"] .ctp-mov-straccio--riscrive .ctp-mov-riga,
-.ctp-root[data-motion="reduced"] .ctp-mov-straccio--riscrive .ctp-mov-riga--da-scrivere {
-  clip-path: inset(-4px -4px -4px -4px);
-  transition: none;
-  transition-delay: 0ms;
-}
-
-.ctp-root[data-motion="reduced"] .ctp-mov-straccio--da-riscrivere {
-  opacity: 0;
-  transition: none;
+.ctp-root[data-motion="reduced"] .ctp-mov-straccio--riscrive .ctp-mov-riga {
+  animation: none;
 }
 
 /* ------------------------------------------------------------------ */
-/* Il pennarello: il tuo nome, il trattino, il tratteggio, il tratto   */
+/* Il pennarello: il tuo nome, i segni brevi, il tratto turchese       */
 /* (section-builder-lista)                                             */
 /* ------------------------------------------------------------------ */
 
-/* Il nome che si scrive durante l'invio: maschera che avanza a scatti di
-   lettera (steps), come una mano che scrive, non un sipario. Il builder
-   scrive --ctp-scrivi e --ctp-lettere una volta al render. */
-.ctp-root .ctp-mov-scrittura {
-  clip-path: inset(-6px -6px -6px -6px);
-}
-
+/* Il tuo nome che si scrive durante l'invio. Il builder mette la classe
+   --scrive quando parte l'invio e scrive --ctp-scrivi (durataScrittura)
+   una volta, sull'elemento del nome. */
 .ctp-root .ctp-mov-scrittura--scrive {
-  clip-path: inset(-6px -6px -6px -6px);
-  transition: clip-path var(--ctp-scrivi) steps(var(--ctp-lettere), end);
+  animation: ctp-scrive var(--ctp-scrivi) var(--ctp-ease-pennarello) backwards;
 }
 
-.ctp-root .ctp-mov-scrittura--da-scrivere {
-  clip-path: inset(-6px 100% -6px -6px);
-  transition: none;
-}
-
-/* Segni brevi (trattino che torna dopo "cancella", tratteggio della
-   seconda mezz'ora): stessa maschera, tempo breve, curva del pennarello. */
+/* Segni brevi: il trattino che torna dopo "cancella", il tratteggio della
+   seconda mezz'ora, il nome di chi "ha scritto prima di te" (L11). Partono
+   al montaggio. */
 .ctp-root .ctp-mov-segno {
-  clip-path: inset(-6px -6px -6px -6px);
+  animation: ctp-scrive var(--ctp-dur-scrittura-breve) var(--ctp-ease-pennarello) backwards;
 }
 
-.ctp-root .ctp-mov-segno--scrive {
-  clip-path: inset(-6px -6px -6px -6px);
-  transition: clip-path var(--ctp-dur-scrittura-breve) var(--ctp-ease-pennarello);
-}
-
-.ctp-root .ctp-mov-segno--da-scrivere {
-  clip-path: inset(-6px 100% -6px -6px);
-  transition: none;
-}
-
-/* Il tratto turchese sotto il nome (SVG del vector-artist, pathLength=1):
-   si traccia in 400 ms dopo 80 ms di pausa. Stato finale = tracciato. */
+/* Il tratto turchese sotto il tuo nome: si traccia in 400 ms dopo 80 ms
+   (il barbiere alza il pennarello). Solo al successo (--traccia): al
+   ritorno sul sito il tratto è già lì, fermo (senza modificatore). */
 .ctp-root .ctp-mov-sottolinea .ctp-tratto__segno {
   stroke-dasharray: 1;
   stroke-dashoffset: 0;
 }
 
 .ctp-root .ctp-mov-sottolinea--traccia .ctp-tratto__segno {
-  stroke-dashoffset: 0;
-  transition: stroke-dashoffset var(--ctp-dur-sottolinea) var(--ctp-ease-sottolinea) var(--ctp-dur-ritardo-sottolinea);
+  animation: ctp-traccia var(--ctp-dur-sottolinea) var(--ctp-ease-sottolinea)
+    var(--ctp-dur-ritardo-sottolinea) backwards;
 }
 
-.ctp-root .ctp-mov-sottolinea--da-tracciare .ctp-tratto__segno {
-  stroke-dashoffset: 1;
-  transition: none;
-}
-
-/* "cancella": lo straccio passa sul nome (e sul tratto), che sparisce da
-   sinistra a destra; poi il builder rimonta il trattino con ctp-mov-segno. */
 .ctp-root .ctp-mov-cancella {
-  clip-path: inset(-6px -6px -6px -6px);
-  opacity: 1;
+  clip-path: inset(-8px -8px -8px -8px);
 }
 
+/* "cancella": lo straccio passa sul nome e sul tratto (elemento già
+   montato). Dopo TEMPI.cancella il builder lo smonta e monta il trattino
+   con ctp-mov-segno. */
 .ctp-root .ctp-mov-cancella--via {
-  clip-path: inset(-6px -6px -6px 100%);
+  clip-path: inset(-8px -8px -8px 100%);
   opacity: 0.35;
+  pointer-events: none;
   transition:
     clip-path var(--ctp-dur-cancella) var(--ctp-ease-straccio),
     opacity var(--ctp-dur-cancella) var(--ctp-ease-lineare);
@@ -274,7 +226,6 @@
 
 /* Invio fallito: il nome resta ma sbiadisce (opacità del token dell'art-director). */
 .ctp-root .ctp-mov-sbiadito {
-  opacity: 1;
   transition: opacity var(--ctp-dur-sbiadisce) var(--ctp-ease-lineare);
 }
 
@@ -283,74 +234,63 @@
 }
 
 /* Riduzione del movimento: tutto compare, senza tracciarsi. */
-.ctp-root[data-motion="reduced"] .ctp-mov-scrittura--da-scrivere,
-.ctp-root[data-motion="reduced"] .ctp-mov-segno--da-scrivere {
-  clip-path: inset(-6px -6px -6px -6px);
-}
-
-.ctp-root[data-motion="reduced"] .ctp-mov-sottolinea--da-tracciare .ctp-tratto__segno {
-  stroke-dashoffset: 0;
+.ctp-root[data-motion="reduced"] .ctp-mov-scrittura--scrive,
+.ctp-root[data-motion="reduced"] .ctp-mov-segno,
+.ctp-root[data-motion="reduced"] .ctp-mov-sottolinea--traccia .ctp-tratto__segno {
+  animation: none;
 }
 
 .ctp-root[data-motion="reduced"] .ctp-mov-cancella--via {
-  clip-path: inset(-6px -6px -6px -6px);
+  clip-path: inset(-8px -8px -8px -8px);
   opacity: 0;
-  transition: none;
 }
 
 /* ------------------------------------------------------------------ */
-/* La raccolta delle righe lontane (riga di scrittura aperta)          */
-/* useStraccio.ts → useRaccolta: le righe lontane svaniscono (180 ms), */
-/* quelle vicine si stringono con FLIP (transform inline scritto dal    */
-/* hook, 300 ms). Chiudendo: ricompaiono (220 ms). Nessun cambio di    */
-/* altezza animato: le righe raccolte hanno display: none dopo la      */
-/* dissolvenza (attributo hidden messo dal builder al termine).        */
+/* La raccolta delle righe lontane (useRaccolta)                       */
 /* ------------------------------------------------------------------ */
 
-.ctp-root .ctp-mov-raccolta {
-  opacity: 1;
-  transition: opacity var(--ctp-dur-riappare) var(--ctp-ease-lineare);
-}
-
+/* Le righe lontane svaniscono (180 ms); poi il builder le nasconde davvero
+   (`hidden` da `nascondiLontane`) e le vicine si stringono con il FLIP. */
 .ctp-root .ctp-mov-raccolta--lontana {
   opacity: var(--ctp-opacita-raccolta, 0);
-  transition: opacity var(--ctp-dur-raccolta-via) var(--ctp-ease-lineare);
   pointer-events: none;
+  transition: opacity var(--ctp-dur-raccolta-via) var(--ctp-ease-lineare);
 }
 
-/* Il FLIP: il hook scrive `transform: translateY(dy)` inline senza
-   transizione, poi al frame dopo aggiunge --flip e azzera il transform. */
+/* Chiudendo la riga di scrittura, le righe che erano raccolte ricompaiono
+   (l'attributo lo mette e lo toglie useRaccolta, fuori da React). */
+.ctp-root [data-ctp-riappare] {
+  animation: ctp-compare var(--ctp-dur-riappare) var(--ctp-ease-lineare) backwards;
+}
+
+/* Il FLIP: useRaccolta scrive `transform: translateY(dy)` inline senza
+   transizione, poi aggiunge --flip e azzera il transform. */
 .ctp-root .ctp-mov-flip--flip {
   transition: transform var(--ctp-dur-raccolta-flip) var(--ctp-ease-raccolta);
 }
 
-/* La riga di scrittura che si apre: non anima l'altezza (ux 8.2), compare
-   con una dissolvenza breve dopo il FLIP. */
+/* La riga di scrittura: non anima l'altezza (ux 8.2); al montaggio
+   compare per opacità dopo che le righe lontane sono svanite. */
 .ctp-root .ctp-mov-riga-scrittura {
-  opacity: 1;
-  transition: opacity var(--ctp-dur-riappare) var(--ctp-ease-lineare) var(--ctp-dur-raccolta-via);
-}
-
-.ctp-root .ctp-mov-riga-scrittura--da-aprire {
-  opacity: 0;
-  transition: none;
+  animation: ctp-compare var(--ctp-dur-riappare) var(--ctp-ease-lineare)
+    var(--ctp-dur-raccolta-via) backwards;
 }
 
 /* ------------------------------------------------------------------ */
-/* Interfaccia: tastiera, striscia, suggerimento, pannello             */
+/* Interfaccia: tastiera, striscia, suggerimento                       */
+/* (elementi sempre montati: si cambia solo il modificatore)           */
 /* ------------------------------------------------------------------ */
 
-/* La faccia lista che segue la tastiera virtuale (S e M). Il valore
-   --ctp-tastiera-dy lo scrive core/viewport.ts (o il builder della lista)
-   sull'elemento foglia data-ctpvar, solo quando cambia. */
+/* La faccia lista che segue la tastiera virtuale (S e M). --ctp-tastiera-dy
+   lo scrive chi misura (lista o core/viewport.ts) sull'elemento foglia
+   data-ctpvar, solo quando cambia. */
 .ctp-root .ctp-mov-tastiera {
   transform: translateY(var(--ctp-tastiera-dy, 0px));
   transition: transform var(--ctp-dur-tastiera) var(--ctp-ease-tastiera);
 }
 
-/* La riga di stato su mobile: esce da dietro la mensola (translateY dal
-   basso) e rientra. Su L/M è ferma al centro della mensola e cambia solo
-   testo (nessuna transizione: il testo non si anima). */
+/* La riga di stato su mobile: esce da dietro la mensola e rientra. Su L/M
+   sta ferma al centro della mensola e cambia solo testo, senza movimento. */
 .ctp-root .ctp-mov-striscia {
   transform: translateY(0);
   opacity: 1;
@@ -362,14 +302,15 @@
 .ctp-root .ctp-mov-striscia--nascosta {
   transform: translateY(100%);
   opacity: 0;
+  pointer-events: none;
   transition:
     transform var(--ctp-dur-striscia-esce) var(--ctp-ease-straccio),
     opacity var(--ctp-dur-striscia-esce) var(--ctp-ease-lineare);
 }
 
-/* Il suggerimento del gesto sulla mensola ("Passa il dito sul vetro"):
-   compare con l'apertura (dopo la salita del vapore, lo decide
-   apertura.ts) e sparisce al primo gesto. Non pulsa, non lampeggia. */
+/* Il suggerimento del gesto sulla mensola: compare quando il vapore è
+   salito (apertura.ts → onSuggerimento) e sparisce al primo gesto. Non
+   pulsa, non lampeggia, nessuna mano disegnata. */
 .ctp-root .ctp-mov-suggerimento {
   opacity: 1;
   transition: opacity var(--ctp-dur-suggerimento-entra) var(--ctp-ease-lineare);
@@ -377,35 +318,29 @@
 
 .ctp-root .ctp-mov-suggerimento--nascosto {
   opacity: 0;
+  pointer-events: none;
   transition: opacity var(--ctp-dur-suggerimento-esce) var(--ctp-ease-lineare);
-  pointer-events: none;
-}
-
-/* Il pannello Informazioni: sopra il vetro, compare e scompare in opacità. */
-.ctp-root .ctp-mov-pannello {
-  opacity: 1;
-  transition: opacity var(--ctp-dur-pannello) var(--ctp-ease-lineare);
-}
-
-.ctp-root .ctp-mov-pannello--chiuso {
-  opacity: 0;
-  pointer-events: none;
 }
 
 /* ------------------------------------------------------------------ */
-/* Sicurezza                                                           */
+/* Primo frame                                                         */
 /* ------------------------------------------------------------------ */
 
-/* La preferenza di sistema vale anche se lo store non l'ha ancora letta
-   (primo frame): stesse regole di [data-motion="reduced"] sulle proprietà
-   che contano di più. */
+/* Prima che lo store scriva data-motion (prerender, primo frame), la
+   preferenza di sistema vale già. */
 @media (prefers-reduced-motion: reduce) {
-  .ctp-root:not([data-motion="full"]) .ctp-mov-pista,
-  .ctp-root:not([data-motion="full"]) .ctp-mov-riga,
-  .ctp-root:not([data-motion="full"]) .ctp-mov-scrittura,
-  .ctp-root:not([data-motion="full"]) .ctp-mov-segno,
-  .ctp-root:not([data-motion="full"]) .ctp-mov-tastiera,
-  .ctp-root:not([data-motion="full"]) .ctp-mov-flip--flip {
+  .ctp-root:not([data-motion]) .ctp-mov-pista,
+  .ctp-root:not([data-motion]) .ctp-mov-tastiera,
+  .ctp-root:not([data-motion]) .ctp-mov-flip--flip {
     transition: none;
+  }
+
+  .ctp-root:not([data-motion]) .ctp-mov-straccio--riscrive .ctp-mov-riga,
+  .ctp-root:not([data-motion]) .ctp-mov-scrittura--scrive,
+  .ctp-root:not([data-motion]) .ctp-mov-segno,
+  .ctp-root:not([data-motion]) .ctp-mov-sottolinea--traccia .ctp-tratto__segno,
+  .ctp-root:not([data-motion]) .ctp-mov-riga-scrittura,
+  .ctp-root:not([data-motion]) [data-ctp-riappare] {
+    animation: none;
   }
 }

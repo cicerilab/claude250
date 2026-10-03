@@ -151,9 +151,9 @@ export function quanteFinestre(n: number): string {
 export const META = {
   /** <title>: 58 caratteri. Dice "Concept" nello snippet e scrive "Ciceri Lab" come il prerender. */
   title: 'Concept 14 · BATTIFILO, edilizia e serramenti | Ciceri Lab',
-  /** meta description: 155 caratteri. Dice subito che l'impresa è inventata. */
+  /** meta description: 146 caratteri. Dice subito che l'impresa è inventata. */
   description:
-    "Concept di Ciceri Lab: il sito di un’impresa edile e di serramenti di Cordenons, inventata. Tira il filo e leggi 14 mesi di cantiere, poi misura la tua finestra.",
+    "Concept di Ciceri Lab: il sito di un’impresa edile e di serramenti di Cordenons, inventata. Tira il filo e segui 14 mesi di cantiere, con i costi.",
   ogTitle: 'BATTIFILO, impresa edile e serramenti. Un concept di Ciceri Lab',
   ogDescription:
     'Quattordici mesi di cantiere, mese per mese, con costi e fermi. Misura la tua finestra e vedila battuta accanto a una porta. Un concept di Ciceri Lab.',
@@ -260,6 +260,11 @@ export const APERTURA = {
 
 /* ================================================================== S1 · schede dei mesi */
 
+/** "Impianti" → "impianti", "Cartongessi e VMC" → "cartongessi e VMC" (solo la prima lettera). */
+export function minuscola(testo: string): string {
+  return testo.charAt(0).toLowerCase() + testo.slice(1);
+}
+
 /** "ottobre, mese 8" */
 export function meseERango(m: Pick<Mese, 'nome' | 'n'>): string {
   return `${m.nome}, mese ${m.n}`;
@@ -279,12 +284,15 @@ export const SCHEDA = {
   fermi: 'Fermi',
   /** "speso finora 238.400 € su 412.500 €" */
   finora: (finora: number) => `speso finora ${euro(finora)} su ${euro(TOTALE)}`,
-  /** "elettricisti 2, idraulici 2. 19 giorni in cantiere." */
-  chiERiga: (m: Pick<Mese, 'chi' | 'giorni'>) =>
-    `${m.chi}. ${m.giorni} ${m.giorni === 1 ? 'giorno' : 'giorni'} in cantiere.`,
-  /** aggiunta alla riga di "chi c’era" quando ci sono fermi: "Fermi: 5 fermi per pioggia." */
-  fermiRiga: (fermi: readonly Fermo[]) =>
-    fermi.length === 0 ? '' : `Fermi: ${fermi.map((f) => f.breve).join(', ')}.`,
+  /**
+   * "chi c’era" completo, fermi compresi (al massimo 80 caratteri):
+   * "Muratori 4, ferraioli 2. 15 giorni in cantiere, 5 fermi per pioggia."
+   */
+  chiERiga: (m: Pick<Mese, 'chi' | 'giorni' | 'fermi'>) =>
+    `${m.chi}. ${m.giorni} ${m.giorni === 1 ? 'giorno' : 'giorni'} in cantiere${m.fermi.map((f) => `, ${f.breve}`).join('')}.`,
+  /** i fermi per esteso (vista elenco, "Di più"): le righe dei buchi, oppure "nessuno." */
+  fermiTesto: (fermi: readonly Fermo[]) =>
+    fermi.length === 0 ? 'nessuno.' : fermi.map((f) => f.riga).join(' '),
   /** solo nei mesi 7 e 12: link contestuale a Misura e manda */
   tuaFinestra: 'Quanto costerebbe la tua finestra?',
   tuaFinestraAria: 'Quanto costerebbe la tua finestra? Apri Misura e manda',
@@ -303,7 +311,7 @@ export const SCHEDA = {
 
 const variantiTesto = BILANCIO.varianti
   .map((v) => `${v.cosa} (${euro(v.euro)})`)
-  .join(' e ');
+  .join('; ');
 
 export const CHIAVI = {
   titolo: 'Le chiavi',
@@ -315,7 +323,7 @@ export const CHIAVI = {
   tempi: 'Tempi',
   tempiTesto: `${BILANCIO.durataMesi} mesi, dal ${BILANCIO.inizio.giorno} ${MESI_NOME[BILANCIO.inizio.mese - 1] ?? ''} al ${BILANCIO.chiavi.giorno} ${MESI_NOME[BILANCIO.chiavi.mese - 1] ?? ''} dell’anno dopo. ${GIORNI_METEO} giorni fermi per pioggia e gelo. Le ferie di agosto e di Natale erano nel calendario dalla firma.`,
   soldi: 'Soldi',
-  soldiTesto: `Preventivo firmato ${euro(BILANCIO.preventivo)}, finale ${euro(BILANCIO.finale)}: più ${percento(BILANCIO.scostamentoPercento)}. La differenza sono due varianti che hai chiesto tu, ${variantiTesto}, scritte e firmate prima di farle.`,
+  soldiTesto: `Preventivo firmato ${euro(BILANCIO.preventivo)}, finale ${euro(BILANCIO.finale)}: il ${percento(BILANCIO.scostamentoPercento)} in più. La differenza sono due varianti che hai chiesto tu, scritte e firmate prima di farle: ${variantiTesto}.`,
   consegna: 'Con le chiavi ti diamo',
   consegnaVoci: [
     "l’attestato di prestazione energetica, con la classe della casa",
@@ -346,10 +354,10 @@ export const LINEA = {
   taccheAria: 'Mesi del cantiere',
   gancioSr: 'Inizio del filo',
   /** aria-label completo della tacca: "Agosto, mese 6: struttura del tetto" */
-  taccaAria: (m: Pick<Mese, 'nome' | 'n' | 'fase'>) => `${meseERangoMaiuscolo(m)}: ${m.fase.toLowerCase()}`,
+  taccaAria: (m: Pick<Mese, 'nome' | 'n' | 'fase'>) => `${meseERangoMaiuscolo(m)}: ${minuscola(m.fase)}`,
   /** il nome completo che compare sopra la tacca al passaggio o a fuoco */
   taccaTitolo: (m: Pick<Mese, 'nome' | 'fase'>) =>
-    `${m.nome.charAt(0).toUpperCase()}${m.nome.slice(1)}: ${m.fase.toLowerCase()}`,
+    `${m.nome.charAt(0).toUpperCase()}${m.nome.slice(1)}: ${minuscola(m.fase)}`,
   /** il buco sopra la linea: bottone invisibile che mostra `fermo.riga` */
   bucoAria: (fermo: Fermo) => fermo.riga,
   /** telefono: i due bottoni ai lati */
@@ -357,7 +365,7 @@ export const LINEA = {
   meseDopo: 'Mese dopo',
   /** annuncio aria-live 500 ms dopo la fermata (se il cambio non viene dallo slider a fuoco) */
   annuncio: (m: Pick<Mese, 'nome' | 'n' | 'fase' | 'costo'>) =>
-    `${meseERangoMaiuscolo(m)}: ${m.fase.toLowerCase()}. ${euroParlati(m.costo)}.`,
+    `${meseERangoMaiuscolo(m)}: ${minuscola(m.fase)}. ${euroParlati(m.costo)}.`,
   annuncioPrima: 'Prima dello scavo: il terreno.',
   annuncioChiavi: CHIAVI.taccaAria,
   /** tacca "TU", prima del gancio, dopo un invio riuscito */
@@ -381,7 +389,7 @@ export function valoreParlante(tappa: number): string {
   const m = MESI[tappa - 1];
   if (!m) return '';
   const fermi = m.fermi.map((f) => ` ${f.parlato}`).join('');
-  return `Mese ${m.n}, ${m.nome}: ${m.fase.toLowerCase()}. ${euroParlati(m.costo)}. Speso finora ${euroParlati(m.finora)}.${fermi}`;
+  return `Mese ${m.n}, ${m.nome}: ${minuscola(m.fase)}. ${euroParlati(m.costo)}. Speso finora ${euroParlati(m.finora)}.${fermi}`;
 }
 
 /* ================================================================== nomi condivisi di Misura e manda */
@@ -675,10 +683,9 @@ export const MESI_VISTA = {
   indiceAria: 'Vai al mese',
   indiceVai: 'vai a',
   /** h3 di ogni voce: "Marzo, mese 1: tracciamento e scavo" */
-  voceTitolo: (m: Pick<Mese, 'nome' | 'n' | 'fase'>) => `${meseERangoMaiuscolo(m)}: ${m.fase.toLowerCase()}`,
+  voceTitolo: (m: Pick<Mese, 'nome' | 'n' | 'fase'>) => `${meseERangoMaiuscolo(m)}: ${minuscola(m.fase)}`,
   /** "14.600 € · speso finora 14.600 €" */
   voceCosto: (m: Pick<Mese, 'costo' | 'finora'>) => `${euro(m.costo)} · speso finora ${euro(m.finora)}`,
-  fermiNessuno: 'nessuno',
   vedilo: 'Vedilo nella cronaca',
   vediloAria: (m: Pick<Mese, 'nome' | 'n'>) => `Vedi ${meseERango(m)} nella cronaca`,
   chiaviTitolo: 'Le chiavi: il bilancio',

@@ -19,14 +19,14 @@
  *
  * Le classi CSS sono in motion.css (ctp-mov-straccio*, ctp-mov-riga*,
  * ctp-mov-raccolta*, ctp-mov-flip*). I tempi in tempi.ts.
- * Nessun requestAnimationFrame proprio: il "frame dopo" del FLIP e della
- * riscrittura si prende con un `setTimeout(0)` dopo una lettura forzata di
- * layout (`offsetWidth`), che fa partire una transizione CSS senza toccare
- * il ticker (tech-architect §12: nessun rAF fuori dal ticker).
+ * Nessun requestAnimationFrame proprio (tech-architect §12): le righe che
+ * si riscrivono sono @keyframes che partono da sole quando compare la
+ * classe; il FLIP parte con una lettura forzata di layout (`offsetWidth`)
+ * nel layout effect. `setTimeout` qui rimanda fasi, non anima.
  * Nessun accesso al browser a livello di modulo.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { useContropelo } from '../state/store';
 import { TEMPI, durataRiscrittura, passoRiga } from './tempi';
 
@@ -39,42 +39,41 @@ export interface Straccio {
   inCorso: boolean;
   /**
    * Cancella, cambia i dati (`cambia`, chiamato tra 'via' e 'riscrive'),
-   * riscrive. Se uno straccio è partito da meno di 500 ms, questa
-   * richiesta aspetta e sostituisce quelle in attesa.
+   * riscrive. Se uno straccio è partito da meno di 500 ms o è ancora in
+   * corso, questa richiesta aspetta e sostituisce quelle già in attesa.
    */
   avvia(cambia: () => void): void;
-  /** Classe da mettere sul contenitore (`ctp-mov-straccio` + modificatore). */
+  /** Classe da mettere sul contenitore (`ctp-mov-straccio` + modificatore della fase). */
   classeContenitore: string;
-  /** Classe da mettere su ogni riga (`ctp-mov-riga` + modificatore di partenza). */
+  /** Classe da mettere su ogni riga che si riscrive. */
   classeRiga: string;
-  /** Stile del contenitore: `--ctp-passo-riga` per lo sfasamento (scritto solo quando cambia). */
+  /** Stile del contenitore: `--ctp-passo-riga` (cambia solo se cambia il numero di righe). */
   stileContenitore: Record<string, string>;
-  /** Stile di una riga: `--ctp-riga` = indice (il builder lo passa a ogni riga). */
+  /** Stile di una riga: `--ctp-riga` = indice (0 = titolo del giorno, 1.. = righe). */
   stileRiga(indice: number): Record<string, string>;
 }
 
 /**
  * @param righe   quante righe si riscrivono (per stringere lo sfasamento se sono tante).
- * @param onFine  chiamata quando l'ultima riga è scritta (per l'annuncio o il fuoco).
+ * @param onFine  chiamata quando l'ultima riga è scritta (annuncio, fuoco).
  */
 export function useStraccio(righe: number, onFine?: () => void): Straccio {
   const ridotto = useContropelo((s) => s.motion === 'reduced');
   const [fase, setFase] = useState<FaseStraccio>('fermo');
-  const [daScrivere, setDaScrivere] = useState(false);
+  const faseRef = useRef<FaseStraccio>('fermo');
   const ultimoAvvio = useRef<number>(Number.NEGATIVE_INFINITY);
   const attesa = useRef<(() => void) | null>(null);
+  const attesaProgrammata = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout>[]>([]);
   const onFineRef = useRef(onFine);
-  onFineRef.current = onFine;
   const righeRef = useRef(righe);
-  righeRef.current = righe;
   const ridottoRef = useRef(ridotto);
-  ridottoRef.current = ridotto;
 
-  const dopo = useCallback((ms: number, fn: () => void): void => {
-    const t = setTimeout(fn, Math.max(0, ms));
-    timer.current.push(t);
-  }, []);
+  useEffect(() => {
+    onFineRef.current = onFine;
+    righeRef.current = righe;
+    ridottoRef.current = ridotto;
+  });
 
   useEffect(
     () => () => {
@@ -85,78 +84,95 @@ export function useStraccio(righe: number, onFine?: () => void): Straccio {
     [],
   );
 
+  const imposta = useCallback((f: FaseStraccio): void => {
+    faseRef.current = f;
+    setFase(f);
+  }, []);
+
+  const dopo = useCallback((ms: number, fn: () => void): void => {
+    const t = setTimeout(() => {
+      timer.current = timer.current.filter((x) => x !== t);
+      fn();
+    }, Math.max(0, ms));
+    timer.current.push(t);
+  }, []);
+
   const esegui = useCallback(
     (cambia: () => void): void => {
       const r = ridottoRef.current;
       ultimoAvvio.current = performance.now();
-      const via = r ? TEMPI.straccioRidotto : TEMPI.straccioVia;
-      setFase('via');
-      dopo(via, () => {
-        // Tra 'via' e 'riscrive': i dati nuovi, con le righe già mascherate.
+      imposta('via');
+      dopo(r ? TEMPI.straccioRidotto : TEMPI.straccioVia, () => {
+        // Tra 'via' e 'riscrive': i dati nuovi arrivano mentre il contenitore
+        // è ancora cancellato; le righe partono con la loro animazione.
         cambia();
-        setDaScrivere(true);
-        setFase('riscrive');
-        // Frame dopo: si tolgono le maschere di partenza, le transizioni partono.
-        dopo(0, () => {
-          setDaScrivere(false);
-          const totale = durataRiscrittura(righeRef.current, r);
-          dopo(totale, () => {
-            setFase('fermo');
-            const fn = onFineRef.current;
-            if (fn !== undefined) fn();
-            const prossimo = attesa.current;
+        imposta('riscrive');
+        dopo(durataRiscrittura(righeRef.current, r), () => {
+          imposta('fermo');
+          const fn = onFineRef.current;
+          if (fn !== undefined) fn();
+          const prossimo = attesa.current;
+          if (prossimo !== null && !attesaProgrammata.current) {
             attesa.current = null;
-            if (prossimo !== null) esegui(prossimo);
-          });
+            const resto = TEMPI.codaStracci - (performance.now() - ultimoAvvio.current);
+            if (resto <= 0) esegui(prossimo);
+            else {
+              attesaProgrammata.current = true;
+              dopo(resto, () => {
+                attesaProgrammata.current = false;
+                const p = attesa.current ?? prossimo;
+                attesa.current = null;
+                esegui(p);
+              });
+            }
+          }
         });
       });
     },
-    [dopo],
+    [dopo, imposta],
   );
 
   const avvia = useCallback(
     (cambia: () => void): void => {
-      const ora = performance.now();
-      const trascorso = ora - ultimoAvvio.current;
-      if (fase === 'fermo' && trascorso >= TEMPI.codaStracci && attesa.current === null) {
+      const trascorso = performance.now() - ultimoAvvio.current;
+      if (faseRef.current === 'fermo' && !attesaProgrammata.current && trascorso >= TEMPI.codaStracci) {
+        attesa.current = null;
         esegui(cambia);
         return;
       }
-      // Tiene solo l'ultima richiesta; parte a fine straccio, o allo
-      // scadere dei 500 ms se lo straccio è già fermo.
-      const eraVuota = attesa.current === null;
+      // Solo l'ultima richiesta conta. Se lo straccio è in corso partirà alla
+      // sua fine; se è fermo ma troppo vicino al precedente, allo scadere dei 500 ms.
       attesa.current = cambia;
-      if (fase === 'fermo' && eraVuota) {
+      if (faseRef.current === 'fermo' && !attesaProgrammata.current) {
+        attesaProgrammata.current = true;
         dopo(TEMPI.codaStracci - trascorso, () => {
+          attesaProgrammata.current = false;
           const prossimo = attesa.current;
           attesa.current = null;
           if (prossimo !== null) esegui(prossimo);
         });
       }
     },
-    [dopo, esegui, fase],
+    [dopo, esegui],
   );
 
   const passo = passoRiga(righe, ridotto);
   const stileContenitore = useMemo(() => ({ '--ctp-passo-riga': `${Math.round(passo)}ms` }), [passo]);
-  const stileRiga = useCallback((indice: number) => ({ '--ctp-riga': String(Math.max(0, indice)) }), []);
+  const stileRiga = useCallback((indice: number) => ({ '--ctp-riga': String(Math.max(0, Math.floor(indice))) }), []);
 
   const classeContenitore =
     fase === 'via'
       ? 'ctp-mov-straccio ctp-mov-straccio--via'
       : fase === 'riscrive'
-        ? daScrivere
-          ? 'ctp-mov-straccio ctp-mov-straccio--riscrive ctp-mov-straccio--da-riscrivere'
-          : 'ctp-mov-straccio ctp-mov-straccio--riscrive'
+        ? 'ctp-mov-straccio ctp-mov-straccio--riscrive'
         : 'ctp-mov-straccio';
-  const classeRiga = fase === 'riscrive' && daScrivere ? 'ctp-mov-riga ctp-mov-riga--da-scrivere' : 'ctp-mov-riga';
 
   return {
     fase,
     inCorso: fase !== 'fermo',
     avvia,
     classeContenitore,
-    classeRiga,
+    classeRiga: 'ctp-mov-riga',
     stileContenitore,
     stileRiga,
   };
@@ -167,37 +183,70 @@ export function useStraccio(righe: number, onFine?: () => void): Straccio {
 /* ------------------------------------------------------------------ */
 
 export interface Raccolta {
-  /** Classe per una riga: lontana (svanisce) o vicina (resta). */
+  /**
+   * Da chiamare nel gestore che apre o chiude la riga di scrittura, PRIMA
+   * dell'azione dello store: misura le posizioni di partenza del FLIP.
+   */
+  misura(): void;
+  /** Classe per una riga della lista: lontana (svanisce) o vicina (resta). */
   classeRiga(lontana: boolean): string;
-  /** Le righe lontane vanno nascoste davvero (`hidden`) dopo la dissolvenza. */
+  /** true quando le righe lontane vanno nascoste davvero (`hidden`), dopo la dissolvenza. */
   nascondiLontane: boolean;
-  /** Classe per la riga di scrittura appena montata. */
+  /** Classe per la riga di scrittura (compare da sola al montaggio). */
   classeRigaScrittura: string;
 }
 
+/** useLayoutEffect nel browser, useEffect nel prerender (nessun avviso di React). */
+const useEffettoLayout = typeof window === 'undefined' ? useEffect : useLayoutEffect;
+
+const ATTR_RIAPPARE = 'data-ctp-riappare';
+
 /**
- * FLIP delle righe vicine: prima che l'apertura cambi il layout il builder
- * chiama `misura()` (le posizioni "First"); al render successivo il hook
- * legge le posizioni nuove ("Last"), scrive il transform inverso inline
- * senza transizione, e al frame dopo lo azzera con la classe di
- * transizione. Solo transform: nessun cambio di altezza animato.
+ * Raccolta delle righe lontane quando si apre la riga di scrittura (ux 5.5).
  *
- * @param contenitore  il `<ol>` della lista
+ * Aprendo: la riga di scrittura prende il posto del trattino e compare per
+ * opacità; le righe lontane svaniscono (180 ms), poi vengono nascoste
+ * (`nascondiLontane`) e quelle vicine si stringono con un FLIP (300 ms).
+ * Chiudendo: le righe lontane tornano visibili (220 ms, attributo
+ * `data-ctp-riappare` messo qui fuori da React) e le vicine tornano al loro
+ * posto con il FLIP.
+ *
+ * FLIP = First (misura), Last (posizioni dopo il render), Invert (transform
+ * inline senza transizione, nel layout effect, prima della pittura), Play
+ * (al giro dopo: classe di transizione e transform azzerato). Solo
+ * transform: nessuna altezza animata.
+ *
+ * @param contenitore  il `<ol>` della lista (righe = figli diretti)
  * @param aperta       true quando la riga di scrittura è aperta
  */
-export function useRaccolta(contenitore: RefObject<HTMLElement | null>, aperta: boolean): Raccolta & { misura(): void } {
+export function useRaccolta(contenitore: RefObject<HTMLElement | null>, aperta: boolean): Raccolta {
   const ridotto = useContropelo((s) => s.motion === 'reduced');
   const prime = useRef<Map<Element, number> | null>(null);
-  const [nascondiLontane, setNascondi] = useState(false);
-  const [daAprire, setDaAprire] = useState(false);
+  const nascosteRef = useRef<Element[]>([]);
+  const [nascondi, setNascondi] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  const dopo = useCallback((ms: number, fn: () => void): void => {
+    const t = setTimeout(() => {
+      timer.current = timer.current.filter((x) => x !== t);
+      fn();
+    }, Math.max(0, ms));
+    timer.current.push(t);
+  }, []);
 
   const misura = useCallback((): void => {
     const el = contenitore.current;
-    if (el === null || ridotto) return;
+    if (el === null || ridotto) {
+      prime.current = null;
+      return;
+    }
     const mappa = new Map<Element, number>();
     for (const riga of Array.from(el.children)) {
-      mappa.set(riga, riga.getBoundingClientRect().top);
+      // Le righe nascoste non hanno posizione: non partecipano al FLIP.
+      if (riga instanceof HTMLElement && riga.hidden) continue;
+      const r = riga.getBoundingClientRect();
+      if (r.width === 0 && r.height === 0) continue;
+      mappa.set(riga, r.top);
     }
     prime.current = mappa;
   }, [contenitore, ridotto]);
@@ -210,62 +259,82 @@ export function useRaccolta(contenitore: RefObject<HTMLElement | null>, aperta: 
     [],
   );
 
-  // Last + Invert + Play, dopo il render che ha cambiato il layout.
+  // Aprendo: dopo la dissolvenza delle lontane, si misura e si nascondono.
+  // Chiudendo: le lontane tornano subito nel layout.
   useEffect(() => {
+    if (!aperta) {
+      setNascondi(false);
+      return;
+    }
+    if (ridotto) {
+      setNascondi(true);
+      return;
+    }
+    dopo(TEMPI.raccoltaVia, () => {
+      misura();
+      setNascondi(true);
+    });
+  }, [aperta, ridotto, dopo, misura]);
+
+  const nascondiLontane = aperta && nascondi;
+
+  // Last + Invert prima della pittura, Play al giro dopo.
+  useEffettoLayout(() => {
     const el = contenitore.current;
     const first = prime.current;
     prime.current = null;
-    if (el === null || first === null || ridotto) return;
+    if (el === null) return;
+
+    // Righe che erano nascoste e tornano: ricompaiono per opacità.
+    if (!nascondiLontane && nascosteRef.current.length > 0) {
+      const tornate = nascosteRef.current.filter((r) => r.isConnected);
+      nascosteRef.current = [];
+      if (!ridotto) {
+        for (const r of tornate) r.setAttribute(ATTR_RIAPPARE, '');
+        dopo(TEMPI.raccoltaVia + TEMPI.riappare, () => {
+          for (const r of tornate) r.removeAttribute(ATTR_RIAPPARE);
+        });
+      }
+    }
+    if (nascondiLontane) {
+      nascosteRef.current = Array.from(el.children).filter((r) => r instanceof HTMLElement && r.hidden);
+    }
+
+    if (first === null || ridotto) return;
     const mosse: HTMLElement[] = [];
     for (const riga of Array.from(el.children)) {
-      if (!(riga instanceof HTMLElement)) continue;
+      if (!(riga instanceof HTMLElement) || riga.hidden) continue;
       const prima = first.get(riga);
       if (prima === undefined) continue;
+      riga.classList.remove('ctp-mov-flip--flip');
+      riga.style.transform = '';
       const dy = prima - riga.getBoundingClientRect().top;
       if (Math.abs(dy) < 0.5) continue;
-      riga.classList.remove('ctp-mov-flip--flip');
       riga.style.transform = `translateY(${dy.toFixed(1)}px)`;
       mosse.push(riga);
     }
     if (mosse.length === 0) return;
-    // Lettura forzata: il transform inverso è applicato prima della transizione.
+    // Lettura forzata: il browser registra il transform inverso come stato
+    // di partenza, così la transizione parte davvero.
     void el.offsetWidth;
-    const t = setTimeout(() => {
-      for (const riga of mosse) {
-        riga.classList.add('ctp-mov-flip--flip');
-        riga.style.transform = '';
-      }
-      const fine = setTimeout(() => {
-        for (const riga of mosse) riga.classList.remove('ctp-mov-flip--flip');
-      }, TEMPI.raccoltaFlip);
-      timer.current.push(fine);
-    }, 0);
-    timer.current.push(t);
-  }, [aperta, contenitore, ridotto]);
-
-  // Le righe lontane spariscono davvero dopo la dissolvenza; la riga di
-  // scrittura compare dopo il FLIP.
-  useEffect(() => {
-    if (aperta) {
-      setDaAprire(!ridotto);
-      const t1 = setTimeout(() => setNascondi(true), ridotto ? 0 : TEMPI.raccoltaVia);
-      const t2 = setTimeout(() => setDaAprire(false), 0);
-      timer.current.push(t1, t2);
-      return;
+    for (const riga of mosse) {
+      riga.classList.add('ctp-mov-flip--flip');
+      riga.style.transform = '';
     }
-    setNascondi(false);
-    setDaAprire(false);
-  }, [aperta, ridotto]);
+    dopo(TEMPI.raccoltaFlip, () => {
+      for (const riga of mosse) riga.classList.remove('ctp-mov-flip--flip');
+    });
+  }, [aperta, nascondiLontane, contenitore, ridotto, dopo]);
 
   const classeRiga = useCallback(
-    (lontana: boolean): string => (aperta && lontana ? 'ctp-mov-raccolta ctp-mov-raccolta--lontana' : 'ctp-mov-raccolta'),
+    (lontana: boolean): string => (aperta && lontana ? 'ctp-mov-raccolta--lontana' : ''),
     [aperta],
   );
 
   return {
-    classeRiga,
-    nascondiLontane: aperta && nascondiLontane,
-    classeRigaScrittura: daAprire ? 'ctp-mov-riga-scrittura ctp-mov-riga-scrittura--da-aprire' : 'ctp-mov-riga-scrittura',
     misura,
+    classeRiga,
+    nascondiLontane,
+    classeRigaScrittura: 'ctp-mov-riga-scrittura',
   };
 }

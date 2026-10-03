@@ -165,6 +165,8 @@ interface Premuto {
   indice: number;
   /** x (contenuto scorrevole) del bordo sinistro della luna 0, misurata al pointerdown. */
   base: number;
+  /** Passo tra le lune misurato al pointerdown (il token è il ripiego). */
+  passo: number;
   diametro: number;
   /** Selezione prima del gesto: ci si torna se il gesto si annulla. */
   prima: Selezione | null;
@@ -445,6 +447,9 @@ export function useSelezioneLune(nastro: RefObject<HTMLElement>, o: OpzioniSelez
       const rs = el.getBoundingClientRect();
       const ro = opzione.getBoundingClientRect();
       const sl = el.scrollLeft;
+      const vicina = e.currentTarget.querySelector(`[${ATTRIBUTO_INDICE}="${i > 0 ? i - 1 : i + 1}"]`);
+      const misurato = vicina ? Math.abs(ro.left - vicina.getBoundingClientRect().left) : 0;
+      const passoVero = misurato > 1 ? misurato : passoRef.current;
       rettangolo.current = { left: rs.left, right: rs.right, top: rs.top, bottom: rs.bottom };
       scroll.current = sl;
       premuto.current = {
@@ -456,7 +461,8 @@ export function useSelezioneLune(nastro: RefObject<HTMLElement>, o: OpzioniSelez
         x: e.clientX,
         y: e.clientY,
         indice: i,
-        base: ro.left - rs.left + sl - i * passoRef.current,
+        base: ro.left - rs.left + sl - i * passoVero,
+        passo: passoVero,
         diametro: ro.width,
         prima: selezioneRef.current,
       };
@@ -567,7 +573,7 @@ export function useSelezioneLune(nastro: RefObject<HTMLElement>, o: OpzioniSelez
       const r = rettangolo.current;
       if (p !== null && r !== null && gestoRef.current === 'trascina') {
         const totale = luneRef.current.length;
-        const passo0 = passoRef.current;
+        const passo0 = p.passo;
         const grezzo = Math.round((p.x - r.left + scroll.current - p.base - p.diametro / 2) / passo0);
         const i = Math.max(0, Math.min(totale - 1, grezzo));
         const zona = Math.min(ZONA_BORDO_PX, (r.right - r.left) / 4);

@@ -111,26 +111,32 @@ export const SERVIZIO = {
 /* ---------------------------------------------------------- riparazioni */
 
 /**
- * Elenco corto delle riparazioni comuni, in ordine di frequenza in bottega.
- * Gli id sono le chiavi di RIPARAZIONI in testi.ts (nome, tempo, evidenza).
+ * Elenco corto delle riparazioni comuni (brand-strategist §7.3), in ordine di
+ * frequenza al banco. Gli id sono le chiavi di RIPARAZIONI_TESTI in testi.ts
+ * (nome, tempo, quali due prezzi vanno in vernice). Il violoncello costa un
+ * po' di più su ponticello e crine: lo dice una riga di testi.ts.
  */
 export const RIPARAZIONI: readonly Riparazione[] = [
-  { id: 'anima-rimessa', prezzoDa: 30 },
-  { id: 'anima-nuova', prezzoDa: 60 },
+  { id: 'anima', prezzoDa: 30 },
   { id: 'regolazione', prezzoDa: 90 },
   { id: 'ponticello', prezzoDa: 150 },
-  { id: 'ponticello-violoncello', prezzoDa: 220 },
   { id: 'crine', prezzoDa: 65 },
-  { id: 'crine-violoncello', prezzoDa: 75 },
-  { id: 'capotasto', prezzoDa: 70 },
-  { id: 'tastiera-ripassata', prezzoDa: 90 },
-  { id: 'tastiera-nuova', prezzoDa: 280 },
+  { id: 'tastiera', prezzoDa: 90 },
   { id: 'scollatura', prezzoDa: 60 },
-  { id: 'crepa-tavola', prezzoDa: 120 },
-  { id: 'crepa-apertura', prezzoDa: 450 },
+  { id: 'crepa', prezzoDa: 120 },
   { id: 'cavigliere', prezzoDa: 250 },
-  { id: 'innesto', prezzoDa: 900 },
 ];
+
+/** Gli id delle riparazioni, per tipizzare i testi. */
+export type IdRiparazione =
+  | 'anima'
+  | 'regolazione'
+  | 'ponticello'
+  | 'crine'
+  | 'tastiera'
+  | 'scollatura'
+  | 'crepa'
+  | 'cavigliere';
 
 /** Il sabato di bottega: fascia e quanti sabati proporre. */
 export const SABATO = { dalle: '9:00', alle: '12:30', quanti: 4 } as const;

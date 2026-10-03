@@ -35,7 +35,7 @@ export function gramSchmidt(colonne, derivate, peso, soglia = 1e-7) {
       for (const lista of derivate) {
         const di = lista[i];
         const dj = lista[j];
-        for (let k = 0; k < g; k++) dj[k] -= r * di[k];
+        for (let k = 0; k < dj.length; k++) dj[k] -= r * di[k];
       }
     }
     const norma = Math.sqrt(prodotto(cj, cj, peso));
@@ -47,7 +47,7 @@ export function gramSchmidt(colonne, derivate, peso, soglia = 1e-7) {
     for (let k = 0; k < g; k++) cj[k] *= inv;
     for (const lista of derivate) {
       const dj = lista[j];
-      for (let k = 0; k < g; k++) dj[k] *= inv;
+      for (let k = 0; k < dj.length; k++) dj[k] *= inv;
     }
     tenute[j] = true;
   }
