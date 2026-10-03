@@ -661,15 +661,42 @@ export const HANNO_COMPRATO = {
 
 /* ================================================================== piede */
 
+/** La parte di Credito (assets/foto/index.ts) che serve ai testi: nessun import dalle foto. */
+export interface CreditoFoto {
+  readonly autore: string;
+  readonly licenza: string;
+}
+
+const PIEDE_CREDITI_PRIMA = 'Foto: ';
+
 export const PIEDE = {
   pagina: 'Pagina 1',
   testata: 'EVIDENZIA',
   /** La data si compone con sabatoLungo(d). */
   data: (d: Giorno) => sabatoLungo(d),
   fotoTitolo: 'Foto',
-  /** Credito di una foto (autore e link da assets/foto/index.ts). */
-  credito: (autore: string) => `${autore} su Unsplash`,
-  creditoAria: (autore: string) => `Foto di ${autore} su Unsplash (si apre in una nuova scheda)`,
+  /**
+   * Crediti delle foto: si compongono da CREDITI di assets/foto/index.ts
+   * (Flickr, licenze Creative Commons), senza ripetere qui autori o licenze.
+   * Riga finita: "Foto: pj.sissi (CC BY 2.0) e Toprural (CC BY-SA 2.0) su
+   * Flickr. Le case fotografate non sono in vendita."
+   * Il builder del piede mette l'autore come link a c.url e la licenza come
+   * link a c.licenzaUrl (CC BY-SA lo richiede): per ogni credito
+   * creditiPrima + [link autore] + " (" + [link licenza] + ")" +
+   * creditiTra(i, n), poi creditiDopo e creditiNota. Senza link: creditiTesto(cs).
+   */
+  creditiPrima: PIEDE_CREDITI_PRIMA,
+  /** Che cosa va dopo il credito i (da 0) su n: ", ", " e " oppure niente. */
+  creditiTra: (i: number, n: number) => (i >= n - 1 ? '' : i === n - 2 ? ' e ' : ', '),
+  creditiDopo: ' su Flickr.',
+  creditiNota: 'Le case fotografate non sono in vendita.',
+  /** Un credito senza link: "pj.sissi (CC BY 2.0)". */
+  credito: (c: CreditoFoto) => `${c.autore} (${c.licenza})`,
+  /** Tutta la riga senza link, per chi non li mette o per un testo alternativo. */
+  creditiTesto: (cs: readonly CreditoFoto[]) =>
+    `${PIEDE_CREDITI_PRIMA}${elenco(cs.map((c) => `${c.autore} (${c.licenza})`))} su Flickr. Le case fotografate non sono in vendita.`,
+  autoreAria: (c: CreditoFoto) => `Foto di ${c.autore} su Flickr (si apre in una nuova scheda)`,
+  licenzaAria: (c: CreditoFoto) => `Licenza ${c.licenza} (si apre in una nuova scheda)`,
   mappaCredito: 'Mappa del giro: © OpenStreetMap contributors.',
   inventata: COMUNI.inventata,
   conceptDi: 'Un concept di Ciceri Lab',

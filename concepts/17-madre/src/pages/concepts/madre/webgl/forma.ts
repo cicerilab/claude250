@@ -122,8 +122,8 @@ export function segmentiGriglia(aspetto: number, leggera: boolean): Vec2 {
  */
 export const LUCE = {
   direzione: [-0.56, 0.44, 0.7] as Vec3,
-  avvolgimento: 0.35,
-  ambiente: 0.26,
+  avvolgimento: 0.22,
+  ambiente: 0.2,
   /**
    * Profondità delle ombre: la tinta d'ombra dei token (farina-ombra) dà il
    * TONO; l'esponente dà quanto scende al buio pieno (1 = esattamente la
@@ -135,7 +135,7 @@ export const LUCE = {
   /** quanto la curvatura convessa schiarisce (traslucenza dei bordi sottili) */
   bordoChiaro: 0.0016,
   /** quanto la curvatura concava scurisce (occlusione nelle pieghe) */
-  occlusione: 0.0028,
+  occlusione: 0.0036,
 } as const;
 
 /* ---------------------------------------------------------------- pagnotta */
@@ -241,7 +241,7 @@ export const FOSSETTA = {
   /** rotazione dell'asse del dito (rad, antiorario da +y) */
   rotazione: 0.32,
   /** profondità massima, in "p" */
-  profondita: 0.024,
+  profondita: 0.034,
   /** quanto la punta è più profonda del tallone (0 = simmetrica) */
   asimmetria: 0.32,
   /** rigonfiamento attorno (l'impasto spostato), frazione della profondità */

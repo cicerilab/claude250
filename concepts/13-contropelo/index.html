@@ -15,8 +15,10 @@
     <!--
       Fondo parete prima di React (solo app standalone, non si porta): stesso
       byte di --ctp-parete in styles/tokens.css (art-director §6).
-      La prima foto (specchio 1) si precarica qui nello standalone
-      (tech-architect §9.2); nel sito basta fetchpriority="high" sull'<img>.
+      Nessun <link rel="preload"> della prima foto: i webp passano da Vite
+      con nome hashato, e un preload scritto a mano qui punterebbe a un file
+      che nel build non esiste. La priorità la dà fetchpriority="high"
+      sull'<img> dello specchio attivo (section-builder-parete).
     -->
     <style>
       html,

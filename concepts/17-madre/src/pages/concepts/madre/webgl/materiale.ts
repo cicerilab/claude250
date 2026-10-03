@@ -31,7 +31,7 @@
 import { NoBlending, ShaderMaterial, Vector2, Vector3, Vector4 } from 'three';
 import type { DataTexture, IUniform } from 'three';
 
-import { IMPASTO_GL } from '../styles/tokens';
+import { COLORI_GL } from '../styles/tokens';
 import { composizione, definesForma } from './forma';
 import type { Composizione, Vec3 } from './forma';
 import { creaSpolvero } from './spolvero';
@@ -81,9 +81,9 @@ export interface OpzioniImpasto {
 }
 
 const COLORI_TOKEN: ColoriImpasto = {
-  farina: IMPASTO_GL.farina,
-  farinaOmbra: IMPASTO_GL.farinaOmbra,
-  impastoNudo: IMPASTO_GL.impastoNudo,
+  farina: COLORI_GL.farina,
+  farinaOmbra: COLORI_GL.farinaOmbra,
+  impastoNudo: COLORI_GL.impastoNudo,
 };
 
 const v3 = (c: Vec3): Vector3 => new Vector3(c[0], c[1], c[2]);

@@ -1,0 +1,346 @@
+/* ==========================================================================
+   MADRE · stati di interazione (interaction-designer)
+   --------------------------------------------------------------------------
+   Anello di fuoco, hover, pressione, "in mano", giorni "si fa", clone del
+   gettone trascinato, zona di prova dell'impasto, gesti della vetrina,
+   reduced motion e colori forzati. Solo token di styles/tokens.css: nessun
+   hex. Nessun cursore custom: il puntatore di sistema dice cosa fa la mano
+   (pointer sull'impasto, grab/grabbing sui gettoni, mano sui bottoni).
+   Importato da Madre.tsx dopo tokens.css e base.css.
+
+   Classi per le sezioni:
+   - mad-ix-premibile   bottone pieno o a filo: hover filo interno, active 1 px giù
+   - mad-ix-link        link di testo: sottolineatura che si ispessisce
+   - mad-ix-tocco       area di tocco minima 44 px
+   - mad-ix-interruttore  "Nel pane fisso" / "Sul vassoio" (aria-pressed)
+   Attributi scritti dagli hook (usePrendiPosa, provaDito):
+   - [data-mad-ix="gettone"] [data-mad-in-mano] [data-mad-origine]
+   - [data-mad-ix="bersaglio"|"zona"] [data-mad-valido] [data-mad-sopra]
+   - [data-mad-ix="clone"] [data-mad-ix="maniglia"]
+   - [data-mad-ix="prova"] [data-mad-premuto] --mad-prova-x/y
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Anello di fuoco: inchiostro (farina su inchiostro), 2 px a 2 px di
+      stacco, raggio del token. Mai outline: none senza sostituto.
+   -------------------------------------------------------------------------- */
+.mad-root :focus-visible {
+  outline: var(--mad-focus-spessore) solid var(--mad-focus-colore);
+  outline-offset: var(--mad-focus-distanza);
+  border-radius: var(--mad-raggio);
+}
+
+.mad-root :focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Titoli raggiunti con i salti (tabindex="-1"): anello più distante, niente raggio. */
+.mad-root :is(h1, h2, h3)[tabindex="-1"]:focus-visible {
+  outline-offset: calc(var(--mad-focus-distanza) * 4);
+  border-radius: 0;
+}
+
+/* Le soste della vetrina senza controllo (i dolci) ricevono il fuoco con le frecce. */
+.mad-root .mad-prodotto[tabindex="-1"]:focus-visible,
+.mad-root [data-mad-sosta][tabindex="-1"]:focus-visible {
+  outline-offset: calc(var(--mad-focus-distanza) * 3);
+}
+
+/* --------------------------------------------------------------------------
+   2. Premibili e link
+   -------------------------------------------------------------------------- */
+.mad-root .mad-ix-premibile {
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--mad-durata-tocco, 140ms) var(--mad-curva-lineare, linear),
+    box-shadow var(--mad-durata-tocco, 140ms) var(--mad-curva-lineare, linear),
+    transform var(--mad-durata-tocco, 140ms) var(--mad-curva-compare, ease-out);
+}
+
+/* Hover: un filo interno del colore del testo del bottone, nessun colore nuovo. */
+@media (hover: hover) and (pointer: fine) {
+  .mad-root .mad-ix-premibile:hover {
+    box-shadow: inset 0 0 0 var(--mad-filo-spessore) currentColor;
+  }
+}
+
+/* Pressione: scende di 1 px, come un tasto; il primario diventa il tono "attivo". */
+.mad-root .mad-ix-premibile:active {
+  transform: translateY(1px);
+}
+
+.mad-root .mad-ix-premibile[aria-disabled="true"],
+.mad-root .mad-ix-premibile:disabled {
+  cursor: not-allowed;
+  opacity: var(--mad-opacita-disabilitato);
+  box-shadow: none;
+  transform: none;
+}
+
+.mad-root .mad-ix-link {
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-thickness: var(--mad-sottolineatura);
+  text-underline-offset: var(--mad-sottolineatura-distanza);
+  text-decoration-color: currentColor;
+  transition: text-decoration-thickness var(--mad-durata-tocco, 140ms) var(--mad-curva-lineare, linear);
+}
+
+.mad-root .mad-ix-link:hover,
+.mad-root .mad-ix-link:focus-visible {
+  text-decoration-thickness: var(--mad-sottolineatura-hover);
+}
+
+.mad-root .mad-ix-link:active {
+  text-decoration-thickness: calc(var(--mad-sottolineatura-hover) * 1.5);
+}
+
+/* Area di tocco minima: il controllo può essere piccolo, il bersaglio no. */
+.mad-root .mad-ix-tocco {
+  position: relative;
+}
+
+.mad-root .mad-ix-tocco::after {
+  content: "";
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: max(100%, var(--mad-tocco-min));
+  height: max(100%, var(--mad-tocco-min));
+  transform: translate(-50%, -50%);
+}
+
+/* Interruttori "Nel pane fisso" / "Sul vassoio": lo stato è detto dal testo
+   e dalla spunta; qui solo il filo pieno quando è acceso. */
+.mad-root .mad-ix-interruttore[aria-pressed="true"] {
+  box-shadow: inset 0 0 0 var(--mad-filo-spessore) var(--mad-filo);
+}
+
+/* --------------------------------------------------------------------------
+   3. La prova del dito
+   -------------------------------------------------------------------------- */
+.mad-root [data-mad-ix="prova"] {
+  cursor: pointer;
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  --mad-prova-x: 50%;
+  --mad-prova-y: 50%;
+}
+
+/* Da tastiera l'anello non gira attorno a tutta la superficie: cerchia il
+   punto della prova (centro o uno dei quattro lati), come l'impronta. */
+.mad-root [data-mad-ix="prova"]:focus-visible {
+  outline: none;
+}
+
+.mad-root [data-mad-ix="prova"]::after {
+  content: "";
+  position: absolute;
+  left: var(--mad-prova-x);
+  top: var(--mad-prova-y);
+  width: 72px;
+  height: 72px;
+  margin: -36px 0 0 -36px;
+  border-radius: 50%;
+  border: var(--mad-focus-spessore) solid var(--mad-focus-colore);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--mad-durata-tocco, 140ms) var(--mad-curva-lineare, linear);
+}
+
+.mad-root [data-mad-ix="prova"]:focus-visible::after {
+  opacity: 1;
+}
+
+.mad-root [data-mad-ix="prova"][data-mad-premuto]:focus-visible::after {
+  border-width: calc(var(--mad-focus-spessore) + 1px);
+}
+
+/* --------------------------------------------------------------------------
+   4. La vetrina: il pollice in verticale scorre, lo zoom a due dita resta;
+      il gesto orizzontale lo legge gestiStriscia.
+   -------------------------------------------------------------------------- */
+.mad-root .mad-vetrina__binario {
+  touch-action: pan-y pinch-zoom;
+}
+
+/* Nel modo in colonna la striscia non trasla: tutto resta del browser. */
+@media (max-height: 539px) {
+  .mad-root .mad-vetrina__binario {
+    touch-action: auto;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   5. Gettoni: prendi in mano, trascina, posa
+   -------------------------------------------------------------------------- */
+.mad-root [data-mad-ix="gettone"] {
+  cursor: grab;
+  touch-action: pan-x pan-y;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+  transition:
+    box-shadow var(--mad-durata-tocco, 140ms) var(--mad-curva-lineare, linear),
+    opacity var(--mad-durata-tocco, 140ms) var(--mad-curva-lineare, linear);
+}
+
+.mad-root [data-mad-ix="gettone"] img {
+  -webkit-user-drag: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+.mad-root [data-mad-ix="gettone"]:active {
+  cursor: grabbing;
+}
+
+/* In mano: filo inchiostro 2 px (il testo "scegli i giorni" lo mette la sezione). */
+.mad-root [data-mad-ix="gettone"][data-mad-in-mano] {
+  box-shadow: inset 0 0 0 var(--mad-filo-spessore) var(--mad-filo);
+}
+
+/* Il gettone (o la riga) di cui esiste un clone in volo: resta al suo
+   posto, velato; non è disabilitato. */
+.mad-root [data-mad-origine] {
+  opacity: var(--mad-opacita-disabilitato);
+}
+
+.mad-root [data-mad-ix="gettone"][aria-disabled="true"] {
+  cursor: default;
+  opacity: var(--mad-opacita-disabilitato);
+}
+
+/* Mentre si trascina (data-mano su .mad-root, scritto da Madre.tsx): tutta la pagina ha la mano chiusa. */
+.mad-root[data-mano],
+.mad-root[data-mano] * {
+  cursor: grabbing;
+}
+
+/* Il clone che segue il puntatore: fisso, sopra a tutto, posizionato solo col transform. */
+.mad-root [data-mad-ix="clone"] {
+  position: fixed;
+  left: 0;
+  top: 0;
+  margin: 0;
+  box-sizing: border-box;
+  z-index: var(--mad-z-trascinato);
+  pointer-events: none;
+  transform-origin: 0 0;
+  will-change: transform, opacity;
+  opacity: 1;
+  box-shadow: inset 0 0 0 var(--mad-filo-spessore) var(--mad-filo);
+  cursor: grabbing;
+}
+
+/* La maniglia della riga messa: si trascina fuori per togliere (aria-hidden). */
+.mad-root [data-mad-ix="maniglia"] {
+  cursor: grab;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.mad-root [data-mad-ix="maniglia"]:active {
+  cursor: grabbing;
+}
+
+/* --------------------------------------------------------------------------
+   6. Bersagli: i giorni e il vassoio
+   Con qualcosa in mano: "si fa" = carta da zucchero (cambia al massimo una
+   volta ogni 500 ms, lo garantisce antiLampeggio); "non si fa" resta farina
+   e la sezione scrive il motivo. Sotto il puntatore durante il
+   trascinamento: filo inchiostro 2 px.
+   -------------------------------------------------------------------------- */
+.mad-root [data-mad-ix="bersaglio"],
+.mad-root [data-mad-ix="zona"] {
+  transition:
+    background-color var(--mad-durata-colore, 300ms) var(--mad-curva-lineare, linear),
+    box-shadow var(--mad-durata-tocco, 140ms) var(--mad-curva-lineare, linear);
+}
+
+.mad-root [data-mad-ix="bersaglio"] {
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mad-root [data-mad-ix="zona"][data-mad-valido="true"],
+.mad-root [data-mad-ix="bersaglio"][data-mad-valido="true"]:not([data-mad-ix="zona"] [data-mad-ix="bersaglio"]) {
+  background-color: var(--mad-zucchero);
+  --mad-banco-fondo: var(--mad-zucchero);
+  --mad-testo-quieto: var(--mad-inchiostro);
+  --mad-prezzo: var(--mad-inchiostro);
+}
+
+.mad-root [data-mad-ix="zona"][data-mad-sopra],
+.mad-root [data-mad-ix="bersaglio"][data-mad-sopra]:not([data-mad-ix="zona"] [data-mad-ix="bersaglio"]) {
+  box-shadow: inset 0 0 0 var(--mad-filo-spessore) var(--mad-filo);
+}
+
+.mad-root [data-mad-ix="bersaglio"][aria-disabled="true"] {
+  cursor: default;
+}
+
+/* --------------------------------------------------------------------------
+   7. Reduced motion: stato finale immediato. Restano solo le dissolvenze di
+      colore lente (già a durata 0 per i movimenti tramite le variabili del
+      motion-designer; qui si azzera anche il resto).
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .mad-root .mad-ix-premibile,
+  .mad-root .mad-ix-link,
+  .mad-root [data-mad-ix="gettone"],
+  .mad-root [data-mad-ix="prova"]::after {
+    transition: none;
+  }
+
+  .mad-root .mad-ix-premibile:active {
+    transform: none;
+  }
+}
+
+.mad-root[data-motion="reduced"] .mad-ix-premibile,
+.mad-root[data-motion="reduced"] .mad-ix-link,
+.mad-root[data-motion="reduced"] [data-mad-ix="gettone"],
+.mad-root[data-motion="reduced"] [data-mad-ix="prova"]::after {
+  transition: none;
+}
+
+.mad-root[data-motion="reduced"] .mad-ix-premibile:active {
+  transform: none;
+}
+
+/* --------------------------------------------------------------------------
+   8. Colori forzati: fuoco e fili di sistema, lo "si fa" detto dal filo.
+   -------------------------------------------------------------------------- */
+@media (forced-colors: active) {
+  .mad-root :focus-visible,
+  .mad-root [data-mad-ix="prova"]::after {
+    outline-color: Highlight;
+    border-color: Highlight;
+  }
+
+  .mad-root [data-mad-ix="gettone"][data-mad-in-mano],
+  .mad-root [data-mad-ix="clone"],
+  .mad-root [data-mad-ix="zona"][data-mad-sopra],
+  .mad-root [data-mad-ix="bersaglio"][data-mad-sopra] {
+    outline: var(--mad-filo-spessore) solid Highlight;
+    box-shadow: none;
+  }
+
+  .mad-root [data-mad-ix="zona"][data-mad-valido="true"],
+  .mad-root [data-mad-ix="bersaglio"][data-mad-valido="true"] {
+    outline: var(--mad-filo-sottile) dashed Highlight;
+  }
+}

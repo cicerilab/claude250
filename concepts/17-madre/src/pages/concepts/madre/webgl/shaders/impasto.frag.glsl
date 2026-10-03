@@ -156,7 +156,7 @@ void main() {
 
   // traslucenza dei bordi convessi (labbro della fossetta, gonfiature) e occlusione nelle conche
   luce += clamp(-vCurva * MAD_BORDO_CHIARO, 0.0, 0.1) * sullImpasto;
-  luce *= 1.0 - clamp(vCurva * MAD_OCCLUSIONE, 0.0, 0.1);
+  luce *= 1.0 - clamp(vCurva * MAD_OCCLUSIONE, 0.0, 0.22);
   luce *= 1.0 - cratere * 0.22 * sullImpasto;
   // cielo: le parti basse della pagnotta vedono meno cielo
   float quota = clamp(vAltezza / max(uPagnotta.w, 1e-3), 0.0, 1.0);

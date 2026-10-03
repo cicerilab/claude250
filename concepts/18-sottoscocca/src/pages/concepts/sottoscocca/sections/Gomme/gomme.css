@@ -142,6 +142,13 @@
   white-space: nowrap;
 }
 
+/* La colonna delle misure è stretta quanto il suo contenuto: lo spazio che
+   avanza va all'intestazione lunga, che sul telefono sta su due righe. */
+.ssc-root .ssc-gomme__tabella th:first-child {
+  inline-size: 1%;
+  white-space: nowrap;
+}
+
 .ssc-root .ssc-gomme__misura {
   text-align: start;
 }
