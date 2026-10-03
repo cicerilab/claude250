@@ -26,6 +26,22 @@ numerico in Node:
 - cursore del righello: da spento a 168 Hz in 68 frame (1,1 s), poi fermo
   e il ticker può dormire.
 
+Giro 2 (richiesta dell'interaction-designer, 03/10): aggiunti i
+**pianerottoli di capo** a 60 e 420 Hz (§2.2). Test rilanciati tutti, anche
+quelli del riquadro mobile dopo i ritocchi del giro 1 (verdi), più un test
+**a pixel interi** su una pagina modello (misure ux in px a 1440 × 900,
+375 × 667 e 375 × 553, voce 330 / 348 / 366):
+- Hz crescente pixel per pixel su tutta la pagina;
+- "Inizio" e "Fine" (`percorsoDaHz(60)` e `percorsoDaHz(420)` riportati in
+  px, arrotondati, per difetto e per eccesso) danno sempre **60 e 420
+  esatti**;
+- pixel che danno il valore estremo: 14 / 14 a 900, 11 / 10 a 667, 9 / 8 a
+  553;
+- ogni intero 60-420 portato a un pixel intero non cade mai nello spento;
+  il valore mostrato (arrotondato) è quello chiesto a 1440 e al più 1 Hz
+  diverso sul telefono, dove nella salita 3 un pixel vale circa 1 Hz (è la
+  risoluzione dello scroll, non un salto).
+
 Non ho avviato un dev server: lo scaffold arriva in ondata 3. Porta
 riservata a me per le prove dal tech-architect (§11) 9196; l'orchestratore
 indicava 9191, che è dell'art-director nella tabella: non la uso.
@@ -127,13 +143,27 @@ durante lo scroll). Senza profilo vale quello nominale dell'ux a 1440
 | Funzione | Cosa fa |
 |---|---|
 | `hzDaPercorso(p, hzModo5?, profilo?)` | Hz o `null` (spento). Sui pianerottoli costante; nelle salite `a × (b/a)^u` (scala logaritmica, la stessa del righello: il cursore scende a velocità costante mentre si scorre a velocità costante). Monotona. |
-| `percorsoDaHz(hz, hzModo5?, profilo?)` | Inversa. Entro 0,5 Hz da un pianerottolo → inizio del pianerottolo + `MARGINE_PIANEROTTOLO` (0,02 di stazione, l'h2 è già in vista); ≤ 60 → inizio della salita 1; ≥ 420 → ultimo punto acceso della salita 4. |
+| `percorsoDaHz(hz, hzModo5?, profilo?)` | Inversa. Entro 0,5 Hz da un pianerottolo → inizio del pianerottolo + `MARGINE_PIANEROTTOLO` (0,02 di stazione, l'h2 è già in vista); ≤ 60 e ≥ 420 → **centro del pianerottolo di capo** (sotto). |
 | `palcoDaPercorso(p, profilo?, palcoApertura?)` | Scala del riquadro mobile, 1 = 54svh, 0,63 = 34svh (§2.3). |
 | `statoTavolaDaPercorso(p)` | `'riposo' \| 1 \| 2 \| 5 \| 'salita' \| 'ferma'` per `store.tavola`, `data-modo`, aria-live. |
 | `modoCuscinetti(p)` | Su quali nodi stanno i cuscinetti: già quelli del modo successivo dall'inizio della salita (§0.4). |
 | `trattoDaPercorso(p)` | Stazione, frazione, fase (pianerottolo/salita) e avanzamento nella fase. |
 | `percorsoDaLettura(y, inizi, fine)` / `letturaDaPercorso(p, inizi, fine)` | Linea di lettura in coordinate documento ↔ percorso. Pure. |
 | `uDaHz(hz)` / `hzDaU(u)` | Posizione sul righello (0 = 60 Hz, 1 = 420 Hz, log) e inversa; `U_SPENTO = -0,055` = fermo "spento" 40 px sotto il 60 su 734 px. Una formula sola per cursore, tacche e scala. |
+
+**Pianerottoli di capo** (giro 2). Con lo scroll a pixel interi i due capi
+cadevano fuori dalla salita per un pixel ("Fine" mostrava 419 o spento).
+Ora la salita 1 comincia con un tratto che dà sempre 60 Hz e la parte
+accesa della salita 4 finisce con un tratto che dà sempre 420 Hz: circa
+1,5svh di scroll ciascuno (`CAPO_SVH`; al massimo il 15% della parte accesa,
+`CAPO_MAX`), cioè 8-14 px secondo la finestra. Il valore sta nel profilo
+(`TrattoStazione.capo`, calcolato da `profiloDaMisure`) ed è zero nelle
+altre stazioni. La curva resta monotona (piatta sui capi, poi la stessa
+salita logaritmica compressa nel resto) e senza salti; `percorsoDaHz(60)`
+e `percorsoDaHz(420)` puntano al centro di quei tratti, quindi un pixel in
+più o in meno dà ancora il valore estremo. Il pixel "un po' dentro" di
+`comandi.ts` dell'interaction-designer continua a funzionare ma non serve
+più.
 
 Valori del profilo stretto (375, misure nominali ux), voce a 348 Hz:
 

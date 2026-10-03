@@ -135,7 +135,7 @@ export const LUCE = {
   /** quanto la curvatura convessa schiarisce (traslucenza dei bordi sottili) */
   bordoChiaro: 0.0016,
   /** quanto la curvatura concava scurisce (occlusione nelle pieghe) */
-  occlusione: 0.0042,
+  occlusione: 0.0028,
 } as const;
 
 /* ---------------------------------------------------------------- pagnotta */
@@ -274,7 +274,7 @@ export const SPOLVERO = {
   /** larghezza delle crepe a riposo (0..1 della distanza dal bordo cella) */
   crepaRiposo: 0.026,
   /** di quanto si aprono nella fossetta */
-  crepaFossetta: 0.5,
+  crepaFossetta: 0.1,
 } as const;
 
 /* ---------------------------------------------------- composizione e quota */

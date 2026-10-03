@@ -108,32 +108,31 @@ void main() {
     float quanto = max(f.z, f.w * 0.85);
     if (quanto > 0.0005) {
       vec2 a = apertura(p, f, quanto);
-      tirato = max(tirato, a.x * (1.0 - smoothstep(0.35, 1.45, a.y)));
-      nudo = max(nudo, a.x * (1.0 - smoothstep(0.12, 0.78, a.y)));
+      tirato = max(tirato, a.x * smoothstep(0.55, 0.85, a.y) * (1.0 - smoothstep(1.0, 1.5, a.y)));
+      nudo = max(nudo, a.x * (1.0 - smoothstep(0.2, 0.92, a.y)));
     }
   }
   if (uSegnoCliente.z > 0.5) {
     vec2 a = apertura(p, vec4(uSegnoCliente.xy, 0.0, 1.0), 0.45);
-    tirato = max(tirato, a.x * (1.0 - smoothstep(0.35, 1.3, a.y)));
-    nudo = max(nudo, a.x * 0.6 * (1.0 - smoothstep(0.1, 0.7, a.y)));
+    tirato = max(tirato, a.x * smoothstep(0.55, 0.85, a.y) * (1.0 - smoothstep(1.0, 1.4, a.y)));
+    nudo = max(nudo, a.x * 0.6 * (1.0 - smoothstep(0.15, 0.85, a.y)));
   }
   crepa += MAD_CREPA_FOSSETTA * tirato;
 
   // densità della farina: un velo continuo a chiazze, più sottile sui fianchi
   // ripidi e sulle bolle (pelle tesa); sul tavolo quasi pieno, con i grumi
   float pendenza = 1.0 - vNormale.z;
-  float macchie = smoothstep(0.3, 0.72, chiazze);
-  float densImpasto = 0.22 + macchie * 0.8 - pendenza * 1.1 - bolla * 0.3;
-  float densTavolo = 0.86 + (chiazze - 0.5) * 0.3 + (strisce - 0.5) * 0.14 + bolla * 0.4;
-  float densita = clamp(mix(densTavolo, densImpasto, sullImpasto), 0.0, 1.0);
-
-  // grana: modula il velo e, dove è sottile, lo rompe in granelli
+  // velo di farina a chiazze: la soglia è spostata dalla grana, così il
+  // bordo di ogni chiazza è polveroso (puntini), non una sfumatura
   float pxTexel = uRisoluzione.y / (MAD_S_GRANA * 256.0);
   float contrasto = smoothstep(0.55, 1.3, pxTexel);
-  float rottura = (1.0 - densita) * densita * 4.0;           // massima a metà densità
-  float modula = mix(1.0, 0.55 + 0.9 * grana, 0.35 + 0.65 * rottura * contrasto);
-  float farina = clamp(densita * modula, 0.0, 1.0);
-  farina = max(farina, smoothstep(0.9, 0.985, grana) * 0.75 * contrasto * (0.3 + densita));
+  float soglia = chiazze + (grana - 0.5) * mix(0.12, 0.34, contrasto);
+  float macchie = smoothstep(0.4, 0.5, soglia);
+  float densImpasto = 0.34 + macchie * 0.62 - pendenza * 0.9 - bolla * 0.25;
+  float densTavolo = 0.86 + (chiazze - 0.5) * 0.3 + (strisce - 0.5) * 0.14 + bolla * 0.4;
+  float farina = clamp(mix(densTavolo, densImpasto, sullImpasto), 0.0, 1.0);
+  farina *= mix(1.0, 0.86 + 0.28 * grana, contrasto);
+  farina = max(farina, smoothstep(0.9, 0.985, grana) * 0.7 * contrasto * (0.25 + farina));
 
   // crepe (tensione e fossette) e pelle nuda nella fossetta
   float crepaM = 1.0 - smoothstep(crepa, crepa + 0.03, crepe);
@@ -143,7 +142,7 @@ void main() {
 
   // ------------------------------------------------------------------ albedo
   vec3 farinaPiena = min(uFarina * vec3(1.05, 1.06, 1.08), vec3(1.0));
-  vec3 pelle = mix(uImpastoNudo, uFarina, 0.28 - nudo * 0.28);
+  vec3 pelle = mix(uImpastoNudo, uFarina, 0.4 - nudo * 0.4);
   pelle = mix(pelle, uImpastoNudo * 1.03, bolla * 0.3 * sullImpasto); // bolla: pelle tesa, traslucida
   vec3 tavolo = mix(uFarina, uFarinaOmbra, 0.3);
   vec3 sotto = mix(tavolo, pelle, sullImpasto);
@@ -158,7 +157,7 @@ void main() {
 
   // traslucenza dei bordi convessi (labbro della fossetta, gonfiature) e occlusione nelle conche
   luce += clamp(-vCurva * MAD_BORDO_CHIARO, 0.0, 0.1) * sullImpasto;
-  luce *= 1.0 - clamp(vCurva * MAD_OCCLUSIONE, 0.0, 0.35);
+  luce *= 1.0 - clamp(vCurva * MAD_OCCLUSIONE, 0.0, 0.16);
   luce *= 1.0 - cratere * 0.22 * sullImpasto;
   // cielo: le parti basse della pagnotta vedono meno cielo
   float quota = clamp(vAltezza / max(uPagnotta.w, 1e-3), 0.0, 1.0);

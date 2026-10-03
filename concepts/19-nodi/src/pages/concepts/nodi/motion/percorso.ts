@@ -83,6 +83,13 @@ export interface TrattoStazione {
   readonly giu: readonly [number, number] | null;
   /** Frazioni [da, a] in cui risale a 1; null = non risale. */
   readonly su: readonly [number, number] | null;
+  /**
+   * Pianerottolo di capo, come frazione della parte accesa della salita:
+   * all'inizio della salita 1 (resta 60 Hz) e alla fine della mezza salita
+   * 4 (resta 420 Hz). Serve allo scroll a pixel interi: "Inizio" e "Fine"
+   * del righello danno sempre 60 e 420 esatti. 0 nelle altre stazioni.
+   */
+  readonly capo: number;
 }
 
 export type Profilo = readonly [
@@ -117,6 +124,14 @@ export const RIQUADRO_SVH = {
   /** Sotto questa lettura a 34 non vale la pena scendere: il riquadro resta a 54. */
   minimoRidotto: 20,
 } as const;
+
+/**
+ * Pianerottoli di capo a 60 e 420 Hz (richiesta interaction-designer): circa
+ * 1,5svh di scroll (10 px a 667, 13 px a 900) che danno esattamente il
+ * valore estremo, al massimo il 15% della parte accesa della salita.
+ */
+export const CAPO_SVH = 1.5;
+export const CAPO_MAX = 0.15;
 
 const TIPI: readonly TipoStazione[] = ['apertura', 'pianerottolo', 'pianerottolo', 'lungo', 'coda', 'lungo'];
 
@@ -154,7 +169,10 @@ export function profiloDaMisure(m: MisureStazioni): Profilo {
       const rampa = Math.min(RIQUADRO_SVH.ingressoLungo * svh, sez * 0.5);
       giu = [0, rampa / tot];
     }
-    tratti.push({ tipo, salita, giu, su });
+    // Parte accesa della salita: tutta per la salita 1, la prima metà per la 4.
+    const accesa = i === 0 ? sal : i === 3 ? sal * 0.5 : 0;
+    const capo = accesa > 0 ? Math.min(CAPO_MAX, (CAPO_SVH * svh) / accesa) : 0;
+    tratti.push({ tipo, salita, giu, su, capo });
   }
   return tratti as unknown as Profilo;
 }
@@ -256,9 +274,16 @@ export function hzDaPercorso(p: number, hzModo5 = HZ_MODO_5_BASE, profilo: Profi
   const k = tr.stazione;
   if (k > 3) return null;
   const [a, b] = estremiSalita(k as 0 | 1 | 2 | 3, hzModo5);
+  const capo = profilo[k].capo;
   if (k === 3) {
     if (tr.u >= 0.5) return null;
-    return lerpLog(a, b, tr.u * 2);
+    // Parte accesa: voce → 420, poi il pianerottolo di capo a 420 esatti.
+    const s = tr.u * 2;
+    return s >= 1 - capo ? b : lerpLog(a, b, s / (1 - capo));
+  }
+  if (k === 0) {
+    // Pianerottolo di capo a 60 esatti, poi 60 → 92.
+    return tr.u <= capo ? a : lerpLog(a, b, (tr.u - capo) / (1 - capo));
   }
   return lerpLog(a, b, tr.u);
 }
@@ -268,8 +293,8 @@ export const PERCORSO_RIPOSO = 0;
 
 /**
  * Frequenza → scroll (inversa). Sui pianerottoli (entro 0,5 Hz) restituisce
- * l'inizio del pianerottolo più un margine; sotto 60 dà l'inizio della
- * salita 1 (cioè 60 Hz); sopra 420 la fine della salita 4.
+ * l'inizio del pianerottolo più un margine; 60 (e sotto) e 420 (e sopra)
+ * danno il centro dei pianerottoli di capo (`TrattoStazione.capo`).
  */
 export function percorsoDaHz(hz: number, hzModo5 = HZ_MODO_5_BASE, profilo: Profilo = PROFILO_DEFAULT): number {
   if (!Number.isFinite(hz)) return PERCORSO_RIPOSO;
@@ -283,15 +308,19 @@ export function percorsoDaHz(hz: number, hzModo5 = HZ_MODO_5_BASE, profilo: Prof
   }
   const inizioSalita = (k: number): number => k + (1 - profilo[k as IndiceStazione].salita);
   const lunghezzaSalita = (k: number): number => profilo[k as IndiceStazione].salita;
-  if (hz <= HZ_MIN) return inizioSalita(0);
-  // 420 Hz è l'ultimo punto acceso della salita 4 (la sua seconda metà è già spenta).
-  if (hz >= HZ_MAX) return inizioSalita(3) + lunghezzaSalita(3) * 0.5 * (1 - 1e-4);
+  const capo0 = profilo[0].capo;
+  const capo3 = profilo[3].capo;
+  // 60 e 420: al centro dei pianerottoli di capo, così un pixel in più o in
+  // meno dà ancora il valore estremo (scroll a pixel interi).
+  if (hz <= HZ_MIN) return inizioSalita(0) + lunghezzaSalita(0) * capo0 * 0.5;
+  if (hz >= HZ_MAX) return inizioSalita(3) + lunghezzaSalita(3) * 0.5 * (1 - capo3 * 0.5);
   for (let k = 0; k < 4; k++) {
     const [a, b] = estremiSalita(k as 0 | 1 | 2 | 3, hzModo5);
     if (hz > a && hz < b) {
-      const u = progressoLog(a, b, hz);
-      const quota = k === 3 ? 0.5 : 1;
-      return inizioSalita(k) + lunghezzaSalita(k) * quota * u;
+      const v = progressoLog(a, b, hz);
+      if (k === 0) return inizioSalita(0) + lunghezzaSalita(0) * (capo0 + v * (1 - capo0));
+      if (k === 3) return inizioSalita(3) + lunghezzaSalita(3) * 0.5 * v * (1 - capo3);
+      return inizioSalita(k) + lunghezzaSalita(k) * v;
     }
   }
   // Solo se hz cade esattamente su un estremo non coperto sopra (60 o 420

@@ -350,14 +350,42 @@
 
 .stp-root .stp-scelta[aria-checked='true'],
 .stp-root .stp-scelta[aria-pressed='true'],
-.stp-root .stp-scelta[aria-selected='true'],
+.stp-root .stp-scelta[aria-selected='true'] {
+  background-color: var(--stp-inchiostro-velo);
+  box-shadow: inset 0 0 0 var(--stp-tratto-forte) var(--stp-osso);
+  font-weight: var(--stp-peso-forte);
+}
+
+/* Radio vero dentro l'etichetta: regola a parte (un :has non supportato
+   non deve far cadere la regola sopra) */
 .stp-root .stp-scelta:has(> input:checked) {
   background-color: var(--stp-inchiostro-velo);
   box-shadow: inset 0 0 0 var(--stp-tratto-forte) var(--stp-osso);
   font-weight: var(--stp-peso-forte);
 }
 
+.stp-root .stp-scelta > input {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* Il radio vero è trasparente: l'anello del fuoco va sulla voce intera */
+.stp-root .stp-scelta:has(> input:focus-visible) {
+  outline: var(--stp-focus-spessore) solid var(--stp-focus-colore);
+  outline-offset: var(--stp-focus-distanza);
+}
+
 .stp-root .stp-scelta[aria-checked='true'] .stp-scelta__nota,
+.stp-root .stp-scelta[aria-pressed='true'] .stp-scelta__nota,
+.stp-root .stp-scelta[aria-selected='true'] .stp-scelta__nota {
+  color: var(--stp-osso);
+}
+
 .stp-root .stp-scelta:has(> input:checked) .stp-scelta__nota {
   color: var(--stp-osso);
 }
@@ -670,7 +698,9 @@
 /* Inchiostro diluito: la macchia del banco e il posto scelto               */
 /* --stp-posa 0 = morbido (bordo largo e sfumato), 1 = posato (bordo stretto) */
 /* Si dà all'elemento la misura; il contorno osso, se serve, lo mette la     */
-/* sezione (la macchia lo ha, il posto scelto no).                            */
+/* sezione (la macchia lo ha, il posto scelto no). Il bordo sfuma verso      */
+/* --stp-inchiostro-intorno (di base il piano del banco, nero): su un fondo   */
+/* rialzato la sezione lo imposta a var(--stp-superficie).                    */
 /* ------------------------------------------------------------------------ */
 
 .stp-root .stp-inchiostro {
@@ -679,7 +709,7 @@
   box-shadow: inset 0 0
     calc(var(--stp-macchia-posata) + (1 - var(--stp-posa)) * (var(--stp-macchia-morbida) - var(--stp-macchia-posata)))
     calc(1px + (1 - var(--stp-posa)) * 6px)
-    var(--stp-banco);
+    var(--stp-inchiostro-intorno, var(--stp-banco));
 }
 
 /* La macchia non si è posata (invio fallito): resta morbida */
@@ -731,6 +761,11 @@
   }
 
   .stp-root .stp-scelta[aria-checked='true'],
+  .stp-root .stp-scelta[aria-pressed='true'],
+  .stp-root .stp-scelta[aria-selected='true'] {
+    border: 3px solid Highlight;
+  }
+
   .stp-root .stp-scelta:has(> input:checked) {
     border: 3px solid Highlight;
   }

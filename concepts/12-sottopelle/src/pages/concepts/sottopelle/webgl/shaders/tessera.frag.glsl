@@ -92,16 +92,24 @@ float metrica(vec2 v, vec2 dir, vec2 per, float ka) {
   return length(vec2(dot(v, dir) / ka, dot(v, per)));
 }
 
-// Foto appena arrivata: disco di 7 campioni, raggio in uv per asse.
+// Foto appena arrivata: centro + due anelli di 6 campioni sfalsati di 30 gradi
+// (con un anello solo le linee fini si sdoppiano). r = raggio in uv per asse.
 vec3 fotoMorbida(vec2 uv, vec2 r) {
-  vec3 s = texture2D(uFoto, uv).rgb * 2.0;
+  vec2 m = r * 0.5;
+  vec3 s = texture2D(uFoto, uv).rgb;
+  s += texture2D(uFoto, uv + m * vec2(0.866, 0.5)).rgb;
+  s += texture2D(uFoto, uv + m * vec2(0.0, 1.0)).rgb;
+  s += texture2D(uFoto, uv + m * vec2(-0.866, 0.5)).rgb;
+  s += texture2D(uFoto, uv + m * vec2(-0.866, -0.5)).rgb;
+  s += texture2D(uFoto, uv + m * vec2(0.0, -1.0)).rgb;
+  s += texture2D(uFoto, uv + m * vec2(0.866, -0.5)).rgb;
   s += texture2D(uFoto, uv + r * vec2(1.0, 0.0)).rgb;
   s += texture2D(uFoto, uv + r * vec2(0.5, 0.866)).rgb;
   s += texture2D(uFoto, uv + r * vec2(-0.5, 0.866)).rgb;
   s += texture2D(uFoto, uv + r * vec2(-1.0, 0.0)).rgb;
   s += texture2D(uFoto, uv + r * vec2(-0.5, -0.866)).rgb;
   s += texture2D(uFoto, uv + r * vec2(0.5, -0.866)).rgb;
-  return s * 0.125;
+  return s / 13.0;
 }
 
 // Increspatura: restituisce le uv spostate e la variazione di luce.
@@ -137,6 +145,28 @@ vec3 arretra(vec3 c, vec2 uv) {
   return mix(c, mix(uNero, uGrigio, l), k);
 }
 
+// Un vortice: ruota P attorno a c, di "giro" radianti al centro, a campana di raggio sig.
+vec2 vortice(vec2 P, vec2 c, float sig, float giro) {
+  vec2 d = P - c;
+  return c + ruota(d, giro * exp(-dot(d, d) / (sig * sig)));
+}
+
+// Un velo davanti al fronte: foglio traslucido con l'orlo ripiegato più denso.
+// Ha un suo piccolo moto (campo a rotore proprio) e lingue sue, così non è
+// una copia concentrica del fronte.
+float velo(vec2 P, vec2 sem, float ka, float Rv) {
+  vec3 n = rumoreD(P * INK_VELI_FREQ + sem);
+  vec2 Q = P + vec2(n.z, -n.y) * INK_VELI_MOSSA;
+  vec2 pa = vec2(Q.x / ka, Q.y);
+  float s = length(pa);
+  vec2 versore = s > 0.0001 ? pa / s : vec2(1.0, 0.0);
+  float l = rumore(versore * INK_VELI_LINGUE + sem.yx);
+  float D = Rv - s / (1.0 + INK_DITA * 1.6 * l);
+  float foglio = smoothstep(-INK_VELI_SFUMA, INK_VELI_SFUMA, D);
+  float x = (D - INK_ORLO) / INK_ORLO_LARGO;
+  return foglio * INK_VELI_ALFA + exp(-x * x) * INK_ORLO_ALFA;
+}
+
 // Lo sboccio.
 vec3 sboccio(vec2 uv, vec2 uvF) {
   float t = clamp(uSboccio, 0.0, 1.0);
@@ -165,52 +195,62 @@ vec3 sboccio(vec2 uv, vec2 uvF) {
   vec2 P0 = P;
   vec2 sem = vec2(uSeme * 71.3, uSeme * 37.9) + 11.0;
 
-  // 1. Rimescolamento: avvezione all'indietro in un campo a rotore (senza divergenza,
-  //    come l'acqua), che scorre in avanti con la nuvola.
+  // 1. Rimescolamento: avvezione all'indietro in un campo a rotore (senza
+  //    divergenza, come l'acqua) che scorre in avanti con la nuvola.
   float agita = INK_AGITA * (0.35 + 0.65 * f);
   vec2 scorre = vec2(-f * INK_DERIVA, 0.0);
-  for (int i = 0; i < 3; i++) {
+  for (int i = 0; i < 2; i++) {
     vec3 n = rumoreD(P * INK_RIM_FREQ + sem + scorre);
     P += vec2(n.z, -n.y) * agita;
   }
 
-  // 2. Volute: quattro vortici sul fronte arrotolano il bordo della nuvola
-  //    (sezione di un anello di vortice: i lati girano in verso opposto).
-  float giro = INK_VOLUTA * smoothstep(0.0, 0.75, f);
+  // 2. Il cappello: la testa della goccia è un anello di vortice. In sezione,
+  //    due vortici controrotanti sulle spalle del fronte arrotolano i lati
+  //    all'indietro (il fungo dell'inchiostro che cade in acqua).
+  float rotola = smoothstep(0.0, 0.6, f);
+  for (int k = 0; k < 2; k++) {
+    float segno = k == 0 ? -1.0 : 1.0;
+    float h = hash11(uSeme * 53.0 + float(k) * 7.0);
+    float ang = segno * (INK_SPALLA + (h - 0.5) * 0.35);
+    vec2 c = vec2(cos(ang) * ka, sin(ang)) * R * INK_ANELLO_POS;
+    float sig = INK_ANELLO_RAGGIO * R + 0.02;
+    P = vortice(P, c, sig, segno * INK_ANELLO_VERSO * INK_ANELLO_GIRO * rotola * (0.8 + 0.4 * h));
+  }
+
+  // 3. Riccioli: vortici piccoli lungo il fronte (instabilità del bordo),
+  //    versi alterni, posizioni dal seme.
   for (int k = 0; k < 4; k++) {
     float fk = float(k);
     float h = hash11(uSeme * 97.0 + fk * 13.0);
-    float ang = (fk - 1.5) * INK_VENTAGLIO + (h - 0.5) * 0.45;
-    vec2 c = vec2(cos(ang) * ka, sin(ang)) * R * INK_VORT_POS;
-    float sig = INK_VORT_RAGGIO * (0.45 + 0.55 * f) * (0.75 + 0.5 * h);
-    vec2 d = P - c;
-    float verso = fk < 1.5 ? -1.0 : 1.0;
-    P = c + ruota(d, verso * giro * exp(-dot(d, d) / (sig * sig)));
+    float g = hash11(uSeme * 31.0 + fk * 5.0);
+    float ang = (fk - 1.5) * INK_VENTAGLIO + (h - 0.5) * 0.5;
+    vec2 c = vec2(cos(ang) * ka, sin(ang)) * R * (0.93 + 0.14 * g);
+    float sig = INK_RICCIOLO_RAGGIO * (0.4 + 0.6 * f) * (0.7 + 0.6 * g);
+    float verso = mod(fk, 2.0) < 0.5 ? 1.0 : -1.0;
+    P = vortice(P, c, sig, verso * INK_RICCIOLO_GIRO * rotola);
   }
 
-  // 3. Lingue: il fronte non è un cerchio, avanza a dita.
+  // 4. Lingue: il fronte non è un cerchio, avanza a dita.
   vec2 pa = vec2(P.x / ka, P.y);
   float s = length(pa);
   vec2 versore = s > 0.0001 ? pa / s : vec2(1.0, 0.0);
   float lingue = rumore(versore * INK_DITA_FREQ + sem.yx);
-  float sE = s / (1.0 + INK_DITA * lingue * 1.4);
+  float D = R - s / (1.0 + INK_DITA * lingue * 1.4);
 
-  // 4. Corpo, fronte più denso, filamenti davanti.
-  float wIn = INK_BORDO * (0.45 + 0.55 * f);
-  float corpo = 1.0 - smoothstep(R - wIn, R, sE);
-  float fronte = smoothstep(R - wIn * 2.6, R - wIn * 0.55, sE) * corpo;
-  float avanti = (sE - R) / INK_FIL_LUNGO;
-  float fil = 0.0;
-  if (avanti > -0.3 && avanti < 1.0) {
-    float arco = atan(pa.y, pa.x) * max(R, 0.25);
-    float n = rumore(vec2(arco * INK_FIL_FREQ, sE * INK_FIL_FREQ * INK_FIL_STIRA) + sem * 1.7);
-    float filo = clamp(1.0 - abs(n) * INK_FIL_SOTTILE, 0.0, 1.0);
-    float coda = clamp(1.0 - avanti, 0.0, 1.0);
-    fil = filo * filo * filo * coda * coda * smoothstep(-0.3, 0.05, avanti);
+  // 5. Corpo con il bordo definito e il fronte più denso; davanti, due veli
+  //    traslucidi di grigio sfumato con l'orlo ripiegato (densità che cala).
+  float corpo = smoothstep(-INK_NITIDO, INK_NITIDO, D);
+  float xr = (D - INK_RIM) / INK_RIM_LARGO;
+  float fronte = exp(-xr * xr) * corpo;
+  float veli = 0.0;
+  if (D < INK_NITIDO) {
+    float apre = 0.35 + 0.65 * f;
+    veli = velo(P, sem + 5.3, ka, R + INK_VELI_PASSO * apre)
+         + 0.7 * velo(P, sem + 9.1, ka, R + 2.1 * INK_VELI_PASSO * apre);
   }
 
-  // 5. La foto dietro il fronte: arriva morbida, trascinata dal flusso, poi si posa.
-  float dietro = smoothstep(0.0, INK_POSA, R - sE);
+  // 6. La foto dietro il fronte: arriva morbida, trascinata dal flusso, poi si posa.
+  float dietro = smoothstep(0.0, INK_POSA, D);
   float morbido = clamp(1.0 - dietro * smoothstep(0.1, 0.8, t), 0.0, 1.0)
                 * (1.0 - smoothstep(0.65, 1.0, t));
   vec2 flusso = dir * (P.x - P0.x) + per * (P.y - P0.y);
@@ -220,7 +260,7 @@ vec3 sboccio(vec2 uv, vec2 uvF) {
   foto = mix(foto, uNero, INK_VELO * morbido);
   foto = mix(foto, uNero, INK_FRONTE * fronte);
 
-  vec3 inchiostro = mix(uNero, uGrigio, fil * INK_FIL_ALFA);
+  vec3 inchiostro = mix(uNero, uGrigio, clamp(veli, 0.0, 1.0));
   vec3 col = mix(inchiostro, foto, corpo);
 
   // Durante lo sboccio i lati della tessera sono morbidi; a posa finita, spigolo vivo.

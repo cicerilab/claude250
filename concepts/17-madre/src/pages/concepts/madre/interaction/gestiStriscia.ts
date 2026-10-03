@@ -28,9 +28,11 @@
 
 import { useEffect, type RefObject } from 'react';
 import { ticker } from '../core/ticker';
+import { INERZIA } from '../motion/choreography';
 import { passoInerzia as spostamentoInerzia } from '../motion/easing';
 import { runtime } from '../state/runtime';
 import { store } from '../state/store';
+import { trascinamentoInCorso } from './usePrendiPosa';
 
 /** Finestra bassa (telefono in orizzontale, zoom forte): la vetrina è una colonna. */
 export const MODO_COLONNA_MQ = '(max-height: 539px)';
@@ -39,12 +41,12 @@ export const MODO_COLONNA_MQ = '(max-height: 539px)';
 export const SOGLIA_SWIPE_PX = 10;
 /** Oltre questo angolo dall'orizzontale lo swipe è verticale (scroll del browser). */
 export const ANGOLO_SWIPE_MAX_GRADI = 30;
-/** Costante di tempo dell'attrito dell'inerzia (s). */
-const TAU_INERZIA_S = 0.325;
-/** Sotto questa velocità l'inerzia si ferma (px/s). */
-const VELOCITA_MINIMA = 40;
-/** Tetto della velocità di partenza dell'inerzia (px/s). */
-const VELOCITA_MASSIMA = 5000;
+/**
+ * Inerzia dello swipe: costante di tempo, tetto e soglia di arresto sono del
+ * motion-designer (`INERZIA` in motion/choreography.ts). Sotto questa
+ * velocità al rilascio (px/s) non parte nemmeno: il dito si era quasi fermato.
+ */
+const VELOCITA_PARTENZA = 120;
 /** Campioni usati per la velocità al rilascio (ms). */
 const FINESTRA_VELOCITA_MS = 90;
 /** Dopo uno swipe, un clic entro questo tempo è assorbito. */
@@ -113,8 +115,8 @@ export function collegaGestiStriscia(binario: HTMLElement, opz: OpzioniGestiStri
   function passoInerzia(dt: number): boolean {
     if (inerzia.v === 0) return false;
     // Spostamento esatto sul dt (motion/easing.ts): non dipende dai frame.
-    const mosso = scorriStriscia(spostamentoInerzia(inerzia, dt, TAU_INERZIA_S), runtime.scrollY);
-    if (!mosso || Math.abs(inerzia.v) < VELOCITA_MINIMA) {
+    const mosso = scorriStriscia(spostamentoInerzia(inerzia, dt, INERZIA.tau), runtime.scrollY);
+    if (!mosso || Math.abs(inerzia.v) < INERZIA.vMin) {
       // Fine: si stacca fuori dal frame (rimozione sicura anche qui dentro).
       queueMicrotask(fermaInerzia);
       return false;
@@ -125,8 +127,8 @@ export function collegaGestiStriscia(binario: HTMLElement, opz: OpzioniGestiStri
   function avviaInerzia(v: number): void {
     fermaInerzia();
     if (store.get().reducedMotion) return;
-    if (Math.abs(v) < VELOCITA_MINIMA * 4) return;
-    inerzia.v = Math.max(-VELOCITA_MASSIMA, Math.min(VELOCITA_MASSIMA, v));
+    if (Math.abs(v) < VELOCITA_PARTENZA) return;
+    inerzia.v = Math.max(-INERZIA.vMax, Math.min(INERZIA.vMax, v));
     togliInerzia = ticker.add(passoInerzia, 'update');
     // Qualsiasi nuovo input ferma l'inerzia subito.
     window.addEventListener('pointerdown', fermaInerzia, true);
@@ -160,6 +162,11 @@ export function collegaGestiStriscia(binario: HTMLElement, opz: OpzioniGestiStri
   function muove(e: PointerEvent): void {
     const s = swipe;
     if (s === null || e.pointerId !== s.id) return;
+    if (trascinamentoInCorso()) {
+      // Un gettone della striscia (le paste) è in mano al dito: non è uno swipe.
+      swipe = null;
+      return;
+    }
     if (s.stato === 'indeciso') {
       const dx = e.clientX - s.x0;
       const dy = e.clientY - s.y0;

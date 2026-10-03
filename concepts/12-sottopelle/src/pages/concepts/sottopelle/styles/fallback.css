@@ -1,0 +1,139 @@
+/*
+ * SOTTOPELLE · la foto in DOM (art-director)
+ *
+ * Resa delle foto come <img>: sempre nella vista elenco e nella scheda,
+ * e sulla parete quando il WebGL non c'è (data-gl="off": niente contesto,
+ * contesto perso, troppo lento). Deve reggere da sola: è la stessa parete,
+ * con lo sboccio fatto da una maschera e senza increspatura.
+ *
+ *   .stp-foto              l'immagine (riempie la tessera, nessuna cornice)
+ *   .stp-foto--sboccio     maschera d'inchiostro che si apre, pilotata da
+ *                          --stp-sboccio (0 → 1), scritta da motion/sboccio.ts
+ *                          sull'elemento foglia [data-stpvar]
+ *   .stp-foto--arretrata   lavoro escluso dai filtri (solo senza WebGL: col
+ *                          WebGL lo fa lo shader con gli stessi numeri)
+ *   .stp-foto--rotta       la foto non arriva: resta la descrizione
+ *
+ * Variabili che motion/sboccio.ts scrive UNA volta all'inizio dello sboccio
+ * (sull'elemento foglia, insieme a --stp-sboccio):
+ *   --stp-sboccio-x / --stp-sboccio-y   punto d'ingresso in % della tessera
+ *                                       (es. 0% 62% se entra da sinistra)
+ *   --stp-sboccio-seme                  0..1, deforma la nuvola in modo
+ *                                       diverso per ogni foto
+ *
+ * La nuvola è l'unione di tre lobi morbidi: uno dal punto d'ingresso e due
+ * spostati verso il centro della tessera, di raggio minore e sfasati dal seme.
+ * Così il fronte non è mai un cerchio che cresce. Luminosità monotona:
+ * la maschera scopre e basta, non torna mai indietro.
+ * Nessun colore qui: la maschera usa solo alfa (black / transparent).
+ */
+
+.stp-root .stp-foto {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  object-position: 50% 50%;
+  border: 0;
+  border-radius: var(--stp-raggio);
+  background-color: transparent;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+}
+
+/* Nella vista elenco e nella scheda l'immagine si dimensiona da sola
+   (width e height veri nell'HTML); mentre arriva si vede il rialzato. */
+.stp-root .stp-foto--libera {
+  block-size: auto;
+  background-color: var(--stp-superficie);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Sboccio senza WebGL                                                       */
+/* ------------------------------------------------------------------------ */
+
+.stp-root[data-gl='off'] .stp-foto {
+  transition: filter var(--stp-dur-arretra, 480ms) var(--stp-ease-arretra, cubic-bezier(0.22, 0.61, 0.36, 1));
+}
+
+.stp-root[data-gl='off'] .stp-foto--sboccio {
+  --stp-sb-r: calc(var(--stp-sboccio, 0) * (100% + var(--stp-sboccio-bordo)));
+  --stp-sb-x: var(--stp-sboccio-x, 50%);
+  --stp-sb-y: var(--stp-sboccio-y, 50%);
+  --stp-sb-s: calc(var(--stp-sboccio-seme, 0.5) - 0.5);
+  --stp-sb-x2: calc(var(--stp-sb-x) + (50% - var(--stp-sb-x)) * 0.55 + var(--stp-sb-s) * 30%);
+  --stp-sb-y2: calc(var(--stp-sb-y) + (50% - var(--stp-sb-y)) * 0.55 - var(--stp-sb-s) * 24%);
+  --stp-sb-x3: calc(var(--stp-sb-x) + (50% - var(--stp-sb-x)) * 0.3 - var(--stp-sb-s) * 40%);
+  --stp-sb-y3: calc(var(--stp-sb-y) + (50% - var(--stp-sb-y)) * 0.3 + var(--stp-sb-s) * 36%);
+  -webkit-mask-image:
+    radial-gradient(circle at var(--stp-sb-x) var(--stp-sb-y),
+      black calc(var(--stp-sb-r) - var(--stp-sboccio-bordo)), transparent var(--stp-sb-r)),
+    radial-gradient(circle at var(--stp-sb-x2) var(--stp-sb-y2),
+      black calc(var(--stp-sb-r) * 0.72 - var(--stp-sboccio-bordo)), transparent calc(var(--stp-sb-r) * 0.72)),
+    radial-gradient(circle at var(--stp-sb-x3) var(--stp-sb-y3),
+      black calc(var(--stp-sb-r) * 0.58 - var(--stp-sboccio-bordo)), transparent calc(var(--stp-sb-r) * 0.58));
+  mask-image:
+    radial-gradient(circle at var(--stp-sb-x) var(--stp-sb-y),
+      black calc(var(--stp-sb-r) - var(--stp-sboccio-bordo)), transparent var(--stp-sb-r)),
+    radial-gradient(circle at var(--stp-sb-x2) var(--stp-sb-y2),
+      black calc(var(--stp-sb-r) * 0.72 - var(--stp-sboccio-bordo)), transparent calc(var(--stp-sb-r) * 0.72)),
+    radial-gradient(circle at var(--stp-sb-x3) var(--stp-sb-y3),
+      black calc(var(--stp-sb-r) * 0.58 - var(--stp-sboccio-bordo)), transparent calc(var(--stp-sb-r) * 0.58));
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+}
+
+/* Lavoro escluso dai filtri: l'inchiostro si ritira (grigio, scuro, fermo) */
+.stp-root[data-gl='off'] .stp-foto--arretrata {
+  filter: grayscale(calc(1 - var(--stp-arretra-saturazione))) brightness(var(--stp-arretra-luce));
+}
+
+/* ------------------------------------------------------------------------ */
+/* Foto che non arriva (anche col WebGL): nero rialzato e descrizione breve */
+/* ------------------------------------------------------------------------ */
+
+.stp-root .stp-foto--rotta {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  inline-size: 100%;
+  block-size: 100%;
+  padding: var(--stp-sp-3);
+  background-color: var(--stp-superficie);
+  color: var(--stp-testo-2);
+  font-family: var(--stp-font-testo);
+  font-size: var(--stp-fs-nota);
+  font-weight: var(--stp-peso-testo);
+  line-height: 1.4;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Movimento ridotto: foto già posate, filtri senza transizione             */
+/* ------------------------------------------------------------------------ */
+
+.stp-root[data-motion='reduced'] .stp-foto--sboccio {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+.stp-root[data-motion='reduced'] .stp-foto {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stp-root .stp-foto--sboccio {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .stp-root .stp-foto {
+    transition: none;
+  }
+}

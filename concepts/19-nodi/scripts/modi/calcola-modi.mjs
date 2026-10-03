@@ -62,7 +62,7 @@ const CATENA = { xMm: -18.5, larghezzaMm: 5.5, y0Mm: 46, y1Mm: 316, altezzaCentr
 
 /** Quante forme calcolate (della parità giusta) entrano nella taratura, e penalità sui modi alti. */
 const BASE_TARATURA = opzione('--base', 6);
-const PENALITA = opzione('--penalita', 0.002);
+const PENALITA = opzione('--penalita', 0.01);
 const PESO_VENTRI = opzione('--peso-ventri', 0.05);
 
 /**
@@ -628,7 +628,7 @@ function ventri() {
   const L = Hmm, c = L / 2;
   return {
     1: [[40, 95, 1], [-40, 95, -1], [40, 285, -1], [-40, 285, 1], [70, 60, 1], [-70, 60, -1], [70, 300, -1], [-70, 300, 1]],
-    2: [[0, c, 1], [0, 60, 1], [0, 300, 1], [78, 95, -1], [-78, 95, -1], [47, c, -1], [-47, c, -1], [88, 280, -1], [-88, 280, -1]],
+    2: [[0, c, 1], [0, 60, 1], [0, 300, 1], [0, 12, 1], [0, L - 12, 1], [78, 95, -1], [-78, 95, -1], [47, c, -1], [-47, c, -1], [88, 280, -1], [-88, 280, -1]],
     5: [[0, c, 1], [30, c - 40, 1], [-30, c - 40, 1], [30, c + 50, 1], [-30, c + 50, 1], [47, c, 1], [-47, c, 1],
       [0, 28, -1], [40, 40, -1], [-40, 40, -1], [0, L - 26, -1], [50, L - 40, -1], [-50, L - 40, -1]],
   };
@@ -641,9 +641,10 @@ function ventri() {
  * @param {Array<[number, number]>} punti
  * @param {Array<[number, number, number]>} segni
  * @param {1 | -1} segnoParita
+ * @param {number} [quanti]  quanti modi calcolati usare (1 = il modo calcolato da solo)
  */
-function combina(punti, segni, segnoParita) {
-  const base = calcolati.filter((c) => c.t.parita * segnoParita > 0.9).slice(0, BASE_TARATURA);
+function combina(punti, segni, segnoParita, quanti = BASE_TARATURA) {
+  const base = calcolati.filter((c) => c.t.parita * segnoParita > 0.9).slice(0, quanti);
   const K = base.length;
   const m = out.maschera;
   // campi a norma quadratica media 1 sulla tavola
@@ -713,7 +714,8 @@ function combina(punti, segni, segnoParita) {
 const B5 = bersagli();
 const V5 = ventri();
 const tarati = {
-  1: combina(B5[1], V5[1], -1),
+  // il modo 1 calcolato ha già la croce al posto giusto: si spedisce da solo
+  1: combina(B5[1], V5[1], -1, 1),
   2: combina(B5[2], V5[2], 1),
   5: combina(B5[5], V5[5], 1),
 };

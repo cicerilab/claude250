@@ -6,8 +6,9 @@
  * (lettori di schermo, controllo vocale) in `premi(uv)` / `rilascia(i)` di
  * `motion/fossetta.ts`. La dinamica (quanto scende, come torna su piano
  * piano) è del motion-designer; la resa è del WebGL o delle fossette CSS.
- * Qui non c'è nessun testo: la frase di spiegazione e i nomi dei punti
- * arrivano dalle opzioni (content/testi.ts, copywriter).
+ * I testi (la frase di spiegazione, i nomi dei punti) sono quelli di
+ * `content/testi.ts` (copywriter, `ANNUNCI.provaDito` e `ANNUNCI.puntoProva`);
+ * le opzioni permettono di cambiarli senza toccare questo file.
  *
  * Regole del gesto:
  * - mouse e penna: la fossetta parte al pointerdown, torna su al rilascio,
@@ -35,6 +36,7 @@
  */
 
 import { useEffect, useRef, type RefObject } from 'react';
+import { ANNUNCI, type PuntoProva } from '../content/testi';
 import { annuncia } from '../core/annunci';
 import { ticker } from '../core/ticker';
 import { premi, rilascia } from '../motion/fossetta';
@@ -43,7 +45,7 @@ import { segnaProvaVista, store } from '../state/store';
 
 /* ------------------------------------------------------------------ punti */
 
-export type PuntoProva = 'centro' | 'sopra' | 'destra' | 'sotto' | 'sinistra';
+export type { PuntoProva };
 
 /** Ordine di lettura dei punti (per i testi del copywriter). */
 export const PUNTI_PROVA: readonly PuntoProva[] = ['centro', 'sopra', 'destra', 'sotto', 'sinistra'];
@@ -79,9 +81,9 @@ export interface OpzioniProvaDito {
    * Mouse e penna valgono su tutto l'elemento.
    */
   zonaTouch?: DOMRectReadOnly | (() => DOMRectReadOnly);
-  /** Frase detta una volta per visita al primo rilascio (content/testi.ts). */
+  /** Frase detta una volta per visita al primo rilascio (default `ANNUNCI.provaDito`). */
   spiegazione?: string;
-  /** Testo da annunciare quando le frecce cambiano punto (content/testi.ts). */
+  /** Testo da annunciare quando le frecce cambiano punto (default `ANNUNCI.puntoProva`). */
   testoPunto?: (punto: PuntoProva) => string;
   /** Avviso al cambio di punto (per esempio per aggiornare un aria-describedby). */
   onPunto?: (punto: PuntoProva) => void;
@@ -160,11 +162,15 @@ export function collegaProvaDito(el: HTMLButtonElement, opz: OpzioniProvaDito = 
     return { x: r.left + r.width * (0.5 + dx * SCARTO_PUNTO), y: r.top + r.height * (0.5 + dy * SCARTO_PUNTO) };
   }
 
-  /** Fa partire una fossetta nel punto dello schermo (px CSS). Null se il punto è fuori dall'impasto. */
+  /**
+   * Fa partire una fossetta nel punto dello schermo (px CSS). Null se il
+   * punto è fuori dall'impasto o se tre dita sono già giù (premi dà -1).
+   */
   function avvia(x: number, y: number): number | null {
     const uv = runtime.impasto.daSchermoAUv(x, y);
     if (uv === null) return null;
     const indice = premi(uv);
+    if (indice < 0) return null;
     // La quarta prende il posto della più vecchia: chi la teneva non la rilascia più.
     for (const p of attive.values()) if (p.indice === indice) p.indice = null;
     if (tastiera === indice) tastiera = null;
@@ -187,7 +193,8 @@ export function collegaProvaDito(el: HTMLButtonElement, opz: OpzioniProvaDito = 
 
   function dopoLaPrima(): void {
     if (store.get().provaVista) return;
-    if (opz.spiegazione !== undefined && opz.spiegazione !== '') annuncia(opz.spiegazione);
+    const frase = opz.spiegazione ?? ANNUNCI.provaDito;
+    if (frase !== '') annuncia(frase);
     segnaProvaVista();
     opz.onPrimaProva?.();
   }
@@ -285,7 +292,7 @@ export function collegaProvaDito(el: HTMLButtonElement, opz: OpzioniProvaDito = 
     punto = nuovo;
     scriviPunto();
     opz.onPunto?.(punto);
-    const testo = opz.testoPunto?.(punto) ?? '';
+    const testo = (opz.testoPunto ?? ANNUNCI.puntoProva)(punto);
     if (testo !== '') annuncia(testo);
   }
 
@@ -394,7 +401,7 @@ export function useProvaDito(ref: RefObject<HTMLButtonElement>, opz: OpzioniProv
       get spiegazione() {
         return opzioni.current.spiegazione;
       },
-      testoPunto: (p) => opzioni.current.testoPunto?.(p) ?? '',
+      testoPunto: (p) => (opzioni.current.testoPunto ?? ANNUNCI.puntoProva)(p),
       onPunto: (p) => opzioni.current.onPunto?.(p),
       onPrimaProva: () => opzioni.current.onPrimaProva?.(),
     });
