@@ -243,7 +243,7 @@ export interface StileTesto {
   readonly tabulare?: boolean;
 }
 
-export const TIPO: Readonly<Record<string, StileTesto>> = {
+export const TIPO = {
   h1: { famiglia: 'fell', px: [34, 52], peso: 400, interlinea: 1.08 },
   h2: { famiglia: 'fell', px: [32, 56], peso: 400, interlinea: 1.05 },
   h3: { famiglia: 'fell', px: [24, 28], peso: 400, interlinea: 1.15 },
@@ -261,7 +261,8 @@ export const TIPO: Readonly<Record<string, StileTesto>> = {
   bottone: { famiglia: 'spline', px: [17, 17], peso: 500, interlinea: 1 },
   campo: { famiglia: 'spline', px: [17, 17], peso: 400, interlinea: 1.3 },
   etichetta: { famiglia: 'spline', px: [15, 15], peso: 500, interlinea: 1.25 },
-};
+} as const satisfies Record<string, StileTesto>;
+export type IdStileTesto = keyof typeof TIPO;
 
 /** Dimensione in px di uno stile a una data larghezza di finestra (stessa curva del CSS). */
 export function pxA(stile: StileTesto, larghezzaFinestra: number): number {

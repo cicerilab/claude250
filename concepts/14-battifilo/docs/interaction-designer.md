@@ -330,7 +330,7 @@ useTrascinaOrizzontale(cassettaRef, {
   attivo: () => store.get().vista === 'cronaca' && store.get().modo === 'palco',
   presa: 'immediata', asse: 'libero',
   onInizio: () => { aggiornaSinistra(); posPresa = runtime.cassetta.pos; segnaSpostamento('trascina'); store.impostaTrascina(true); },
-  onMuovi: (_x, dx) => cassetta.trascina(runtime.linea.formato === 'nastro' ? posPresa + dx / runtime.linea.passo : posPresa + dx / runtime.linea.passo),
+  onMuovi: (_x, dx) => cassetta.trascina(posPresa + dx / runtime.linea.passo),   // largo e nastro: dito a destra = avanti
   onFine: (vel) => { store.impostaTrascina(false); cassetta.rilascia(vel / runtime.linea.passo); },
   onAnnulla: () => { store.impostaTrascina(false); cassetta.vaA(store.get().tappaFerma, { subito: true }); },
 });
@@ -364,13 +364,15 @@ const onKeyDown = (e: React.KeyboardEvent) => {
   const azione = tastiSlider(e); if (!azione) return;
   e.preventDefault(); if (!ripeti(e)) return;
   segnaSpostamento('tastiera');
-  cassetta.vaA(destinazioneSlider(azione, runtime.cassetta.target), { forza: e.repeat ? 'corta' : 'piena' });
+  forzaProssimaBattuta = e.repeat ? 'corta' : 'piena';   // letta da onAggancio → filo.batti(forzaProssimaBattuta)
+  cassetta.vaA(destinazioneSlider(azione, runtime.cassetta.target));
 };
 // alla fermata: if (annunciaCambio(document.activeElement === cassettaRef.current)) annuncia(valoreParlante(t))
 ```
 
-(`forza` della battuta: se `vaA` non la prende, la sezione chiama
-`filo.batti()` con `FILO.ampiezza.corta` quando `e.repeat`.)
+(`vaA` di `motion/cassetta.ts` non ha l'opzione della forza: la battuta la
+fa `onAggancio` della sezione con `filo.batti(forza)`; col tasto tenuto
+premuto la forza è `'corta'`, `FILO.ampiezza.corta` del motion-designer.)
 
 ### 7.3 Uso nella foto e nella scheda
 
@@ -404,11 +406,11 @@ store.segnaIstruzione()), [])`.
 - **section-builder-linea, -foto, -scheda, -fascia, -misura, -cartello,
   -mesi**: attributi di §7.1 e codice di §7.2-7.3. La riga del fermo sulla
   tacca a fuoco e la sparizione dell'istruzione sono loro (CSS e store).
-- **motion-designer**: `motion/cassetta.ts` deve fermare un volo in corso
-  quando riceve `trascina()` (afferrare in volo) e `rilascia(vel)` deve
-  ricevere tappe/s con segno nel verso del tempo (per il nastro il segno è
-  già invertito da chi chiama). `vaA` con la forza della battuta, oppure la
-  sezione chiama `filo.batti()` a parte per il tasto tenuto premuto.
+- **motion-designer**: nessuna modifica. Verificato su `motion/cassetta.ts`
+  già scritto: `trascina()` ferma un volo in corso (afferrare in volo) e
+  `rilascia(vel)` prende tappe/s nel verso del tempo (per il nastro il segno
+  lo inverte chi chiama, §7.2); la forza corta del tasto tenuto premuto
+  passa da `filo.batti('corta')` nella sezione.
 - **ux-architect** (conferma): swipe verticale = un passo (§4 qui), foto e
   lastra chiusa; nella lastra espansa resta `pan-y`. Zona tra 30° e 60°
   = gesto ignorato. `aria-live` secondo `annunciaCambio()`.

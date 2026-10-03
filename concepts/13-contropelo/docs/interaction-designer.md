@@ -290,12 +290,12 @@ posto / qui tocca a te": fuoco, fascia scelta, cursore del campo.
 | `ctp-ix-libero` (trattino) | `position: relative` per il cerchio; hover: trattino ×1,4 in altezza (ripassato); premuto ×1,7; fuoco: il **cerchio a pennarello** del vector-artist (`<Tratto tipo="cerchio">` reso sempre, `opacity` 0 → 1 con `:focus-visible`), anello standard tolto con `:has()`; senza `:has()` restano entrambi |
 | `ctp-ix-scelta` + `__input` + `__parola` (radio del servizio) | l'input copre la parola (tocco, clic, lettori di schermo); scelta: la parola è cerchiata a pennarello (bordo 2 px `--ctp-pennarello`, sempre riservato: scegliere non sposta nulla); fuoco: anello turchese sulla parola; hover sul non scelto: sottolineatura |
 | `ctp-ix-campo` (nome, telefono) | `caret-color` turchese; selezione turchese al 38%; `aria-invalid`: linea di base 3 px tratteggiata (mai solo colore, con l'icona e il testo della lista); `readonly`/`aria-readonly` durante l'invio: niente barra |
-| `ctp-ix-bottone` ("Scrivi il tuo nome", "Segna") | 48 px; hover: fondo `--ctp-turchese-vetro` (più chiaro, contrasto col testo `--ctp-su-turchese` sale); premuto: 1 px giù; `aria-disabled`: `cursor: default` |
+| `ctp-ix-bottone` ("Scrivi il tuo nome", "Segna") | 48 px; hover: fondo `--ctp-turchese-vetro` (più chiaro: testo `--ctp-su-turchese` a 8,06:1 invece di 5,21:1); premuto: 1 px giù; `aria-disabled`: `cursor: default` |
 | `ctp-ix-testo` ("Informazioni", "Specchio pulito", "chiudi", "Sì, ricomincia", "No") | 44 px; hover: sottolineatura 1 px; premuto: 1 px giù |
 | `ctp-ix-tocco` | solo area minima 44 × 44 |
 
 - **Fuoco**: `.ctp-root :focus-visible` = `--ctp-fuoco-spessore` (2 px)
-  `--ctp-fuoco-colore` (turchese del vetro `#4BC3BC`, 5,3:1 sullo specchio),
+  `--ctp-fuoco-colore` (turchese del vetro `#4BC3BC`: 6,83:1 sullo specchio, 8,06:1 sulla parete),
   stacco `--ctp-fuoco-stacco` (2 px); titoli con `tabindex="-1"`: stacco 6
   px; parole sul vetro: stacco 4 px. Guardato a schermo: anello turchese
   ovale attorno al trattino, netto sul grafite.

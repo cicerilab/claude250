@@ -284,7 +284,8 @@ export function percorsoDaHz(hz: number, hzModo5 = HZ_MODO_5_BASE, profilo: Prof
   const inizioSalita = (k: number): number => k + (1 - profilo[k as IndiceStazione].salita);
   const lunghezzaSalita = (k: number): number => profilo[k as IndiceStazione].salita;
   if (hz <= HZ_MIN) return inizioSalita(0);
-  if (hz >= HZ_MAX) return inizioSalita(3) + lunghezzaSalita(3) * 0.5;
+  // 420 Hz è l'ultimo punto acceso della salita 4 (la sua seconda metà è già spenta).
+  if (hz >= HZ_MAX) return inizioSalita(3) + lunghezzaSalita(3) * 0.5 * (1 - 1e-4);
   for (let k = 0; k < 4; k++) {
     const [a, b] = estremiSalita(k as 0 | 1 | 2 | 3, hzModo5);
     if (hz > a && hz < b) {
@@ -313,6 +314,19 @@ export function palcoDaPercorso(p: number, profilo: Profilo = PROFILO_DEFAULT, p
     if (tr.fase === 'pianerottolo') return base;
     return lerp(base, PALCO_PIENO, riquadro(tr.u));
   }
+  if (tr.fase === 'salita') {
+    // Dopo una stazione "lunga" (la voce) il riquadro risale durante la
+    // salita; dopo un pianerottolo è già risalito a 54svh.
+    if (conf.tipo === 'lungo') return lerp(PALCO_RIDOTTO, PALCO_PIENO, riquadro(Math.min(1, tr.u * 2)));
+    return PALCO_PIENO;
+  }
+  if (conf.tipo === 'lungo') {
+    // Ingresso continuo: parte dal valore con cui finisce la stazione prima
+    // (54svh dopo una salita, 34svh dopo le riparazioni) e scende a 34svh.
+    const ingresso = tr.stazione > 0 ? palcoDaPercorso(tr.stazione - 1e-6, profilo, palcoApertura) : PALCO_PIENO;
+    if (!conf.giu) return ingresso;
+    return lerp(ingresso, PALCO_RIDOTTO, riquadro(progressoTra(conf.giu[0], conf.giu[1], tr.t)));
+  }
   let v = PALCO_PIENO;
   if (conf.giu) {
     v = lerp(PALCO_PIENO, PALCO_RIDOTTO, riquadro(progressoTra(conf.giu[0], conf.giu[1], tr.t)));
@@ -320,7 +334,6 @@ export function palcoDaPercorso(p: number, profilo: Profilo = PROFILO_DEFAULT, p
   if (conf.su && tr.t >= conf.su[0]) {
     v = lerp(PALCO_RIDOTTO, PALCO_PIENO, riquadro(progressoTra(conf.su[0], conf.su[1], tr.t)));
   }
-  if (tr.fase === 'salita') return PALCO_PIENO;
   return v;
 }
 

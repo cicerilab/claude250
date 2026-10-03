@@ -363,9 +363,10 @@ Un solo tipo, per "Scrivi il tuo nome" (mensola) e "Segna" (riga di
 scrittura). Fondo `turchese`, testo `parete` Figtree 600 15-17 px (5,21:1),
 48 px di altezza, padding 24 px, raggio 0, nessuna ombra, nessun bordo. Al
 passaggio il fondo diventa `turchese-vetro` (8,06:1), premuto si abbassa di
-1 px (interaction.css). Sotto i 380 px "Scrivi il tuo nome" va su due righe
-(interlinea 1,15) in 147 px: mai troncato. Il testo del bottone, misurato con
-i woff2 veri, sta su una riga in 147 px da 380 px in su.
+1 px (interaction.css). Su S il bottone della mensola ha padding 12 px
+(`--ctp-sp-3`): "Scrivi il tuo nome" misura 119 px a 15 px con i woff2 veri,
+quindi sta su una riga nei 147 px dello slot a 375 (143 px). Sotto i 360 px
+va su due righe (interlinea 1,15), mai troncato né abbreviato.
 
 ### I campi (`.ctp-campo`, `.ctp-etichetta`)
 

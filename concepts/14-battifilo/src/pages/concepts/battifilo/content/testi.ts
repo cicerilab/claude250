@@ -128,6 +128,19 @@ export function dataStencil(iso: string): string {
   return `${p.giorno} ${MESI_BREVE[p.mese - 1] ?? ''}`;
 }
 
+/**
+ * Quando arriva la richiamata, dal giorno dell'invio ('AAAA-MM-GG'):
+ * da domenica a giovedì "entro domani", venerdì e sabato "lunedì".
+ * Senza data (prerender) "entro il giorno lavorativo dopo".
+ * Le feste non si contano: è una promessa di ufficio, non un calendario.
+ */
+export function richiamata(oggiIso: string | null): string {
+  const p = oggiIso ? partiData(oggiIso) : null;
+  if (!p) return 'entro il giorno lavorativo dopo';
+  const giorno = new Date(p.anno, p.mese - 1, p.giorno).getDay();
+  return giorno === 5 || giorno === 6 ? 'lunedì' : 'entro domani';
+}
+
 /** "9 finestre uguali" / "1 finestra" */
 export function quanteFinestre(n: number): string {
   return n === 1 ? '1 finestra' : `${n} finestre uguali`;
@@ -136,8 +149,8 @@ export function quanteFinestre(n: number): string {
 /* ================================================================== meta e vetrina */
 
 export const META = {
-  /** <title>: 59 caratteri. Dice "Concept" nello snippet e scrive "Ciceri Lab" come il prerender. */
-  title: 'Concept 14 · BATTIFILO, impresa edile e serramenti | Ciceri Lab',
+  /** <title>: 58 caratteri. Dice "Concept" nello snippet e scrive "Ciceri Lab" come il prerender. */
+  title: 'Concept 14 · BATTIFILO, edilizia e serramenti | Ciceri Lab',
   /** meta description: 155 caratteri. Dice subito che l'impresa è inventata. */
   description:
     "Concept di Ciceri Lab: il sito di un’impresa edile e di serramenti di Cordenons, inventata. Tira il filo e leggi 14 mesi di cantiere, poi misura la tua finestra.",
@@ -352,7 +365,7 @@ export const LINEA = {
   tuMisure: (larghezza: number, altezza: number) => misure(larghezza, altezza),
   tuDoppia: '×2',
   tuAria: (tipo: TipoFinestra, larghezza: number, altezza: number, dataIso: string) =>
-    `La tua finestra, ${TIPI_NOMI[tipo].inFrase} ${numero(larghezza, 1)} per ${numero(altezza, 1)}, mandata il ${dataLunga(dataIso)}. Apri Misura e manda`,
+    `La tua finestra ${TIPI_NOMI[tipo].inFrase}, ${numero(larghezza, 1)} per ${numero(altezza, 1)}, mandata il ${dataLunga(dataIso)}. Apri Misura e manda`,
   tuTitolo: (dataIso: string) => `Le tue misure, mandate il ${dataLunga(dataIso)}. Ti chiama Davide.`,
 } as const;
 
@@ -374,10 +387,10 @@ export function valoreParlante(tappa: number): string {
 /* ================================================================== nomi condivisi di Misura e manda */
 
 export const TIPI_NOMI = {
-  'un-anta': { nome: 'Finestra a un’anta', breve: 'un’anta', inFrase: 'a un’anta', articolo: 'una finestra' },
-  'due-ante': { nome: 'Finestra a due ante', breve: 'due ante', inFrase: 'a due ante', articolo: 'una finestra' },
-  portafinestra: { nome: 'Portafinestra', breve: 'portafinestra', inFrase: 'portafinestra', articolo: 'una portafinestra' },
-  scorrevole: { nome: 'Scorrevole alzante', breve: 'scorrevole', inFrase: 'scorrevole alzante', articolo: 'uno scorrevole' },
+  'un-anta': { nome: 'Finestra a un’anta', breve: 'un’anta', inFrase: 'a un’anta', articolo: 'Una finestra alta' },
+  'due-ante': { nome: 'Finestra a due ante', breve: 'due ante', inFrase: 'a due ante', articolo: 'Una finestra alta' },
+  portafinestra: { nome: 'Portafinestra', breve: 'portafinestra', inFrase: 'portafinestra', articolo: 'Una portafinestra alta' },
+  scorrevole: { nome: 'Scorrevole alzante', breve: 'scorrevole', inFrase: 'scorrevole alzante', articolo: 'Uno scorrevole alzante alto' },
 } as const satisfies Record<TipoFinestra, { nome: string; breve: string; inFrase: string; articolo: string }>;
 
 export const MATERIALI_NOMI = {
@@ -485,7 +498,7 @@ export const MISURA = {
   /** avvisi di coerenza (A1), non bloccano */
   coerenza: {
     forseFinestra: (tipo: TipoFinestra, cm: number) =>
-      `${TIPI_NOMI[tipo].articolo.charAt(0).toUpperCase()}${TIPI_NOMI[tipo].articolo.slice(1)} alta ${numero(cm, 1)} cm? Di solito è una finestra.`,
+      `${TIPI_NOMI[tipo].articolo} ${numero(cm, 1)} cm? Di solito è una finestra.`,
     faiFinestra: 'Fai finestra',
     faiFinestraAria: 'Cambia in finestra a due ante',
     forsePortafinestra: (cm: number) =>
@@ -538,7 +551,7 @@ export const MISURA = {
     quando: 'Quando preferisci il sopralluogo',
     quandoOpzioni: QUANDO.map((id) => ({ id, nome: QUANDO_NOMI[id] })),
     rassicura: 'Ti chiamiamo solo per questo sopralluogo. Niente commerciali.',
-    promessa: 'Ti chiamiamo entro domani. Al sopralluogo rimisuriamo noi al millimetro.',
+    promessa: 'Ti chiamiamo entro il giorno lavorativo dopo. Al sopralluogo rimisuriamo noi al millimetro.',
   },
 
   invio: {
@@ -569,10 +582,8 @@ export const MISURA = {
 
   successo: {
     /** la data marcata a spruzzo: dataStencil(oggi) */
-    frase: (comune: string | null) =>
-      comune
-        ? `Ricevute. Ti chiamiamo entro domani per il sopralluogo a ${comune}. Tieni il metro a portata di mano.`
-        : 'Ricevute. Ti chiamiamo entro domani per il sopralluogo. Tieni il metro a portata di mano.',
+    frase: (comune: string | null, oggiIso: string | null) =>
+      `Ricevute. Ti chiamiamo ${richiamata(oggiIso)} per il sopralluogo${comune ? ` a ${comune}` : ''}. Tieni il metro a portata di mano.`,
     chiChiama: `Ti chiama Davide, il geometra. Sopralluogo gratuito, prezzo scritto entro ${PROMESSE.prezzoScrittoGiorni} giorni lavorativi.`,
     saluto: 'Mandi.',
     altra: 'Misura un’altra finestra',
@@ -583,7 +594,7 @@ export const MISURA = {
     /** OK3: seconda finestra */
     ancheQueste: 'Ricevute anche queste. Al sopralluogo le guardiamo tutte.',
     /** annuncio aria-live */
-    annuncio: 'Misure ricevute. Ti chiamiamo entro domani.',
+    annuncio: (oggiIso: string | null) => `Misure ricevute. Ti chiamiamo ${richiamata(oggiIso)}.`,
     tempi: `Serramenti in ${PROMESSE.consegnaSettimane} settimane dall’ordine, posa in una giornata per ${PROMESSE.posaAlGiorno} finestre.`,
   },
 
@@ -619,7 +630,7 @@ export const CARTELLO = {
   impresaTesto: 'BATTIFILO costruzioni e serramenti',
   chiSiamo: 'Chi siamo',
   chiSiamoTesto:
-    'Squadra propria di muratori e posatori dei serramenti dentro l’impresa, un capocantiere solo dal tracciamento alle chiavi. Davide, geometra, fa sopralluoghi e preventivi; Renzo, che ha fondato l’impresa da muratore, passa in cantiere quasi ogni mattina a vedere i fili. Costruiamo in laterizio: è quello che sappiamo fare.',
+    'Muratori e posatori sono dell’impresa, non squadre a chiamata. Un capocantiere solo, Loris, dallo scavo alle chiavi. Ha cominciato Renzo, muratore; oggi i preventivi li fa suo figlio Davide, geometra.',
   sede: 'Sede e magazzino serramenti',
   sedeTesto: RECAPITI.indirizzo,
   sedeNota: 'Parcheggio nel cortile, davanti al magazzino. Da Pordenone dieci minuti in auto.',
@@ -685,7 +696,6 @@ export const ANNUNCI = {
   vistaChiusa: 'Torni alla cronaca',
   menuAperto: 'Menu aperto',
   menuChiuso: 'Menu chiuso',
-  istruzioneSparita: '',
 } as const;
 
 /* ================================================================== default export */

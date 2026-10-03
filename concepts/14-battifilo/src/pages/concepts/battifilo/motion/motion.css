@@ -132,19 +132,9 @@
   will-change: translate;
 }
 
-/* In mano: la cassetta si preme un poco (transform, non dimensione). */
-.btf-root .btf-linea__cassetta-corpo {
-  transition: transform 120ms var(--btf-ease-aggancio);
-}
+/* La presa (maniglia che si alza) è dell'interaction-designer: interaction.css. */
 
-.btf-root[data-trascina="1"] .btf-linea__cassetta-corpo {
-  transform: scale(0.96);
-}
-
-/* Il filo: `d` scritto per frame; il colore non cambia mai. */
-.btf-root .btf-linea__filo {
-  will-change: contents;
-}
+/* Il filo: solo `d` scritto per frame da Filo.tsx; nessuna regola qui, il colore non cambia mai. */
 
 /* Istruzione "Tira il filo": sparisce al primo movimento, solo opacità. */
 .btf-root .btf-linea__istruzione {
@@ -218,10 +208,7 @@
 /* 5 · Misura e manda: il piano di tracciamento                          */
 /* ------------------------------------------------------------------ */
 
-/* I lati della finestra: dasharray/dashoffset scritti per frame durante la battuta. */
-.btf-root .btf-misura__lato {
-  will-change: contents;
-}
+/* I lati della finestra: dasharray/dashoffset scritti per frame da Tracciamento.tsx (trattoDalCentro). */
 
 /* Il segno vecchio dopo una correzione: resta, più chiaro, come sulla lastra. */
 .btf-root .btf-misura__lato--vecchio {
@@ -313,7 +300,6 @@
 
   .btf-root .btf-linea__gesso--nuovo,
   .btf-root .btf-linea__gesso--vecchio,
-  .btf-root .btf-linea__cassetta-corpo,
   .btf-root .btf-linea__istruzione,
   .btf-root .btf-linea__riga,
   .btf-root .btf-misura__quota,
@@ -338,8 +324,4 @@
 .btf-root[data-motion="reduced"] .btf-polvere__granello {
   animation: none;
   opacity: 0;
-}
-
-.btf-root[data-motion="reduced"] .btf-linea__cassetta-corpo {
-  transform: none;
 }
