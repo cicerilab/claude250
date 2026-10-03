@@ -34,15 +34,16 @@ function mediaQuery(query: string): MediaQueryList | null {
 /**
  * Prova a creare un contesto WebGL2 (poi WebGL1) su un canvas scartato
  * subito, con `failIfMajorPerformanceCaveat` (niente GPU software) e controlla
- * che il fragment shader abbia `highp`.
+ * che il fragment shader abbia `highp`. `permettiSoftware` toglie la clausola:
+ * solo per `?fermo=` (fermi immagine fatti con SwiftShader, tech §8.4).
  */
-export function detectWebGL(): EsitoWebGL {
+export function detectWebGL(opzioni: { readonly permettiSoftware?: boolean } = {}): EsitoWebGL {
   if (typeof document === 'undefined') return { ok: false, versione: 0, motivo: 'nessuna-finestra' };
   const canvas = document.createElement('canvas');
   canvas.width = 1;
   canvas.height = 1;
   const attributi: WebGLContextAttributes = {
-    failIfMajorPerformanceCaveat: true,
+    failIfMajorPerformanceCaveat: opzioni.permettiSoftware !== true,
     antialias: false,
     depth: false,
     stencil: false,

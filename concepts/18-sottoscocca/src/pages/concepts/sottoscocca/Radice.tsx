@@ -238,7 +238,7 @@ export default function Radice() {
     const decisione = decidiGL({
       forzatura: conFermo ? 'on' : leggiForzaturaGL(search),
       saveData: saveData(),
-      webgl: detectWebGL(),
+      webgl: detectWebGL({ permettiSoftware: conFermo }),
     });
     if (!decisione.carica) {
       impostaGL('off', decisione.motivo);

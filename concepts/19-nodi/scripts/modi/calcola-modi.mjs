@@ -48,6 +48,9 @@ const ABETE = {
 };
 const GRADO = opzione('--grado', 18);
 const CON_CATENA = !argomenti.includes('--senza-catena');
+const SCALA_CATENA = opzione('--catena-scala', 1);
+/** Altezza della bombatura al centro (mm); 0 = piastra piana. */
+const BOMBATURA_MM = opzione('--bombatura', 15.5);
 
 /**
  * Catena (bass bar) come irrigidimento lungo la vena sul lato dei bassi
@@ -58,7 +61,7 @@ const CON_CATENA = !argomenti.includes('--senza-catena');
 const CATENA = { xMm: -18.5, larghezzaMm: 5.5, y0Mm: 46, y1Mm: 316, altezzaCentroMm: 11, altezzaEstremiMm: 3 };
 
 // Griglia di integrazione (2 mm circa) e griglia d'uscita (formato §8.2 del tech-architect).
-const NU_INT = 104, NV_INT = 178;
+const NU_INT = opzione('--nu', 84), NV_INT = Math.round(NU_INT * 1.712);
 const NU_OUT = 96, NV_OUT = 168;
 
 // ---------------------------------------------------------------------------
@@ -94,11 +97,11 @@ for (let g = 0; g < G; g++) {
   ym[g] = integ.yDaV((j + 0.5) / NV_INT);
 }
 
-// Base e derivate seconde in metri.
+// Base e derivate (prime e seconde) in metri.
 const sx = 1 / (semiW * 1e-3), sy = 1 / (semiH * 1e-3);
-const phi = [], pxx = [], pyy = [], pxy = [], coeff = [];
+const phi = [], px = [], py = [], pxx = [], pyy = [], pxy = [], coeff = [];
 for (let a = 0; a < N; a++) {
-  phi.push(new Float64Array(G)); pxx.push(new Float64Array(G)); pyy.push(new Float64Array(G)); pxy.push(new Float64Array(G));
+  for (const l of [phi, px, py, pxx, pyy, pxy]) l.push(new Float64Array(G));
   const c = new Float64Array(N); c[a] = 1; coeff.push(c);
 }
 for (let g = 0; g < G; g++) {
@@ -106,6 +109,8 @@ for (let g = 0; g < G; g++) {
   for (let a = 0; a < N; a++) {
     const [i, j] = indici[a];
     phi[a][g] = lx.p[i] * ly.p[j];
+    px[a][g] = lx.d1[i] * ly.p[j] * sx;
+    py[a][g] = lx.p[i] * ly.d1[j] * sy;
     pxx[a][g] = lx.d2[i] * ly.p[j] * sx * sx;
     pyy[a][g] = lx.p[i] * ly.d2[j] * sy * sy;
     pxy[a][g] = lx.d1[i] * ly.d1[j] * sx * sy;
@@ -114,15 +119,52 @@ for (let g = 0; g < G; g++) {
 
 let t0 = Date.now();
 // due passate per la stabilità numerica
-let tenute = gramSchmidt(phi, [pxx, pyy, pxy, coeff], peso);
+let tenute = gramSchmidt(phi, [px, py, pxx, pyy, pxy, coeff], peso);
 const idx = tenute.flatMap((t, a) => (t ? [a] : []));
 const sel = (/** @type {Float64Array[]} */ l) => idx.map((a) => l[a]);
-const Phi = sel(phi), Pxx = sel(pxx), Pyy = sel(pyy), Pxy = sel(pxy), Coeff = sel(coeff);
-tenute = gramSchmidt(Phi, [Pxx, Pyy, Pxy, Coeff], peso);
+const Phi = sel(phi), Px = sel(px), Py = sel(py), Pxx = sel(pxx), Pyy = sel(pyy), Pxy = sel(pxy), Coeff = sel(coeff);
+tenute = gramSchmidt(Phi, [Px, Py, Pxx, Pyy, Pxy, Coeff], peso);
 const n = Phi.length;
 console.log(`base ortonormale: ${n} funzioni (${N - n} scartate), ${Date.now() - t0} ms`);
 
-// Rigidezze flessionali.
+// ---------------------------------------------------------------------------
+// Bombatura: guscio sottile ribassato (Marguerre). z0(x, y) è l'altezza della
+// tavola sul piano delle fasce: arco lungo la tavola × arco di traverso a
+// campana di coseno sulla semilarghezza locale (sguscio verso il bordo).
+// Con BOMBATURA = 0 il modello torna la piastra piana.
+
+/** semilarghezza locale del contorno (mm) per ogni riga della griglia d'integrazione */
+const semilarghezza = new Float64Array(NV_INT);
+for (let j = 0; j < NV_INT; j++) {
+  const ymm = integ.yDaV((j + 0.5) / NV_INT);
+  let b = 0;
+  for (let xmm = 0; xmm <= semiW; xmm += 0.5) if (integ.dentroTavola(xmm, ymm) || integ.dentroTavola(-xmm, ymm)) b = xmm;
+  // le effe non accorciano la semilarghezza: si prende il bordo esterno
+  semilarghezza[j] = Math.max(b, 1);
+}
+const z0 = new Float64Array(G), z0x = new Float64Array(G), z0y = new Float64Array(G);
+{
+  const Hb = BOMBATURA_MM;
+  /** @param {number} xmm @param {number} ymm */
+  const quota = (xmm, ymm) => {
+    const t = Math.min(1, Math.max(0, (ymm - y0) / Hmm));
+    const jf = Math.min(NV_INT - 1, Math.max(0, t * NV_INT - 0.5));
+    const j0 = Math.floor(jf), j1 = Math.min(NV_INT - 1, j0 + 1), fj = jf - j0;
+    const b = semilarghezza[j0] * (1 - fj) + semilarghezza[j1] * fj;
+    const s = Math.min(1, Math.abs(xmm) / b);
+    const lungo = Math.pow(Math.sin(Math.PI * t), 0.7);
+    const traverso = 0.5 * (1 + Math.cos(Math.PI * s));
+    return Hb * lungo * traverso;
+  };
+  const e = 0.25;
+  for (let g = 0; g < G; g++) {
+    z0[g] = quota(xm[g], ym[g]) * 1e-3;
+    z0x[g] = (quota(xm[g] + e, ym[g]) - quota(xm[g] - e, ym[g])) / (2 * e);
+    z0y[g] = (quota(xm[g], ym[g] + e) - quota(xm[g], ym[g] - e)) / (2 * e);
+  }
+}
+
+// Rigidezze (x = di traverso, R; y = lungo la vena, L).
 const nuRL = (ABETE.nuLR * ABETE.ER) / ABETE.EL;
 const den = 1 - ABETE.nuLR * nuRL;
 const h3 = ABETE.h ** 3;
@@ -130,6 +172,10 @@ const Dx = (ABETE.ER * h3) / (12 * den);
 const DyPiastra = (ABETE.EL * h3) / (12 * den);
 const D12 = ABETE.nuLR * Dx;
 const D66 = (ABETE.G * h3) / 12;
+const A11 = (ABETE.ER * ABETE.h) / den;
+const A22 = (ABETE.EL * ABETE.h) / den;
+const A12 = ABETE.nuLR * A11;
+const A66 = ABETE.G * ABETE.h;
 const Dy = new Float64Array(G).fill(DyPiastra);
 if (CON_CATENA) {
   const c = CATENA;
@@ -138,26 +184,64 @@ if (CON_CATENA) {
     if (Math.abs(xm[g] - c.xMm) > c.larghezzaMm / 2 || ym[g] < c.y0Mm || ym[g] > c.y1Mm) continue;
     const t = (ym[g] - centro) / meta;
     const H = (c.altezzaEstremiMm + (c.altezzaCentroMm - c.altezzaEstremiMm) * Math.sqrt(Math.max(0, 1 - t * t))) * 1e-3;
-    // trave: E I / b distribuito sulla sua larghezza (sopra la piastra: asse neutro spostato, approssimato)
-    const EIperB = (opzione("--catena-scala", 1) * ABETE.EL * (H + ABETE.h) ** 3) / 12;
+    // trave incollata sotto la tavola: E I / b della sezione composta, distribuito sulla sua larghezza
+    const EIperB = (SCALA_CATENA * ABETE.EL * (H + ABETE.h) ** 3) / 12;
     Dy[g] = Math.max(DyPiastra, EIperB);
   }
 }
-console.log(`rapporto di rigidezza Dy/Dx = ${(DyPiastra / Dx).toFixed(1)} (EL/ER = ${(ABETE.EL / ABETE.ER).toFixed(1)})`);
+console.log(`rapporto di rigidezza EL/ER = ${(ABETE.EL / ABETE.ER).toFixed(1)}, bombatura ${BOMBATURA_MM} mm, catena ${CON_CATENA ? 'sì' : 'no'}`);
+
+// Gradi di libertà: u (n), v (n), w (n). Per ognuno le deformazioni
+// membranali (ex, ey, gxy) e le curvature (kxx, kyy, kxy) nei punti.
+const zero = new Float64Array(G);
+const Exw = [], Eyw = [], Gw = [];
+for (let a = 0; a < n; a++) {
+  const ex = new Float64Array(G), ey = new Float64Array(G), gg = new Float64Array(G);
+  for (let g = 0; g < G; g++) {
+    ex[g] = z0x[g] * Px[a][g];
+    ey[g] = z0y[g] * Py[a][g];
+    gg[g] = z0x[g] * Py[a][g] + z0y[g] * Px[a][g];
+  }
+  Exw.push(ex); Eyw.push(ey); Gw.push(gg);
+}
+const conMembrana = BOMBATURA_MM > 0;
+/** @type {Array<{ ex: Float64Array, ey: Float64Array, gxy: Float64Array, kxx: Float64Array, kyy: Float64Array, kxy: Float64Array }>} */
+const gdl = [];
+if (conMembrana) {
+  for (let a = 0; a < n; a++) gdl.push({ ex: Px[a], ey: zero, gxy: Py[a], kxx: zero, kyy: zero, kxy: zero });
+  for (let a = 0; a < n; a++) gdl.push({ ex: zero, ey: Py[a], gxy: Px[a], kxx: zero, kyy: zero, kxy: zero });
+}
+const offW = gdl.length;
+for (let a = 0; a < n; a++) gdl.push({ ex: Exw[a], ey: Eyw[a], gxy: Gw[a], kxx: Pxx[a], kyy: Pyy[a], kxy: Pxy[a] });
+const nTot = gdl.length;
 
 t0 = Date.now();
-const K = new Float64Array(n * n);
-for (let a = 0; a < n; a++) {
-  for (let b = a; b < n; b++) {
-    const xa = Pxx[a], ya = Pyy[a], za = Pxy[a], xb = Pxx[b], yb = Pyy[b], zb = Pxy[b];
+const K = new Float64Array(nTot * nTot);
+for (let I = 0; I < nTot; I++) {
+  const a = gdl[I];
+  const mA = a.ex !== zero || a.ey !== zero, bA = a.kxx !== zero;
+  for (let J = I; J < nTot; J++) {
+    const b = gdl[J];
+    const mB = b.ex !== zero || b.ey !== zero, bB = b.kxx !== zero;
     let s = 0;
-    for (let g = 0; g < G; g++) {
-      s += Dx * xa[g] * xb[g] + D12 * (xa[g] * yb[g] + ya[g] * xb[g]) + Dy[g] * ya[g] * yb[g] + 4 * D66 * za[g] * zb[g];
+    if (conMembrana && mA && mB) {
+      const aex = a.ex, aey = a.ey, ag = a.gxy, bex = b.ex, bey = b.ey, bg = b.gxy;
+      for (let g = 0; g < G; g++) {
+        s += A11 * aex[g] * bex[g] + A12 * (aex[g] * bey[g] + aey[g] * bex[g]) + A22 * aey[g] * bey[g] + A66 * ag[g] * bg[g];
+      }
     }
-    K[a * n + b] = K[b * n + a] = s * dA;
+    if (bA && bB) {
+      const xa = a.kxx, ya = a.kyy, za = a.kxy, xb = b.kxx, yb = b.kyy, zb = b.kxy;
+      for (let g = 0; g < G; g++) {
+        s += Dx * xa[g] * xb[g] + D12 * (xa[g] * yb[g] + ya[g] * xb[g]) + Dy[g] * ya[g] * yb[g] + 4 * D66 * za[g] * zb[g];
+      }
+    }
+    K[I * nTot + J] = K[J * nTot + I] = s * dA;
   }
 }
-const { valori, vettori } = jacobi(K, n);
+console.log(`rigidezza ${nTot}×${nTot}: ${Date.now() - t0} ms`);
+t0 = Date.now();
+const { valori, vettori } = jacobi(K, nTot);
 console.log(`autovalori: ${Date.now() - t0} ms`);
 
 // ---------------------------------------------------------------------------
@@ -170,7 +254,7 @@ console.log(`autovalori: ${Date.now() - t0} ms`);
 function coefficientiModo(m) {
   const c = new Float64Array(N);
   for (let a = 0; a < n; a++) {
-    const v = vettori[a * n + m];
+    const v = vettori[(offW + a) * nTot + m];
     if (v === 0) continue;
     const ca = Coeff[a];
     for (let q = 0; q < N; q++) c[q] += v * ca[q];
@@ -372,7 +456,7 @@ const out = costruisciMaschera(tavola, NU_OUT, NV_OUT);
 const dist = distanzaDalBordo(out.maschera, NU_OUT, NV_OUT);
 const freq = Array.from(valori, (l) => Math.sqrt(Math.max(0, l)) / (2 * Math.PI));
 const elastici = [];
-for (let m = 0; m < n && elastici.length < 12; m++) if (freq[m] > 5) elastici.push(m);
+for (let m = 0; m < nTot && elastici.length < 12; m++) if (freq[m] > 5) elastici.push(m);
 
 const confronti = [];
 /** @type {Record<string, { m: number, w: Float64Array, hz: number, t: ReturnType<typeof topologia> }>} */

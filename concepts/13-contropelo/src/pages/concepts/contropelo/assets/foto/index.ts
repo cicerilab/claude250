@@ -11,8 +11,9 @@
  * RIFLESSO): specchiate in orizzontale, saturazione 60%, livelli con bianco
  * d'uscita #A7AFAE, sfocatura gaussiana 1,5 px (1600) / 0,75 px (800), webp.
  * Nessun filtro a runtime; la velatura #232A2C al 66% la mette il CSS.
- * Luminanza relativa massima misurata sui webp decodificati: tutte <= 0,416
- * (tetto 0,419), dettaglio per file in `luminanzaMax` e nel doc.
+ * Verificato sui webp decodificati: nessun pixel supera #A7AFAE in nessun
+ * canale e la luminanza relativa massima è <= 0,407 (tetto 0,419); valori per
+ * file in `luminanzaMax` e nel doc.
  *
  * Posizioni (`object-position` sulla foto GIÀ specchiata):
  * - `posizione`: specchio largo (>= 900 px, vetro circa 1,7:1 orizzontale);
@@ -82,7 +83,7 @@ export const FOTO_SPECCHI: readonly [FotoSpecchio, FotoSpecchio, FotoSpecchio] =
     licenza: 'CC BY-SA 4.0',
     licenzaUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
     modifiche: MODIFICHE,
-    luminanzaMax: [0.4132, 0.4035],
+    luminanzaMax: [0.394, 0.391],
   },
   {
     specchio: 1,
@@ -122,7 +123,7 @@ export const FOTO_SPECCHI: readonly [FotoSpecchio, FotoSpecchio, FotoSpecchio] =
     licenza: 'CC BY-SA 2.0',
     licenzaUrl: 'https://creativecommons.org/licenses/by-sa/2.0/',
     modifiche: MODIFICHE,
-    luminanzaMax: [0.4152, 0.3983],
+    luminanzaMax: [0.3988, 0.3983],
   },
 ] as const;
 
