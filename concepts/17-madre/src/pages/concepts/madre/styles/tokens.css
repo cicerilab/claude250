@@ -359,8 +359,8 @@
     --mad-margine-dx: calc(40px + var(--mad-fuori));
     --mad-colonne: 12;
     --mad-canalino: 24px;
-    --mad-foto-h-max: min(360px, calc(var(--mad-piano-y) - var(--mad-testata-h) - var(--mad-appoggio-aria)));
-    --mad-foto-w-max: 560px;
+    --mad-foto-h-max: min(clamp(360px, 30svh, 440px), calc(var(--mad-piano-y) - var(--mad-testata-h) - var(--mad-appoggio-aria)));
+    --mad-foto-w-max: clamp(560px, 36vw, 720px);
     --mad-passo: 96px;
     --mad-cartellino-w: 18.5rem;
     --mad-appeso: 24px;

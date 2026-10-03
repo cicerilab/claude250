@@ -82,10 +82,11 @@ float fossetta(vec2 p, vec4 f, float profSegno) {
   q = vec2(cs * q.x + sn * q.y, -sn * q.x + cs * q.y);
   vec2 e = q / MAD_FOSSETTA_SEMIASSI;
   float r2 = dot(e, e);
-  float conca = max(1.0 - r2, 0.0);
-  conca = conca * conca * clamp(1.0 + MAD_FOSSETTA_ASIMMETRIA * e.y, 0.0, 2.0);
+  // conca morbida: pareti che scendono piano (impasto lievitato, non argilla)
+  float conca = exp(-2.6 * r2) * (1.0 - smoothstep(1.0, 1.6, r2));
+  conca *= clamp(1.0 + MAD_FOSSETTA_ASIMMETRIA * e.y, 0.0, 2.0);
   float r = sqrt(r2);
-  float rb = (r - 1.05) / 0.32;
+  float rb = (r - 1.12) / 0.34;
   float bordo = exp(-rb * rb);
   float prof = f.z;
   float giu = prof * (conca - MAD_FOSSETTA_BORDO * bordo) + profSegno * f.w * conca;

@@ -129,7 +129,7 @@ export const LUCE = {
    * TONO; l'esponente dà quanto scende al buio pieno (1 = esattamente la
    * tinta, 2,4 ≈ due volte più scuro, sempre caldo, mai grigio né nero).
    */
-  profonditaOmbra: 3.0,
+  profonditaOmbra: 3.6,
   /** schiarita massima dei lati verso la luce (verso il bianco, 0..1) */
   schiarita: 0.55,
   /** quanto la curvatura convessa schiarisce (traslucenza dei bordi sottili) */
@@ -237,11 +237,11 @@ export const RESPIRO = {
  */
 export const FOSSETTA = {
   /** semiasse trasversale e semiasse lungo il dito */
-  semiassi: [0.041, 0.054] as Vec2,
+  semiassi: [0.05, 0.064] as Vec2,
   /** rotazione dell'asse del dito (rad, antiorario da +y) */
   rotazione: 0.32,
   /** profondità massima, in "p" */
-  profondita: 0.03,
+  profondita: 0.024,
   /** quanto la punta è più profonda del tallone (0 = simmetrica) */
   asimmetria: 0.32,
   /** rigonfiamento attorno (l'impasto spostato), frazione della profondità */
@@ -261,7 +261,7 @@ export const FOSSETTA = {
  */
 export const SPOLVERO = {
   /** grana fine della farina (canale R) */
-  grana: 3.3,
+  grana: 1.75,
   /** alveoli sotto la pelle e grumi di farina sul tavolo (canale G) */
   alveoli: 0.97,
   /** chiazze dello spolvero e ondulazione della pelle (canale B) */
@@ -270,11 +270,11 @@ export const SPOLVERO = {
   crepe: 2.15,
   /** rilievo degli alveoli e dell'ondulazione, in "p" */
   rilievoAlveoli: 0.0034,
-  rilievoOnde: 0.0016,
+  rilievoOnde: 0.0042,
   /** larghezza delle crepe a riposo (0..1 della distanza dal bordo cella) */
-  crepaRiposo: 0.026,
+  crepaRiposo: 0.012,
   /** di quanto si aprono nella fossetta */
-  crepaFossetta: 0.1,
+  crepaFossetta: 0.05,
 } as const;
 
 /* ---------------------------------------------------- composizione e quota */

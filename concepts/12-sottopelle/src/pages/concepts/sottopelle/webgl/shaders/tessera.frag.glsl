@@ -154,17 +154,19 @@ vec2 vortice(vec2 P, vec2 c, float sig, float giro) {
 // Un velo davanti al fronte: foglio traslucido con l'orlo ripiegato più denso.
 // Ha un suo piccolo moto (campo a rotore proprio) e lingue sue, così non è
 // una copia concentrica del fronte.
-float velo(vec2 P, vec2 sem, float ka, float Rv) {
+float velo(vec2 P, vec2 fine, vec2 sem, float ka, float Rv) {
   vec3 n = rumoreD(P * INK_VELI_FREQ + sem);
-  vec2 Q = P + vec2(n.z, -n.y) * INK_VELI_MOSSA;
+  vec2 Q = P + vec2(n.z, -n.y) * INK_VELI_MOSSA + fine;
   vec2 pa = vec2(Q.x / ka, Q.y);
   float s = length(pa);
   vec2 versore = s > 0.0001 ? pa / s : vec2(1.0, 0.0);
   float l = rumore(versore * INK_VELI_LINGUE + sem.yx);
   float D = Rv - s / (1.0 + INK_DITA * 1.6 * l);
-  float foglio = smoothstep(-INK_VELI_SFUMA, INK_VELI_SFUMA, D);
-  float x = (D - INK_ORLO) / INK_ORLO_LARGO;
-  return foglio * INK_VELI_ALFA + exp(-x * x) * INK_ORLO_ALFA;
+  // Orlo asimmetrico: netto fuori, si scioglie verso l'interno (bordo d'attacco
+  // di un foglio d'inchiostro, non un tubo).
+  float foglio = smoothstep(-INK_VELI_SFUMA, INK_VELI_SFUMA, D) * (0.55 + 0.6 * n.x);
+  float orlo = smoothstep(-INK_ORLO_NETTO, INK_ORLO_NETTO, D) * exp(-max(D, 0.0) / INK_ORLO_SCIOGLIE);
+  return foglio * INK_VELI_ALFA + orlo * INK_ORLO_ALFA;
 }
 
 // Lo sboccio.
@@ -188,7 +190,10 @@ vec3 sboccio(vec2 uv, vec2 uvF) {
   portata = max(portata, metrica(vec2(dim.x, 0.0) - o, dir, per, ka));
   portata = max(portata, metrica(vec2(0.0, dim.y) - o, dir, per, ka));
   portata = max(portata, metrica(dim - o, dir, per, ka));
-  float R = f * (portata * (1.0 + INK_DITA) + INK_MARGINE);
+  // Il fronte frena; verso la fine l'inchiostro satura la tessera (gli angoli
+  // si chiudono prima della dissolvenza finale).
+  float R = f * (portata * (1.0 + INK_DITA) + INK_MARGINE)
+          + INK_SATURA * portata * smoothstep(0.45, INK_CHIUDE, t);
 
   vec2 rel = uv * dim - o;
   vec2 P = vec2(dot(rel, dir), dot(rel, per));
@@ -203,6 +208,7 @@ vec3 sboccio(vec2 uv, vec2 uvF) {
     vec3 n = rumoreD(P * INK_RIM_FREQ + sem + scorre);
     P += vec2(n.z, -n.y) * agita;
   }
+  vec2 P1 = P;
 
   // 2. Il cappello: la testa della goccia è un anello di vortice. In sezione,
   //    due vortici controrotanti sulle spalle del fronte arrotolano i lati
@@ -213,7 +219,7 @@ vec3 sboccio(vec2 uv, vec2 uvF) {
     float h = hash11(uSeme * 53.0 + float(k) * 7.0);
     float ang = segno * (INK_SPALLA + (h - 0.5) * 0.35);
     vec2 c = vec2(cos(ang) * ka, sin(ang)) * R * INK_ANELLO_POS;
-    float sig = INK_ANELLO_RAGGIO * R + 0.02;
+    float sig = min(INK_ANELLO_RAGGIO * R + 0.02, INK_ANELLO_MAX);
     P = vortice(P, c, sig, segno * INK_ANELLO_VERSO * INK_ANELLO_GIRO * rotola * (0.8 + 0.4 * h));
   }
 
@@ -244,16 +250,20 @@ vec3 sboccio(vec2 uv, vec2 uvF) {
   float fronte = exp(-xr * xr) * corpo;
   float veli = 0.0;
   if (D < INK_NITIDO) {
+    // Sfrangiatura fine comune ai veli: piccola scala, piccola ampiezza.
+    vec3 nf = rumoreD(P * INK_FINE_FREQ + sem.yx * 1.3 + scorre * 2.0);
+    vec2 fine = vec2(nf.z, -nf.y) * INK_FINE_MOSSA;
     float apre = 0.35 + 0.65 * f;
-    veli = velo(P, sem + 5.3, ka, R + INK_VELI_PASSO * apre)
-         + 0.7 * velo(P, sem + 9.1, ka, R + 2.1 * INK_VELI_PASSO * apre);
+    veli = velo(P, fine, sem + 5.3, ka, R + INK_VELI_PASSO * apre)
+         + 0.7 * velo(P, fine * 1.6, sem + 9.1, ka, R + 2.1 * INK_VELI_PASSO * apre);
   }
 
   // 6. La foto dietro il fronte: arriva morbida, trascinata dal flusso, poi si posa.
   float dietro = smoothstep(0.0, INK_POSA, D);
   float morbido = clamp(1.0 - dietro * smoothstep(0.1, 0.8, t), 0.0, 1.0)
                 * (1.0 - smoothstep(0.65, 1.0, t));
-  vec2 flusso = dir * (P.x - P0.x) + per * (P.y - P0.y);
+  // Solo il rimescolamento trascina la foto (i vortici la strapperebbero).
+  vec2 flusso = dir * (P1.x - P0.x) + per * (P1.y - P0.y);
   vec2 uvW = uvF - flusso / dim * INK_TRASCINA * morbido;
   vec3 foto = fotoMorbida(uvW, INK_SFOCA * morbido / dim);
   foto = mix(foto, vec3(dot(foto, LUMA)), INK_DESATURA * morbido);
@@ -265,7 +275,7 @@ vec3 sboccio(vec2 uv, vec2 uvF) {
 
   // Durante lo sboccio i lati della tessera sono morbidi; a posa finita, spigolo vivo.
   vec2 lato = min(uv, 1.0 - uv) * dim;
-  float bordoLati = smoothstep(0.0, INK_LATI, min(lato.x, lato.y));
+  float bordoLati = smoothstep(0.0, INK_LATI * (1.0 - smoothstep(0.3, 0.75, t)) + 0.0001, min(lato.x, lato.y));
   col = mix(uNero, col, bordoLati);
 
   // Chiusura: la nuvola si posa nella foto nitida (continua con il ramo t = 1).

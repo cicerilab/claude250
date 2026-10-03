@@ -24,7 +24,9 @@ export const INCHIOSTRO = {
   /** Frequenza delle lingue intorno al punto d'ingresso. */
   ditaFreq: 1.7,
   /** Margine oltre l'angolo più lontano, in moduli: a fine corsa la tessera è tutta coperta. */
-  margine: 0.12,
+  margine: 0.2,
+  /** Saturazione finale: quanto cresce ancora il raggio (in portate) tra t = 0,45 e la chiusura. */
+  satura: 0.45,
 
   /** Rimescolamento: frequenza del campo a rotore (per modulo). */
   rimFreq: 1.8,
@@ -39,6 +41,8 @@ export const INCHIOSTRO = {
   anelloPos: 0.9,
   /** Cappello: raggio dei vortici, in frazione del raggio del fronte. */
   anelloRaggio: 0.3,
+  /** Cappello: raggio massimo dei vortici, in moduli (sulle tessere grandi niente uncini giganti). */
+  anelloMax: 0.34,
   /** Cappello: rotazione al centro dei vortici, in radianti. */
   anelloGiro: 4.5,
   /** Cappello: verso di rotazione (+1 o −1): i lati si arrotolano all'indietro. */
@@ -69,15 +73,19 @@ export const INCHIOSTRO = {
   /** Veli: frequenza delle loro lingue. */
   veliLingue: 2.6,
   /** Veli: sfumatura del contorno, in moduli. */
-  veliSfuma: 0.035,
+  veliSfuma: 0.05,
   /** Veli: opacità del foglio (grigio sfumato sul nero). */
   veliAlfa: 0.18,
-  /** Orlo ripiegato del velo: distanza dal contorno, in moduli. */
-  orlo: 0.025,
-  /** Orlo: larghezza, in moduli. */
-  orloLargo: 0.018,
+  /** Orlo ripiegato del velo: mezza larghezza del lato netto (fuori), in moduli. */
+  orloNetto: 0.018,
+  /** Orlo: quanto si scioglie verso l'interno (decadimento), in moduli. */
+  orloScioglie: 0.045,
   /** Orlo: opacità in più. */
-  orloAlfa: 0.32,
+  orloAlfa: 0.34,
+  /** Sfrangiatura fine dei veli: frequenza (per modulo). */
+  fineFreq: 7.5,
+  /** Sfrangiatura fine: ampiezza, in moduli. */
+  fineMossa: 0.012,
 
   /** Distanza dietro al fronte dove la foto è già nitida, in moduli. */
   posa: 0.42,

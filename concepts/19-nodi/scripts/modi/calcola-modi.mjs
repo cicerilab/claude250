@@ -64,6 +64,7 @@ const CATENA = { xMm: -18.5, larghezzaMm: 5.5, y0Mm: 46, y1Mm: 316, altezzaCentr
 const BASE_TARATURA = opzione('--base', 6);
 const PENALITA = opzione('--penalita', 0.01);
 const PESO_VENTRI = opzione('--peso-ventri', 0.05);
+const BASE_MODO1 = opzione('--base1', 4);
 
 /**
  * Linee nodali misurate da Jansson, fig. 5.17 (media di 14 tavole), riga in
@@ -397,9 +398,8 @@ function topologia(w, m, nu, nv) {
   const L = Hmm;
   if (parita < -0.5 && r.lato === 1 && r.spalleAlte <= 1 && r.spalleBasse <= 1) nome = 'croce';
   else if (parita > 0.5 && r.asse === 0 && (r.vita === 2 || r.spalleAlte === 2) && r.spalleBasse === 2) nome = 'parentesi';
-  else if (parita > 0.5 && r.asse >= 1 && r.lato === 2 && r.spalleAlte === 2 && r.spalleBasse === 2 &&
-    zeriAsse.every((z) => (z > y0 + 0.1 * L && z < y0 + 0.42 * L) || (z > y0 + 0.62 * L && z < y0 + 0.93 * L)) &&
-    zeriAsse.some((z) => z > y0 + 0.62 * L)) nome = 'anello';
+  else if (parita > 0.5 && r.lato === 2 && zeriAsse.length === 2 &&
+    zeriAsse[0] > y0 + 0.1 * L && zeriAsse[0] < y0 + 0.42 * L && zeriAsse[1] > y0 + 0.62 * L && zeriAsse[1] < y0 + 0.93 * L) nome = 'anello';
   return { nome, ...r };
 }
 
@@ -454,7 +454,8 @@ function distanzaDalBordo(m, nu, nv) {
       const q = dx * dx + dy * dy;
       if (q < best) best = q;
     }
-    d[j * nu + i] = Math.sqrt(best);
+    const bordoGriglia = Math.min((i + 0.5) * cw, (nu - i - 0.5) * cw, (j + 0.5) * ch, (nv - j - 0.5) * ch);
+    d[j * nu + i] = Math.min(Math.sqrt(best), bordoGriglia);
   }
   return d;
 }
@@ -477,7 +478,7 @@ function cuscinetti(w, m, dist, nu, nv, simmetrico) {
     const k = j * nu + i;
     if (!m[k] || dist[k] < 15 || Math.abs(w[k]) > 0.05) continue;
     const xmm = x0 + (i + 0.5) * cw, ymm = y0 + (j + 0.5) * ch;
-    if (simmetrico && xmm < 14) continue;
+    if (simmetrico && xmm < 30) continue;
     cand.push([xmm, ymm, Math.abs(w[k])]);
   }
   if (cand.length === 0) throw new Error('nessun punto nodale lontano dal bordo');
@@ -714,8 +715,7 @@ function combina(punti, segni, segnoParita, quanti = BASE_TARATURA) {
 const B5 = bersagli();
 const V5 = ventri();
 const tarati = {
-  // il modo 1 calcolato ha già la croce al posto giusto: si spedisce da solo
-  1: combina(B5[1], V5[1], -1, 1),
+  1: combina(B5[1], V5[1], -1, BASE_MODO1),
   2: combina(B5[2], V5[2], 1),
   5: combina(B5[5], V5[5], 1),
 };

@@ -37,12 +37,11 @@
  */
 
 import { useEffect, useRef, useState, useSyncExternalStore, type ButtonHTMLAttributes, type HTMLAttributes, type RefObject } from 'react';
-import type { IdGiorno } from '../content/prezzi';
+import { PANI_PER_ID, type IdGiorno, type IdPane, type IdPezzatura } from '../content/prezzi';
 import { ANNUNCI } from '../content/testi';
 import { annuncia } from '../core/annunci';
 import { ticker } from '../core/ticker';
-import { VOLI, type ParametriVolo } from '../motion/choreography';
-import { posa as curvaPosa, torna as curvaTorna, type Easing } from '../motion/easing';
+import { vola } from '../motion/gettoni';
 import { puoStare } from '../state/settimana';
 import {
   metti,
@@ -91,8 +90,18 @@ const VELOCITA_BORDO = 900;
 /** Dopo un trascinamento, il clic gemello sul gettone è assorbito. */
 const CLIC_DOPO_TRASCINA_MS = 400;
 
-/** Inclinazione e ingrandimento del gettone sollevato (niente con reduced motion). */
-const SOLLEVATO = { ruota: -2, scala: 1.04 } as const;
+/**
+ * Chiave `data-mad-volo` della riga di un pane in un giorno, dove il clone
+ * posato va a sciogliersi (motion/gettoni.ts). La sezione del pane fisso la
+ * mette sulla riga: `data-mad-volo={chiaveVoloRiga(giorno, pane, pezzatura)}`.
+ * Esempio: "mar-segale-500g".
+ */
+export function chiaveVoloRiga(giorno: IdGiorno, pane: IdPane, pezzatura: IdPezzatura): string {
+  return `${giorno}-${pane}-${pezzatura}`;
+}
+
+/** Chiave `data-mad-volo` del vassoio dentro la domenica (paste e gettone del vassoio). */
+export const CHIAVE_VOLO_VASSOIO = 'dom-vassoio';
 
 /* ------------------------------------------------------------- regole */
 
@@ -254,13 +263,6 @@ export function trascinamentoInCorso(): boolean {
   return sessione !== null;
 }
 
-function trasformaClone(x: number, y: number, sollevato: number, ridotto: boolean): string {
-  if (ridotto) return `translate3d(${x}px, ${y}px, 0)`;
-  const r = SOLLEVATO.ruota * sollevato;
-  const sc = 1 + (SOLLEVATO.scala - 1) * sollevato;
-  return `translate3d(${x}px, ${y}px, 0) rotate(${r}deg) scale(${sc})`;
-}
-
 function creaClone(el: HTMLElement, r: DOMRect): HTMLElement {
   const clone = el.cloneNode(true) as HTMLElement;
   const pulisci = (n: Element): void => {
@@ -340,56 +342,39 @@ function scriviSessione(): void {
   if (x === s.scrittoX && y === s.scrittoY) return;
   s.scrittoX = x;
   s.scrittoY = y;
-  s.clone.style.transform = trasformaClone(x, y, 1, s.ridotto);
-}
-
-/* voli del clone dopo il rilascio (nel ticker, fase write) */
-
-/** Durata di un volo per la distanza, coi parametri del motion-designer (VOLI). */
-function durataVolo(p: ParametriVolo, distanza: number): number {
-  return Math.max(p.min, Math.min(p.max, p.base + p.perPx * distanza));
+  // Solo translate3d: è il contratto di motion/gettoni.ts per il volo dopo il rilascio.
+  s.clone.style.transform = `translate3d(${x}px, ${y}px, 0)`;
 }
 
 /**
- * Il clone, lasciato andare, vola da `da` ad `a` (angolo in alto a sinistra,
- * px della finestra) e poi sparisce:
- * - `torna` (rifiutato o annullato): dritto al posto del gettone, curva
- *   `torna`, circa 320 ms, si rimette dritto;
- * - `posa` (messo): un piccolo arco fino al giorno, curva `posa`, e si
- *   scioglie nel giorno dal 62% del tragitto.
- * Con reduced motion niente volo: il clone sparisce e il gettone riappare.
+ * Dove va il clone posato: la riga nuova del giorno (per un pane) o il
+ * vassoio della domenica (paste e vassoio). Se la sezione non ha messo la
+ * chiave, motion/gettoni.ts non trova l'arrivo e il clone sparisce.
  */
-function volaVia(clone: HTMLElement, da: { x: number; y: number }, a: { x: number; y: number }, tipo: 'torna' | 'posa', ridotto: boolean, fine: () => void): void {
-  if (ridotto || !Number.isFinite(da.x) || !Number.isFinite(da.y)) {
+function arrivoPosa(cosa: Cosa, b: Bersaglio): string {
+  if (cosa.tipo !== 'pane') return CHIAVE_VOLO_VASSOIO;
+  const pezzatura = PANI_PER_ID[cosa.id].pezzature[0]?.id ?? '500g';
+  return chiaveVoloRiga(giornoDi(b), cosa.id, pezzatura);
+}
+
+/**
+ * Il clone, lasciato andare, vola con motion/gettoni.ts (`torna`: dritto
+ * sopra il suo gettone, circa 320 ms; `posa`: un piccolo arco fino alla riga
+ * nuova, dove si scioglie). Con reduced motion niente volo: il clone sparisce
+ * subito e il gettone riappare.
+ */
+function lasciaVolare(s: Sessione, tipo: 'torna' | 'posa', verso: HTMLElement | string, fine: () => void): void {
+  const clone = s.clone;
+  const da = { x: s.scrittoX, y: s.scrittoY, w: clone.offsetWidth, h: clone.offsetHeight };
+  const chiudi = (): void => {
     clone.remove();
     fine();
+  };
+  if (s.ridotto || !Number.isFinite(da.x) || !Number.isFinite(da.y)) {
+    chiudi();
     return;
   }
-  const parametri = VOLI[tipo];
-  const curva: Easing = tipo === 'torna' ? curvaTorna : curvaPosa;
-  const distanza = Math.hypot(a.x - da.x, a.y - da.y);
-  const durata = durataVolo(parametri, distanza);
-  const arco = Math.min(parametri.arcoMax, parametri.arcoPerPx * distanza);
-  let t = 0;
-  let togli: (() => void) | null = null;
-  const passo = (dt: number): boolean => {
-    t = Math.min(1, t + (dt * 1000) / durata);
-    const k = curva(t);
-    const x = da.x + (a.x - da.x) * k;
-    const y = da.y + (a.y - da.y) * k - arco * Math.sin(Math.PI * k);
-    clone.style.transform = trasformaClone(x, y, 1 - k, false);
-    if (parametri.dissolvenzaDa < 1 && k > parametri.dissolvenzaDa) {
-      clone.style.opacity = String(Math.max(0, 1 - (k - parametri.dissolvenzaDa) / (1 - parametri.dissolvenzaDa)));
-    }
-    if (t >= 1) {
-      clone.remove();
-      fine();
-      togli?.();
-      return false;
-    }
-    return true;
-  };
-  togli = ticker.add(passo, 'write');
+  vola(clone, { tipo, da, verso, ridotto: s.ridotto, allaFine: chiudi });
 }
 
 function iniziaSessione(opz: {
@@ -489,12 +474,12 @@ function concludiSessione(rilascio: boolean, senzaVolo = false): void {
   }
 
   let posato = false;
-  let arrivo: DOMRect | null = null;
+  let arrivo: string | null = null;
   if (rilascio) {
     const sotto = bersaglioSotto(s.x, s.y);
     if (s.tipo === 'gettone' && s.cosa !== null && sotto !== null) {
       posato = deponi(s.cosa, sotto.bersaglio).ok;
-      if (posato) arrivo = sotto.el.getBoundingClientRect();
+      if (posato) arrivo = arrivoPosa(s.cosa, sotto.bersaglio);
     } else if (s.tipo === 'riga' && s.riga !== null && sotto === null) {
       // Fuori da ogni scomparto: la riga si toglie. Su un altro giorno no:
       // per spostare un pane si toglie e si rimette.
@@ -505,7 +490,6 @@ function concludiSessione(rilascio: boolean, senzaVolo = false): void {
   cambiaSopra(s, null);
   impostaTrascinata(null);
 
-  const da = { x: s.scrittoX, y: s.scrittoY };
   const sblocca = (): void => s.origine.removeAttribute('data-mad-origine');
   if (senzaVolo || !s.origine.isConnected) {
     s.clone.remove();
@@ -513,17 +497,18 @@ function concludiSessione(rilascio: boolean, senzaVolo = false): void {
     return;
   }
   if (posato) {
-    // Messo: il clone si posa al centro del giorno (o, per una riga tolta, dove è) e si scioglie.
-    const w = s.clone.offsetWidth;
-    const h = s.clone.offsetHeight;
-    const a = arrivo === null ? da : { x: Math.round(arrivo.left + arrivo.width / 2 - w / 2), y: Math.round(arrivo.top + arrivo.height / 2 - h / 2) };
-    volaVia(s.clone, da, a, 'posa', s.ridotto, sblocca);
-    ticker.wake();
+    if (arrivo === null) {
+      // Riga tolta: niente da raggiungere, il clone sparisce dov'è.
+      s.clone.remove();
+      sblocca();
+      return;
+    }
+    // Il gettone resta al suo posto: il velo si toglie subito, il clone si scioglie nella riga.
+    sblocca();
+    lasciaVolare(s, 'posa', arrivo, () => undefined);
     return;
   }
-  const r = s.origine.getBoundingClientRect();
-  volaVia(s.clone, da, { x: Math.round(r.left), y: Math.round(r.top) }, 'torna', s.ridotto, sblocca);
-  ticker.wake();
+  lasciaVolare(s, 'torna', s.origine, sblocca);
 }
 
 /* --------------------------------------------- gesto sul gettone o maniglia */

@@ -9,9 +9,10 @@ export interface MetaModo {
   readonly modo: 1 | 2 | 5;
   /** Frequenza di bottega usata dal sito (Hz). */
   readonly hzBottega: number;
-  /** Frequenza della piastra piana del calcolo: solo documentazione, mai usata. */
-  readonly hzCalcolatoPiastraPiana: number;
-  readonly ordineCalcolo: number;
+  /** Modi calcolati che compongono la figura (ordine, Hz del modello, quota d'energia): solo documentazione. */
+  readonly composizione: ReadonlyArray<{ readonly ordine: number; readonly hz: number; readonly quota: number }>;
+  /** Distanza media (mm) tra le linee nodali spedite e i punti misurati da Jansson. */
+  readonly distanzaMediaMm: number;
   readonly topologia: TopologiaModo;
   /** Quattro cuscinetti (u, v) in [0, 1] sul rettangolo, sulle linee nodali. */
   readonly cuscinetti: ReadonlyArray<readonly [number, number]>;
@@ -20,7 +21,7 @@ export interface MetaModo {
 export interface MetaModi {
   readonly versione: number;
   readonly data: string;
-  readonly metodo: 'rayleigh-ritz' | 'a-mano';
+  readonly metodo: 'rayleigh-ritz' | 'rayleigh-ritz-tarato' | 'a-mano';
   readonly formato: FormatoModi;
   readonly griglia: { readonly nu: number; readonly nv: number };
   /** Rettangolo dei campi in mm: x centrata sulla giunta, y = 0 al bordo verso il riccio. */
@@ -31,13 +32,13 @@ export interface MetaModi {
   readonly modi: readonly [MetaModo, MetaModo, MetaModo];
   readonly anello: { readonly centro: readonly [number, number]; readonly apertoAlleC: { readonly bassi: boolean; readonly acuti: boolean } };
   readonly riposo: { readonly cuscinetti: ReadonlyArray<readonly [number, number]> };
-  readonly calcolati: ReadonlyArray<{ readonly ordine: number; readonly hz: number; readonly topologia: string }>;
+  readonly calcolati: ReadonlyArray<{ readonly ordine: number; readonly hz: number; readonly topologia: string; readonly parita: number }>;
 }
 
 export const MODI_META: MetaModi = /*JSON*/{
   "versione": 1,
   "data": "2026-10-03",
-  "metodo": "rayleigh-ritz",
+  "metodo": "rayleigh-ritz-tarato",
   "formato": "i8-96x168",
   "griglia": {
     "nu": 96,
@@ -49,7 +50,7 @@ export const MODI_META: MetaModi = /*JSON*/{
     "w": 208,
     "h": 356
   },
-  "contorno": "riserva",
+  "contorno": "svg",
   "parametri": {
     "ELGPa": 15,
     "ERGPa": 0.8,
@@ -60,89 +61,152 @@ export const MODI_META: MetaModi = /*JSON*/{
     "rapportoRigidezza": 18.8,
     "gradoPolinomi": 16,
     "funzioniBase": 153,
-    "catena": {
-      "xMm": -18.5,
-      "larghezzaMm": 5.5,
-      "y0Mm": 46,
-      "y1Mm": 316,
-      "altezzaCentroMm": 11,
-      "altezzaEstremiMm": 3
-    },
-    "bombatura": false
+    "catena": null,
+    "bombaturaMm": 15.5,
+    "taratura": {
+      "misure": {
+        "modo1": {
+          "yTraverso": 190
+        },
+        "modo2": {
+          "distanzaAlta": 140,
+          "distanzaBassa": 162,
+          "semidistanzaVita": 27,
+          "yVita": 158,
+          "esponente": 1.25
+        },
+        "modo5": {
+          "altoCentro": 69,
+          "altoBordo": 92,
+          "bassoCentro": 60,
+          "bassoBordo": 254
+        }
+      },
+      "base": 6,
+      "penalita": 0.01
+    }
   },
   "modi": [
     {
       "modo": 1,
       "hzBottega": 92,
-      "hzCalcolatoPiastraPiana": 220.1,
-      "ordineCalcolo": 1,
+      "composizione": [
+        {
+          "ordine": 1,
+          "hz": 268,
+          "quota": 1
+        }
+      ],
+      "distanzaMediaMm": 24.3,
       "topologia": "croce",
       "cuscinetti": [
         [
           0.4948,
-          0.0327
+          0.003
         ],
         [
           0.5052,
-          0.9732
+          0.997
         ],
         [
-          0.4948,
-          0.503
+          0.5052,
+          0.497
         ],
         [
-          0.4948,
-          0.7411
+          0.0781,
+          0.7351
         ]
       ]
     },
     {
       "modo": 2,
       "hzBottega": 168,
-      "hzCalcolatoPiastraPiana": 289.2,
-      "ordineCalcolo": 2,
+      "composizione": [
+        {
+          "ordine": 2,
+          "hz": 306,
+          "quota": 0.537
+        },
+        {
+          "ordine": 7,
+          "hz": 617,
+          "quota": 0.252
+        },
+        {
+          "ordine": 3,
+          "hz": 424,
+          "quota": 0.117
+        },
+        {
+          "ordine": 12,
+          "hz": 992,
+          "quota": 0.087
+        }
+      ],
+      "distanzaMediaMm": 4.6,
       "topologia": "parentesi",
       "cuscinetti": [
         [
-          0.7344,
-          0.0804
+          0.7969,
+          0.1042
         ],
         [
-          0.2656,
-          0.0804
+          0.2031,
+          0.1042
         ],
         [
-          0.776,
-          0.9256
+          0.849,
+          0.9018
         ],
         [
-          0.224,
-          0.9256
+          0.151,
+          0.9018
         ]
       ]
     },
     {
       "modo": 5,
       "hzBottega": 348,
-      "hzCalcolatoPiastraPiana": 494.9,
-      "ordineCalcolo": 5,
+      "composizione": [
+        {
+          "ordine": 5,
+          "hz": 516,
+          "quota": 0.661
+        },
+        {
+          "ordine": 3,
+          "hz": 424,
+          "quota": 0.324
+        },
+        {
+          "ordine": 10,
+          "hz": 874,
+          "quota": 0.012
+        },
+        {
+          "ordine": 2,
+          "hz": 306,
+          "quota": 0.001
+        }
+      ],
+      "distanzaMediaMm": 2,
       "topologia": "anello-aperto",
       "cuscinetti": [
         [
+          0.5885,
+          0.1756
+        ],
+        [
+          0.4115,
+          0.1756
+        ],
+        [
           0.5677,
-          0.1161
+          0.872
         ],
         [
           0.4323,
-          0.1161
-        ],
-        [
-          0.7135,
-          0.8661
-        ],
-        [
-          0.2865,
-          0.8661
+          0.872
         ]
       ]
     }
@@ -150,7 +214,7 @@ export const MODI_META: MetaModi = /*JSON*/{
   "anello": {
     "centro": [
       0.5,
-      0.6401
+      0.5776
     ],
     "apertoAlleC": {
       "bassi": true,
@@ -161,82 +225,130 @@ export const MODI_META: MetaModi = /*JSON*/{
     "cuscinetti": [
       [
         0.4948,
-        0.0327
+        0.003
       ],
       [
         0.5052,
-        0.9732
+        0.997
       ],
       [
-        0.4948,
-        0.503
+        0.5052,
+        0.497
       ],
       [
-        0.4948,
-        0.7411
+        0.0781,
+        0.7351
       ]
     ]
   },
   "calcolati": [
     {
       "ordine": 1,
-      "hz": 220.1,
-      "topologia": "croce"
+      "hz": 268.2,
+      "topologia": "croce",
+      "parita": -1
     },
     {
       "ordine": 2,
-      "hz": 289.2,
-      "topologia": "parentesi"
+      "hz": 305.8,
+      "topologia": "altro",
+      "parita": 1
     },
     {
       "ordine": 3,
-      "hz": 364.2,
-      "topologia": "altro"
+      "hz": 423.8,
+      "topologia": "altro",
+      "parita": 1
     },
     {
       "ordine": 4,
-      "hz": 453.5,
-      "topologia": "altro"
+      "hz": 432.1,
+      "topologia": "altro",
+      "parita": -1
     },
     {
       "ordine": 5,
-      "hz": 494.9,
-      "topologia": "anello"
+      "hz": 516.3,
+      "topologia": "altro",
+      "parita": 1
     },
     {
       "ordine": 6,
-      "hz": 512,
-      "topologia": "altro"
+      "hz": 535.8,
+      "topologia": "altro",
+      "parita": -1
     },
     {
       "ordine": 7,
-      "hz": 592.7,
-      "topologia": "altro"
+      "hz": 617,
+      "topologia": "altro",
+      "parita": 1
     },
     {
       "ordine": 8,
-      "hz": 649.3,
-      "topologia": "altro"
+      "hz": 739.9,
+      "topologia": "altro",
+      "parita": -1
     },
     {
       "ordine": 9,
-      "hz": 691.9,
-      "topologia": "altro"
+      "hz": 825.5,
+      "topologia": "altro",
+      "parita": -1
     },
     {
       "ordine": 10,
-      "hz": 759.3,
-      "topologia": "altro"
+      "hz": 873.8,
+      "topologia": "altro",
+      "parita": 1
     },
     {
       "ordine": 11,
-      "hz": 809.6,
-      "topologia": "altro"
+      "hz": 956.7,
+      "topologia": "altro",
+      "parita": -1
     },
     {
       "ordine": 12,
-      "hz": 937.3,
-      "topologia": "altro"
+      "hz": 991.9,
+      "topologia": "altro",
+      "parita": 1
+    },
+    {
+      "ordine": 13,
+      "hz": 1054.6,
+      "topologia": "altro",
+      "parita": 1
+    },
+    {
+      "ordine": 14,
+      "hz": 1176.5,
+      "topologia": "altro",
+      "parita": 1
+    },
+    {
+      "ordine": 15,
+      "hz": 1247.5,
+      "topologia": "altro",
+      "parita": -1
+    },
+    {
+      "ordine": 16,
+      "hz": 1318.2,
+      "topologia": "altro",
+      "parita": 1
+    },
+    {
+      "ordine": 17,
+      "hz": 1336.6,
+      "topologia": "altro",
+      "parita": -1
+    },
+    {
+      "ordine": 18,
+      "hz": 1430.9,
+      "topologia": "altro",
+      "parita": -1
     }
   ]
 }/*FINE*/ as MetaModi;
