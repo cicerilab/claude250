@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Concept 16 · EVIDENZIA, agenzia immobiliare | Ciceri Lab</title>
+    <meta
+      name="description"
+      content="Concept di Ciceri Lab: la pagina degli annunci di un’agenzia immobiliare di Pordenone, inventata. Segna fino a quattro case e il giro di sabato è pronto."
+    />
+    <meta name="theme-color" content="#E4DFD1" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!--
+      Solo app standalone (non si porta): fondo carta prima di React, così il
+      primo colore che si vede è già quello del foglio. Il resto lo fa
+      Evidenzia.tsx (fondo inline di html e body, rimesso allo smontaggio).
+    -->
+    <style>
+      html,
+      body {
+        margin: 0;
+        background-color: #e4dfd1;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
