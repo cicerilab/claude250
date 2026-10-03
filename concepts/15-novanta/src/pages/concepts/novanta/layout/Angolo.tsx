@@ -27,7 +27,7 @@
  * Tornando attivo, il corpo riparte dall'alto.
  */
 
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
 import { ANGOLI_TESTI, COMUNI } from '../content/testi';
 import { idAngolo, idTitolo } from '../core/ids';
 import Arco from '../dial/Arco';
@@ -65,14 +65,14 @@ const ugualeFetta = (a: FettaAngolo, b: FettaAngolo): boolean =>
   a.stato === b.stato && a.inerte === b.inerte && a.quadrante === b.quadrante;
 
 /** Stato di un angolo dallo store. */
-export function statoAngolo(gradi: Gradi, attivo: Gradi, precedente: Gradi | null): StatoAngolo {
+function statoAngolo(gradi: Gradi, attivo: Gradi, precedente: Gradi | null): StatoAngolo {
   if (gradi === attivo) return precedente === null ? 'attivo' : 'entra';
   if (gradi === precedente) return 'esce';
   return 'spento';
 }
 
 /** Tiene `data-continua` e la frase per il lettore di schermo allineati allo scroll del corpo. */
-function useContinuaSotto(corpo: React.RefObject<HTMLDivElement>, avviso: React.RefObject<HTMLParagraphElement>, attivo: boolean): void {
+function useContinuaSotto(corpo: RefObject<HTMLDivElement>, avviso: RefObject<HTMLParagraphElement>, attivo: boolean): void {
   useEffect(() => {
     const el = corpo.current;
     const sr = avviso.current;
