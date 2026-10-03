@@ -38,8 +38,11 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore, type ButtonHTMLAttributes, type HTMLAttributes, type RefObject } from 'react';
 import type { IdGiorno } from '../content/prezzi';
+import { ANNUNCI } from '../content/testi';
+import { annuncia } from '../core/annunci';
 import { ticker } from '../core/ticker';
-import { torna } from '../motion/easing';
+import { VOLI, type ParametriVolo } from '../motion/choreography';
+import { posa as curvaPosa, torna as curvaTorna, type Easing } from '../motion/easing';
 import { puoStare } from '../state/settimana';
 import {
   metti,
@@ -85,10 +88,6 @@ export const ATTESA_TRASCINA_TOUCH_MS = 250;
 export const ZONA_BORDO_PX = 48;
 /** Velocità massima dello scorrimento ai bordi (px/s). */
 const VELOCITA_BORDO = 900;
-/** Il clone rifiutato torna al suo posto in tanto (ux-architect §5.7). */
-export const RITORNO_MS = 320;
-/** Il clone posato su un giorno sparisce in tanto. */
-const POSA_MS = 160;
 /** Dopo un trascinamento, il clic gemello sul gettone è assorbito. */
 const CLIC_DOPO_TRASCINA_MS = 400;
 
@@ -346,24 +345,41 @@ function scriviSessione(): void {
 
 /* voli del clone dopo il rilascio (nel ticker, fase write) */
 
-function volaVia(clone: HTMLElement, da: { x: number; y: number }, a: { x: number; y: number } | null, ridotto: boolean, fine: () => void): void {
-  if (ridotto) {
+/** Durata di un volo per la distanza, coi parametri del motion-designer (VOLI). */
+function durataVolo(p: ParametriVolo, distanza: number): number {
+  return Math.max(p.min, Math.min(p.max, p.base + p.perPx * distanza));
+}
+
+/**
+ * Il clone, lasciato andare, vola da `da` ad `a` (angolo in alto a sinistra,
+ * px della finestra) e poi sparisce:
+ * - `torna` (rifiutato o annullato): dritto al posto del gettone, curva
+ *   `torna`, circa 320 ms, si rimette dritto;
+ * - `posa` (messo): un piccolo arco fino al giorno, curva `posa`, e si
+ *   scioglie nel giorno dal 62% del tragitto.
+ * Con reduced motion niente volo: il clone sparisce e il gettone riappare.
+ */
+function volaVia(clone: HTMLElement, da: { x: number; y: number }, a: { x: number; y: number }, tipo: 'torna' | 'posa', ridotto: boolean, fine: () => void): void {
+  if (ridotto || !Number.isFinite(da.x) || !Number.isFinite(da.y)) {
     clone.remove();
     fine();
     return;
   }
-  const durata = a === null ? POSA_MS : RITORNO_MS;
+  const parametri = VOLI[tipo];
+  const curva: Easing = tipo === 'torna' ? curvaTorna : curvaPosa;
+  const distanza = Math.hypot(a.x - da.x, a.y - da.y);
+  const durata = durataVolo(parametri, distanza);
+  const arco = Math.min(parametri.arcoMax, parametri.arcoPerPx * distanza);
   let t = 0;
   let togli: (() => void) | null = null;
   const passo = (dt: number): boolean => {
     t = Math.min(1, t + (dt * 1000) / durata);
-    if (a === null) {
-      // Posato: si appoggia (torna dritto) e sparisce sul giorno.
-      clone.style.transform = trasformaClone(da.x, da.y, 1 - t, false);
-      clone.style.opacity = String(1 - t);
-    } else {
-      const k = torna(t);
-      clone.style.transform = trasformaClone(da.x + (a.x - da.x) * k, da.y + (a.y - da.y) * k, 1 - k, false);
+    const k = curva(t);
+    const x = da.x + (a.x - da.x) * k;
+    const y = da.y + (a.y - da.y) * k - arco * Math.sin(Math.PI * k);
+    clone.style.transform = trasformaClone(x, y, 1 - k, false);
+    if (parametri.dissolvenzaDa < 1 && k > parametri.dissolvenzaDa) {
+      clone.style.opacity = String(Math.max(0, 1 - (k - parametri.dissolvenzaDa) / (1 - parametri.dissolvenzaDa)));
     }
     if (t >= 1) {
       clone.remove();
@@ -473,10 +489,12 @@ function concludiSessione(rilascio: boolean, senzaVolo = false): void {
   }
 
   let posato = false;
+  let arrivo: DOMRect | null = null;
   if (rilascio) {
     const sotto = bersaglioSotto(s.x, s.y);
     if (s.tipo === 'gettone' && s.cosa !== null && sotto !== null) {
       posato = deponi(s.cosa, sotto.bersaglio).ok;
+      if (posato) arrivo = sotto.el.getBoundingClientRect();
     } else if (s.tipo === 'riga' && s.riga !== null && sotto === null) {
       // Fuori da ogni scomparto: la riga si toglie. Su un altro giorno no:
       // per spostare un pane si toglie e si rimette.
@@ -495,11 +513,16 @@ function concludiSessione(rilascio: boolean, senzaVolo = false): void {
     return;
   }
   if (posato) {
-    volaVia(s.clone, da, null, s.ridotto, sblocca);
+    // Messo: il clone si posa al centro del giorno (o, per una riga tolta, dove è) e si scioglie.
+    const w = s.clone.offsetWidth;
+    const h = s.clone.offsetHeight;
+    const a = arrivo === null ? da : { x: Math.round(arrivo.left + arrivo.width / 2 - w / 2), y: Math.round(arrivo.top + arrivo.height / 2 - h / 2) };
+    volaVia(s.clone, da, a, 'posa', s.ridotto, sblocca);
+    ticker.wake();
     return;
   }
   const r = s.origine.getBoundingClientRect();
-  volaVia(s.clone, da, { x: Math.round(r.left), y: Math.round(r.top) }, s.ridotto, sblocca);
+  volaVia(s.clone, da, { x: Math.round(r.left), y: Math.round(r.top) }, 'torna', s.ridotto, sblocca);
   ticker.wake();
 }
 
@@ -785,8 +808,9 @@ export function useBersaglio(ref: RefObject<HTMLElement>, bersaglio: Bersaglio, 
       if (settimanaBloccata(store.get())) return;
       const c = store.get().inMano;
       if (c === null) {
-        // Niente in mano: si va a prendere un pane.
+        // Niente in mano: si va a prendere un pane (il fuoco va alla fila).
         e.preventDefault();
+        annuncia(ANNUNCI.prendiPrima);
         primaPresa()?.focus();
         return;
       }
