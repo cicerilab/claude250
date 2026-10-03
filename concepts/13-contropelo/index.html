@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Concept 13 · CONTROPELO, barberia a Pordenone | Ciceri Lab</title>
+    <meta
+      name="description"
+      content="Concept di Ciceri Lab: il sito di una barberia di Pordenone, inventata. Pulisci lo specchio appannato, leggi il listino e scrivi il tuo nome nella lista."
+    />
+    <meta name="theme-color" content="#171C1D" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!--
+      Fondo parete prima di React (solo app standalone, non si porta): stesso
+      byte di --ctp-parete in styles/tokens.css (art-director §6).
+      La prima foto (specchio 1) si precarica qui nello standalone
+      (tech-architect §9.2); nel sito basta fetchpriority="high" sull'<img>.
+    -->
+    <style>
+      html,
+      body {
+        margin: 0;
+        background-color: #171c1d;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

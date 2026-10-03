@@ -263,10 +263,10 @@ export function cssLinear(fn: Easing, campioni = 32, decimali = 4): string {
   return `linear(${punti.join(', ')})`;
 }
 
-/** Le curve come stringhe CSS. `affonda` e `risale` sono le bezier più vicine (errore < 0,03). */
+/** Le curve come stringhe CSS. `affonda` e `risale` sono le bezier più vicine (errore massimo 0,016 e 0,014, fit numerico). */
 export const BEZIER_CSS = {
-  affonda: 'cubic-bezier(0.3, 0.55, 0.25, 1)',
-  risale: 'cubic-bezier(0.32, 0.2, 0.25, 1)',
+  affonda: 'cubic-bezier(0.14, 0.02, 0.46, 1)',
+  risale: 'cubic-bezier(0.13, 0.02, 0.34, 1)',
   stende: 'cubic-bezier(0.25, 0.6, 0.35, 1)',
   posa: 'cubic-bezier(0.45, 0.05, 0.25, 1)',
   torna: 'cubic-bezier(0.2, 0.65, 0.3, 1)',
