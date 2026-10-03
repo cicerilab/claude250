@@ -328,7 +328,7 @@ export function evidenzia(id: IdAnnuncio, origine: Origine): EsitoEvidenzia {
     return 'pieno';
   }
   const segnati = [...s.segnati, id];
-  store.set({ segnati, ordine: s.ordine === null ? null : [...s.ordine, id], scarico: null, sparite: 0 });
+  store.set({ segnati, ordine: s.ordine === null ? null : [...s.ordine, id], scarico: null });
   annuncia(voceAggiunto(a, segnati.length));
   if (origine === 'gesto' || origine === 'bottone') vibra(SOGLIE_GESTO.vibrazioneMs);
   salva();

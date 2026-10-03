@@ -67,7 +67,7 @@ export const MODI_META: MetaModi = /*JSON*/{
     {
       "modo": 1,
       "hzBottega": 92,
-      "hzCalcolatoPiastraPiana": 220,
+      "hzCalcolatoPiastraPiana": 192,
       "ordineCalcolo": 1,
       "topologia": "croce",
       "cuscinetti": [
@@ -92,16 +92,16 @@ export const MODI_META: MetaModi = /*JSON*/{
     {
       "modo": 2,
       "hzBottega": 168,
-      "hzCalcolatoPiastraPiana": 289.2,
+      "hzCalcolatoPiastraPiana": 253.7,
       "ordineCalcolo": 2,
       "topologia": "parentesi",
       "cuscinetti": [
         [
-          0.7344,
+          0.724,
           0.0804
         ],
         [
-          0.2656,
+          0.276,
           0.0804
         ],
         [
@@ -117,25 +117,25 @@ export const MODI_META: MetaModi = /*JSON*/{
     {
       "modo": 5,
       "hzBottega": 348,
-      "hzCalcolatoPiastraPiana": 494.9,
+      "hzCalcolatoPiastraPiana": 430.5,
       "ordineCalcolo": 5,
       "topologia": "anello-aperto",
       "cuscinetti": [
         [
           0.5677,
-          0.1161
+          0.128
         ],
         [
           0.4323,
-          0.1161
+          0.128
         ],
         [
           0.7135,
-          0.8661
+          0.8601
         ],
         [
           0.2865,
-          0.8661
+          0.8601
         ]
       ]
     }
@@ -143,7 +143,7 @@ export const MODI_META: MetaModi = /*JSON*/{
   "anello": {
     "centro": [
       0.5,
-      0.6401
+      0.6141
     ],
     "apertoAlleC": {
       "bassi": true,
@@ -173,62 +173,62 @@ export const MODI_META: MetaModi = /*JSON*/{
   "calcolati": [
     {
       "ordine": 1,
-      "hz": 220,
+      "hz": 192,
       "topologia": "croce"
     },
     {
       "ordine": 2,
-      "hz": 289.2,
+      "hz": 253.7,
       "topologia": "parentesi"
     },
     {
       "ordine": 3,
-      "hz": 364.2,
+      "hz": 323.4,
       "topologia": "altro"
     },
     {
       "ordine": 4,
-      "hz": 453.5,
+      "hz": 417.4,
       "topologia": "altro"
     },
     {
       "ordine": 5,
-      "hz": 494.9,
+      "hz": 430.5,
       "topologia": "anello"
     },
     {
       "ordine": 6,
-      "hz": 512,
+      "hz": 456.9,
       "topologia": "altro"
     },
     {
       "ordine": 7,
-      "hz": 592.6,
+      "hz": 537.7,
       "topologia": "altro"
     },
     {
       "ordine": 8,
-      "hz": 649.3,
+      "hz": 588.8,
       "topologia": "altro"
     },
     {
       "ordine": 9,
-      "hz": 691.9,
-      "topologia": "altro"
+      "hz": 634.1,
+      "topologia": "anello"
     },
     {
       "ordine": 10,
-      "hz": 759.2,
+      "hz": 673.1,
       "topologia": "altro"
     },
     {
       "ordine": 11,
-      "hz": 809.6,
+      "hz": 719.3,
       "topologia": "altro"
     },
     {
       "ordine": 12,
-      "hz": 937.3,
+      "hz": 881.2,
       "topologia": "altro"
     }
   ]
