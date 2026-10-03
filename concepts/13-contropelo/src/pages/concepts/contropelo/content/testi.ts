@@ -196,9 +196,25 @@ export const PARETE = {
   h2Sr: (i: Indice) => `, ${BARBIERI[i].poltrona}`,
   /** Bordo dello specchio vicino (bottone fuori dal Tab su L). */
   bordoAria: (i: Indice) => `Specchio di ${BARBIERI[i].nome}`,
-  /** La foto del riflesso è decorativa: alt vuoto (ux-architect §8.1). */
+  /**
+   * La foto del riflesso resta decorativa: alt vuoto (ux-architect §8.1). Sta
+   * dietro al vapore e non porta informazione; cosa mostra lo dicono a parole
+   * `RIFLESSI[i].descrizione` e `INFORMAZIONI.riflesso` nel pannello.
+   */
   riflessoAlt: '',
 } as const;
+
+/**
+ * Le tre foto del riflesso, a parole (Figtree, pannello Informazioni). Una per
+ * specchio, nell'ordine di `FOTO_SPECCHI` di assets/foto/index.ts: tre
+ * barberie vere di Wikimedia Commons, NON il salone di Contropelo. Se il
+ * photo-editor cambia una foto, si cambia anche la sua riga qui.
+ */
+export const RIFLESSI = [
+  { descrizione: 'Specchio di Mattia: una barberia di Lucca, con le poltrone in fila davanti agli specchi.' },
+  { descrizione: 'Specchio di Denis: una rasatura col rasoio a mano libera, ad Antigua, in Guatemala.' },
+  { descrizione: 'Specchio di Samir: una barberia di Porto, con la vetrina sulla strada riflessa nello specchio.' },
+] as const;
 
 /* ================================================================== fascia alta */
 
@@ -554,11 +570,29 @@ export const INFORMAZIONI = {
   ritardo: `Arriva ${REGOLE_NUMERI.arrivoPrimaMinuti} minuti prima. Dopo ${REGOLE_NUMERI.ritardoMinuti} minuti di ritardo prendiamo chi aspetta, e ti diciamo noi quando c'è il primo buco.`,
   ferie: 'Ferie: due settimane a metà agosto.',
   /** Cosa c'è dietro al vetro (le foto hanno alt vuoto). */
-  riflesso: 'Dietro al vetro c\'è un salone vero, riflesso come in uno specchio: le poltrone in fila, la mensola, la porta sulla via.',
+  riflesso:
+    "Dietro al vetro ci sono tre barberie vere, riflesse come in uno specchio: le poltrone in fila, una barba fatta col rasoio, la vetrina sulla strada. Il salone di Contropelo non c'è, perché non esiste.",
   fotoTitolo: 'Foto',
-  /** Una riga per foto, con i dati di assets/foto/index.ts. Il nome dell'autore è il testo del link. */
-  foto: (autore: string) => ({ prima: 'Foto di ', link: autore, dopo: ', su Unsplash.' }),
+  /**
+   * Credito di una foto (licenze CC BY-SA: autore, licenza, fonte, modifiche).
+   * Riceve l'elemento di `FOTO_SPECCHI` (assets/foto/index.ts) e il suo indice:
+   * nessun dato della foto è copiato qui. Il componente rende
+   * `{prima}<a href={f.url}>{autore}</a>{mezzo}<a href={f.licenzaUrl}>{licenza}</a>{dopo}`.
+   * Esempio: "Specchio di Mattia: una barberia di Lucca, con le poltrone in
+   * fila davanti agli specchi. Foto di Palickap, CC BY-SA 4.0, da Wikimedia
+   * Commons, modificata: specchiata, desaturata, luci abbassate, sfocata."
+   */
+  foto: (f: { autore: string; licenza: string; fonte: string; modifiche: string }, i: Indice) => ({
+    prima: `${RIFLESSI[i].descrizione} Foto di `,
+    autore: f.autore,
+    mezzo: ', ',
+    licenza: f.licenza,
+    dopo: `, da ${f.fonte}, modificata: ${f.modifiche}.`,
+  }),
+  /** In `.ctp-sr` dentro i due link del credito (si aprono in una nuova scheda). */
   fotoLinkSr: ', si apre in una nuova scheda',
+  fotoAutoreAria: (autore: string) => `Foto di ${autore} su Wikimedia Commons, si apre in una nuova scheda`,
+  fotoLicenzaAria: (licenza: string) => `Licenza ${licenza}, si apre in una nuova scheda`,
   font: 'Caratteri: Limelight, Mansalva e Figtree, da Google Fonts.',
   icone: 'Icone: Phosphor, licenza MIT.',
   conceptDi: 'Un concept di Ciceri Lab',
@@ -608,6 +642,7 @@ export const TESTI = {
   link: LINK,
   barbieri: BARBIERI,
   parete: PARETE,
+  riflessi: RIFLESSI,
   fascia: FASCIA,
   salti: SALTI,
   vetroListino: VETRO_LISTINO,

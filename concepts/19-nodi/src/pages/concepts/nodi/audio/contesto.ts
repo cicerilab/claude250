@@ -4,9 +4,7 @@
  * Il contesto lo crea interaction/suono.ts dentro il gesto e lo consegna con
  * `usaContesto`. Qui si tiene il conto di chi suona (altoparlante, nota
  * d'esempio): quando nessuno suona da 2 s il contesto si sospende, così il
- * processo audio del sistema non resta acceso per niente. Un'uscita comune
- * con un limitatore leggero garantisce che, anche sommando altoparlante e
- * nota, il volume non superi mai quello voluto.
+ * processo audio del sistema non resta acceso per niente.
  */
 
 /** Guadagno massimo di tutto quello che esce (circa -28 dBFS, CD §4.3). */
@@ -33,23 +31,19 @@ export function contesto(): AudioContext | null {
 }
 
 /**
- * Nodo d'uscita comune: guadagno 1 e un compressore usato come limitatore
- * (soglia -30 dB, rapporto 20): somma di altoparlante e nota mai oltre.
+ * Nodo d'uscita comune, guadagno 1. Niente compressore come limitatore: il
+ * DynamicsCompressorNode di Web Audio aggiunge da solo un guadagno di
+ * compensazione che alzerebbe i suoni bassi. Il tetto lo garantiscono le
+ * sorgenti: ognuna sta sotto GUADAGNO_MAX e l'altoparlante va a zero mentre
+ * suona la nota d'esempio (ux §6.1 V4), quindi non si sommano mai.
  */
 export function uscita(): AudioNode | null {
   const c = contesto();
   if (c === null) return null;
   if (uscitaNodo === null) {
-    const limite = c.createDynamicsCompressor();
-    limite.threshold.value = -30;
-    limite.knee.value = 0;
-    limite.ratio.value = 20;
-    limite.attack.value = 0.003;
-    limite.release.value = 0.12;
     const g = c.createGain();
     g.gain.value = 1;
-    g.connect(limite);
-    limite.connect(c.destination);
+    g.connect(c.destination);
     uscitaNodo = g;
   }
   return uscitaNodo;
