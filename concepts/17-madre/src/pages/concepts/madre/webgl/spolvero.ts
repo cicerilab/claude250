@@ -143,8 +143,8 @@ function alveoli(caso: () => number): Float32Array {
     const orlo = Math.exp(-(((t - 1.05) / 0.25) ** 2)) * 0.35;
     return amp * (buco + orlo);
   };
-  for (let k = 0; k < 12; k++) {
-    timbra(caso() * L, caso() * L, 1.4 + 1.8 * caso(), cratere(0.42 + 0.2 * caso()));
+  for (let k = 0; k < 6; k++) {
+    timbra(caso() * L, caso() * L, 1.3 + 1.4 * caso(), cratere(0.36 + 0.16 * caso()));
   }
   for (let i = 0; i < h.length; i++) h[i] = Math.max(0, Math.min(1, 0.5 + (h[i] ?? 0)));
   return h;

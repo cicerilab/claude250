@@ -23,7 +23,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gramSchmidt, jacobi, legendre } from './algebra.mjs';
-import { costruisciMaschera, leggiTavola } from './contorno.mjs';
+import { costruisciMaschera, dentro, leggiTavola } from './contorno.mjs';
 import { scriviPng, scriviTavolaComparata } from './controllo-nodi.mjs';
 
 const QUI = dirname(fileURLToPath(import.meta.url));
@@ -59,6 +59,20 @@ const BOMBATURA_MM = opzione('--bombatura', 15.5);
  * centrata sotto il piede dei bassi del ponticello.
  */
 const CATENA = { xMm: -18.5, larghezzaMm: 5.5, y0Mm: 46, y1Mm: 316, altezzaCentroMm: 11, altezzaEstremiMm: 3 };
+
+/** Quante forme calcolate (della parità giusta) entrano nella taratura, e penalità sui modi alti. */
+const BASE_TARATURA = opzione('--base', 6);
+const PENALITA = opzione('--penalita', 0.002);
+
+/**
+ * Linee nodali misurate da Jansson, fig. 5.17 (media di 14 tavole), riga in
+ * alto: tavola armonica. Le quote sono in mm sul contorno 4/4 di 356 mm.
+ */
+const MISURE_JANSSON = {
+  modo1: { yTraverso: 190 },
+  modo2: { distanzaAlta: 140, distanzaBassa: 162, semidistanzaVita: 27, yVita: 158, esponente: 1.25 },
+  modo5: { altoCentro: 69, altoBordo: 92, bassoCentro: 60, bassoBordo: 254 },
+};
 
 // Griglia di integrazione (2 mm circa) e griglia d'uscita (formato §8.2 del tech-architect).
 const NU_INT = opzione('--nu', 84), NV_INT = Math.round(NU_INT * 1.712);
@@ -517,8 +531,8 @@ function quotaPiana(w) {
   const spiegata = c[0] * sw + c[1] * sxw + c[2] * syw;
   return spiegata / sww;
 }
-const SOGLIA_PIANO = opzione('--soglia-piano', 0.8);
-for (let m = 0; m < nTot && elastici.length < 12; m++) {
+const SOGLIA_PIANO = opzione('--soglia-piano', 0.5);
+for (let m = 0; m < nTot && elastici.length < 18; m++) {
   if (freq[m] < 5) continue;
   const prova = valutaSuGriglia(coefficientiModo(m), NU_OUT, NV_OUT);
   const q = quotaPiana(prova);
@@ -528,34 +542,193 @@ for (let m = 0; m < nTot && elastici.length < 12; m++) {
 }
 
 const confronti = [];
-/** @type {Record<string, { m: number, w: Float64Array, hz: number, t: ReturnType<typeof topologia> }>} */
-const trovati = {};
+/** @type {Array<{ ordine: number, m: number, hz: number, w: Float64Array, t: ReturnType<typeof topologia> }>} */
+const calcolati = [];
 const elenco = [];
 for (const [ordine, m] of elastici.entries()) {
   const w = normalizza(valutaSuGriglia(coefficientiModo(m), NU_OUT, NV_OUT), out.maschera);
   const t = topologia(w, out.maschera, NU_OUT, NV_OUT);
-  elenco.push({ ordine: ordine + 1, hz: Math.round(freq[m] * 10) / 10, ...t });
+  calcolati.push({ ordine: ordine + 1, m, hz: freq[m], w, t });
+  elenco.push({ ordine: ordine + 1, hz: Math.round(freq[m] * 10) / 10, topologia: t.nome, parita: Math.round(t.parita * 100) / 100 });
   console.log(`modo elastico ${ordine + 1}: ${freq[m].toFixed(1)} Hz  ${t.nome.padEnd(9)} parità ${t.parita.toFixed(2)} asse ${t.asse} [${t.zeriAsse.join(' ')}] lato ${t.lato} alte ${t.spalleAlte} vita ${t.vita} basse ${t.spalleBasse} larghezze ${t.larghezze.join('/')}`);
-  scriviPng(`calcolato-${String(ordine + 1).padStart(2, '0')}-${t.nome}.png`, { campo: w, maschera: out.maschera, nu: NU_OUT, nv: NV_OUT, scala: 3 });
-  if (t.nome !== 'altro' && !trovati[t.nome]) trovati[t.nome] = { m, w, hz: freq[m], t };
-  confronti.push({ campo: w, maschera: out.maschera, nu: NU_OUT, nv: NV_OUT, scala: 2 });
+  if (ordine < 12) {
+    scriviPng(`calcolato-${String(ordine + 1).padStart(2, '0')}-${t.nome}.png`, { campo: w, maschera: out.maschera, nu: NU_OUT, nv: NV_OUT, scala: 3 });
+    confronti.push({ campo: w, maschera: out.maschera, nu: NU_OUT, nv: NV_OUT, scala: 2 });
+  }
 }
 scriviTavolaComparata('calcolati-tutti.png', confronti);
 
-for (const nome of ['croce', 'parentesi', 'anello']) {
-  if (!trovati[nome]) throw new Error(`topologia "${nome}" non trovata nei primi 12 modi: rivedi i parametri o usa il piano B`);
+// ---------------------------------------------------------------------------
+// Taratura sulle misure (Jansson fig. 5.17, tavole vere, bombate e graduate).
+// Il modello è una piastra bombata ideale: le sue forme proprie hanno le
+// topologie giuste ma le linee non cadono esattamente dove cadono nelle
+// tavole misurate (spessori graduati, bombatura vera, catena). Ogni figura
+// spedita è quindi una COMBINAZIONE dei modi calcolati con la stessa parità,
+// scelta perché le linee nodali passino per i punti misurati da Jansson
+// (minimi quadrati con norma unitaria e penalità sui modi alti). Il doc
+// riporta quanto pesa il modo calcolato principale in ogni figura.
+
+/** semilarghezza del contorno (senza effe) alla quota y, in mm */
+function semilarghezzaA(/** @type {number} */ ymm) {
+  let b = 0;
+  for (let x = 0; x <= Wmm / 2; x += 0.25) if (dentro(tavola.contorno, x, ymm) || dentro(tavola.contorno, -x, ymm)) b = x;
+  return b;
 }
-const aperto = anelloAperto(trovati.anello.w, out.maschera, NU_OUT, NV_OUT);
-console.log(`anello aperto alle C: bassi ${aperto.bassi}, acuti ${aperto.acuti}`);
+/** quota y (mm) del contorno con semilarghezza `x` cercando dal lato `daY` verso `versoY` */
+function yBordoA(/** @type {number} */ x, /** @type {number} */ daY, /** @type {number} */ versoY) {
+  const passo = versoY > daY ? 0.25 : -0.25;
+  for (let y = daY; passo > 0 ? y <= versoY : y >= versoY; y += passo) if (semilarghezzaA(y) >= x) return y;
+  return versoY;
+}
 
-// segno: centro della tavola positivo (solo convenzione)
+/** @param {Float64Array} w @param {number} xmm @param {number} ymm */
+function campionaMm(w, xmm, ymm) {
+  const u = (xmm - x0) / Wmm * NU_OUT - 0.5, v = (ymm - y0) / Hmm * NV_OUT - 0.5;
+  const i = Math.max(0, Math.min(NU_OUT - 2, Math.floor(u))), j = Math.max(0, Math.min(NV_OUT - 2, Math.floor(v)));
+  const fx = u - i, fy = v - j;
+  const a = w[j * NU_OUT + i], b = w[j * NU_OUT + i + 1], c = w[(j + 1) * NU_OUT + i], d = w[(j + 1) * NU_OUT + i + 1];
+  return (a * (1 - fx) + b * fx) * (1 - fy) + (c * (1 - fx) + d * fx) * fy;
+}
+
+/** Linee misurate (mm, x dalla giunta, y dal bordo verso il riccio) per i tre modi. */
+function bersagli() {
+  const L = Hmm;
+  /** @type {Record<number, Array<[number, number]>>} */
+  const t = { 1: [], 2: [], 5: [] };
+  // Modo 1: linea di traverso circa 10 mm sotto gli angoli bassi delle C (all'altezza degli occhi bassi delle effe).
+  const yTrav = MISURE_JANSSON.modo1.yTraverso;
+  for (let x = 8; x < semilarghezzaA(yTrav) - 4; x += 6) { t[1].push([x, yTrav]); t[1].push([-x, yTrav]); }
+  // Modo 2: due parentesi )( dagli spigoli alti (140 mm tra le due) agli spigoli bassi (162 mm),
+  // che si avvicinano tra le effe passando per gli occhi alti senza toccarsi.
+  const m2 = MISURE_JANSSON.modo2;
+  const yt = yBordoA(m2.distanzaAlta / 2, 0, L / 2), yb = yBordoA(m2.distanzaBassa / 2, L, L / 2);
+  const xt = m2.distanzaAlta / 2, xb = m2.distanzaBassa / 2, xw = m2.semidistanzaVita, yw = m2.yVita;
+  for (let y = yt + 4; y < yb - 4; y += 6) {
+    const x = y < yw ? xw + (xt - xw) * Math.pow((yw - y) / (yw - yt), m2.esponente) : xw + (xb - xw) * Math.pow((y - yw) / (yb - yw), m2.esponente);
+    if (integ.dentroTavola(x, y)) { t[2].push([x, y]); t[2].push([-x, y]); }
+  }
+  // Modo 5: arco alto (69 mm dal bordo alto sulla giunta, al bordo all'altezza degli spigoli alti),
+  // arco basso (60 mm dal bordo basso sulla giunta, al bordo sopra gli spigoli bassi); aperto alle C.
+  const m5 = MISURE_JANSSON.modo5;
+  const yAc = m5.altoCentro, yAb = m5.altoBordo, yBc = L - m5.bassoCentro, yBb = m5.bassoBordo;
+  const xeA = semilarghezzaA(yAb), xeB = semilarghezzaA(yBb);
+  for (let x = 0; x < xeA - 3; x += 5) { const y = yAc + (yAb - yAc) * (x / xeA) ** 2; t[5].push([x, y]); if (x > 0) t[5].push([-x, y]); }
+  for (let x = 0; x < xeB - 3; x += 5) { const y = yBc + (yBb - yBc) * (x / xeB) ** 2; t[5].push([x, y]); if (x > 0) t[5].push([-x, y]); }
+  return t;
+}
+
+/**
+ * Combinazione dei modi calcolati di parità `segnoParita` che annulla w sui
+ * punti misurati. Restituisce il campo normalizzato e i pesi.
+ * @param {Array<[number, number]>} punti
+ * @param {1 | -1} segnoParita
+ */
+function combina(punti, segnoParita) {
+  const base = calcolati.filter((c) => c.t.parita * segnoParita > 0.9).slice(0, BASE_TARATURA);
+  const K = base.length;
+  const m = out.maschera;
+  // campi a norma quadratica media 1 sulla tavola
+  const campi = base.map((c) => {
+    let s = 0, q = 0;
+    for (let k = 0; k < c.w.length; k++) if (m[k]) { s += c.w[k] * c.w[k]; q++; }
+    const f = 1 / Math.sqrt(s / q);
+    return c.w.map((v) => v * f);
+  });
+  const B = new Float64Array(K * K), A = new Float64Array(K * K);
+  let q = 0;
+  for (let k = 0; k < m.length; k++) if (m[k]) q++;
+  for (let a = 0; a < K; a++) for (let b = a; b < K; b++) {
+    let s = 0;
+    for (let k = 0; k < m.length; k++) if (m[k]) s += campi[a][k] * campi[b][k];
+    B[a * K + b] = B[b * K + a] = s / q;
+    let r = 0;
+    for (const [x, y] of punti) r += campionaMm(campi[a], x, y) * campionaMm(campi[b], x, y);
+    A[a * K + b] = A[b * K + a] = r / punti.length;
+  }
+  const f0 = base[0].hz;
+  for (let a = 0; a < K; a++) A[a * K + a] += PENALITA * ((base[a].hz / f0) ** 2 - 1);
+  // min c'Ac con c'Bc = 1: B^(-1/2) A B^(-1/2)
+  const eb = jacobi(B, K);
+  const Bm = new Float64Array(K * K);
+  for (let i = 0; i < K; i++) for (let j = 0; j < K; j++) {
+    let s = 0;
+    for (let r = 0; r < K; r++) s += eb.vettori[i * K + r] * eb.vettori[j * K + r] / Math.sqrt(Math.max(eb.valori[r], 1e-12));
+    Bm[i * K + j] = s;
+  }
+  const C = new Float64Array(K * K);
+  for (let i = 0; i < K; i++) for (let j = 0; j < K; j++) {
+    let s = 0;
+    for (let r = 0; r < K; r++) for (let t2 = 0; t2 < K; t2++) s += Bm[i * K + r] * A[r * K + t2] * Bm[t2 * K + j];
+    C[i * K + j] = s;
+  }
+  const ec = jacobi(C, K);
+  const y = Array.from({ length: K }, (_, r) => ec.vettori[r * K + 0]);
+  const c = Array.from({ length: K }, (_, i) => y.reduce((s, yr, r) => s + Bm[i * K + r] * yr, 0));
+  const w = new Float64Array(m.length);
+  for (let a = 0; a < K; a++) for (let k = 0; k < w.length; k++) w[k] += c[a] * campi[a][k];
+  // quota di energia per modo (i campi sono quasi ortogonali: B ≈ I)
+  const tot = c.reduce((s, v) => s + v * v, 0);
+  const pesi = base.map((b, a) => ({ ordine: b.ordine, hz: Math.round(b.hz), quota: Math.round((c[a] * c[a]) / tot * 1000) / 1000 }))
+    .sort((p1, p2) => p2.quota - p1.quota);
+  // residuo: distanza media (mm) dei punti misurati dalla linea nodale ottenuta
+  normalizza(w, m);
+  let distTot = 0;
+  for (const [x, y] of punti) {
+    let best = 30;
+    for (let r = 0.5; r < 30 && best === 30; r += 0.5) {
+      for (let ang = 0; ang < 360; ang += 15) {
+        const xx = x + r * Math.cos(ang * Math.PI / 180), yy = y + r * Math.sin(ang * Math.PI / 180);
+        if (Math.sign(campionaMm(w, xx, yy)) !== Math.sign(campionaMm(w, x, y))) { best = r; break; }
+      }
+    }
+    distTot += Math.abs(campionaMm(w, x, y)) < 0.01 ? 0 : best;
+  }
+  return { w, pesi, distanzaMediaMm: Math.round((distTot / punti.length) * 10) / 10 };
+}
+
+const B5 = bersagli();
+const tarati = {
+  1: combina(B5[1], -1),
+  2: combina(B5[2], 1),
+  5: combina(B5[5], 1),
+};
+for (const [modo, r] of Object.entries(tarati)) {
+  console.log(`modo ${modo}: distanza media dalle linee misurate ${r.distanzaMediaMm} mm; pesi ${r.pesi.slice(0, 4).map((p) => `${p.ordine}°(${p.hz} Hz) ${(p.quota * 100).toFixed(1)}%`).join(', ')}`);
+}
+
+// segno: centro della tavola positivo per i simmetrici, quarto in alto a destra positivo per la croce (solo convenzione)
 const kc = Math.floor(NV_OUT / 2) * NU_OUT + NU_OUT / 2;
-for (const v of Object.values(trovati)) if (v.w[kc] < 0) for (let k = 0; k < v.w.length; k++) v.w[k] = -v.w[k];
+for (const modo of [2, 5]) { const w = tarati[modo].w; if (w[kc] < 0) for (let k = 0; k < w.length; k++) w[k] = -w[k]; }
+{ const w = tarati[1].w; const kq = Math.floor(NV_OUT * 0.25) * NU_OUT + Math.floor(NU_OUT * 0.7); if (w[kq] < 0) for (let k = 0; k < w.length; k++) w[k] = -w[k]; }
 
+scriviTavolaComparata('tarati-1-2-5.png', [1, 2, 5].map((modo) => ({
+  campo: tarati[/** @type {1|2|5} */ (modo)].w, maschera: out.maschera, nu: NU_OUT, nv: NV_OUT, scala: 3,
+  cuscinetti: B5[modo].map(([x, y]) => /** @type {[number, number]} */ ([(x - x0) / Wmm, (y - y0) / Hmm])),
+})));
+const topo = {
+  1: topologia(tarati[1].w, out.maschera, NU_OUT, NV_OUT),
+  2: topologia(tarati[2].w, out.maschera, NU_OUT, NV_OUT),
+  5: topologia(tarati[5].w, out.maschera, NU_OUT, NV_OUT),
+};
+const attese = { 1: 'croce', 2: 'parentesi', 5: 'anello' };
+for (const modo of [1, 2, 5]) {
+  const t = topo[/** @type {1|2|5} */ (modo)];
+  console.log(`figura spedita modo ${modo}: ${t.nome} (asse [${t.zeriAsse.join(' ')}], larghezze ${t.larghezze.join('/')}, vita ${t.vita})`);
+  if (t.nome !== attese[/** @type {1|2|5} */ (modo)]) throw new Error(`la figura del modo ${modo} non ha la topologia attesa (${attese[/** @type {1|2|5} */ (modo)]})`);
+}
+const aperto = anelloAperto(tarati[5].w, out.maschera, NU_OUT, NV_OUT);
+console.log(`anello aperto alle C: bassi ${aperto.bassi}, acuti ${aperto.acuti}`);
+if (!aperto.bassi && !aperto.acuti) throw new Error('il modo 5 risulta chiuso alle C: nella tavola deve aprirsi (Jansson p. 5.21)');
+
+const trovati = {
+  croce: { m: tarati[1].pesi[0].ordine, w: tarati[1].w, hz: 0, t: topo[1] },
+  parentesi: { m: tarati[2].pesi[0].ordine, w: tarati[2].w, hz: 0, t: topo[2] },
+  anello: { m: tarati[5].pesi[0].ordine, w: tarati[5].w, hz: 0, t: topo[5] },
+};
 const scelta = [
-  { modo: 1, hzBottega: 92, ...trovati.croce, simm: false },
-  { modo: 2, hzBottega: 168, ...trovati.parentesi, simm: true },
-  { modo: 5, hzBottega: 348, ...trovati.anello, simm: true },
+  { modo: 1, hzBottega: 92, ...trovati.croce, simm: false, taratura: tarati[1] },
+  { modo: 2, hzBottega: 168, ...trovati.parentesi, simm: true, taratura: tarati[2] },
+  { modo: 5, hzBottega: 348, ...trovati.anello, simm: true, taratura: tarati[5] },
 ];
 
 // centro dell'anello: baricentro della zona interna (stesso segno del centro, |w| > 0,3)
@@ -587,8 +760,8 @@ const modiMeta = scelta.map((s) => {
   return {
     modo: s.modo,
     hzBottega: s.hzBottega,
-    hzCalcolatoPiastraPiana: Math.round(s.hz * 10) / 10,
-    ordineCalcolo: elastici.indexOf(s.m) + 1,
+    composizione: s.taratura.pesi.slice(0, 4),
+    distanzaMediaMm: s.taratura.distanzaMediaMm,
     topologia: s.t.nome === 'anello' ? 'anello-aperto' : s.t.nome,
     cuscinetti: cus,
   };
@@ -602,7 +775,7 @@ scriviTavolaComparata('scelti-modi-1-2-5.png', scelta.map((s, q) => {
 const meta = {
   versione: 1,
   data: new Date().toISOString().slice(0, 10),
-  metodo: 'rayleigh-ritz',
+  metodo: 'rayleigh-ritz-tarato',
   formato: 'i8-96x168',
   griglia: { nu: NU_OUT, nv: NV_OUT },
   rettangoloMm: { x0: arrot(x0), y0: arrot(y0), w: arrot(Wmm), h: arrot(Hmm) },
@@ -618,12 +791,13 @@ const meta = {
     gradoPolinomi: GRADO,
     funzioniBase: n,
     catena: CON_CATENA ? CATENA : null,
-    bombatura: false,
+    bombaturaMm: BOMBATURA_MM,
+    taratura: { misure: MISURE_JANSSON, base: BASE_TARATURA, penalita: PENALITA },
   },
   modi: modiMeta,
   anello: { centro: centroAnello, apertoAlleC: aperto },
   riposo: { cuscinetti: modiMeta[0].cuscinetti },
-  calcolati: elenco.map((e) => ({ ordine: e.ordine, hz: e.hz, topologia: e.nome })),
+  calcolati: elenco,
 };
 
 const ts = `// File GENERATO da scripts/modi/calcola-modi.mjs (${meta.data}). Non modificare a mano:
@@ -637,9 +811,10 @@ export interface MetaModo {
   readonly modo: 1 | 2 | 5;
   /** Frequenza di bottega usata dal sito (Hz). */
   readonly hzBottega: number;
-  /** Frequenza della piastra piana del calcolo: solo documentazione, mai usata. */
-  readonly hzCalcolatoPiastraPiana: number;
-  readonly ordineCalcolo: number;
+  /** Modi calcolati che compongono la figura (ordine, Hz del modello, quota d'energia): solo documentazione. */
+  readonly composizione: ReadonlyArray<{ readonly ordine: number; readonly hz: number; readonly quota: number }>;
+  /** Distanza media (mm) tra le linee nodali spedite e i punti misurati da Jansson. */
+  readonly distanzaMediaMm: number;
   readonly topologia: TopologiaModo;
   /** Quattro cuscinetti (u, v) in [0, 1] sul rettangolo, sulle linee nodali. */
   readonly cuscinetti: ReadonlyArray<readonly [number, number]>;
@@ -648,7 +823,7 @@ export interface MetaModo {
 export interface MetaModi {
   readonly versione: number;
   readonly data: string;
-  readonly metodo: 'rayleigh-ritz' | 'a-mano';
+  readonly metodo: 'rayleigh-ritz' | 'rayleigh-ritz-tarato' | 'a-mano';
   readonly formato: FormatoModi;
   readonly griglia: { readonly nu: number; readonly nv: number };
   /** Rettangolo dei campi in mm: x centrata sulla giunta, y = 0 al bordo verso il riccio. */
@@ -659,7 +834,7 @@ export interface MetaModi {
   readonly modi: readonly [MetaModo, MetaModo, MetaModo];
   readonly anello: { readonly centro: readonly [number, number]; readonly apertoAlleC: { readonly bassi: boolean; readonly acuti: boolean } };
   readonly riposo: { readonly cuscinetti: ReadonlyArray<readonly [number, number]> };
-  readonly calcolati: ReadonlyArray<{ readonly ordine: number; readonly hz: number; readonly topologia: string }>;
+  readonly calcolati: ReadonlyArray<{ readonly ordine: number; readonly hz: number; readonly topologia: string; readonly parita: number }>;
 }
 
 export const MODI_META: MetaModi = /*JSON*/${JSON.stringify(meta, null, 2)}/*FINE*/ as MetaModi;

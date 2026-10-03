@@ -1,0 +1,302 @@
+/*
+ * SOTTOPELLE · design tokens (art-director)
+ *
+ * Solo variabili --stp-* su .stp-root, i @font-face di ripiego e i gradini
+ * della parete. Nessuna regola di componente: bottone rosso, comandi, campi,
+ * isole e materiali d'inchiostro stanno in componenti.css; la resa DOM delle
+ * foto senza WebGL in fallback.css; la geometria degli strati in layout.css
+ * (scaffold); tempi ed easing in motion/motion.css (motion-designer).
+ * Specchio numerico per JS e GL: tokens.ts. Contrasti misurati con script:
+ * docs/art-director.md §2.
+ *
+ * Tema unico scuro, bloccato (il muro dello studio): nessuna variante chiara,
+ * nessun prefers-color-scheme.
+ *
+ * Tre gradini, gli stessi del modulo della parete (tokens.ts MODULO):
+ *   stretto  fino a 640 px    M = 112
+ *   medio    da 641 px        M = 136
+ *   largo    da 1024 px       M = 168
+ * Sulla parete i corpi seguono il gradino, non la finestra: la scala della
+ * parete non cambia mai (niente zoom), e il testo dei cartelli nemmeno.
+ * Fuori dalla parete (elenco, scheda, Grande come?) i corpi sono fluidi
+ * da 375 a 1440 px e si fermano lì.
+ */
+
+/* ------------------------------------------------------------------------ */
+/* Ripieghi metrici dei font                                                 */
+/* Misurati in Chromium sui woff2 latin di Google Fonts (Grenze Gotisch v20, */
+/* Schibsted Grotesk v7) contro Liberation Serif / Liberation Sans (metriche */
+/* di Times New Roman e Arial), su testi veri del concept.                   */
+/* size-adjust = larghezza media vera / larghezza del ripiego.               */
+/* ascent/descent-override = metrica vera / size-adjust (le override sono    */
+/* scalate da size-adjust).                                                  */
+/* ------------------------------------------------------------------------ */
+
+@font-face {
+  font-family: 'Stp Grenze Ripiego';
+  src: local('Times New Roman Bold'), local('TimesNewRomanPS-BoldMT'),
+    local('Liberation Serif Bold'), local('LiberationSerif-Bold');
+  font-weight: 100 900;
+  size-adjust: 84.05%;
+  ascent-override: 130.87%;
+  descent-override: 45.21%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Stp Schibsted Ripiego';
+  src: local('Arial'), local('ArialMT'), local('Liberation Sans'), local('LiberationSans'),
+    local('Helvetica');
+  font-weight: 400;
+  size-adjust: 103.34%;
+  ascent-override: 94.5%;
+  descent-override: 24.95%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Stp Schibsted Ripiego';
+  src: local('Arial'), local('ArialMT'), local('Liberation Sans'), local('LiberationSans'),
+    local('Helvetica');
+  font-weight: 500;
+  size-adjust: 104.76%;
+  ascent-override: 93.22%;
+  descent-override: 24.61%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Stp Schibsted Ripiego';
+  src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'),
+    local('LiberationSans-Bold'), local('Helvetica Bold');
+  font-weight: 600;
+  size-adjust: 99.51%;
+  ascent-override: 98.14%;
+  descent-override: 25.91%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Stp Schibsted Ripiego';
+  src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'),
+    local('LiberationSans-Bold'), local('Helvetica Bold');
+  font-weight: 700;
+  size-adjust: 101.16%;
+  ascent-override: 96.54%;
+  descent-override: 25.49%;
+  line-gap-override: 0%;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Token (gradino stretto come base: si parte dal telefono)                 */
+/* ------------------------------------------------------------------------ */
+
+.stp-root {
+  color-scheme: dark;
+
+  /* Palette della matrice ---------------------------------------------- */
+  --stp-nero: #151312;              /* muro, fondo di tutto, inchiostro */
+  --stp-nero-rialzato: #1E1B19;     /* unico gradino: isole, barra, targhe, scheda, pannello */
+  --stp-osso: #ECE5D8;              /* testo, contorni, anello del fuoco, oggetti in scala */
+  --stp-grigio-lettura: #A39C93;    /* testo secondario piccolo (6,31:1 sul rialzato) */
+  --stp-grigio-sfumato: #6F6962;    /* MAI testo: filamenti, tratteggi, sottolineature mute */
+  --stp-rosso: #A92F28;             /* SOLO fondo dei due bottoni d'azione */
+
+  /* Derivati (stessa tinta, nessun colore nuovo) ------------------------ */
+  --stp-rosso-scuro: #8F2722;       /* bottone rosso al passaggio (osso 6,76:1) */
+  --stp-rosso-premuto: #7E211D;     /* bottone rosso premuto e "Sto fissando…" (osso 7,90:1) */
+  --stp-inchiostro-fronte: #0E0C0B; /* fronte della nuvola, un filo sotto il nero (GL) */
+  --stp-inchiostro-velo: #5E5852;   /* inchiostro diluito sotto testo osso: macchia, posto scelto (osso 5,60:1) */
+  --stp-campitura: #22201E;         /* osso al 6% sul nero: campitura degli oggetti in scala */
+
+  /* Ruoli --------------------------------------------------------------- */
+  --stp-fondo: var(--stp-nero);
+  --stp-superficie: var(--stp-nero-rialzato);
+  --stp-banco: var(--stp-nero);     /* il piano del banco di misura, un gradino sotto il pannello */
+  --stp-testo: var(--stp-osso);
+  --stp-testo-2: var(--stp-grigio-lettura);
+  --stp-azione-fondo: var(--stp-rosso);
+  --stp-azione-fondo-sopra: var(--stp-rosso-scuro);
+  --stp-azione-fondo-premuto: var(--stp-rosso-premuto);
+  --stp-azione-testo: var(--stp-osso);
+  --stp-campo-fondo: var(--stp-nero);
+  --stp-campo-filo: var(--stp-grigio-lettura);   /* 6,31:1 sul rialzato, 6,82:1 sul nero */
+  --stp-contorno: var(--stp-osso);
+  --stp-filamento: var(--stp-grigio-sfumato);
+  --stp-selezione-fondo: var(--stp-osso);
+  --stp-selezione-testo: var(--stp-nero);
+
+  /* Stati --------------------------------------------------------------- */
+  --stp-focus-colore: var(--stp-osso);
+  --stp-focus-spessore: 2px;
+  --stp-focus-distanza: 2px;
+  --stp-tratto: 1px;                /* contorni: oggetti, macchia, posto vuoto, comandi a contorno */
+  --stp-tratto-forte: 2px;          /* sottolineatura attiva, bordo del scelto, filo del campo a fuoco */
+  --stp-tratteggio: 6px;            /* lunghezza del tratto del contorno che esce dallo schermo */
+  --stp-tratteggio-vuoto: 5px;
+  --stp-sottolineatura-distanza: 0.24em;
+  --stp-opacita-spento: 1;          /* niente opacità sui comandi spenti: si spiega a parole */
+
+  /* Materiali ----------------------------------------------------------- */
+  --stp-arretra-luce: 0.28;         /* lavori esclusi dai filtri: luminosità */
+  --stp-arretra-saturazione: 0;     /* e saturazione */
+  --stp-sboccio-bordo: 16%;         /* morbidezza del bordo della maschera senza WebGL */
+  --stp-macchia-morbida: 26px;      /* bordo interno della macchia ancora "morbida" */
+  --stp-macchia-posata: 7px;        /* bordo interno della macchia posata */
+
+  /* Famiglie e pesi ----------------------------------------------------- */
+  --stp-font-insegna: 'Grenze Gotisch', 'Stp Grenze Ripiego', 'Times New Roman', serif;
+  --stp-font-testo: 'Schibsted Grotesk', 'Stp Schibsted Ripiego', Arial, sans-serif;
+  --stp-peso-insegna: 600;          /* Sottopelle a riposo (sboccia da 100) */
+  --stp-peso-insegna-inizio: 100;
+  --stp-peso-titolo: 560;           /* titoli delle isole e del pannello */
+  --stp-peso-nome: 600;             /* Nives, Tobia, nome in testata */
+  --stp-peso-cifra: 620;            /* la cifra delle ore nella stima */
+  --stp-peso-testo: 400;
+  --stp-peso-medio: 500;            /* comandi */
+  --stp-peso-forte: 600;            /* bottoni, etichette, parti della frase, enfasi */
+  --stp-peso-nero: 700;             /* prezzi nella stima */
+
+  /* Corpi sulla parete (a gradini) ------------------------------------- */
+  --stp-fs-titolo: 2.375rem;        /* 38 · 42 · 48 · gotico, titoli delle isole */
+  --stp-fs-pannello: 2rem;          /* 32 · 38 · 44 · gotico, titolo di Grande come? */
+  --stp-fs-nome: 2rem;              /* 32 · 36 · 40 · gotico, Nives e Tobia */
+  --stp-fs-marchio: 2rem;           /* 32 · gotico, Sottopelle in testata */
+  --stp-fs-lead: 1rem;              /* 16 · 18 · 19 · la frase dell'ingresso */
+  --stp-fs-isola: 0.9375rem;        /* 15 · 16 · 17 · testo dei cartelli */
+  --stp-fs-testo: 1rem;             /* 16 · 16 · 17 · testo fuori dalla parete */
+  --stp-fs-comando: 0.9375rem;      /* 15 · 15 · 14 (14 solo con puntatore fine) */
+  --stp-fs-azione: 0.9375rem;       /* 15 · 16 · 16 · bottone rosso e a contorno */
+  --stp-fs-etichetta: 0.9375rem;    /* 15 · etichette sopra i campi, dt della scheda */
+  --stp-fs-campo: 1.0625rem;        /* 17 · mai sotto 16 (zoom di iOS) */
+  --stp-fs-misura: 0.9375rem;       /* 15 · 15 · 16 · centimetri accanto alla macchia */
+  --stp-fs-nota: 0.875rem;          /* 14 · minimo assoluto del sito */
+
+  /* Corpi fuori dalla parete (fluidi 375 → 1440) ------------------------ */
+  --stp-fs-insegna-elenco: clamp(5rem, 4.507vw + 3.944rem, 8rem);        /* 80 → 128 */
+  --stp-fs-frase: clamp(1.1875rem, 0.657vw + 1.0334rem, 1.625rem);       /* 19 → 26 */
+  --stp-fs-scheda-titolo: clamp(1.5rem, 0.563vw + 1.368rem, 1.875rem);   /* 24 → 30 */
+  --stp-fs-cifra: clamp(4rem, 3.005vw + 3.296rem, 6rem);                 /* 64 → 96 */
+
+  /* Interlinee e spaziature delle lettere ----------------------------- */
+  --stp-lh-insegna: 1;              /* + riserva sotto di 0,06 em per la "p" */
+  --stp-lh-titolo: 1.05;
+  --stp-lh-cifra: 0.8;
+  --stp-lh-testo: 1.5;
+  --stp-lh-isola: 1.45;
+  --stp-lh-frase: max(44px, 1.6em); /* ogni riga della frase è alta un bersaglio di tocco */
+  --stp-lh-stretta: 1.2;            /* bottoni, etichette, comandi */
+  --stp-trk-insegna: -0.005em;
+  --stp-trk-testo: 0;
+  --stp-rientro-insegna: -0.04em;   /* allineamento ottico della S gotica al bordo del testo */
+  --stp-rientro-titolo: -0.025em;   /* idem per i titoli delle isole */
+  --stp-riserva-discendente: 0.06em;
+  --stp-giustezza: 27.5em;          /* circa 60 caratteri di Schibsted */
+  --stp-giustezza-isola: 22em;      /* righe dei cartelli larghi */
+
+  /* Spazi --------------------------------------------------------------- */
+  --stp-sp-1: 4px;
+  --stp-sp-2: 8px;
+  --stp-sp-3: 12px;
+  --stp-sp-4: 16px;
+  --stp-sp-5: 20px;
+  --stp-sp-6: 24px;
+  --stp-sp-7: 32px;
+  --stp-sp-8: 40px;
+  --stp-sp-9: 48px;
+  --stp-sp-10: 64px;
+  --stp-sp-11: 96px;
+  --stp-margine: 16px;              /* margine laterale fuori dalla parete: 16 · 32 · 48 */
+
+  /* Griglia: il modulo della parete ------------------------------------ */
+  --stp-modulo: 112px;              /* 112 · 136 · 168 */
+  --stp-giunto: calc(var(--stp-modulo) / 6);   /* spazio tra due tessere, dentro il modulo */
+  --stp-scarto: 6px;                /* scarto fisso massimo di una tessera: ±6 · ±10 · ±10 */
+  --stp-isola-pad: 20px;            /* 20 · 32 · 40 */
+  --stp-ingresso-pad: 20px;         /* 20 · 40 · 48 */
+  --stp-insegna-larghezza: min(
+    calc(var(--stp-modulo) * 4 - var(--stp-giunto) - 2 * var(--stp-ingresso-pad)),
+    calc(100vw - 32px)
+  );                                /* contenuto dell'ingresso: 343 a 375, 441 a 768, 548 a 1440 */
+  --stp-fs-insegna: calc(var(--stp-insegna-larghezza) / 4.05);   /* la parola riempie il cartello */
+
+  /* Misure dei comandi -------------------------------------------------- */
+  --stp-tocco: 44px;                /* bersaglio minimo su touch */
+  --stp-comando-h: 44px;            /* 44, 32 solo con puntatore fine da 1024 */
+  --stp-azione-h: 44px;             /* 44 · 48 · 48 */
+  --stp-azione-h-grande: 48px;      /* bottone dell'ingresso: 48 · 52 · 52 */
+  --stp-azione-pad: 14px;           /* 14 · 20 · 22 */
+  --stp-campo-h: 52px;
+  --stp-casella: 24px;              /* lato della casella dei 18 anni */
+  --stp-barra-h: 48px;
+  --stp-testata-h: 44px;
+  --stp-raggio: 0;                  /* spigolo vivo ovunque; i raggi veri sono negli SVG degli oggetti */
+
+  /* Livelli (unici ammessi) --------------------------------------------- */
+  --stp-z-canvas: 0;
+  --stp-z-parete: 1;
+  --stp-z-comandi: 10;
+  --stp-z-filtri: 20;
+  --stp-z-scheda: 30;
+  --stp-z-grande-come: 40;
+
+  accent-color: var(--stp-osso);
+  caret-color: var(--stp-osso);
+  scrollbar-color: var(--stp-grigio-sfumato) var(--stp-nero-rialzato);
+}
+
+/* Gradino medio: da 641 px ------------------------------------------------ */
+@media (min-width: 641px) {
+  .stp-root {
+    --stp-fs-titolo: 2.625rem;      /* 42 */
+    --stp-fs-pannello: 2.375rem;    /* 38 */
+    --stp-fs-nome: 2.25rem;         /* 36 */
+    --stp-fs-lead: 1.125rem;        /* 18 */
+    --stp-fs-isola: 1rem;           /* 16 */
+    --stp-fs-azione: 1rem;          /* 16 */
+    --stp-lh-isola: 1.5;
+    --stp-margine: 32px;
+    --stp-modulo: 136px;
+    --stp-scarto: 10px;
+    --stp-isola-pad: 32px;
+    --stp-ingresso-pad: 40px;
+    --stp-azione-h: 48px;
+    --stp-azione-h-grande: 52px;
+    --stp-azione-pad: 20px;
+  }
+}
+
+/* Gradino largo: da 1024 px ----------------------------------------------- */
+@media (min-width: 1024px) {
+  .stp-root {
+    --stp-fs-titolo: 3rem;          /* 48 */
+    --stp-fs-pannello: 2.75rem;     /* 44 */
+    --stp-fs-nome: 2.5rem;          /* 40 */
+    --stp-fs-lead: 1.1875rem;       /* 19 */
+    --stp-fs-isola: 1.0625rem;      /* 17 */
+    --stp-fs-testo: 1.0625rem;      /* 17 */
+    --stp-fs-misura: 1rem;          /* 16 */
+    --stp-margine: 48px;
+    --stp-modulo: 168px;
+    --stp-isola-pad: 40px;
+    --stp-ingresso-pad: 48px;
+    --stp-azione-pad: 22px;
+  }
+}
+
+/* Puntatore fine da 1024: comandi più compatti (la barra sta su una riga) -- */
+@media (min-width: 1024px) and (pointer: fine) {
+  .stp-root {
+    --stp-fs-comando: 0.875rem;     /* 14 */
+    --stp-comando-h: 32px;
+  }
+}
+
+/* Contrasto alto richiesto dal sistema: il secondario diventa osso -------- */
+@media (prefers-contrast: more) {
+  .stp-root {
+    --stp-testo-2: var(--stp-osso);
+    --stp-campo-filo: var(--stp-osso);
+    --stp-grigio-lettura: var(--stp-osso);
+  }
+}

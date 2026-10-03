@@ -98,7 +98,7 @@ void main() {
     tensione += exp(-dot(dg, dg) / (g.z * g.z * 0.8));
   }
   tensione = clamp(tensione * 0.8 + smoothstep(0.55, 0.85, vDistanza) * 0.6, 0.0, 1.0) * sullImpasto;
-  float crepa = MAD_CREPA_RIPOSO * (0.35 + tensione) * (1.0 + MAD_RESPIRO_CREPE * uRespiro);
+  float crepa = MAD_CREPA_RIPOSO * tensione * (1.0 + MAD_RESPIRO_CREPE * uRespiro);
 
   // fossette: lo spolvero si apre (crepe larghe sulle pareti, pelle nuda al centro)
   float nudo = 0.0;
@@ -119,26 +119,32 @@ void main() {
   }
   crepa += MAD_CREPA_FOSSETTA * tirato;
 
-  // densità della farina: chiazze; meno sui fianchi ripidi e sulle bolle; tavolo quasi pieno
-  float pendenza = 1.0 - N.z;
-  float densImpasto = 0.6 + (chiazze - 0.5) * 1.25 - pendenza * 2.2 - bolla * 0.45;
-  float densTavolo = 0.8 + (strisce - 0.5) * 0.7 + (chiazze - 0.5) * 0.35 + bolla * 0.5;
+  // densità della farina: un velo continuo a chiazze, più sottile sui fianchi
+  // ripidi e sulle bolle (pelle tesa); sul tavolo quasi pieno, con i grumi
+  float pendenza = 1.0 - vNormale.z;
+  float densImpasto = 0.76 + (chiazze - 0.5) * 1.3 - pendenza * 1.3 - bolla * 0.3;
+  float densTavolo = 0.9 + (chiazze - 0.5) * 0.25 + (strisce - 0.5) * 0.12 + bolla * 0.4;
   float densita = clamp(mix(densTavolo, densImpasto, sullImpasto), 0.0, 1.0);
 
-  // la grana decide quali punti sono farina: a bassa densità si vedono puntini
+  // grana: modula il velo e, dove è sottile, lo rompe in granelli
   float pxTexel = uRisoluzione.y / (MAD_S_GRANA * 256.0);
-  float morbido = mix(0.3, 0.12, smoothstep(0.6, 1.4, pxTexel));
-  float farina = smoothstep(1.0 - densita - morbido, 1.0 - densita + morbido, grana);
-  float crepaM = 1.0 - smoothstep(crepa, crepa + 0.035, crepe);
-  farina *= 1.0 - crepaM * sullImpasto * 0.85;
-  farina *= 1.0 - nudo * (1.0 - smoothstep(0.62, 0.9, grana));
+  float contrasto = smoothstep(0.55, 1.3, pxTexel);
+  float rottura = (1.0 - densita) * densita * 4.0;           // massima a metà densità
+  float modula = mix(1.0, 0.55 + 0.9 * grana, 0.35 + 0.65 * rottura * contrasto);
+  float farina = clamp(densita * modula, 0.0, 1.0);
+  farina = max(farina, smoothstep(0.9, 0.985, grana) * 0.75 * contrasto * (0.3 + densita));
+
+  // crepe (tensione e fossette) e pelle nuda nella fossetta
+  float crepaM = 1.0 - smoothstep(crepa, crepa + 0.03, crepe);
+  farina *= 1.0 - crepaM * sullImpasto * 0.8;
+  farina *= 1.0 - nudo * (1.0 - smoothstep(0.7, 0.95, grana));
   farina *= 1.0 - cratere * 0.8 * sullImpasto;
 
   // ------------------------------------------------------------------ albedo
-  vec3 farinaPiena = min(uFarina * 1.03, vec3(1.0));
-  vec3 pelle = mix(uImpastoNudo, uFarina, 0.32 - nudo * 0.32);
-  pelle = mix(pelle, uImpastoNudo * 1.025, bolla * 0.35 * sullImpasto); // bolla: pelle tesa, traslucida
-  vec3 tavolo = mix(uFarina, uFarinaOmbra, 0.22);
+  vec3 farinaPiena = min(uFarina * 1.035, vec3(1.0));
+  vec3 pelle = mix(uImpastoNudo, uFarina, 0.5 - nudo * 0.5);
+  pelle = mix(pelle, uImpastoNudo * 1.03, bolla * 0.3 * sullImpasto); // bolla: pelle tesa, traslucida
+  vec3 tavolo = mix(uFarina, uFarinaOmbra, 0.3);
   vec3 sotto = mix(tavolo, pelle, sullImpasto);
   vec3 albedo = mix(sotto, farinaPiena, farina);
 
@@ -151,14 +157,17 @@ void main() {
 
   // traslucenza dei bordi convessi (labbro della fossetta, gonfiature) e occlusione nelle conche
   luce += clamp(-vCurva * MAD_BORDO_CHIARO, 0.0, 0.1) * sullImpasto;
-  luce *= 1.0 - clamp(vCurva * MAD_OCCLUSIONE, 0.0, 0.32);
-  luce *= 1.0 - cratere * 0.35 * sullImpasto;
+  luce *= 1.0 - clamp(vCurva * MAD_OCCLUSIONE, 0.0, 0.35);
+  luce *= 1.0 - cratere * 0.22 * sullImpasto;
+  // cielo: le parti basse della pagnotta vedono meno cielo
+  float quota = clamp(vAltezza / max(uPagnotta.w, 1e-3), 0.0, 1.0);
+  luce *= mix(0.9, 1.0, smoothstep(0.0, 0.3, quota)) * sullImpasto + (1.0 - sullImpasto);
   // contatto col tavolo: ombra morbida e stretta attorno al piede della pagnotta
   float fuori = max(vDistanza - 1.0, 0.0) * uPagnotta.z;
-  luce *= 1.0 - 0.2 * exp(-fuori / 0.014) * (1.0 - sullImpasto);
+  luce *= 1.0 - 0.3 * exp(-fuori / 0.012) * (1.0 - sullImpasto);
 
-  vec3 tintaOmbra = mix(uFarinaOmbra, uImpastoNudo * 0.93, 0.4 * sullImpasto);
-  vec3 rapporto = tintaOmbra / max(uFarina, vec3(0.001));
+  vec3 tintaOmbra = mix(uFarinaOmbra, uImpastoNudo, 0.45 * sullImpasto);
+  vec3 rapporto = pow(tintaOmbra / max(uFarina, vec3(0.001)), vec3(MAD_PROFONDITA_OMBRA));
   vec3 col = albedo * mix(rapporto, vec3(1.0), clamp(luce, 0.0, 1.0));
   col += (vec3(1.0) - col) * clamp(luce - 1.0, 0.0, 1.0) * MAD_SCHIARITA;
 

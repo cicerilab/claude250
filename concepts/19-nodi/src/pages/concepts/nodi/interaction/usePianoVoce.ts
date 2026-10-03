@@ -68,10 +68,13 @@ export interface PuntoVoce {
 }
 
 export interface OpzioniPianoVoce {
-  /** aria-valuetext del range "Da scuro a brillante" (x 0..1): "un po' scura", "equilibrata"… */
-  valuetextX: (x: number) => string;
-  /** aria-valuetext del range "Da morbido a pronto" (y 0..1). */
-  valuetextY: (y: number) => string;
+  /**
+   * aria-valuetext del range "Da scuro a brillante": riceve il valore del
+   * range, 0-100 a passi di 5 (content/testi.ts, VOCE.piano.valuetextX).
+   */
+  valuetextX: (valore: number) => string;
+  /** aria-valuetext del range "Da morbido a pronto" (0-100, VOCE.piano.valuetextY). */
+  valuetextY: (valore: number) => string;
   /** Il gesto è finito: il builder annuncia la zona e gli hertz nella regione aria-live del form. */
   onAssestata?: (punto: PuntoVoce, metodo: Exclude<MetodoVoce, 'nessuno'>) => void;
   /** Invio in corso (V6) e prerender (V0): la foglia si vede ma non risponde. */
@@ -496,7 +499,7 @@ export function usePianoVoce(opz: OpzioniPianoVoce): PianoVoce {
       max: 100,
       step: 5,
       value: valoreRange(voce.x),
-      'aria-valuetext': opz.valuetextX(voce.x),
+      'aria-valuetext': opz.valuetextX(valoreRange(voce.x)),
       'aria-disabled': ariaDisabilitato,
       onChange: onChangeX,
     },
@@ -506,7 +509,7 @@ export function usePianoVoce(opz: OpzioniPianoVoce): PianoVoce {
       max: 100,
       step: 5,
       value: valoreRange(voce.y),
-      'aria-valuetext': opz.valuetextY(voce.y),
+      'aria-valuetext': opz.valuetextY(valoreRange(voce.y)),
       'aria-disabled': ariaDisabilitato,
       onChange: onChangeY,
     },

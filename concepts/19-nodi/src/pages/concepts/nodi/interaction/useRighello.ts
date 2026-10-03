@@ -28,9 +28,13 @@
  * - `aria-valuenow`/`aria-valuetext` NON seguono lo scroll a 60 Hz: cambiano
  *   a ogni tasto, al rilascio, e quando la frequenza è ferma da 400 ms (sui
  *   pianerottoli e dopo uno scroll). Il numero visibile lo scrive il ticker.
- * - Il ticker scrive il `transform` del cursore e il numero del valore solo
- *   quando cambiano; durante il trascinamento il cursore segue il dito, fuori
- *   dal trascinamento segue `runtime.righello.cursore` (lerp di motion/molle).
+ * - Il ticker scrive il `transform` del cursore (px misurati, niente calcoli
+ *   di lunghezza in CSS) e il numero del valore solo quando cambiano.
+ *   Durante il trascinamento il cursore sta esattamente sotto il dito
+ *   (dalla posizione del puntatore, senza il frame di ritardo dello scroll);
+ *   fuori dal trascinamento segue l'inseguitore del motion-designer
+ *   (`runtime.righello.u` per la posizione, `runtime.righello.cursore` per
+ *   gli Hz mostrati, null = spento: motion/molle.ts, CursoreRighello).
  *
  * Markup richiesto (dettagli in docs/interaction-designer.md §2.6):
  *   <div ref={refScala} {...propsScala} class="… nod-ix-scala">   ← il tratto 60→420 Hz, niente padding
@@ -143,7 +147,7 @@ export function uDaHzMostrati(hz: number): number {
   return uDaHz(hz);
 }
 
-/** Numero intero mostrato accanto al cursore. */
+/** Numero intero mostrato accanto al cursore durante il trascinamento. */
 export function numeroMostrato(hz: number): number {
   if (!(hz > 0) || hz < HZ_MIN / 2) return 0;
   return Math.round(clamp(hz, HZ_MIN, HZ_MAX));
@@ -285,9 +289,9 @@ export function useRighello(opz: OpzioniRighello): Righello {
       }
       if (!r.trascinando) ultimoScrollHz = Number.NaN;
 
-      // 2. Cursore: segue il dito mentre trascina, la molla del motion-designer altrimenti.
-      const hz = r.trascinando && r.hzPuntatore !== null ? r.hzPuntatore : r.cursore;
-      const u = uDaHzMostrati(hz);
+      // 2. Cursore: sotto il dito mentre trascina, l'inseguitore del motion-designer altrimenti.
+      const sottoIlDito = r.trascinando && r.hzPuntatore !== null;
+      const u = sottoIlDito && r.hzPuntatore !== null ? uDaHzMostrati(r.hzPuntatore) : r.u;
       const l = lunghezza.current;
       const cursore = refCursore.current;
       if (cursore !== null && (Math.abs(u - ultimaU) > SOGLIA_U || l !== ultimaLunghezza)) {
@@ -297,8 +301,13 @@ export function useRighello(opz: OpzioniRighello): Righello {
         cursore.style.transform = verticale ? `translate3d(0, ${-px}px, 0)` : `translate3d(${px}px, 0, 0)`;
       }
 
-      // 3. Numero intero accanto al cursore.
-      const n = numeroMostrato(hz);
+      // 3. Numero intero accanto al cursore (0 = spento).
+      const n =
+        sottoIlDito && r.hzPuntatore !== null
+          ? numeroMostrato(r.hzPuntatore)
+          : r.cursore === null
+            ? HZ_SPENTO
+            : Math.round(r.cursore);
       const valore = refValore.current;
       if (valore !== null && n !== ultimoNumero) {
         ultimoNumero = n;
@@ -400,7 +409,6 @@ export function useRighello(opz: OpzioniRighello): Righello {
       }
 
       const r = runtime.righello;
-      const hzOra = r.cursore;
       const g: Gesto = {
         id: e.pointerId,
         el,
@@ -412,7 +420,7 @@ export function useRighello(opz: OpzioniRighello): Righello {
         x0: e.clientX,
         y0: e.clientY,
         t0: e.timeStamp,
-        u0: uDaHzMostrati(hzOra),
+        u0: r.u,
         mosso: false,
         staccatori: [],
       };

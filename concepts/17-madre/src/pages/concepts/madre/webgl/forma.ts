@@ -121,9 +121,15 @@ export function segmentiGriglia(aspetto: number, leggera: boolean): Vec2 {
  * esattamente quello dei token (normalizzazione nello shader).
  */
 export const LUCE = {
-  direzione: [-0.52, 0.5, 0.69] as Vec3,
-  avvolgimento: 0.55,
-  ambiente: 0.42,
+  direzione: [-0.56, 0.44, 0.7] as Vec3,
+  avvolgimento: 0.35,
+  ambiente: 0.3,
+  /**
+   * Profondità delle ombre: la tinta d'ombra dei token (farina-ombra) dà il
+   * TONO; l'esponente dà quanto scende al buio pieno (1 = esattamente la
+   * tinta, 2,4 ≈ due volte più scuro, sempre caldo, mai grigio né nero).
+   */
+  profonditaOmbra: 2.4,
   /** schiarita massima dei lati verso la luce (verso il bianco, 0..1) */
   schiarita: 0.55,
   /** quanto la curvatura convessa schiarisce (traslucenza dei bordi sottili) */
@@ -156,14 +162,14 @@ const VERTICALE: ChiaveComposizione = {
   aspetto: 0.5,
   centro: [0.07, -0.19],
   raggio: 0.44,
-  altezza: 0.105,
+  altezza: 0.15,
 };
 
 const ORIZZONTALE: ChiaveComposizione = {
   aspetto: 1.65,
   centro: [0.36, -0.13],
   raggio: 0.62,
-  altezza: 0.125,
+  altezza: 0.2,
 };
 
 /**
@@ -186,20 +192,27 @@ export const GONFIATURE: readonly Vec4[] = [
  */
 export const PIEGA = {
   cerchio: [0.95, -1.05, 1.08] as Vec3,
-  arco: [2.32, 0.42, 0.0085, 0.055] as Vec4,
+  arco: [2.32, 0.42, 0.016, 0.07] as Vec4,
   /** profondità del solco in frazioni dell'altezza */
-  solco: 0.07,
+  solco: 0.05,
 } as const;
 
-/** Profilo della cupola: h = H · (1 − d^esponente), raccordato al tavolo. */
+/**
+ * Profilo della cupola: h = H · (max_morbido(1 − d², 0)^esponente − piede)
+ * (calotta arrotondata di una pagnotta rilassata). Il max morbido (raccordo)
+ * fa scendere il bordo a ~40° invece che in verticale e lascia un piede basso
+ * sul tavolo; `piede` toglie la coda lunga del piede.
+ */
 export const PROFILO = {
-  esponente: 3.4,
-  /** raccordo morbido col tavolo, in frazioni dell'altezza */
-  raccordo: 0.2,
+  esponente: 0.6,
+  /** morbidezza del bordo (k del max morbido su 1 − d²) */
+  raccordo: 0.05,
+  /** soglia sotto cui il piede si appoggia al tavolo (frazione dell'altezza) */
+  piede: 0.022,
   /** irregolarità del bordo: [ampiezza, frequenza, fase] × 3 */
   bordo: [
-    [0.034, 3, 0.7],
-    [0.021, 5, 2.1],
+    [0.02, 3, 0.7],
+    [0.024, 5, 2.1],
     [0.011, 9, 4.0],
   ] as readonly Vec3[],
 } as const;
@@ -259,7 +272,7 @@ export const SPOLVERO = {
   rilievoAlveoli: 0.0042,
   rilievoOnde: 0.0016,
   /** larghezza delle crepe a riposo (0..1 della distanza dal bordo cella) */
-  crepaRiposo: 0.035,
+  crepaRiposo: 0.026,
   /** di quanto si aprono nella fossetta */
   crepaFossetta: 0.5,
 } as const;
@@ -304,11 +317,6 @@ export function composizione(aspetto: number): Composizione {
 
 /* ------------------------------------------- altezza su CPU (per il raycast) */
 
-const smax = (a: number, b: number, k: number): number => {
-  const h = Math.max(0, Math.min(1, 0.5 + (0.5 * (a - b)) / k));
-  return b + (a - b) * h + k * h * (1 - h);
-};
-
 /** Distanza normalizzata dal centro della pagnotta (1 = bordo), come nello shader. */
 export function distanzaPagnotta(px: number, py: number, c: Composizione, respiro: number): number {
   const [cx, cy, r0] = c.pagnotta;
@@ -332,8 +340,10 @@ export function altezzaMacro(u: number, v: number, aspetto: number, c: Composizi
   const py = v - 0.5;
   const H = c.pagnotta[3] * (1 + RESPIRO.altezza * respiro);
   const d = distanzaPagnotta(px, py, c, respiro);
-  let h = H * (1 - Math.pow(Math.min(d, 1.6), PROFILO.esponente));
-  h = smax(h, 0, H * PROFILO.raccordo);
+  const s = 1 - d * d;
+  const k = PROFILO.raccordo;
+  const sm = 0.5 * (s + Math.sqrt(s * s + k * k));
+  let h = (H * Math.max(Math.pow(sm, PROFILO.esponente) - PROFILO.piede, 0)) / (1 - PROFILO.piede);
   const cupola = 1 - liscio(0.55, 0.97, d);
   for (const [gx, gy, gr, ga] of c.gonfiature) {
     const dx = px - gx;
@@ -379,6 +389,7 @@ export function definesForma(): Record<string, string> {
   return {
     MAD_ESPONENTE: f(PROFILO.esponente),
     MAD_RACCORDO: f(PROFILO.raccordo),
+    MAD_PIEDE: f(PROFILO.piede),
     MAD_BORDO_0: bordo(b0),
     MAD_BORDO_1: bordo(b1),
     MAD_BORDO_2: bordo(b2),
@@ -395,6 +406,7 @@ export function definesForma(): Record<string, string> {
     MAD_LUCE: v3([L[0] / l, L[1] / l, L[2] / l]),
     MAD_AVVOLGIMENTO: f(LUCE.avvolgimento),
     MAD_AMBIENTE: f(LUCE.ambiente),
+    MAD_PROFONDITA_OMBRA: f(LUCE.profonditaOmbra),
     MAD_SCHIARITA: f(LUCE.schiarita),
     MAD_BORDO_CHIARO: f(LUCE.bordoChiaro),
     MAD_OCCLUSIONE: f(LUCE.occlusione),

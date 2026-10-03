@@ -154,7 +154,7 @@
 
   /* ---- Scala tipografica: valore a 375 px → valore a 1440 px ----
      clamp(min, min - pendenza*375 + pendenza*100vw, max), tutto in rem. */
-  --mad-fs-cartello: clamp(3.5rem, calc(1.4419rem + 8.7793vw), 9rem);      /* 56 → 144: "il pane", "i dolci" sul piano */
+  --mad-fs-cartello: clamp(3.5rem, calc(1.9155rem + 6.7606vw), 8rem);      /* 56 → 128: "il pane", "la domenica" sul piano */
   --mad-fs-titolo-1: clamp(2.125rem, calc(1.6408rem + 2.0657vw), 3.5rem);  /* 34 → 56: H1 dell'impasto */
   --mad-fs-titolo-2: clamp(2.75rem, calc(2.1338rem + 2.6291vw), 4.5rem);   /* 44 → 72: H2 delle sezioni verticali, la madre */
   --mad-fs-nome: clamp(1.625rem, calc(1.3169rem + 1.3146vw), 2.5rem);      /* 26 → 40: H3 dei prodotti sul bancone */
@@ -267,26 +267,31 @@
 
   /* ---- Superfici e texture (statiche) ---- */
 
-  /* Spolvero: chiazze calde dove l'impasto è nudo + granelli bianchi di
-     farina. Solo sulla superficie dell'impasto, mai altrove. */
-  --mad-spolvero: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='s' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.016' numOctaves='2' seed='11' stitchTiles='stitch' result='p'/%3E%3CfeColorMatrix in='p' values='0 0 0 0 .92 0 0 0 0 .85 0 0 0 0 .73 1.7 0 0 0 -.78' result='nudo'/%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.78' numOctaves='2' seed='3' stitchTiles='stitch' result='g'/%3E%3CfeColorMatrix in='g' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 .99 5.2 0 0 0 -2.75' result='bianco'/%3E%3CfeMerge%3E%3CfeMergeNode in='nudo'/%3E%3CfeMergeNode in='bianco'/%3E%3C/feMerge%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)'/%3E%3C/svg%3E");
+  /* Spolvero: granelli bianchi di farina radi e qualche puntino di crusca
+     (la tipo 1). Solo grana fine: le variazioni grandi le fanno i
+     gradienti della forma (una tessera ripetuta si vedrebbe). Solo sulla
+     superficie dell'impasto, mai altrove. */
+  --mad-spolvero: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='s' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' seed='3' stitchTiles='stitch' result='g'/%3E%3CfeColorMatrix in='g' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 7 0 0 0 -3.9' result='bianco'/%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.6' numOctaves='1' seed='19' stitchTiles='stitch' result='c'/%3E%3CfeColorMatrix in='c' values='0 0 0 0 .62 0 0 0 0 .5 0 0 0 0 .36 9 0 0 0 -6.3' result='crusca'/%3E%3CfeMerge%3E%3CfeMergeNode in='crusca'/%3E%3CfeMergeNode in='bianco'/%3E%3C/feMerge%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)'/%3E%3C/svg%3E");
 
-  /* Fibra della carta da zucchero: puntini più scuri e più chiari, senza
-     direzione (feltro, non vergatura). Solo su foglio e vassoio. */
-  --mad-fibra: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55 .9' numOctaves='3' seed='5' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' values='0 0 0 0 .19 0 0 0 0 .25 0 0 0 0 .32 2.2 0 0 0 -1.12' result='scuro'/%3E%3CfeColorMatrix in='n' values='0 0 0 0 .93 0 0 0 0 .95 0 0 0 0 .97 -2.4 0 0 0 1.04' result='chiaro'/%3E%3CfeMerge%3E%3CfeMergeNode in='scuro'/%3E%3CfeMergeNode in='chiaro'/%3E%3C/feMerge%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+  /* Fibra della carta da zucchero: un feltro leggero senza direzione e
+     senza puntini. SOLO sul vassoio (è un oggetto, la sua carta si vede da
+     vicino): il foglio steso sul bancone e i giorni "si fa" sono pieni.
+     Così il vassoio si stacca dal foglio per materia, non per ombra. */
+  --mad-fibra: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.045' numOctaves='3' seed='5' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' values='0 0 0 0 .18 0 0 0 0 .24 0 0 0 0 .3 .18 0 0 0 -.075' result='scuro'/%3E%3CfeColorMatrix in='n' values='0 0 0 0 .95 0 0 0 0 .97 0 0 0 0 .98 -.2 0 0 0 .1' result='chiaro'/%3E%3CfeMerge%3E%3CfeMergeNode in='scuro'/%3E%3CfeMergeNode in='chiaro'/%3E%3C/feMerge%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
 
   /* Superficie CSS dell'impasto (stato data-gl="pending" e fondo sotto il
-     canvas): una pagnotta larga vista dall'alto con un leggero angolo,
-     luce diffusa dall'alto a sinistra, due gonfiature e la piega di
-     chiusura in basso. Stessa luce e stessi colori dello shader. */
+     canvas): una pagnotta larga vista dall'alto, luce diffusa dall'alto a
+     sinistra, una gonfiatura grande a centro-destra (dove cade la prima
+     prova), una più piccola in basso a sinistra, il bordo basso più caldo
+     (l'impasto nudo verso la piega di chiusura). Nessun gradiente si
+     ripete: niente tessere visibili. Stessi colori dello shader. */
   --mad-impasto-forma:
-    radial-gradient(70% 55% at 24% 20%, rgb(252 250 245 / 0.95) 0%, rgb(252 250 245 / 0) 70%),
-    radial-gradient(46% 38% at 64% 40%, rgb(252 250 245 / 0.7) 0%, rgb(252 250 245 / 0) 72%),
-    radial-gradient(52% 40% at 72% 52%, rgb(231 222 205 / 0) 55%, rgb(231 222 205 / 0.85) 100%),
-    radial-gradient(40% 34% at 30% 64%, rgb(252 250 245 / 0.55) 0%, rgb(252 250 245 / 0) 75%),
-    radial-gradient(90% 9% at 52% 83%, rgb(226 212 186 / 0.9) 0%, rgb(226 212 186 / 0) 100%),
-    radial-gradient(88% 7% at 50% 80.5%, rgb(252 250 245 / 0.8) 0%, rgb(252 250 245 / 0) 100%),
-    radial-gradient(140% 120% at 30% 20%, rgb(247 243 234 / 0) 50%, rgb(225 213 192 / 0.9) 100%);
+    radial-gradient(58% 62% at 60% 40%, rgb(253 252 249 / 0.85) 0%, rgb(253 252 249 / 0) 64%),
+    radial-gradient(64% 70% at 70% 58%, rgb(231 222 205 / 0) 56%, rgb(231 222 205 / 0.75) 100%),
+    radial-gradient(34% 36% at 17% 66%, rgb(253 252 249 / 0.7) 0%, rgb(253 252 249 / 0) 70%),
+    radial-gradient(42% 44% at 23% 74%, rgb(231 222 205 / 0) 58%, rgb(231 222 205 / 0.55) 100%),
+    radial-gradient(80% 22% at 46% 100%, rgb(234 217 188 / 0.55) 0%, rgb(234 217 188 / 0) 100%),
+    linear-gradient(140deg, rgb(253 252 249 / 0.55) 0%, rgb(253 252 249 / 0) 38%, rgb(231 222 205 / 0) 62%, rgb(231 222 205 / 0.45) 100%);
   --mad-impasto-superficie: var(--mad-spolvero), var(--mad-impasto-forma);
   --mad-impasto-fondo: var(--mad-farina);
 
@@ -295,27 +300,28 @@
   --mad-velo-testo: linear-gradient(100deg, rgb(247 243 234 / 0.9) 0%, rgb(247 243 234 / 0.78) 38%, rgb(247 243 234 / 0) 64%);
   --mad-velo-testo-mobile: linear-gradient(180deg, rgb(247 243 234 / 0.92) 0%, rgb(247 243 234 / 0.8) 34%, rgb(247 243 234 / 0) 52%);
 
-  /* L'unica ombra del sito: il contatto di un prodotto sul piano.
-     Si usa su uno pseudo-elemento largo il 112% della foto, alto
-     --mad-contatto-h, centrato sul bordo inferiore della foto. */
+  /* L'unica ombra del sito: il contatto di un prodotto (o del vassoio)
+     sul piano. Il gradiente è ricalcolato per ogni fondo nel blocco 3bis. */
   --mad-contatto-h: 14px;
-  --mad-ombra-contatto: radial-gradient(50% 50% at 50% 50%, var(--mad-contatto-colore) 0%, rgb(47 61 76 / 0.1) 58%, rgb(47 61 76 / 0) 100%);
 
   /* Bordo del foglio azzurro che entra da destra: dritto, con il risvolto
      (il bordo ripiegato sotto) più chiaro e una linea di piega. */
   --mad-risvolto: 12px;
   --mad-foglio-bordo: linear-gradient(90deg, var(--mad-zucchero-ombra) 0 1px, var(--mad-zucchero-luce) 1px var(--mad-risvolto), transparent var(--mad-risvolto));
-  --mad-foglio-fondo: var(--mad-fibra), var(--mad-zucchero);
+  --mad-foglio-fondo: var(--mad-zucchero);   /* pieno: la fibra è solo del vassoio */
 
-  /* Vassoio: foglio più fitto con i quattro angoli piegati verso l'interno
-     (triangoli del rovescio, più chiari, con la linea di piega). */
+  /* Vassoio: foglio più fitto (--mad-zucchero-piega) con un filo di taglio
+     e i quattro angoli piegati verso l'interno. Gli angoli si calcolano
+     sull'elemento marcato data-mad-vassoio (blocco 3ter). */
   --mad-vassoio-fondo: var(--mad-zucchero-piega);
-  --mad-vassoio-angoli:
-    linear-gradient(135deg, var(--mad-zucchero-luce) 0 calc(var(--mad-vassoio-piega) * 0.7071 - 0.5px), var(--mad-zucchero-ombra) calc(var(--mad-vassoio-piega) * 0.7071 - 0.5px) calc(var(--mad-vassoio-piega) * 0.7071 + 0.5px), transparent calc(var(--mad-vassoio-piega) * 0.7071 + 0.5px)) top left / 50% 50% no-repeat,
-    linear-gradient(225deg, var(--mad-zucchero-luce) 0 calc(var(--mad-vassoio-piega) * 0.7071 - 0.5px), var(--mad-zucchero-ombra) calc(var(--mad-vassoio-piega) * 0.7071 - 0.5px) calc(var(--mad-vassoio-piega) * 0.7071 + 0.5px), transparent calc(var(--mad-vassoio-piega) * 0.7071 + 0.5px)) top right / 50% 50% no-repeat,
-    linear-gradient(315deg, var(--mad-zucchero-luce) 0 calc(var(--mad-vassoio-piega) * 0.7071 - 0.5px), var(--mad-zucchero-ombra) calc(var(--mad-vassoio-piega) * 0.7071 - 0.5px) calc(var(--mad-vassoio-piega) * 0.7071 + 0.5px), transparent calc(var(--mad-vassoio-piega) * 0.7071 + 0.5px)) bottom right / 50% 50% no-repeat,
-    linear-gradient(45deg, var(--mad-zucchero-luce) 0 calc(var(--mad-vassoio-piega) * 0.7071 - 0.5px), var(--mad-zucchero-ombra) calc(var(--mad-vassoio-piega) * 0.7071 - 0.5px) calc(var(--mad-vassoio-piega) * 0.7071 + 0.5px), transparent calc(var(--mad-vassoio-piega) * 0.7071 + 0.5px)) bottom left / 50% 50% no-repeat;
-  --mad-vassoio-piega-max: 18px;    /* angoli piegati; 12 px nel gettone del vassoio */
+  --mad-vassoio-bordo: inset 0 0 0 1px var(--mad-zucchero-ombra);
+  --mad-vassoio-piega-max: 22px;
+
+  /* Il cartello (H2 dei banchi nella striscia) poggia sul piano con la
+     linea di base: con interlinea 0,86 la base sta 0,1 em sopra il fondo
+     della riga. bottom = (altezza finestra - piano-y) - cartello-base:
+     le discendenti di "p" e "g" scavalcano il piano e pendono davanti. */
+  --mad-cartello-base: 0.1em;
 
   /* Lunedì chiuso: farina più scura con tratteggio a 45° in inchiostro leggero. */
   --mad-tratteggio: repeating-linear-gradient(135deg, rgb(47 61 76 / 0.16) 0 1px, rgb(47 61 76 / 0) 1px 7px);
@@ -421,6 +427,42 @@
 }
 
 /* --------------------------------------------------------------------------
+   3bis. Ombra di contatto, ricalcolata su ogni fondo (una variabile che
+   contiene var() si risolve dove è dichiarata).
+   Uso: pseudo-elemento della foto, left/right -6%, alto --mad-contatto-h,
+   centrato sul bordo inferiore della foto, sopra la foto e sopra il piano.
+   -------------------------------------------------------------------------- */
+.mad-root,
+.mad-root [data-mad-fondo] {
+  --mad-ombra-contatto: radial-gradient(50% 50% at 50% 50%, var(--mad-contatto-colore) 0%, var(--mad-contatto-colore) 62%, rgb(47 61 76 / 0) 100%);
+}
+
+/* --------------------------------------------------------------------------
+   3ter. Vassoio. L'elemento ha data-mad-vassoio="vuoto" | "pieno" | "gettone".
+   Vuoto: foglio piatto. Pieno: angoli piegati (la transizione su
+   --mad-vassoio-piega, registrata con @property, la scrive chi anima;
+   con reduced motion nessuna transizione). Gettone: sempre piegato, 12 px.
+   Sfondo da usare: background: var(--mad-vassoio-angoli), var(--mad-fibra),
+   var(--mad-vassoio-fondo); box-shadow: var(--mad-vassoio-bordo).
+   -------------------------------------------------------------------------- */
+.mad-root [data-mad-vassoio] {
+  --mad-vassoio-piega: 0px;
+  --mad-vassoio-angoli:
+    linear-gradient(135deg, var(--mad-zucchero-luce) 0 calc(var(--mad-vassoio-piega) * 0.7071 - 0.5px), var(--mad-zucchero-ombra) calc(var(--mad-vassoio-piega) * 0.7071 - 0.5px) calc(var(--mad-vassoio-piega) * 0.7071 + 0.5px), transparent calc(var(--mad-vassoio-piega) * 0.7071 + 0.5px)) top left / 50% 50% no-repeat,
+    linear-gradient(225deg, var(--mad-zucchero-luce) 0 calc(var(--mad-vassoio-piega) * 0.7071 - 0.5px), var(--mad-zucchero-ombra) calc(var(--mad-vassoio-piega) * 0.7071 - 0.5px) calc(var(--mad-vassoio-piega) * 0.7071 + 0.5px), transparent calc(var(--mad-vassoio-piega) * 0.7071 + 0.5px)) top right / 50% 50% no-repeat,
+    linear-gradient(315deg, var(--mad-zucchero-luce) 0 calc(var(--mad-vassoio-piega) * 0.7071 - 0.5px), var(--mad-zucchero-ombra) calc(var(--mad-vassoio-piega) * 0.7071 - 0.5px) calc(var(--mad-vassoio-piega) * 0.7071 + 0.5px), transparent calc(var(--mad-vassoio-piega) * 0.7071 + 0.5px)) bottom right / 50% 50% no-repeat,
+    linear-gradient(45deg, var(--mad-zucchero-luce) 0 calc(var(--mad-vassoio-piega) * 0.7071 - 0.5px), var(--mad-zucchero-ombra) calc(var(--mad-vassoio-piega) * 0.7071 - 0.5px) calc(var(--mad-vassoio-piega) * 0.7071 + 0.5px), transparent calc(var(--mad-vassoio-piega) * 0.7071 + 0.5px)) bottom left / 50% 50% no-repeat;
+}
+
+.mad-root [data-mad-vassoio="pieno"] {
+  --mad-vassoio-piega: var(--mad-vassoio-piega-max);
+}
+
+.mad-root [data-mad-vassoio="gettone"] {
+  --mad-vassoio-piega: 12px;
+}
+
+/* --------------------------------------------------------------------------
    4. Preferenze del sistema
    -------------------------------------------------------------------------- */
 
@@ -439,7 +481,10 @@
 /* Colori forzati (Windows): le superfici diventano quelle di sistema,
    texture e ombre spariscono, i fili restano. */
 @media (forced-colors: active) {
-  .mad-root {
+  .mad-root,
+  .mad-root [data-mad-fondo],
+  .mad-root [data-mad-vassoio] {
+    --mad-vassoio-angoli: none;
     --mad-spolvero: none;
     --mad-fibra: none;
     --mad-impasto-forma: none;

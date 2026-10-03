@@ -266,7 +266,7 @@ export const DOLCI_PER_ID: Readonly<Record<IdDolce, Dolce>> = {
     nome: 'Esse',
     righe: [
       'Biscotti di frolla a forma di S, come si fanno a Raveo, in Carnia.',
-      'Burro, uova e scorza di limone. Vanno bene inzuppati nel caffellatte.',
+      'Burro, uova e scorza di limone. Da inzuppare nel caffellatte.',
     ],
     alKg: 22,
     pezzi: [{ etichetta: 'sacchetto da 250 g', prezzo: 5.5 }],

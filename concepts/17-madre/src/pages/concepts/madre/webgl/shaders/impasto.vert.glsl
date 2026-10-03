@@ -25,11 +25,6 @@ varying float vCurva;           // laplaciano dell'altezza: > 0 concavo, < 0 con
 varying float vDistanza;        // distanza normalizzata dal centro della pagnotta (1 = bordo)
 varying float vAltezza;         // altezza in "p"
 
-float smaxM(float a, float b, float k) {
-  float h = clamp(0.5 + 0.5 * (a - b) / k, 0.0, 1.0);
-  return mix(b, a, h) + k * h * (1.0 - h);
-}
-
 float distanzaPagnotta(vec2 p) {
   vec2 q = p - uPagnotta.xy;
   float a = atan(q.y, q.x + 1e-5);
@@ -60,8 +55,14 @@ float piega(vec2 p, float d) {
 float altezzaMacro(vec2 p, out float d) {
   float H = uPagnotta.w * (1.0 + MAD_RESPIRO_ALTEZZA * uRespiro);
   d = distanzaPagnotta(p);
-  float h = H * (1.0 - pow(min(d, 1.6), MAD_ESPONENTE));
-  h = smaxM(h, 0.0, H * MAD_RACCORDO);
+  // cupola: calotta arrotondata (pagnotta rilassata). Il max(1 − d², 0) è
+  // morbido (k = MAD_RACCORDO): il bordo scende a ~40° e si allarga in un
+  // piede basso sul tavolo, senza parete verticale.
+  float s = 1.0 - d * d;
+  float k = MAD_RACCORDO;
+  float sm = 0.5 * (s + sqrt(s * s + k * k));
+  float g = max(pow(sm, MAD_ESPONENTE) - MAD_PIEDE, 0.0) / (1.0 - MAD_PIEDE);
+  float h = H * g;
   float cupola = 1.0 - smoothstep(0.55, 0.97, d);
   for (int i = 0; i < 3; i++) {
     vec4 g = uGonfiature[i];
