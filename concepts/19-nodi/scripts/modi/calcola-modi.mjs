@@ -456,7 +456,36 @@ const out = costruisciMaschera(tavola, NU_OUT, NV_OUT);
 const dist = distanzaDalBordo(out.maschera, NU_OUT, NV_OUT);
 const freq = Array.from(valori, (l) => Math.sqrt(Math.max(0, l)) / (2 * Math.PI));
 const elastici = [];
-for (let m = 0; m < nTot && elastici.length < 12; m++) if (freq[m] > 5) elastici.push(m);
+/**
+ * Quota di |w|² spiegata da un piano a + b x + c y: vicino a 1 = moto rigido
+ * (nel guscio ribassato le rotazioni rigide non sono esatte nella base
+ * polinomiale e compaiono a bassa frequenza: si scartano).
+ * @param {Float64Array} w
+ */
+function quotaPiana(w) {
+  const m = out.maschera;
+  let s1 = 0, sx1 = 0, sy1 = 0, sxx = 0, syy = 0, sxy = 0, sw = 0, sxw = 0, syw = 0, sww = 0;
+  for (let j = 0; j < NV_OUT; j++) for (let i = 0; i < NU_OUT; i++) {
+    const k = j * NU_OUT + i;
+    if (!m[k]) continue;
+    const x = (i + 0.5) / NU_OUT - 0.5, y = (j + 0.5) / NV_OUT - 0.5, v = w[k];
+    s1++; sx1 += x; sy1 += y; sxx += x * x; syy += y * y; sxy += x * y; sw += v; sxw += x * v; syw += y * v; sww += v * v;
+  }
+  // minimi quadrati 3×3 (regola di Cramer)
+  const M = [[s1, sx1, sy1], [sx1, sxx, sxy], [sy1, sxy, syy]], r = [sw, sxw, syw];
+  const det = (/** @type {number[][]} */ A) => A[0][0] * (A[1][1] * A[2][2] - A[1][2] * A[2][1]) - A[0][1] * (A[1][0] * A[2][2] - A[1][2] * A[2][0]) + A[0][2] * (A[1][0] * A[2][1] - A[1][1] * A[2][0]);
+  const D = det(M);
+  const c = [0, 1, 2].map((q) => det(M.map((riga, i) => riga.map((v, jj) => (jj === q ? r[i] : v)))) / D);
+  const spiegata = c[0] * sw + c[1] * sxw + c[2] * syw;
+  return spiegata / sww;
+}
+for (let m = 0; m < nTot && elastici.length < 12; m++) {
+  if (freq[m] < 5) continue;
+  const prova = valutaSuGriglia(coefficientiModo(m), NU_OUT, NV_OUT);
+  const q = quotaPiana(prova);
+  if (q > 0.95) { console.log(`scartato moto rigido a ${freq[m].toFixed(1)} Hz (piano ${q.toFixed(3)})`); continue; }
+  elastici.push(m);
+}
 
 const confronti = [];
 /** @type {Record<string, { m: number, w: Float64Array, hz: number, t: ReturnType<typeof topologia> }>} */
