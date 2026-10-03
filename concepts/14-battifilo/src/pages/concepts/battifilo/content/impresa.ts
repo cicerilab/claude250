@@ -4,7 +4,7 @@
  * Attività inventata. Indirizzo, telefono ed email sono DI ESEMPIO: il repo è
  * pubblico, quindi nessun numero che possa appartenere a qualcuno. Il telefono
  * e l'email non compaiono mai a vista: nel sito ci sono solo i link "Chiama",
- * "Scrivi", "Chiama Loris", "chiama l'ufficio".
+ * "Scrivi", "Chiama Loris", "chiama l’ufficio".
  * Nessun dato legale (partita IVA, iscrizioni, permessi, direttore lavori).
  */
 

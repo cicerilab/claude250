@@ -1,0 +1,345 @@
+/*
+ * BATTIFILO · motion.css
+ *
+ * Tutte le transizioni e i keyframe del concept. Le durate e le curve
+ * arrivano da `variabiliMotion()` (choreography.ts) come variabili inline su
+ * `.btf-root`; con reduced motion i movimenti valgono 0 ms e restano solo le
+ * dissolvenze corte di foto e scheda (150 ms). Solo `opacity`, `transform`,
+ * `clip-path`: mai width, height, top, left, filter.
+ *
+ * Niente transizioni prima del mount: `.btf-root[data-pronto="0"]` le
+ * spegne tutte, così la prima pittura (e il prerender) non sfuma nulla.
+ *
+ * Selettori di stato: `[data-stato]` di layout/Tappa.tsx, `data-motion` e
+ * `data-trascina` della radice, e le classi/attributi di sezione elencati in
+ * docs/motion-designer.md §7 (contratto con i section-builder).
+ */
+
+/* ------------------------------------------------------------------ */
+/* Ordine dei cambi: niente transizioni finché la pagina non è pronta   */
+/* ------------------------------------------------------------------ */
+
+.btf-root[data-pronto="0"] *,
+.btf-root[data-pronto="0"] *::before,
+.btf-root[data-pronto="0"] *::after {
+  transition-duration: 0s !important;
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+}
+
+/* ------------------------------------------------------------------ */
+/* 1 · La scheda sulla lastra (Tappa)                                   */
+/* ------------------------------------------------------------------ */
+
+/*
+ * Le 16 tappe stanno nella stessa cella. Solo opacità: nessuna traslazione,
+ * niente fade-up. L'uscente sfuma in 250 ms, l'entrante parte dopo 100 ms e
+ * sfuma in 250 ms (si sovrappongono 150 ms sotto il 50%: niente doppio testo).
+ */
+.btf-root .btf-tappa {
+  opacity: 0;
+  transition: opacity var(--btf-dur-tappa-esce) var(--btf-ease-velatura);
+}
+
+.btf-root .btf-tappa[data-stato="attiva"] {
+  opacity: 1;
+  transition: none;
+}
+
+.btf-root .btf-tappa[data-stato="entra"] {
+  opacity: 1;
+  transition: opacity var(--btf-dur-tappa-entra) var(--btf-ease-velatura) var(--btf-ritardo-tappa-entra);
+}
+
+.btf-root .btf-tappa[data-stato="esce"] {
+  opacity: 0;
+}
+
+.btf-root .btf-tappa[data-stato="spenta"] {
+  opacity: 0;
+  transition: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* 2 · Le foto (due livelli A/B)                                        */
+/* ------------------------------------------------------------------ */
+
+/*
+ * Dissolvenza incrociata: i due livelli sono sempre sovrapposti, quello che
+ * entra sale da 0 a 1 SOPRA quello che esce (che resta a 1 finché la
+ * dissolvenza non è finita: mai un passaggio per il fondo). 450 ms, 150 ms
+ * con reduced motion. Il cambio arriva al massimo ogni 500 ms (JS).
+ */
+.btf-root .btf-foto__livello {
+  opacity: 0;
+  transition: opacity var(--btf-dur-foto) var(--btf-ease-velatura);
+  will-change: opacity;
+}
+
+.btf-root .btf-foto__livello[data-visibile="1"] {
+  opacity: 1;
+}
+
+.btf-root .btf-foto__livello[data-visibile="1"][data-sotto="1"] {
+  /* Il livello uscente: opaco, sotto, senza transizione (lo scopre l'altro). */
+  transition: none;
+}
+
+/* Mese senza foto (piano B): la lastra sale sull'area della foto, solo opacità. */
+.btf-root .btf-foto__vuoto {
+  opacity: 0;
+  transition: opacity var(--btf-dur-foto) var(--btf-ease-velatura);
+}
+
+.btf-root[data-foto="no"] .btf-foto__vuoto {
+  opacity: 1;
+}
+
+/* ------------------------------------------------------------------ */
+/* 3 · La linea: gesso, filo, cassetta, istruzione, riga del fermo       */
+/* ------------------------------------------------------------------ */
+
+/*
+ * Il gesso si scopre con `clip-path: inset()`: `--btf-battuto` (nuovo) e
+ * `--btf-massimo` (vecchio) sono px scritti da LineaBattuta.tsx sull'elemento
+ * foglia `data-btfvar` UNA volta all'impatto; la transizione fa il resto.
+ * La curva `posa` mette quasi tutto nei primi 60 ms: il segno appare come si
+ * posa il gesso, non come una barra che cresce.
+ */
+.btf-root .btf-linea__gesso--nuovo {
+  clip-path: inset(0 calc(100% - var(--btf-battuto, 0px)) 0 0);
+  transition: clip-path var(--btf-dur-posa) var(--btf-ease-posa);
+}
+
+.btf-root .btf-linea__gesso--vecchio {
+  clip-path: inset(0 calc(100% - var(--btf-massimo, 0px)) 0 0);
+  opacity: var(--btf-opacita-gesso-vecchio);
+  transition: clip-path var(--btf-dur-posa) var(--btf-ease-posa);
+}
+
+.btf-root .btf-linea__gesso[data-posa="1"] {
+  will-change: clip-path;
+}
+
+/* La cassetta e il nastro: posizione scritta per frame (variabile), nessuna transizione CSS. */
+.btf-root .btf-linea__cassetta {
+  translate: var(--btf-cassetta-x, 0px) 0;
+  will-change: translate;
+}
+
+.btf-root .btf-linea__nastro {
+  translate: var(--btf-nastro-x, 0px) 0;
+  will-change: translate;
+}
+
+/* In mano: la cassetta si preme un poco (transform, non dimensione). */
+.btf-root .btf-linea__cassetta-corpo {
+  transition: transform 120ms var(--btf-ease-aggancio);
+}
+
+.btf-root[data-trascina="1"] .btf-linea__cassetta-corpo {
+  transform: scale(0.96);
+}
+
+/* Il filo: `d` scritto per frame; il colore non cambia mai. */
+.btf-root .btf-linea__filo {
+  will-change: contents;
+}
+
+/* Istruzione "Tira il filo": sparisce al primo movimento, solo opacità. */
+.btf-root .btf-linea__istruzione {
+  opacity: 1;
+  transition: opacity var(--btf-dur-istruzione) var(--btf-ease-velatura);
+}
+
+.btf-root .btf-linea__istruzione[data-vista="1"] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Riga del fermo e nome del mese al passaggio o al fuoco: compare, non scorre. */
+.btf-root .btf-linea__riga {
+  opacity: 0;
+  transition: opacity var(--btf-dur-riga-fermo) var(--btf-ease-velatura);
+}
+
+.btf-root .btf-linea__riga[data-mostra="1"] {
+  opacity: 1;
+}
+
+/* ------------------------------------------------------------------ */
+/* 4 · La polvere                                                       */
+/* ------------------------------------------------------------------ */
+
+/*
+ * 8-12 granelli sopra il punto d'impatto, ognuno con le sue variabili
+ * (`stileGranello()`): si alzano di 6-20 px con una deriva laterale, si
+ * posano e svaniscono in 800 ms. Opacità di picco 0,16-0,36: mai un lampo.
+ * Il contenitore rinasce (key React) a ogni battuta. Con reduced motion o
+ * saveData non viene renderizzato.
+ */
+.btf-root .btf-polvere {
+  pointer-events: none;
+}
+
+.btf-root .btf-polvere__granello {
+  position: absolute;
+  left: calc(var(--btf-g-u, 0.5) * 100%);
+  top: 0;
+  width: var(--btf-g-lato, 2px);
+  height: var(--btf-g-lato, 2px);
+  background: var(--btf-gesso);
+  opacity: 0;
+  transform: translate(0, 0);
+  animation: btf-polvere var(--btf-dur-polvere) var(--btf-ease-sbuffo) var(--btf-g-ritardo, 0ms) 1 both;
+  will-change: transform, opacity;
+}
+
+@keyframes btf-polvere {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  18% {
+    opacity: var(--btf-g-o, 0.3);
+    transform: translate(calc(var(--btf-g-dx, 0px) * 0.35), var(--btf-g-dy, -12px));
+  }
+  60% {
+    opacity: calc(var(--btf-g-o, 0.3) * 0.7);
+    transform: translate(calc(var(--btf-g-dx, 0px) * 0.8), calc(var(--btf-g-dy, -12px) * 0.35));
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--btf-g-dx, 0px), 1px);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* 5 · Misura e manda: il piano di tracciamento                          */
+/* ------------------------------------------------------------------ */
+
+/* I lati della finestra: dasharray/dashoffset scritti per frame durante la battuta. */
+.btf-root .btf-misura__lato {
+  will-change: contents;
+}
+
+/* Il segno vecchio dopo una correzione: resta, più chiaro, come sulla lastra. */
+.btf-root .btf-misura__lato--vecchio {
+  opacity: var(--btf-opacita-gesso-vecchio);
+}
+
+/* Quote a stencil e superficie: compaiono con il gesso del loro lato. */
+.btf-root .btf-misura__quota {
+  opacity: 0;
+  transition: opacity var(--btf-dur-posa) var(--btf-ease-posa);
+}
+
+.btf-root .btf-misura__quota[data-mostra="1"] {
+  opacity: 1;
+}
+
+/* Data e frase del successo "marcate a spruzzo": compaiono, non si spruzzano. */
+.btf-root .btf-misura__marcatura {
+  opacity: 0;
+  transition: opacity var(--btf-dur-marcatura) var(--btf-ease-posa);
+}
+
+.btf-root .btf-misura__marcatura[data-mostra="1"] {
+  opacity: 1;
+}
+
+/* Piano di tracciamento con la tastiera aperta: cambia l'altezza della griglia
+   (layout, una volta), il piano scala con transform. */
+.btf-root .btf-misura__piano {
+  transition: transform var(--btf-dur-tastiera) var(--btf-ease-scende);
+  transform-origin: top center;
+}
+
+/* ------------------------------------------------------------------ */
+/* 6 · La lastra che sale ("Di più" su telefono)                        */
+/* ------------------------------------------------------------------ */
+
+/*
+ * Su stretto la lastra sale sopra la foto lasciandone una striscia di 20svh:
+ * `translate` di una distanza fissata da layout.css (`--btf-lastra-salita`),
+ * curva `solleva` in salita e `scende` in discesa. Solo transform.
+ */
+.btf-root .btf-lastra {
+  transition: translate var(--btf-dur-lastra-scende) var(--btf-ease-scende);
+}
+
+.btf-root .btf-lastra[data-espansa="1"] {
+  translate: 0 calc(-1 * var(--btf-lastra-salita, 0px));
+  transition: translate var(--btf-dur-lastra-sale) var(--btf-ease-solleva);
+}
+
+/* ------------------------------------------------------------------ */
+/* 7 · Menu del telefono e schermate a tutto schermo                     */
+/* ------------------------------------------------------------------ */
+
+/* Dissolvenza pura: niente tendina che scende, niente scala. */
+.btf-root .btf-menu {
+  opacity: 0;
+  transition: opacity var(--btf-dur-menu) var(--btf-ease-velatura);
+}
+
+.btf-root .btf-menu[data-aperto="1"] {
+  opacity: 1;
+}
+
+.btf-root .btf-schermata {
+  opacity: 0;
+  transition: opacity var(--btf-dur-schermata) var(--btf-ease-velatura);
+}
+
+.btf-root .btf-schermata[data-aperta="1"] {
+  opacity: 1;
+}
+
+/* ------------------------------------------------------------------ */
+/* 8 · Reduced motion: stato finale immediato                            */
+/* ------------------------------------------------------------------ */
+
+/*
+ * `variabiliMotion(true)` porta già i movimenti a 0 ms. Qui si copre il caso
+ * in cui la preferenza cambi prima che JS ricalcoli le variabili, e si
+ * spengono i keyframe (la polvere non viene renderizzata; se ci fosse, ferma).
+ */
+@media (prefers-reduced-motion: reduce) {
+  .btf-root .btf-polvere__granello {
+    animation: none;
+    opacity: 0;
+  }
+
+  .btf-root .btf-linea__gesso--nuovo,
+  .btf-root .btf-linea__gesso--vecchio,
+  .btf-root .btf-linea__cassetta-corpo,
+  .btf-root .btf-linea__istruzione,
+  .btf-root .btf-linea__riga,
+  .btf-root .btf-misura__quota,
+  .btf-root .btf-misura__marcatura,
+  .btf-root .btf-misura__piano,
+  .btf-root .btf-lastra,
+  .btf-root .btf-lastra[data-espansa="1"],
+  .btf-root .btf-menu,
+  .btf-root .btf-schermata {
+    transition-duration: 0s;
+  }
+
+  .btf-root .btf-tappa,
+  .btf-root .btf-tappa[data-stato="entra"],
+  .btf-root .btf-foto__livello,
+  .btf-root .btf-foto__vuoto {
+    transition-duration: 150ms;
+    transition-delay: 0s;
+  }
+}
+
+.btf-root[data-motion="reduced"] .btf-polvere__granello {
+  animation: none;
+  opacity: 0;
+}
+
+.btf-root[data-motion="reduced"] .btf-linea__cassetta-corpo {
+  transform: none;
+}

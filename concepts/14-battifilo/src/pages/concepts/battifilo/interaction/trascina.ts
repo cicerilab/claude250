@@ -235,7 +235,10 @@ export function useTrascinaOrizzontale(ref: RefObject<HTMLElement>, o: OpzioniTr
         /* capture non disponibile: il gesto regge finché il dito resta sopra */
       }
       const o2 = opz.current;
-      o2.focusSu?.()?.focus({ preventScroll: true });
+      // La presa mette a fuoco lo slider (o l'elemento stesso se è focalizzabile):
+      // dopo il rilascio le frecce continuano da dove si è lasciato.
+      const daFocalizzare = o2.focusSu ? o2.focusSu() : el.hasAttribute('tabindex') ? el : null;
+      daFocalizzare?.focus({ preventScroll: true });
       segnaInput();
       o2.onInizio({ x0, x, puntatore: tipoPuntatore });
       ultimoX = x;

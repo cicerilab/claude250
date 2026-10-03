@@ -808,6 +808,15 @@ export function useSelezioneLune(nastro: RefObject<HTMLElement>, o: OpzioniSelez
 
   const idLuna = useCallback((i: number) => `${idBase}-${i}`, [idBase]);
 
+  /* quali lune non si possono scegliere (chiusura, notti occupate della stanza filtro): dipende da lune e filtro */
+  const disabilitate = useMemo(() => {
+    const set = new Set<number>();
+    lune.forEach((d, i) => {
+      if (chiuso(d) || (filtro !== null && occupata(filtro, d))) set.add(i);
+    });
+    return set;
+  }, [lune, filtro]);
+
   const propsLuna = useCallback(
     (i: number): PropsLuna => {
       const scelta = intervallo !== null && i >= intervallo.da && i <= intervallo.a;
@@ -821,7 +830,7 @@ export function useSelezioneLune(nastro: RefObject<HTMLElement>, o: OpzioniSelez
         id: idLuna(i),
         role: 'option',
         'aria-selected': scelta,
-        'aria-disabled': selezionabile(i) ? undefined : true,
+        'aria-disabled': disabilitate.has(i) ? true : undefined,
         'data-imb-ix-indice': i,
         'data-imb-ix-attiva': i === attiva ? 'true' : undefined,
         'data-imb-ix-scelta': posizione,
@@ -830,8 +839,7 @@ export function useSelezioneLune(nastro: RefObject<HTMLElement>, o: OpzioniSelez
         onClick: onClickLuna,
       };
     },
-    // `filtro` e `lune` cambiano l'esito di selezionabile (che legge gli specchi)
-    [intervallo, anteprima, attiva, ancora, idLuna, onClickLuna, selezionabile, filtro, lune],
+    [intervallo, anteprima, attiva, ancora, idLuna, onClickLuna, disabilitate],
   );
 
   const statoLune: PropsListbox['data-imb-ix-lune'] = gesto === 'trascina' ? (fuori ? 'fuori' : 'trascina') : 'fermo';

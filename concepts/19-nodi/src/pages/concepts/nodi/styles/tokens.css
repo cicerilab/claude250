@@ -1,0 +1,227 @@
+/*
+ * NODI · design tokens (art-director)
+ *
+ * Solo variabili --nod-* su .nod-root e i @font-face di ripiego. Nessuna
+ * regola di layout o di componente: quelle stanno in base.css, layout.css e
+ * nei CSS di sezione. Specchio numerico: tokens.ts. Contrasti calcolati e
+ * prove a schermo: docs/art-director.md. Guida d'uso: DESIGN.md.
+ *
+ * Tema unico chiaro (la tavola di abete sul banco), bloccato: non esiste una
+ * variante scura e non si segue prefers-color-scheme. Nessun hex fuori da
+ * questo file e da tokens.ts.
+ */
+
+/* ------------------------------------------------------------------------ */
+/* Ripieghi metrici dei font (niente salti quando arrivano i woff2)          */
+/* Tarati con fontTools sui file di Google Fonts (IM Fell DW Pica v16,       */
+/* Spline Sans v16) contro Liberation Serif / Times New Roman e Liberation   */
+/* Sans / Arial (metriche identiche): larghezza media di una frase italiana  */
+/* in minuscolo, ascent e descent hhea riportati sulla misura corretta.      */
+/* ------------------------------------------------------------------------ */
+
+@font-face {
+  font-family: 'Nod Fell Ripiego';
+  src: local('Times New Roman'), local('TimesNewRomanPSMT'), local('Liberation Serif'), local('Tinos'), local('Georgia');
+  font-weight: 400;
+  size-adjust: 96.8%;
+  ascent-override: 94.24%;
+  descent-override: 34.91%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Nod Spline Ripiego';
+  src: local('Arial'), local('ArialMT'), local('Liberation Sans'), local('Arimo'), local('Helvetica');
+  font-weight: 300 600;
+  size-adjust: 101.8%;
+  ascent-override: 94.64%;
+  descent-override: 23.23%;
+  line-gap-override: 0%;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Token                                                                     */
+/* ------------------------------------------------------------------------ */
+
+.nod-root {
+  color-scheme: light;
+
+  /* Colori: i quattro materiali del gesto + tre derivati ------------------ */
+  --nod-abete: #e6d4ac;         /* la tavola e il banco: fondo di tutta la pagina */
+  --nod-abete-scuro: #dcc593;   /* abete in ombra: fondo del piano del suono, riga del campo a fuoco */
+  --nod-abete-vena: #d6bf8e;    /* solo le righe della vena nello shader (mai nel DOM) */
+  --nod-te: #3b2b1d;            /* foglie di tè: testo di lettura, righello, assi, bordi dei campi */
+  --nod-vernice: #8b3a1d;       /* vernice a olio: SOLO cifre (Hz, euro, mesi, posto in lista) e cursore */
+  --nod-ebano: #16120f;         /* ebano: titoli IM Fell, bottone principale, contorno della tavola, fuoco */
+
+  /* Triple per rgb(var(--x-rgb) / a) (usare solo con le alfa qui sotto) */
+  --nod-abete-rgb: 230 212 172;
+  --nod-te-rgb: 59 43 29;
+  --nod-vernice-rgb: 139 58 29;
+  --nod-ebano-rgb: 22 18 15;
+
+  /* Alfa fisse (le uniche ammesse; ogni valore ha il suo contrasto calcolato) */
+  --nod-a-ombra: 0.2;           /* ombra della tavola sul banco, tinta di tè, mai nera */
+  --nod-a-cuscinetto: 0.25;     /* cuscinetti di gommapiuma, ebano (oggetto nel GL) */
+  --nod-a-assi: 0.62;           /* assi del piano del suono: 3,04:1 su abete scuro */
+  --nod-a-tacca: 0.6;           /* tacche minori del righello: 3,34:1 su abete */
+  --nod-a-foglia-chiara: 0.8;   /* secondo tono delle foglie */
+  --nod-a-velo-menu: 0.98;      /* pannello del menu a comparsa su stretto */
+
+  /* Colori composti (già calcolati: stessi valori in tokens.ts) */
+  --nod-te-chiaro: #5d4d3a;     /* tè all'80 % su abete: secondo tono delle foglie, foglia del piano */
+  --nod-assi: #7c6b53;          /* tè al 62 % su abete scuro */
+  --nod-tacca: #7f6f56;         /* tè al 60 % su abete */
+  --nod-cuscinetto: #b2a485;    /* ebano al 25 % su abete */
+  --nod-ombra: #c4b28f;         /* tè al 20 % su abete: colore pieno dell'ombra al centro */
+
+  /* Ruoli (nei componenti si usano questi, non i colori nudi) ------------- */
+  --nod-fondo: var(--nod-abete);
+  --nod-testo: var(--nod-te);
+  --nod-titolo: var(--nod-ebano);
+  --nod-cifra: var(--nod-vernice);                /* l'unico posto in cui vive la vernice, con il cursore */
+  --nod-cursore: var(--nod-vernice);
+  --nod-azione: var(--nod-ebano);                 /* bottone principale e bottoni di invio */
+  --nod-azione-testo: var(--nod-abete);
+  --nod-azione-premuta: var(--nod-te);            /* bottone ebano sotto il puntatore o premuto */
+  --nod-link: var(--nod-te);                      /* i link sono tè sottolineati, mai colorati */
+  --nod-link-filo: var(--nod-te);                 /* sottolineatura 1 px; 2 px ebano sull'elemento corrente */
+  --nod-regolo-binario: var(--nod-te);            /* linea del righello, 1 px */
+  --nod-regolo-tacca: var(--nod-tacca);           /* tacche ogni 10 Hz */
+  --nod-regolo-tacca-cifra: var(--nod-te);        /* tacche con cifra (ogni 50 Hz) */
+  --nod-regolo-trovato: var(--nod-ebano);         /* segno dei modi trovati */
+  --nod-piano-fondo: var(--nod-abete-scuro);
+  --nod-piano-assi: var(--nod-assi);
+  --nod-piano-foglia: var(--nod-te);
+  --nod-campo-fondo: var(--nod-abete);
+  --nod-campo-bordo: var(--nod-te);               /* 1 px pieno: 9,28:1 */
+  --nod-campo-bordo-fuoco: var(--nod-ebano);      /* 2 px */
+  --nod-campo-fondo-fuoco: var(--nod-abete-scuro);
+  --nod-errore-segno: var(--nod-vernice);         /* solo il segno a sinistra del messaggio: il testo resta tè */
+  --nod-menu-fondo: rgb(var(--nod-abete-rgb) / var(--nod-a-velo-menu));
+  --nod-menu-bordo: var(--nod-ebano);
+  --nod-selezione-fondo: var(--nod-ebano);
+  --nod-selezione-testo: var(--nod-abete);
+  --nod-fuoco: var(--nod-ebano);                  /* anello 2 px, a 2 px di distanza */
+  --nod-fuoco-spessore: 2px;
+  --nod-fuoco-distanza: 2px;
+
+  /* Tipografia ------------------------------------------------------------ */
+  --nod-font-fell: 'IM Fell DW Pica', 'Nod Fell Ripiego', 'Times New Roman', serif;
+  --nod-font-spline: 'Spline Sans', 'Nod Spline Ripiego', Arial, sans-serif;
+
+  /* Scala fluida: 375 px → 1440 px, lineare in mezzo, ferma fuori.
+     IM Fell mai sotto 24 px tranne la seconda riga del marchio (18 px, solo largo). */
+  --nod-t-h1: clamp(34px, 27.66px + 1.69vw, 52px);            /* IM Fell 400, 1,08 */
+  --nod-t-h2: clamp(32px, 23.55px + 2.254vw, 56px);           /* IM Fell 400, 1,05 */
+  --nod-t-h3: clamp(24px, 22.59px + 0.376vw, 28px);           /* IM Fell 400, 1,15 */
+  --nod-t-marchio: clamp(28px, 23.77px + 1.127vw, 40px);      /* IM Fell 400, 1 */
+  --nod-t-marchio-2: 18px;                                     /* IM Fell 400, 1,2: solo sul largo */
+  --nod-t-radio: 24px;                                         /* IM Fell 400: strumento nel form */
+  --nod-t-valore: clamp(24px, 16.96px + 1.878vw, 44px);       /* Spline 500, cifre tabulari: Hz corrente */
+  --nod-t-cifra: clamp(24px, 21.18px + 0.751vw, 32px);        /* Spline 500, cifre tabulari: Hz, euro, mesi */
+  --nod-t-lead: clamp(17px, 16.3px + 0.188vw, 19px);          /* Spline 400, 1,5: frase dell'apertura */
+  --nod-t-corpo: 17px;                                         /* Spline 400, 1,55 */
+  --nod-t-piccolo: 15px;                                       /* Spline 400, 1,5: frase della zona, invito */
+  --nod-t-nota: 13px;                                          /* Spline 400, 1,45: note, orari, "9:00-12:30" */
+  --nod-t-scala: clamp(11px, 10.65px + 0.094vw, 12px);        /* Spline 500, cifre tabulari: cifre del righello */
+  --nod-t-modo: clamp(12px, 11.3px + 0.188vw, 14px);          /* Spline 500: nome del modo sotto il valore */
+  --nod-t-bottone: 17px;                                       /* Spline 500 */
+  --nod-t-campo: 17px;                                         /* Spline 400 (niente zoom iOS) */
+  --nod-t-etichetta: 15px;                                     /* Spline 500: etichette dei campi */
+
+  --nod-lh-titolo: 1.08;
+  --nod-lh-h2: 1.05;
+  --nod-lh-h3: 1.15;
+  --nod-lh-cifra: 1;
+  --nod-lh-lead: 1.5;
+  --nod-lh-corpo: 1.55;
+  --nod-lh-nota: 1.45;
+
+  --nod-peso-leggero: 300;
+  --nod-peso-testo: 400;
+  --nod-peso-medio: 500;
+  --nod-peso-forte: 600;
+
+  --nod-misura-riga: 60ch;      /* massimo 60 caratteri per riga di corpo */
+  --nod-tracking-titolo: -0.005em;
+  --nod-tracking-cifra: -0.01em;
+
+  /* Spaziatura (base 4) ------------------------------------------------- */
+  --nod-sp-1: 4px;
+  --nod-sp-2: 8px;
+  --nod-sp-3: 12px;
+  --nod-sp-4: 16px;
+  --nod-sp-5: 24px;
+  --nod-sp-6: 32px;
+  --nod-sp-7: 48px;
+  --nod-sp-8: 64px;
+  --nod-sp-9: 96px;
+  --nod-sp-10: 128px;
+
+  /* Griglia della scena: testo | tavola | regolo (largo), colonna unica (stretto) */
+  --nod-bordo: 20px;                                           /* margine laterale su stretto */
+  --nod-bordo-largo: 72px;                                     /* x di partenza del margine di lettura */
+  --nod-lettura: clamp(320px, 26.7vw, 440px);                  /* larghezza del margine di lettura, largo */
+  --nod-lettura-stretta: clamp(300px, 30vw, 360px);            /* 1024-1199 px */
+  --nod-lettura-768: min(560px, 100% - 40px);                  /* tablet in verticale */
+  --nod-tavola-h: min(86svh, 1000px);                          /* altezza del riquadro della tavola, largo */
+  --nod-tavola-h-1024: min(80svh, 1000px);
+  --nod-tavola-rapporto: 240 / 388;                            /* riquadro con l'ombra (TAVOLA.riquadro): l'SVG può correggerlo */
+  --nod-cornice: 54svh;                                        /* riquadro fisso su stretto, valore massimo */
+  --nod-cornice-min: 34svh;
+  --nod-cornice-apertura-min: 38svh;
+  --nod-regolo-h: 56px;                                        /* righello orizzontale su stretto */
+  --nod-regolo-x: 1000px;                                      /* binario a 1440: 54 px a destra della tavola */
+  --nod-banco-w: 164px;                                        /* colonna del banco (marchio, suono, indice), largo */
+  --nod-ritorno-zona: 72px;                                    /* zona del ConceptBackButton, mai coperta */
+  --nod-ritorno-scroll: 88px;                                  /* scroll-margin-bottom su stretto */
+  --nod-foto-w: 360px;
+  --nod-foto-rapporto: 4 / 3;
+  --nod-piano-lato: 320px;                                     /* piano del suono su largo; 100 % della colonna su stretto */
+  --nod-piano-centro: 18%;                                     /* raggio della zona "equilibrata" */
+
+  /* Misure dei controlli ------------------------------------------------- */
+  --nod-tocco: 44px;
+  --nod-bottone-h: 52px;
+  --nod-campo-h: 48px;
+  --nod-indice-riga: 40px;
+  --nod-cursore-segno: 16px;                                   /* segno vernice del cursore (lunghezza) */
+  --nod-cursore-spessore: 2px;
+  --nod-tacca-l: 8px;                                          /* tacca ogni 10 Hz */
+  --nod-tacca-cifra-l: 14px;                                   /* tacca ogni 50 Hz */
+  --nod-binario: 1px;
+  --nod-filo: 1px;                                             /* contorno della tavola, bordi dei campi, assi */
+  --nod-filo-forte: 2px;                                       /* sottolineatura dell'elemento corrente, fuoco */
+  --nod-foglia-piano: 28px;                                    /* foglia trascinabile del piano del suono */
+
+  /* Raggi: spigolo vivo ovunque; tondi solo gli oggetti ------------------ */
+  --nod-raggio: 0;
+  --nod-raggio-oggetto: 50%;                                   /* cuscinetti (GL), radio, area di presa della foglia */
+
+  /* Ombra: una sola in tutto il sito, la tavola sul banco (nel GL e nel poster) */
+  --nod-ombra-tavola: 0 10px 28px rgb(var(--nod-te-rgb) / var(--nod-a-ombra));
+  --nod-ombra-sfocatura-mm: 9;                                  /* per maschera.ts: sfocatura in mm */
+  --nod-ombra-spostamento-mm: 0 3;                              /* per maschera.ts: x y in mm */
+
+  /* Vena dell'abete (parametri per lo shader, non per il DOM) ------------- */
+  --nod-vena-passo-mm: 1.4;                                    /* anelli fitti al centro */
+  --nod-vena-passo-fianco-mm: 2.2;                             /* più larghi verso i fianchi */
+  --nod-vena-contrasto: 0.55;                                  /* 0 = abete piatto, 1 = abete vena pieno */
+  --nod-vena-rumore: 0.18;                                     /* ondulazione delle righe */
+  --nod-giunta-mm: 0.25;                                       /* linea della giunta al centro */
+
+  /* Tempi e curve (valori di partenza: le curve definitive sono del motion-designer) */
+  --nod-t-dissolvenza-testo: 200ms;
+  --nod-t-dissolvenza-modo: 300ms;
+  --nod-t-dissolvenza-fermo: 400ms;
+  --nod-t-caduta: 1200ms;
+  --nod-ease-fermo: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Livelli ------------------------------------------------------------- */
+  --nod-z-palco: 0;
+  --nod-z-testo: 1;
+  --nod-z-regolo: 2;
+  --nod-z-testata: 10;
+  --nod-z-menu: 11;
+}

@@ -143,6 +143,14 @@
   text-align: end;
   white-space: nowrap;
 }
+/* Su telefono la scheda è una colonna sola allineata a sinistra: il
+   riquadro resta largo (niente salti) ma la cifra parte dal bordo. */
+@media (max-width: 59.99em) {
+  .btf-root .btf-stencil--riquadro-costo,
+  .btf-root .btf-stencil--riquadro-totale {
+    text-align: start;
+  }
+}
 
 /* --------------------------------------------------------------------------
    3. Cifre in Chivo (prezzi in riga, progressivo, forbice)

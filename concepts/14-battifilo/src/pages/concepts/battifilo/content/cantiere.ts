@@ -35,7 +35,7 @@ export interface Fermo {
   readonly meteo: boolean;
   /** la riga che compare sul buco, sulla tacca a fuoco e nella vista elenco */
   readonly riga: string;
-  /** il pezzo che entra in "chi c'era" */
+  /** il pezzo che entra in "chi c’era" */
   readonly breve: string;
   /** la frase detta dallo slider (aria-valuetext) */
   readonly parlato: string;
@@ -126,7 +126,7 @@ const RIGHE: readonly RigaMese[] = [
     fase: 'Vespaio e primi muri',
     costo: 29800,
     fatto:
-      "Vespaio aerato: sotto il pavimento resta un'intercapedine d'aria, così l'umidità del terreno non sale. Gli scarichi, poi i primi corsi di blocchi in laterizio.",
+      "Vespaio aerato: sotto il pavimento resta un’intercapedine d’aria, così l’umidità del terreno non sale. Gli scarichi, poi i primi corsi di blocchi in laterizio.",
     chi: 'Muratori 4, idraulico 1 per gli scarichi',
     giorni: 20,
     fermi: [],
@@ -165,7 +165,7 @@ const RIGHE: readonly RigaMese[] = [
     giorni: 20,
     fermi: [],
     controlla:
-      "Adesso si vedono le finestre vere nei muri: è l'ultimo momento comodo per cambiarne una.",
+      "Adesso si vedono le finestre vere nei muri: è l’ultimo momento comodo per cambiarne una.",
     finestra: false,
   },
   {
@@ -177,7 +177,7 @@ const RIGHE: readonly RigaMese[] = [
     fase: 'Struttura del tetto',
     costo: 22300,
     fatto:
-      "Travi e tavolato del tetto in legno, sopra l'isolamento. È un tetto ventilato: uno strato d'aria sotto le tegole porta via il caldo d'estate.",
+      "Travi e tavolato del tetto in legno, sopra l’isolamento. È un tetto ventilato: uno strato d’aria sotto le tegole porta via il caldo d’estate.",
     chi: 'Carpentieri 3, muratori 2',
     giorni: 6,
     fermi: [
@@ -297,12 +297,12 @@ const RIGHE: readonly RigaMese[] = [
     fase: 'Cartongessi e VMC',
     costo: 30400,
     fatto:
-      "Pareti in cartongesso. La VMC, la ventilazione che cambia l'aria senza aprire le finestre. La pompa di calore, che scalda e raffresca con l'aria di fuori.",
+      "Pareti in cartongesso. La VMC, la ventilazione che cambia l’aria senza aprire le finestre. La pompa di calore, che scalda e raffresca con l’aria di fuori.",
     chi: 'Cartongessisti 2, impiantisti 3',
     giorni: 20,
     fermi: [],
     controlla:
-      "La pompa di calore fuori fa un po' di rumore: controlla che non finisca sotto la finestra di una camera.",
+      "La pompa di calore fuori fa un po’ di rumore: controlla che non finisca sotto la finestra di una camera.",
     finestra: false,
   },
   {
@@ -397,7 +397,7 @@ export const BILANCIO = {
   varianti: [
     {
       id: 'finestra-cucina',
-      cosa: "una finestra in più in cucina, con l'apertura del muro e l'architrave",
+      cosa: "una finestra in più in cucina, con l’apertura del muro e l’architrave",
       euro: 2100,
       n: 5,
     },
