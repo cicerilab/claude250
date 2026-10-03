@@ -1,0 +1,452 @@
+/* ==========================================================================
+   MADRE · design tokens (art-director)
+   --------------------------------------------------------------------------
+   Unico file in cui vivono colori, misure, superfici e font del concept 17.
+   Le sezioni usano solo queste variabili: nessun hex nei CSS di sezione.
+   Specchio numerico per TypeScript e WebGL: styles/tokens.ts (stessi valori).
+   Contrasti WCAG calcolati con lo script in docs/art-director.md.
+
+   Tre fondi, tre ruoli
+   - farina (default di .mad-root): impasto, pane, la madre, pane fisso.
+   - zucchero: dolci e domenica (il foglio steso sul bancone), i giorni in
+     cui "si fa" nel pane fisso, il vassoio.
+   - inchiostro: la bottega e il piede.
+   Un elemento con data-mad-fondo="zucchero" | "inchiostro" | "farina"
+   ridefinisce i ruoli (testo, prezzo, bottone, filo, focus) per sé e per
+   i figli. data-mad-fondo="banco" segue il banco attivo scritto da Madre.tsx
+   su .mad-root[data-banco]: serve ai fissi (testata, riga dei banchi).
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Font di ripiego con metriche tarate (niente salto quando arriva il font).
+   Misure fatte con fontTools sui woff2 latin serviti da Google Fonts
+   (Bricolage Grotesque v9 senza asse wdth, Karla v33) contro Arial /
+   Liberation Sans, su frasi italiane del concept. Vedi docs/art-director.md §3.
+   - Titoli: Bricolage opsz 96 wght 700 = 90,7% di Arial Bold;
+     ascent 0,930, descent 0,270.
+   - Voce (nomi, indirizzo, frase): Bricolage opsz 48 wght 600 = 96,6% di
+     Arial Bold; opsz 24 wght 500 = 103,6% di Arial.
+   - Testo: Karla 400 = 101,2% di Arial; Karla 600-700 = 99,7% di Arial Bold;
+     ascent 0,917, descent 0,252.
+   -------------------------------------------------------------------------- */
+@font-face {
+  font-family: "Madre Titolo Ripiego";
+  src: local("Arial Bold"), local("Arial-BoldMT"), local("Liberation Sans Bold"), local("Arimo Bold"), local("Helvetica Neue Bold"), local("Helvetica Bold");
+  font-weight: 100 900;
+  font-style: normal;
+  size-adjust: 90.7%;
+  ascent-override: 102.54%;
+  descent-override: 29.77%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Madre Voce Ripiego";
+  src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("Arimo"), local("Helvetica Neue"), local("Helvetica");
+  font-weight: 100 550;
+  font-style: normal;
+  size-adjust: 103.6%;
+  ascent-override: 89.77%;
+  descent-override: 26.06%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Madre Voce Ripiego";
+  src: local("Arial Bold"), local("Arial-BoldMT"), local("Liberation Sans Bold"), local("Arimo Bold"), local("Helvetica Neue Bold"), local("Helvetica Bold");
+  font-weight: 551 900;
+  font-style: normal;
+  size-adjust: 96.6%;
+  ascent-override: 96.27%;
+  descent-override: 27.95%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Madre Testo Ripiego";
+  src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("Arimo"), local("Helvetica Neue"), local("Helvetica");
+  font-weight: 100 550;
+  font-style: normal;
+  size-adjust: 101.2%;
+  ascent-override: 90.61%;
+  descent-override: 24.9%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Madre Testo Ripiego";
+  src: local("Arial Bold"), local("Arial-BoldMT"), local("Liberation Sans Bold"), local("Arimo Bold"), local("Helvetica Neue Bold"), local("Helvetica Bold");
+  font-weight: 551 900;
+  font-style: normal;
+  size-adjust: 99.7%;
+  ascent-override: 91.98%;
+  descent-override: 25.28%;
+  line-gap-override: 0%;
+}
+
+/* Angoli piegati del vassoio: registrata per poterla animare (una volta,
+   300 ms, lo decide il motion-designer). 0px = foglio piatto. */
+@property --mad-vassoio-piega {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+/* --------------------------------------------------------------------------
+   1. Token comuni
+   -------------------------------------------------------------------------- */
+.mad-root {
+  color-scheme: light;
+
+  /* ---- Colori (i quattro della matrice) ---- */
+  --mad-farina: #F7F3EA;            /* fondo dei pani, dell'impasto, del pane fisso */
+  --mad-zucchero: #9BB2C5;          /* carta da zucchero: dolci, domenica, vassoio, "si fa" */
+  --mad-crosta: #9C5B2A;            /* unico accento: piano del bancone, prezzi su farina, bottone su farina */
+  --mad-inchiostro: #2F3D4C;        /* tutto il testo, fili, focus */
+
+  /* ---- Derivati (nessun colore nuovo: miscele dei quattro) ---- */
+  --mad-crosta-scura: #7E4620;      /* bottone crosta premuto/hover; mai fondo */
+  --mad-farina-chiara: #FCFAF5;     /* fondo dei campi di testo (un foglio più chiaro) */
+  --mad-farina-sotto: #EEE8DC;      /* gettoni, lunedì chiuso, fondo foto in caricamento su farina */
+  --mad-farina-ombra: #E7DECD;      /* pieghe dell'impasto (anche nello shader) */
+  --mad-impasto-nudo: #EAD9BC;      /* impasto senza spolvero, dentro la fossetta (anche nello shader) */
+  --mad-zucchero-luce: #B2C2CE;     /* risvolto del foglio, rovescio degli angoli piegati */
+  --mad-zucchero-piega: #95ABBE;    /* il foglio del vassoio (più fitto del foglio steso) */
+  --mad-zucchero-ombra: #8095A7;    /* linea di piega, fondo foto in caricamento su zucchero; decorativo */
+  --mad-inchiostro-quieto: #57616C; /* testo secondario SOLO su farina (5,69:1) */
+  --mad-inchiostro-profondo: #222C37; /* bottone inchiostro premuto/hover */
+  --mad-farina-quieta: #CFCFCA;     /* testo secondario SOLO su inchiostro (7,10:1) */
+
+  /* ---- Ruoli (fondo farina; ridefiniti dai blocchi data-mad-fondo) ---- */
+  --mad-banco-fondo: var(--mad-farina);
+  --mad-testo: var(--mad-inchiostro);
+  --mad-testo-quieto: var(--mad-inchiostro-quieto);
+  --mad-prezzo: var(--mad-crosta);
+  --mad-primario-fondo: var(--mad-crosta);
+  --mad-primario-fondo-attivo: var(--mad-crosta-scura);
+  --mad-primario-testo: var(--mad-farina);
+  --mad-filo: var(--mad-inchiostro);
+  --mad-focus-colore: var(--mad-inchiostro);
+  --mad-campo-fondo: var(--mad-farina-chiara);
+  --mad-foto-attesa: var(--mad-farina-sotto);
+  --mad-selezione-fondo: var(--mad-zucchero);
+  --mad-selezione-testo: var(--mad-inchiostro);
+  --mad-contatto-colore: rgb(47 61 76 / 0.34);   /* inchiostro: ombra di contatto sul piano */
+
+  /* ---- Famiglie ---- */
+  --mad-font-titolo: "Bricolage Grotesque", "Madre Titolo Ripiego", Arial, sans-serif;
+  --mad-font-voce: "Bricolage Grotesque", "Madre Voce Ripiego", Arial, sans-serif;
+  --mad-font-testo: "Karla", "Madre Testo Ripiego", Arial, sans-serif;
+
+  /* Assi di Bricolage (nessun wdth: il file senza quell'asse pesa 55 KB in meno).
+     opsz fissato a mano: con "auto" un titolo a 36 px prenderebbe il disegno
+     da testo, più largo e più spento. */
+  --mad-opsz-titolo: "opsz" 96;     /* cartello, H1, H2 */
+  --mad-opsz-voce: "opsz" 48;       /* nomi dei prodotti, indirizzo */
+  --mad-opsz-frase: "opsz" 24;      /* la frase del pane fisso */
+  --mad-wght-titolo: 700;
+  --mad-wght-nome: 600;
+  --mad-wght-frase: 500;
+  --mad-wght-corpo: 400;
+  --mad-wght-interfaccia: 500;
+  --mad-wght-forte: 700;
+  --mad-wght-bottone: 600;
+
+  /* ---- Scala tipografica: valore a 375 px → valore a 1440 px ----
+     clamp(min, min - pendenza*375 + pendenza*100vw, max), tutto in rem. */
+  --mad-fs-cartello: clamp(3.5rem, calc(1.4419rem + 8.7793vw), 9rem);      /* 56 → 144: "il pane", "i dolci" sul piano */
+  --mad-fs-titolo-1: clamp(2.125rem, calc(1.6408rem + 2.0657vw), 3.5rem);  /* 34 → 56: H1 dell'impasto */
+  --mad-fs-titolo-2: clamp(2.75rem, calc(2.1338rem + 2.6291vw), 4.5rem);   /* 44 → 72: H2 delle sezioni verticali, la madre */
+  --mad-fs-nome: clamp(1.625rem, calc(1.3169rem + 1.3146vw), 2.5rem);      /* 26 → 40: H3 dei prodotti sul bancone */
+  --mad-fs-nome-piccolo: clamp(1.375rem, calc(1.2430rem + 0.5634vw), 1.75rem); /* 22 → 28: paste, giorni del pane fisso */
+  --mad-fs-indirizzo: clamp(1.875rem, calc(1.6549rem + 0.9390vw), 2.5rem); /* 30 → 40 */
+  --mad-fs-frase: clamp(1.25rem, calc(1.1180rem + 0.5634vw), 1.625rem);   /* 20 → 26: la frase che si scrive da sola */
+  --mad-fs-lead: clamp(1rem, calc(0.9560rem + 0.1878vw), 1.125rem);       /* 16 → 18: riga sotto H1 e cartelli */
+  --mad-fs-corpo: clamp(1rem, calc(0.9780rem + 0.0939vw), 1.0625rem);     /* 16 → 17 */
+  --mad-fs-prezzo: clamp(1.0625rem, calc(0.9965rem + 0.2817vw), 1.25rem); /* 17 → 20, Karla 700 cifre tabellari */
+  --mad-fs-piccolo: 0.9375rem;      /* 15: riga dei banchi, gettoni, righe di servizio */
+  --mad-fs-nota: 0.875rem;          /* 14: crediti; minimo assoluto */
+  --mad-fs-bottone: 1.0625rem;      /* 17 */
+  --mad-fs-campo: 1.0625rem;        /* 17: niente zoom di iOS */
+
+  /* Interlinea */
+  --mad-lh-cartello: 0.86;
+  --mad-lh-titolo: 0.96;
+  --mad-lh-nome: 1.04;
+  --mad-lh-frase: 1.28;
+  --mad-lh-corpo: 1.5;
+  --mad-lh-piccolo: 1.4;
+  --mad-lh-interfaccia: 1.15;
+
+  /* Spaziatura tra le lettere */
+  --mad-trk-cartello: -0.025em;
+  --mad-trk-titolo: -0.015em;
+  --mad-trk-nome: -0.008em;
+  --mad-trk-corpo: 0em;
+  --mad-trk-piccolo: 0.01em;
+
+  /* Giustezze */
+  --mad-giustezza: 60ch;
+  --mad-giustezza-stretta: 44ch;
+
+  /* ---- Spazi (multipli di 4) ---- */
+  --mad-sp-1: 0.25rem;  /* 4 */
+  --mad-sp-2: 0.5rem;   /* 8 */
+  --mad-sp-3: 0.75rem;  /* 12 */
+  --mad-sp-4: 1rem;     /* 16 */
+  --mad-sp-5: 1.5rem;   /* 24 */
+  --mad-sp-6: 2rem;     /* 32 */
+  --mad-sp-7: 3rem;     /* 48 */
+  --mad-sp-8: 4rem;     /* 64 */
+  --mad-sp-9: 6rem;     /* 96 */
+  --mad-sp-10: 8rem;    /* 128 */
+  --mad-sp-11: 12rem;   /* 192 */
+
+  /* ---- Gabbia "a spalla" ----
+     Margine sinistro largo quanto il ConceptBackButton (da 1024 px in su
+     tutto parte da x 248, l'asse del marchio), destro stretto: la pagina
+     pende verso destra, dove continua il bancone. Oltre 1680 px la gabbia
+     si centra. */
+  --mad-pagina-max: 1680px;
+  --mad-fuori: max(0px, calc((100vw - var(--mad-pagina-max)) / 2));
+  --mad-margine-sx: 20px;
+  --mad-margine-dx: 20px;
+  --mad-colonne: 4;
+  --mad-canalino: 16px;
+
+  /* ---- Il bancone ----
+     Il piano è la riga d'appoggio di tutta la vetrina: sopra si poggia,
+     sotto si appende. La quota è una frazione dell'area viva tra la testata
+     e i fissi in basso (mobile 0,50; da 640 px 0,65). */
+  --mad-testata-h: 56px;
+  --mad-riga-banchi-h: 44px;
+  --mad-fissi-basso: calc(102px + env(safe-area-inset-bottom, 0px));  /* riga dei banchi + ConceptBackButton */
+  --mad-piano-quota: 0.5;
+  --mad-piano-y: calc(var(--mad-testata-h) + (100svh - var(--mad-testata-h) - var(--mad-fissi-basso)) * var(--mad-piano-quota));
+  --mad-piano-spessore: 6px;
+  --mad-piano-colore: var(--mad-crosta);
+  --mad-appoggio-aria: 24px;        /* spazio minimo tra la testata e la foto più alta */
+  --mad-foto-h-max: min(230px, calc(var(--mad-piano-y) - var(--mad-testata-h) - var(--mad-appoggio-aria)));
+  --mad-foto-w-max: calc(84vw - 40px);
+  --mad-blocco: 84vw;               /* un prodotto per schermata su mobile (315 px a 375) */
+  --mad-passo: 0px;                 /* spazio tra due prodotti nella striscia */
+  --mad-cartellino-w: 100%;         /* colonna del testo del prodotto */
+  --mad-appeso: 16px;               /* distanza tra il piano e il primo testo appeso sotto */
+
+  /* ---- Misure di interfaccia ---- */
+  --mad-tocco-min: 44px;
+  --mad-bottone-h: 48px;
+  --mad-bottone-h-grande: 56px;
+  --mad-campo-h: 56px;
+  --mad-giorno-h: 56px;             /* righe dei giorni su mobile */
+  --mad-gettone: 72px;              /* foto quadrata del gettone (96 da 640 px) */
+  --mad-raggio: 4px;                /* unico raggio: bottoni, campi, gettoni */
+  --mad-filo-spessore: 2px;         /* bottoni a filo, "in mano", errori, successo */
+  --mad-filo-sottile: 1px;          /* divisori degli scomparti */
+
+  /* ---- Stati ---- */
+  --mad-focus-spessore: 2px;
+  --mad-focus-distanza: 2px;
+  --mad-sottolineatura: 1px;
+  --mad-sottolineatura-hover: 2px;
+  --mad-sottolineatura-distanza: 0.22em;
+  --mad-corrente-sottolineatura: 2px;   /* voce corrente della riga dei banchi */
+  --mad-opacita-disabilitato: 0.45;
+  --mad-fantasma-opacita: 0.35;         /* gettone d'esempio del martedì */
+  --mad-fantasma-bordo: 1.5px dashed var(--mad-inchiostro);
+
+  /* ---- Livelli ---- */
+  --mad-z-canvas: 0;                /* dentro #impasto */
+  --mad-z-foglio: 0;                /* foglio azzurro, sotto il binario, dentro la finestra */
+  --mad-z-contenuto: 1;
+  --mad-z-etichette: 5;             /* riga dei banchi */
+  --mad-z-barra: 6;                 /* barra del riassunto su mobile */
+  --mad-z-in-mano: 7;               /* striscia "In mano" su mobile */
+  --mad-z-testata: 10;
+  --mad-z-trascinato: 20;           /* clone del gettone durante il trascinamento */
+
+  /* ---- Superfici e texture (statiche) ---- */
+
+  /* Spolvero: chiazze calde dove l'impasto è nudo + granelli bianchi di
+     farina. Solo sulla superficie dell'impasto, mai altrove. */
+  --mad-spolvero: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='s' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.016' numOctaves='2' seed='11' stitchTiles='stitch' result='p'/%3E%3CfeColorMatrix in='p' values='0 0 0 0 .92 0 0 0 0 .85 0 0 0 0 .73 1.7 0 0 0 -.78' result='nudo'/%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.78' numOctaves='2' seed='3' stitchTiles='stitch' result='g'/%3E%3CfeColorMatrix in='g' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 .99 5.2 0 0 0 -2.75' result='bianco'/%3E%3CfeMerge%3E%3CfeMergeNode in='nudo'/%3E%3CfeMergeNode in='bianco'/%3E%3C/feMerge%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)'/%3E%3C/svg%3E");
+
+  /* Fibra della carta da zucchero: puntini più scuri e più chiari, senza
+     direzione (feltro, non vergatura). Solo su foglio e vassoio. */
+  --mad-fibra: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55 .9' numOctaves='3' seed='5' stitchTiles='stitch' result='n'/%3E%3CfeColorMatrix in='n' values='0 0 0 0 .19 0 0 0 0 .25 0 0 0 0 .32 2.2 0 0 0 -1.12' result='scuro'/%3E%3CfeColorMatrix in='n' values='0 0 0 0 .93 0 0 0 0 .95 0 0 0 0 .97 -2.4 0 0 0 1.04' result='chiaro'/%3E%3CfeMerge%3E%3CfeMergeNode in='scuro'/%3E%3CfeMergeNode in='chiaro'/%3E%3C/feMerge%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+
+  /* Superficie CSS dell'impasto (stato data-gl="pending" e fondo sotto il
+     canvas): una pagnotta larga vista dall'alto con un leggero angolo,
+     luce diffusa dall'alto a sinistra, due gonfiature e la piega di
+     chiusura in basso. Stessa luce e stessi colori dello shader. */
+  --mad-impasto-forma:
+    radial-gradient(70% 55% at 24% 20%, rgb(252 250 245 / 0.95) 0%, rgb(252 250 245 / 0) 70%),
+    radial-gradient(46% 38% at 64% 40%, rgb(252 250 245 / 0.7) 0%, rgb(252 250 245 / 0) 72%),
+    radial-gradient(52% 40% at 72% 52%, rgb(231 222 205 / 0) 55%, rgb(231 222 205 / 0.85) 100%),
+    radial-gradient(40% 34% at 30% 64%, rgb(252 250 245 / 0.55) 0%, rgb(252 250 245 / 0) 75%),
+    radial-gradient(90% 9% at 52% 83%, rgb(226 212 186 / 0.9) 0%, rgb(226 212 186 / 0) 100%),
+    radial-gradient(88% 7% at 50% 80.5%, rgb(252 250 245 / 0.8) 0%, rgb(252 250 245 / 0) 100%),
+    radial-gradient(140% 120% at 30% 20%, rgb(247 243 234 / 0) 50%, rgb(225 213 192 / 0.9) 100%);
+  --mad-impasto-superficie: var(--mad-spolvero), var(--mad-impasto-forma);
+  --mad-impasto-fondo: var(--mad-farina);
+
+  /* Velo dietro il testo dell'apertura quando sotto c'è la FOTO del
+     fallback (non serve sul GL né sulla superficie CSS). */
+  --mad-velo-testo: linear-gradient(100deg, rgb(247 243 234 / 0.9) 0%, rgb(247 243 234 / 0.78) 38%, rgb(247 243 234 / 0) 64%);
+  --mad-velo-testo-mobile: linear-gradient(180deg, rgb(247 243 234 / 0.92) 0%, rgb(247 243 234 / 0.8) 34%, rgb(247 243 234 / 0) 52%);
+
+  /* L'unica ombra del sito: il contatto di un prodotto sul piano.
+     Si usa su uno pseudo-elemento largo il 112% della foto, alto
+     --mad-contatto-h, centrato sul bordo inferiore della foto. */
+  --mad-contatto-h: 14px;
+  --mad-ombra-contatto: radial-gradient(50% 50% at 50% 50%, var(--mad-contatto-colore) 0%, rgb(47 61 76 / 0.1) 58%, rgb(47 61 76 / 0) 100%);
+
+  /* Bordo del foglio azzurro che entra da destra: dritto, con il risvolto
+     (il bordo ripiegato sotto) più chiaro e una linea di piega. */
+  --mad-risvolto: 12px;
+  --mad-foglio-bordo: linear-gradient(90deg, var(--mad-zucchero-ombra) 0 1px, var(--mad-zucchero-luce) 1px var(--mad-risvolto), transparent var(--mad-risvolto));
+  --mad-foglio-fondo: var(--mad-fibra), var(--mad-zucchero);
+
+  /* Vassoio: foglio più fitto con i quattro angoli piegati verso l'interno
+     (triangoli del rovescio, più chiari, con la linea di piega). */
+  --mad-vassoio-fondo: var(--mad-zucchero-piega);
+  --mad-vassoio-angoli:
+    linear-gradient(135deg, var(--mad-zucchero-luce) 0 calc(var(--mad-vassoio-piega) * 0.7071 - 0.5px), var(--mad-zucchero-ombra) calc(var(--mad-vassoio-piega) * 0.7071 - 0.5px) calc(var(--mad-vassoio-piega) * 0.7071 + 0.5px), transparent calc(var(--mad-vassoio-piega) * 0.7071 + 0.5px)) top left / 50% 50% no-repeat,
+    linear-gradient(225deg, var(--mad-zucchero-luce) 0 calc(var(--mad-vassoio-piega) * 0.7071 - 0.5px), var(--mad-zucchero-ombra) calc(var(--mad-vassoio-piega) * 0.7071 - 0.5px) calc(var(--mad-vassoio-piega) * 0.7071 + 0.5px), transparent calc(var(--mad-vassoio-piega) * 0.7071 + 0.5px)) top right / 50% 50% no-repeat,
+    linear-gradient(315deg, var(--mad-zucchero-luce) 0 calc(var(--mad-vassoio-piega) * 0.7071 - 0.5px), var(--mad-zucchero-ombra) calc(var(--mad-vassoio-piega) * 0.7071 - 0.5px) calc(var(--mad-vassoio-piega) * 0.7071 + 0.5px), transparent calc(var(--mad-vassoio-piega) * 0.7071 + 0.5px)) bottom right / 50% 50% no-repeat,
+    linear-gradient(45deg, var(--mad-zucchero-luce) 0 calc(var(--mad-vassoio-piega) * 0.7071 - 0.5px), var(--mad-zucchero-ombra) calc(var(--mad-vassoio-piega) * 0.7071 - 0.5px) calc(var(--mad-vassoio-piega) * 0.7071 + 0.5px), transparent calc(var(--mad-vassoio-piega) * 0.7071 + 0.5px)) bottom left / 50% 50% no-repeat;
+  --mad-vassoio-piega-max: 18px;    /* angoli piegati; 12 px nel gettone del vassoio */
+
+  /* Lunedì chiuso: farina più scura con tratteggio a 45° in inchiostro leggero. */
+  --mad-tratteggio: repeating-linear-gradient(135deg, rgb(47 61 76 / 0.16) 0 1px, rgb(47 61 76 / 0) 1px 7px);
+}
+
+/* --------------------------------------------------------------------------
+   2. Breakpoint (640: testata desktop e ConceptBackButton in alto;
+      1024: gabbia a spalla e 12 colonne)
+   -------------------------------------------------------------------------- */
+@media (min-width: 640px) {
+  .mad-root {
+    --mad-margine-sx: 24px;
+    --mad-margine-dx: 24px;
+    --mad-colonne: 8;
+    --mad-canalino: 20px;
+    --mad-testata-h: 64px;
+    --mad-riga-banchi-h: 48px;
+    --mad-fissi-basso: var(--mad-riga-banchi-h);
+    --mad-piano-quota: 0.65;
+    --mad-piano-spessore: 8px;
+    --mad-appoggio-aria: 56px;
+    --mad-foto-h-max: min(300px, calc(var(--mad-piano-y) - var(--mad-testata-h) - var(--mad-appoggio-aria)));
+    --mad-foto-w-max: 46vw;
+    --mad-blocco: auto;
+    --mad-passo: 64px;
+    --mad-cartellino-w: 16.5rem;
+    --mad-appeso: 20px;
+    --mad-gettone: 96px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mad-root {
+    --mad-margine-sx: calc(248px + var(--mad-fuori));
+    --mad-margine-dx: calc(40px + var(--mad-fuori));
+    --mad-colonne: 12;
+    --mad-canalino: 24px;
+    --mad-foto-h-max: min(360px, calc(var(--mad-piano-y) - var(--mad-testata-h) - var(--mad-appoggio-aria)));
+    --mad-foto-w-max: 560px;
+    --mad-passo: 96px;
+    --mad-cartellino-w: 18.5rem;
+    --mad-appeso: 24px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   3. Ruoli per fondo
+   -------------------------------------------------------------------------- */
+.mad-root [data-mad-fondo="farina"] {
+  --mad-banco-fondo: var(--mad-farina);
+  --mad-testo: var(--mad-inchiostro);
+  --mad-testo-quieto: var(--mad-inchiostro-quieto);
+  --mad-prezzo: var(--mad-crosta);
+  --mad-primario-fondo: var(--mad-crosta);
+  --mad-primario-fondo-attivo: var(--mad-crosta-scura);
+  --mad-primario-testo: var(--mad-farina);
+  --mad-filo: var(--mad-inchiostro);
+  --mad-focus-colore: var(--mad-inchiostro);
+  --mad-campo-fondo: var(--mad-farina-chiara);
+  --mad-foto-attesa: var(--mad-farina-sotto);
+  --mad-selezione-fondo: var(--mad-zucchero);
+  --mad-selezione-testo: var(--mad-inchiostro);
+  --mad-contatto-colore: rgb(47 61 76 / 0.34);
+}
+
+/* Su carta da zucchero: niente crosta come testo (2,43:1), niente testo
+   quieto (l'inchiostro pieno fa già 5,06:1), bottone inchiostro pieno. */
+.mad-root [data-mad-fondo="zucchero"],
+.mad-root:is([data-banco="dolci"], [data-banco="domenica"]) [data-mad-fondo="banco"] {
+  --mad-banco-fondo: var(--mad-zucchero);
+  --mad-testo: var(--mad-inchiostro);
+  --mad-testo-quieto: var(--mad-inchiostro);
+  --mad-prezzo: var(--mad-inchiostro);
+  --mad-primario-fondo: var(--mad-inchiostro);
+  --mad-primario-fondo-attivo: var(--mad-inchiostro-profondo);
+  --mad-primario-testo: var(--mad-farina);
+  --mad-filo: var(--mad-inchiostro);
+  --mad-focus-colore: var(--mad-inchiostro);
+  --mad-campo-fondo: var(--mad-farina-chiara);
+  --mad-foto-attesa: var(--mad-zucchero-ombra);
+  --mad-selezione-fondo: var(--mad-inchiostro);
+  --mad-selezione-testo: var(--mad-farina);
+  --mad-contatto-colore: rgb(47 61 76 / 0.4);
+}
+
+/* Bottega e piede: inchiostro con testo farina. */
+.mad-root [data-mad-fondo="inchiostro"],
+.mad-root[data-banco="bottega"] [data-mad-fondo="banco"] {
+  --mad-banco-fondo: var(--mad-inchiostro);
+  --mad-testo: var(--mad-farina);
+  --mad-testo-quieto: var(--mad-farina-quieta);
+  --mad-prezzo: var(--mad-farina);
+  --mad-primario-fondo: var(--mad-farina);
+  --mad-primario-fondo-attivo: var(--mad-farina-sotto);
+  --mad-primario-testo: var(--mad-inchiostro);
+  --mad-filo: var(--mad-farina);
+  --mad-focus-colore: var(--mad-farina);
+  --mad-campo-fondo: var(--mad-farina-chiara);
+  --mad-foto-attesa: var(--mad-inchiostro-profondo);
+  --mad-selezione-fondo: var(--mad-farina);
+  --mad-selezione-testo: var(--mad-inchiostro);
+  --mad-contatto-colore: rgb(34 44 55 / 0.6);
+}
+
+/* --------------------------------------------------------------------------
+   4. Preferenze del sistema
+   -------------------------------------------------------------------------- */
+
+/* Contrasto alto: niente testo quieto, fili più spessi, tratteggio pieno. */
+@media (prefers-contrast: more) {
+  .mad-root,
+  .mad-root [data-mad-fondo] {
+    --mad-testo-quieto: var(--mad-testo);
+    --mad-filo-sottile: 2px;
+    --mad-filo-spessore: 3px;
+    --mad-focus-spessore: 3px;
+    --mad-tratteggio: repeating-linear-gradient(135deg, rgb(47 61 76 / 0.4) 0 1.5px, rgb(47 61 76 / 0) 1.5px 6px);
+  }
+}
+
+/* Colori forzati (Windows): le superfici diventano quelle di sistema,
+   texture e ombre spariscono, i fili restano. */
+@media (forced-colors: active) {
+  .mad-root {
+    --mad-spolvero: none;
+    --mad-fibra: none;
+    --mad-impasto-forma: none;
+    --mad-ombra-contatto: none;
+    --mad-tratteggio: none;
+    --mad-velo-testo: none;
+    --mad-velo-testo-mobile: none;
+    --mad-piano-colore: CanvasText;
+  }
+}

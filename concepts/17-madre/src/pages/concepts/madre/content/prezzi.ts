@@ -81,7 +81,8 @@ export interface Pasta {
   readonly riga: string;
 }
 
-export interface Vassoio {
+/** Una delle tre misure del vassoio (il vassoio scelto dal cliente è nello store). */
+export interface MisuraVassoio {
   readonly peso: PesoVassoio;
   /** Numero indicativo di paste ("circa 12"). */
   readonly paste: number;
@@ -139,7 +140,7 @@ export const PANI_PER_ID: Readonly<Record<IdPane, Pane>> = {
     nome: 'Ciabatta',
     righe: [
       'Impasto morbido, con tanta acqua: dentro ha i buchi grandi.',
-      'Crosta sottile. È la più buona in giornata, aperta col San Daniele.',
+      'Crosta sottile: si mangia in giornata, magari aperta col San Daniele.',
     ],
     alKg: 5,
     pezzature: [{ id: 'pezzo', etichetta: 'circa 300 g', prezzo: 1.5 }],
@@ -323,7 +324,7 @@ export const ORDINE_PASTE: readonly IdPasta[] = ['bigne', 'cannoncini', 'diploma
 export const PASTE: readonly Pasta[] = ORDINE_PASTE.map((id) => PASTE_PER_ID[id]);
 
 /** Il vassoio si vende a peso. Le paste costano 34,00 € al chilo. */
-export const VASSOI: readonly Vassoio[] = [
+export const VASSOI: readonly MisuraVassoio[] = [
   { peso: 500, paste: 12, prezzo: 17 },
   { peso: 750, paste: 18, prezzo: 25.5 },
   { peso: 1000, paste: 24, prezzo: 34 },

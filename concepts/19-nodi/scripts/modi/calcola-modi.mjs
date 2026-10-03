@@ -382,8 +382,9 @@ function topologia(w, m, nu, nv) {
   const L = Hmm;
   if (parita < -0.5 && r.lato === 1 && r.spalleAlte <= 1 && r.spalleBasse <= 1) nome = 'croce';
   else if (parita > 0.5 && r.asse === 0 && (r.vita === 2 || r.spalleAlte === 2) && r.spalleBasse === 2) nome = 'parentesi';
-  else if (parita > 0.5 && r.asse === 2 && zeriAsse.length === 2 &&
-    zeriAsse[0] > y0 + 0.1 * L && zeriAsse[0] < y0 + 0.42 * L && zeriAsse[1] > y0 + 0.62 * L && zeriAsse[1] < y0 + 0.93 * L) nome = 'anello';
+  else if (parita > 0.5 && r.asse >= 1 && r.lato === 2 && r.spalleAlte === 2 && r.spalleBasse === 2 &&
+    zeriAsse.every((z) => (z > y0 + 0.1 * L && z < y0 + 0.42 * L) || (z > y0 + 0.62 * L && z < y0 + 0.93 * L)) &&
+    zeriAsse.some((z) => z > y0 + 0.62 * L)) nome = 'anello';
   return { nome, ...r };
 }
 
