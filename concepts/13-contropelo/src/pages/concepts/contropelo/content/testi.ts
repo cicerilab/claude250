@@ -155,6 +155,8 @@ export const VETRINA = {
  * - `titoloVetro`: h3 del vetro, a pennarello.
  * - `riga`: la riga sul barbiere, a pennarello piccolo in fondo al vetro.
  * - `indietro`: bottone a pennarello della faccia lista per tornare al vetro.
+ *   Senza freccia: i font non hanno ← →, la freccia SVG la mette il componente
+ *   (assets/svg, `freccia-sinistra`, prima del testo, aria-hidden).
  */
 export const BARBIERI = [
   {
@@ -297,7 +299,10 @@ export const VETRO_DOVE = {
   regoleAria: 'Regole del salone',
 } as const;
 
-/** In fondo a ogni vetro, solo dove le facce si alternano (S, M, L stretto). */
+/**
+ * In fondo a ogni vetro, solo dove le facce si alternano (S, M, L stretto).
+ * La freccia `freccia-destra` è SVG, dopo il testo, nel componente.
+ */
 export const VETRO_COMUNE = {
   vaiAllaLista: 'la lista',
   vaiAllaListaAria: (i: Indice) => `Vai alla lista di ${BARBIERI[i].nome}`,
@@ -346,7 +351,10 @@ export const LISTA = {
   tuaSecondaSr: (ora: string, nome: string) => `Ore ${oraVisibile(ora)}, ${nome}, seconda mezz'ora del tuo appuntamento`,
   cancella: 'cancella',
   cancellaAria: (ora: string) => `Cancella il tuo nome delle ${oraVisibile(ora)}`,
-  /** Navigazione tra i giorni, a pennarello. `nomeGiorno` = "sabato" o "sabato 3", da core/date.ts. */
+  /**
+   * Navigazione tra i giorni, a pennarello. `nomeGiorno` = "sabato" o "sabato 3", da core/date.ts.
+   * Frecce SVG nel componente: `freccia-sinistra` prima di `indietro`, `freccia-destra` dopo `avanti`.
+   */
   avanti: (rel: Relativo, nomeGiorno: string) => (rel === 'domani' ? 'domani' : nomeGiorno),
   indietro: (rel: Relativo, nomeGiorno: string) => (rel === 'oggi' ? 'oggi' : nomeGiorno),
   vaiAGiornoAria: (giorno: string) => `Vai a ${giorno}`,
