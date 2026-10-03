@@ -68,12 +68,25 @@ pilota.
     `freccia-destra` (dopo), `aria-hidden`, messa dal componente. Gli `*Aria`
     non cambiano.
 
+12. **Foto e crediti** (giro 3, dal photo-editor): le foto sono tre
+    barberie vere da Wikimedia Commons (Lucca, Antigua, Porto), CC BY-SA.
+    Il credito cita la fonte vera. `INFORMAZIONI.riflesso` dice "tre barberie vere"
+    e che il salone di Contropelo non c'è. Il credito `INFORMAZIONI.foto(f, i)`
+    riceve l'elemento di `FOTO_SPECCHI` e scrive descrizione, autore, licenza,
+    fonte e "modificata: ..." leggendo `autore`, `licenza`, `fonte`,
+    `modifiche` dai dati: nessun dato della foto è copiato in `testi.ts`
+    (solo le tre descrizioni in `RIFLESSI`). Gli `alt` restano vuoti: le foto
+    sono decorative per l'ux-architect (§8.1), dietro al vapore; cosa
+    mostrano lo dice il testo del pannello.
+
 ### Glifi controllati
 
 Script `glifi13.py` (scratchpad) con `fontTools` sui woff2 latin di Google
 Fonts (Mansalva 227 codepoint, Figtree 222, Limelight): legge solo le stringhe
 dei quattro file `content/*.ts`, commenti esclusi. Caratteri non ASCII usati:
-spazio non separabile, `·` (solo META/VETRINA), à è ì ù, `€`. **Tutti presenti
+spazio non separabile, `·` (solo META/VETRINA), à è é ì ù, `€`; dai dati
+delle foto (letti da `assets/foto/index.ts`) anche ó di "Ramón", presente in
+Figtree. **Tutti presenti
 in Mansalva e Figtree**; "Contropelo", "Mattia", "Denis", "Samir" interamente
 coperti da Limelight. Chi aggiunge testo non usa frecce, virgolette curve,
 trattini lunghi né lettere maiuscole accentate senza ricontrollare.
@@ -119,7 +132,8 @@ import { NOMI_PER_SPECCHIO, NOMI_VIETATI } from '../../content/nomi';
 | `META` | `index.html`, `document.title` | `title` (58), `description` (153), `ogTitle`, `ogDescription`, `ogImageAlt` | |
 | `VETRINA` | voce `CONCEPTS` del sito vero (proposta) | `tag`, `title`, `subtitle`, `desc`, `perche`, `mestieri[]` | |
 | `BARBIERI[0..2]` | ovunque | `id` (`listino`, `barba`, `orari`), `nome`, `poltrona`, `titoloVetro`, `riga`, `indietro` (senza freccia), `indietroAria` | nome: Limelight (mensola) / Mansalva (vetro) |
-| `PARETE` | Parete, Specchio | `h2Sr(i)`, `bordoAria(i)`, `riflessoAlt` (`''`) | sr |
+| `PARETE` | Parete, Specchio | `h2Sr(i)`, `bordoAria(i)`, `riflessoAlt` (`''`, foto decorative) | sr |
+| `RIFLESSI[0..2]` | Informazioni (crediti) | `descrizione`: cosa mostra la foto di ogni specchio | Figtree |
 | `FASCIA` | Fascia | `insegna`, `sotto`, `informazioni`, `informazioniAria` | Limelight + Figtree |
 | `SALTI` | link di salto | `lista` | Figtree |
 | `VETRO_LISTINO` | VetroListino | `titolo`, `voci[id].{voce, sr}`, `ordine`, `prezzo(id)`, `prezzoSr(id)`, `durata`, `pagamento`, `elencoAria` | Mansalva |
@@ -132,13 +146,13 @@ import { NOMI_PER_SPECCHIO, NOMI_VIETATI } from '../../content/nomi';
 | `ERRORI_CON_LINK` | riga di scrittura | `mezzora(p \| null)`, `preso(p)`, `fallito.{prima, riprova, riprovaAria, mezzo, chiama, chiamaAria, dopo}` | Figtree |
 | `CONFERMA` | riga di stato, lista | `segnato(p)`, `chiamaAria`, `giaSegnato(p)`, `cancellato`, `rimettilo`, `rimettiloAria(ora)`, `rimettiloPreso` | Figtree |
 | `MENSOLA` | Mensola | `navAria`, `tablistAria`, `tabSr(i)`, `pulito`, `scriviIlTuoNome`, `scriviIlTuoNomeRighe`, `suggerimentoMouse`, `suggerimentoDito` | Figtree (nomi Limelight) |
-| `INFORMAZIONI` | Informazioni | `titolo`, `chiudi`, `chiudiAria`, `finzione`, `storia`, `igiene`, `nonFacciamo`, `collo`, `bambini`, `ritardo`, `ferie`, `riflesso`, `fotoTitolo`, `foto(autore)`, `fotoLinkSr`, `font`, `icone`, `conceptDi`, `cicerilab`, `cicerilabSr`, `ricomincia.{bottone, domanda, si, no, fatto}` | titolo Mansalva, resto Figtree |
+| `INFORMAZIONI` | Informazioni | `titolo`, `chiudi`, `chiudiAria`, `finzione`, `storia`, `igiene`, `nonFacciamo`, `collo`, `bambini`, `ritardo`, `ferie`, `riflesso`, `fotoTitolo`, `foto(f, i)`, `fotoLinkSr`, `fotoAutoreAria(autore)`, `fotoLicenzaAria(licenza)`, `font`, `icone`, `conceptDi`, `cicerilab`, `cicerilabSr`, `ricomincia.{bottone, domanda, si, no, fatto}` | titolo Mansalva, resto Figtree |
 | `ANNUNCI` | `store.annuncia()` | `specchio(i)`, `facciaLista(i)`, `facciaVetro(i)`, `giorno(p)`, `chiuso(g)`, `pulitoAcceso`, `pulitoSpento`, `inCorso`, `segnato(p)`, `giaSegnato(p)`, `cancellato`, `ricominciato` | sr |
 | `TESTI` | tutto sopra (default export) | | |
 
 Ordine suggerito del pannello Informazioni (brand-strategist §5.9):
 `finzione`, `storia`, `igiene`, `nonFacciamo`, `collo`, `bambini`,
-`ritardo`, `ferie`, `riflesso`, crediti (`fotoTitolo` + `foto()` × 3, `font`,
+`ritardo`, `ferie`, `riflesso`, crediti (`fotoTitolo` + `foto(f, i)` × 3, `font`,
 `icone`), `conceptDi` con link `cicerilab`, `ricomincia`.
 
 ### `prezzi.ts`
@@ -277,10 +291,28 @@ comunque).
 - **section-builder-vetro**: prezzi con `VETRO_LISTINO.prezzo(id)` (a vista)
   e `prezzoSr(id)` (in `.ctp-sr`, dopo il numero); nessun puntino tra voce e
   prezzo (ux 5.2).
-- **photo-editor**: `INFORMAZIONI.riflesso` descrive le foto come "le
-  poltrone in fila, la mensola, la porta sulla via"; se le foto scelte
-  mostrano altro, dimmelo e cambio la frase. `INFORMAZIONI.foto(autore)` usa
-  il campo `autore` di `assets/foto/index.ts`.
+- **photo-editor**: fatto (giro 3). `INFORMAZIONI.riflesso` e
+  `RIFLESSI[i].descrizione` descrivono le tre foto vere (Lucca, Antigua,
+  Porto). Se cambi una foto, avvisami: cambio la sua riga.
+- **section-builder-informazioni**: i crediti si fanno così, senza copiare
+  dati delle foto nei testi:
+  ```tsx
+  import { FOTO_SPECCHI } from '../../assets/foto';
+  FOTO_SPECCHI.map((f, i) => {
+    const r = INFORMAZIONI.foto(f, f.specchio);
+    return (
+      <p key={i}>
+        {r.prima}
+        <a href={f.url} target="_blank" rel="noopener">{r.autore}<span className="ctp-sr">{INFORMAZIONI.fotoLinkSr}</span></a>
+        {r.mezzo}
+        <a href={f.licenzaUrl} target="_blank" rel="noopener">{r.licenza}<span className="ctp-sr">{INFORMAZIONI.fotoLinkSr}</span></a>
+        {r.dopo}
+      </p>
+    );
+  });
+  ```
+  (`fotoAutoreAria` / `fotoLicenzaAria` solo se si preferisce `aria-label`
+  al testo nascosto: uno dei due, non entrambi.)
 - **interaction-designer**: il commento di `interaction.css` (riga ~110,
   "← il listino") va aggiornato: il testo ora è "il listino".
 - **seo-engineer**: `META` è pronto; JSON-LD WebPage/CreativeWork di Ciceri
